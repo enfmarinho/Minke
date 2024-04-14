@@ -6,9 +6,10 @@
  */
 
 #include "uci.h"
+#include <cstdlib>
 
 int main(int argc, char *argv[]) {
   UCI uci(argc, argv);
-  uci.game_loop();
-  return 0;
+  uci.loop();
+  return EXIT_SUCCESS;
 }
