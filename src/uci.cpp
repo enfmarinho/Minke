@@ -57,11 +57,12 @@ void UCI::go() {
 }
 
 void UCI::eval() {
-  std::cout << "The board evaluation is " << m_board.evaluate() << std::endl;
+  std::cout << "The position evaluation is " << m_position.evaluate()
+            << std::endl;
 }
 
 void UCI::reset() {
-  // TODO reset board
+  // TODO reset position
 }
 
 void UCI::position() {

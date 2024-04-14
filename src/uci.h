@@ -8,7 +8,7 @@
 #ifndef UCI_H
 #define UCI_H
 
-#include "board.h"
+#include "position.h"
 #include "thread.h"
 #include "transposition_table.h"
 #include <ostream>
@@ -60,7 +60,7 @@ private:
   TranspositionTable m_transposition_table;
   EngineOptions m_engine_options;
   ThreadPool m_threads;
-  Board m_board;
+  Position m_position;
 };
 
 #endif // #ifndef UCI_H

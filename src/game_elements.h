@@ -58,11 +58,11 @@ enum class MoveType {
   Regular,
 };
 
-struct Position {
+struct PiecePlacement {
   IndexType file;
   IndexType rank;
-  Position() = delete;
-  Position(IndexType file, IndexType rank) : file(file), rank(rank) {}
+  PiecePlacement() = delete;
+  PiecePlacement(IndexType file, IndexType rank) : file(file), rank(rank) {}
 };
 
 struct Square {
@@ -76,10 +76,11 @@ struct Square {
 };
 
 struct Movement {
-  Position from;
-  Position to;
+  PiecePlacement from;
+  PiecePlacement to;
   MoveType move_type;
-  Movement(Position from, Position to, Square captured, MoveType move_type)
+  Movement(PiecePlacement from, PiecePlacement to, Square captured,
+           MoveType move_type)
       : from(from), to(to), move_type(move_type) {}
 };
 using MovementList = std::vector<Movement>;
@@ -87,10 +88,10 @@ using MovementList = std::vector<Movement>;
 struct PastMovement {
   Movement movement;
   Square captured;
-  Position past_en_passant;
+  PiecePlacement past_en_passant;
   CounterType past_fifty_move_counter;
   PastMovement(Movement movement, Square captured, int fifty_move_counter,
-               Position en_passant)
+               PiecePlacement en_passant)
       : movement(movement), captured(captured), past_en_passant(en_passant),
         past_fifty_move_counter(fifty_move_counter) {}
 };
