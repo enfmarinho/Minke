@@ -33,7 +33,7 @@ enum class Piece {
   Rook,
   Queen,
   King,
-  Empty,
+  None,
   OutOfBounds,
 };
 
@@ -47,6 +47,7 @@ enum class CastlingRights {
 enum class Player {
   White = 1,
   Black = -1,
+  None,
 };
 
 struct Position {
@@ -56,16 +57,37 @@ struct Position {
   Position(IndexType file, IndexType rank) : file(file), rank(rank) {}
 };
 
-struct Movement {
-  Position from;
-  Position to;
-  Piece captured;
-};
-using MovementList = std::vector<Movement>;
-
 struct Square {
   Piece piece;
   Player player;
+  Square() {
+    piece = Piece::None;
+    player = Player::None;
+  }
+  Square(Piece piece, Player player) : piece(piece), player(player) {}
+};
+
+enum class MoveType {
+  KingSideCastling,
+  QueenSideCastling,
+  EnPassant,
+  PawnPromotion,
+  Regular,
+};
+
+struct Movement {
+  Position from;
+  Position to;
+  MoveType move_type;
+  Movement(Position from, Position to, Square captured, MoveType move_type)
+      : from(from), to(to), move_type(move_type) {}
+};
+using MovementList = std::vector<Movement>;
+
+struct PastMovement {
+  Movement movement;
+  Square captured;
+  int past_fifty_move_counter;
 };
 
 #endif // #ifndef GAME_ELEMENTS_H
