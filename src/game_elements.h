@@ -13,9 +13,10 @@
 
 using i32 = int32_t;
 using IndexType = int;
+using CounterType = int;
 using WeightType = i32;
 
-constexpr IndexType NumberOfPieces = 6;
+constexpr CounterType NumberOfPieces = 6;
 constexpr IndexType BoardHeight = 8;
 constexpr IndexType BoardWidth = 8;
 constexpr IndexType NumberOfFiles = 12;
@@ -37,17 +38,24 @@ enum class Piece {
   OutOfBounds,
 };
 
-enum class CastlingRights {
-  BothSides = 0,
-  KingSide,
-  QueenSide,
-  None,
-};
-
 enum class Player {
   White = 1,
   Black = -1,
   None,
+};
+
+struct CastlingRights {
+  bool king_side;
+  bool queen_side;
+  CastlingRights() : king_side(true), queen_side(true) {}
+};
+
+enum class MoveType {
+  KingSideCastling,
+  QueenSideCastling,
+  EnPassant,
+  PawnPromotion,
+  Regular,
 };
 
 struct Position {
@@ -67,14 +75,6 @@ struct Square {
   Square(Piece piece, Player player) : piece(piece), player(player) {}
 };
 
-enum class MoveType {
-  KingSideCastling,
-  QueenSideCastling,
-  EnPassant,
-  PawnPromotion,
-  Regular,
-};
-
 struct Movement {
   Position from;
   Position to;
@@ -87,7 +87,12 @@ using MovementList = std::vector<Movement>;
 struct PastMovement {
   Movement movement;
   Square captured;
-  int past_fifty_move_counter;
+  Position past_en_passant;
+  CounterType past_fifty_move_counter;
+  PastMovement(Movement movement, Square captured, int fifty_move_counter,
+               Position en_passant)
+      : movement(movement), captured(captured), past_en_passant(en_passant),
+        past_fifty_move_counter(fifty_move_counter) {}
 };
 
 #endif // #ifndef GAME_ELEMENTS_H
