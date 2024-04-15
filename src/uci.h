@@ -23,17 +23,17 @@ public:
 
 private:
   struct EngineOptions {
-    static const int max_depth_default = 16;
-    static const int max_depth_min = 1;
-    static const int max_depth_max = 16;
+    static constexpr int max_depth_default = 16;
+    static constexpr int max_depth_min = 1;
+    static constexpr int max_depth_max = 16;
 
-    static const int threads_default = 1;
-    static const int threads_min = 1;
-    static const int threads_max = 1024;
+    static constexpr int threads_default = 1;
+    static constexpr int threads_min = 1;
+    static constexpr int threads_max = 1024;
 
-    static const int hash_default = 16;
-    static const int hash_min = 1;
-    static const int hash_max = 131072;
+    static constexpr int hash_default = 16;
+    static constexpr int hash_min = 1;
+    static constexpr int hash_max = 131072;
     int max_depth;
     int threads;
     int hash;
