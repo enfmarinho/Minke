@@ -55,9 +55,9 @@ u64 zobrist::rehash(const Position &position, const u64 &previous_hash) {
     new_hash ^= RandomArray[piece_starter_index(last_move.captured) +
                             destination_index];
   }
-  if (last_move.past_en_passant.rank != -1) {
+  if (last_move.past_en_passant != -1) {
     new_hash ^=
-        RandomArray[en_passant_starter_index + last_move.past_en_passant.rank];
+        RandomArray[en_passant_starter_index + last_move.past_en_passant];
   }
   if (position.en_passant_rank() != -1) {
     new_hash ^=
