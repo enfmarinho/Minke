@@ -7,8 +7,8 @@
 
 #include "uci.h"
 #include <iostream>
-#include <ostream>
 #include <sstream>
+#include <string>
 
 UCI::UCI(int argc, char *argv[]) {
   // TODO built object.
@@ -17,15 +17,17 @@ UCI::UCI(int argc, char *argv[]) {
 void UCI::loop() {
   std::cout << "Minke Chess Engine by Eduardo Marinho" << std::endl;
 
-  std::istringstream iss;
-  std::string token;
+  std::string input, token;
   do {
-    // TODO fix input entry
+    if (!std::getline(std::cin, input)) {
+      input = "quit";
+    }
+    std::istringstream iss(input);
+
     token.clear();
     iss >> std::skipws >> token;
-    // TODO check for command "d"
     if (token == "quit" || token == "stop") {
-      // stop thread of the search and print best movement found so far
+      // TODO stop search thread and print best movement found so far
     } else if (token == "go") {
       go();
     } else if (token == "position") {
@@ -62,7 +64,8 @@ void UCI::eval() {
 }
 
 void UCI::reset() {
-  // TODO reset position
+  m_position.reset();
+  // TODO reset transposition table
 }
 
 void UCI::position() {
