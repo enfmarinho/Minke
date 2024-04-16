@@ -12,6 +12,7 @@
 #include <vector>
 
 using i32 = int32_t;
+using u64 = uint64_t;
 using IndexType = int;
 using CounterType = int;
 using WeightType = i32;
@@ -29,8 +30,8 @@ using PieceSquareTablePointer = const PieceSquareTable *;
 
 enum class Piece {
   Pawn = 0,
-  Bishop,
   Knight,
+  Bishop,
   Rook,
   Queen,
   King,
@@ -61,7 +62,6 @@ enum class MoveType {
 struct PiecePlacement {
   IndexType file;
   IndexType rank;
-  PiecePlacement() = delete;
   PiecePlacement(IndexType file, IndexType rank) : file(file), rank(rank) {}
 };
 
@@ -88,12 +88,19 @@ using MovementList = std::vector<Movement>;
 struct PastMovement {
   Movement movement;
   Square captured;
-  PiecePlacement past_en_passant;
+  IndexType past_en_passant;
   CounterType past_fifty_move_counter;
-  PastMovement(Movement movement, Square captured, int fifty_move_counter,
-               PiecePlacement en_passant)
-      : movement(movement), captured(captured), past_en_passant(en_passant),
-        past_fifty_move_counter(fifty_move_counter) {}
+  CastlingRights past_white_castling_rights;
+  CastlingRights past_black_castling_rights;
+  PastMovement(Movement movement, Square captured, IndexType past_en_passant,
+               CounterType past_fifty_move_counter,
+               CastlingRights past_white_castling_rights,
+               CastlingRights past_black_castling_rights)
+      : movement(movement), captured(captured),
+        past_en_passant(past_en_passant),
+        past_fifty_move_counter(past_fifty_move_counter),
+        past_white_castling_rights(past_white_castling_rights),
+        past_black_castling_rights(past_black_castling_rights) {}
 };
 
 #endif // #ifndef GAME_ELEMENTS_H

@@ -18,10 +18,20 @@ public:
   void reset();
   Square consult_position(const PiecePlacement &position) const;
   Square consult_position(const IndexType &file, const IndexType &rank) const;
+  Square consult_legal_position(const PiecePlacement &position) const;
+  Square consult_legal_position(const IndexType &file,
+                                const IndexType &rank) const;
+  Square &consult_legal_position(const PiecePlacement &position);
+  Square &consult_legal_position(const IndexType &file, const IndexType &rank);
   void move_piece(const Movement &movement);
   void undo_move();
   WeightType evaluate() const;
   MovementList get_legal_moves() const;
+  Player side_to_move() const;
+  CastlingRights white_castling_rights() const;
+  CastlingRights black_castling_rights() const;
+  IndexType en_passant_rank() const;
+  PastMovement last_move() const;
 
 private:
   bool check() const;
@@ -45,7 +55,7 @@ private:
   CastlingRights m_black_castling_rights;
   PiecePlacement m_white_king_position;
   PiecePlacement m_black_king_position;
-  PiecePlacement m_en_passant;
+  IndexType m_en_passant;
   CounterType m_fifty_move_counter;
   Player m_side_to_move;
 };
