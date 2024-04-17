@@ -198,23 +198,25 @@ WeightType Position::evaluate() const {
       } else {
         file_idx = file ^ 7;
       }
-      mid_game_evaluation += (*MidGamePointerTable[piece_idx])[file_idx][rank] *
-                             piece_multiplication_factor;
-      end_game_evaluation += (*EndGamePointerTable[piece_idx])[file_idx][rank] *
-                             piece_multiplication_factor;
-      game_state += PhaseWeightTable[piece_idx];
+      mid_game_evaluation +=
+          (*weights::MidGamePointerTable[piece_idx])[file_idx][rank] *
+          piece_multiplication_factor;
+      end_game_evaluation +=
+          (*weights::EndGamePointerTable[piece_idx])[file_idx][rank] *
+          piece_multiplication_factor;
+      game_state += weights::PhaseTable[piece_idx];
     }
   }
   WeightType mid_game_weight;
-  if (game_state > MidGamePhaseMax) {
-    mid_game_weight = MidGamePhaseMax;
+  if (game_state > weights::MidGamePhaseMax) {
+    mid_game_weight = weights::MidGamePhaseMax;
   } else {
     mid_game_weight = game_state;
   }
-  WeightType end_game_weight = MidGamePhaseMax - mid_game_weight;
+  WeightType end_game_weight = weights::MidGamePhaseMax - mid_game_weight;
   return (mid_game_evaluation * mid_game_weight +
           end_game_evaluation * end_game_weight) /
-         MidGamePhaseMax; // tapered_evaluation
+         weights::MidGamePhaseMax; // tapered_evaluation
 }
 
 MovementList Position::get_legal_moves() const {

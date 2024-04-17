@@ -10,6 +10,8 @@
 
 #include "game_elements.h"
 
+namespace weights {
+
 /// Phase weights
 constexpr WeightType PawnPhase = 0;
 constexpr WeightType KnightPhase = 1;
@@ -20,29 +22,29 @@ constexpr WeightType KingPhase = 0;
 constexpr WeightType MidGamePhaseMax = 16 * PawnPhase + 4 * KnightPhase +
                                        4 * BishopPhase + 4 * RookPhase +
                                        2 * QueenPhase + 2 * KingPhase;
-constexpr WeightType PhaseWeightTable[NumberOfPieces] = {
+constexpr WeightType PhaseTable[NumberOfPieces] = {
     PawnPhase, KnightPhase, BishopPhase, RookPhase, QueenPhase, KingPhase};
 
 /// Materials weights
-constexpr WeightType MidGamePawnWeight = 82;
-constexpr WeightType MidGameKnightWeight = 337;
-constexpr WeightType MidGameBishopWeight = 365;
-constexpr WeightType MidGameRookWeight = 477;
-constexpr WeightType MidGameQueenWeight = 1025;
-constexpr WeightType MidGameKingWeight = 10000;
-constexpr WeightType MidGameMaterialWeightTable[NumberOfPieces] = {
-    MidGamePawnWeight, MidGameKnightWeight, MidGameBishopWeight,
-    MidGameRookWeight, MidGameQueenWeight,  MidGameKingWeight};
+constexpr WeightType MidGamePawn = 82;
+constexpr WeightType MidGameKnight = 337;
+constexpr WeightType MidGameBishop = 365;
+constexpr WeightType MidGameRook = 477;
+constexpr WeightType MidGameQueen = 1025;
+constexpr WeightType MidGameKing = 10000;
+constexpr WeightType MidGameMaterialTable[NumberOfPieces] = {
+    MidGamePawn, MidGameKnight, MidGameBishop,
+    MidGameRook, MidGameQueen,  MidGameKing};
 
-constexpr WeightType EndGamePawnWeight = 94;
-constexpr WeightType EndGameKnightWeight = 281;
-constexpr WeightType EndGameBishopWeight = 297;
-constexpr WeightType EndGameRookWeight = 512;
-constexpr WeightType EndGameQueenWeight = 936;
-constexpr WeightType EndGameKingWeight = 10000;
-constexpr WeightType EndGameMaterialWeightTable[NumberOfPieces] = {
-    EndGamePawnWeight, EndGameKnightWeight, EndGameBishopWeight,
-    EndGameRookWeight, EndGameQueenWeight,  EndGameKingWeight};
+constexpr WeightType EndGamePawn = 94;
+constexpr WeightType EndGameKnight = 281;
+constexpr WeightType EndGameBishop = 297;
+constexpr WeightType EndGameRook = 512;
+constexpr WeightType EndGameQueen = 936;
+constexpr WeightType EndGameKing = 10000;
+constexpr WeightType EndGameMaterialTable[NumberOfPieces] = {
+    EndGamePawn, EndGameKnight, EndGameBishop,
+    EndGameRook, EndGameQueen,  EndGameKing};
 
 /// Piece-squares tables.
 /// IMPORTANT: the tables are indexed based on the position of the white pieces,
@@ -183,5 +185,7 @@ constexpr PieceSquareTablePointer MidGamePointerTable[6] = {
 constexpr PieceSquareTablePointer EndGamePointerTable[6] = {
     &EndGamePawnTable, &EndGameKnightTable, &EndGameBishopTable,
     &EndGameRookTable, &EndGameQueenTable,  &EndGameKingTable};
+
+} // namespace weights
 
 #endif // #ifndef WEIGHTS_H
