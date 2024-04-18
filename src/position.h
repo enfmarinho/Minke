@@ -25,7 +25,6 @@ public:
   Square &consult_legal_position(const IndexType &file, const IndexType &rank);
   void move_piece(const Movement &movement);
   void undo_move();
-  WeightType evaluate() const;
   MovementList get_legal_moves() const;
   Player side_to_move() const;
   CastlingRights white_castling_rights() const;

@@ -6,6 +6,7 @@
  */
 
 #include "uci.h"
+#include "evaluation.h"
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -59,7 +60,7 @@ void UCI::go() {
 }
 
 void UCI::eval() {
-  std::cout << "The position evaluation is " << m_position.evaluate()
+  std::cout << "The position evaluation is " << eval::evaluate(m_position)
             << std::endl;
 }
 
