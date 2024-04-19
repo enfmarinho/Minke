@@ -9,8 +9,8 @@
 #include "game_elements.h"
 #include "position.h"
 
-u64 zobrist::hash(const Position &position) {
-  u64 key = 0;
+HashType zobrist::hash(const Position &position) {
+  HashType key = 0;
   for (IndexType file = 0; file < BoardHeight; ++file) {
     for (IndexType rank = 0; rank < BoardWidth; ++rank) {
       Square current_square = position.consult_legal_position(file, rank);
@@ -41,8 +41,9 @@ u64 zobrist::hash(const Position &position) {
   return key;
 }
 
-u64 zobrist::rehash(const Position &position, const u64 &previous_hash) {
-  u64 new_hash = previous_hash;
+HashType zobrist::rehash(const Position &position,
+                         const HashType &previous_hash) {
+  HashType new_hash = previous_hash;
   PastMovement last_move = position.last_move();
   IndexType piece_index = piece_starter_index(
       position.consult_legal_position(last_move.movement.to));
