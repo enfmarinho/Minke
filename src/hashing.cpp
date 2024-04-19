@@ -92,7 +92,7 @@ IndexType zobrist::piece_starter_index(const Square &piece_square) {
 }
 
 IndexType zobrist::position_index(const PiecePlacement &piece_placement) {
-  return piece_placement.file * BoardWidth + piece_placement.rank;
+  return piece_placement.file() * BoardWidth + piece_placement.rank();
 }
 
 IndexType zobrist::position_index(const IndexType &file,

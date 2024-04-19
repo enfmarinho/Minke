@@ -22,7 +22,7 @@ void Position::reset() {
 }
 
 Square Position::consult_position(const PiecePlacement &position) const {
-  return consult_position(position.file, position.rank);
+  return consult_position(position.file(), position.rank());
 }
 
 Square Position::consult_position(const IndexType &file,
@@ -36,7 +36,7 @@ Square Position::consult_legal_position(const IndexType &file,
 }
 
 Square Position::consult_legal_position(const PiecePlacement &position) const {
-  return m_board[position.file + FileOffset][position.rank + RankOffset];
+  return m_board[position.file() + FileOffset][position.rank() + RankOffset];
 }
 
 Square &Position::consult_legal_position(const IndexType &file,
@@ -45,7 +45,7 @@ Square &Position::consult_legal_position(const IndexType &file,
 }
 
 Square &Position::consult_legal_position(const PiecePlacement &position) {
-  return m_board[position.file + FileOffset][position.rank + RankOffset];
+  return m_board[position.file() + FileOffset][position.rank() + RankOffset];
 }
 
 void Position::move_piece(const Movement &movement) {
@@ -62,8 +62,8 @@ void Position::move_piece(const Movement &movement) {
     m_fifty_move_counter = 0;
   } else if (piece_being_moved == Piece::Pawn) {
     m_fifty_move_counter = 0;
-    if (abs(movement.to.file - movement.from.file) == 2) {
-      m_en_passant = movement.to.rank;
+    if (abs(movement.to.file() - movement.from.file()) == 2) {
+      m_en_passant = movement.to.rank();
     }
   }
 
@@ -76,11 +76,11 @@ void Position::move_piece(const Movement &movement) {
   } else if (piece_being_moved == Piece::Rook) {
     IndexType player_perspective_first_file =
         m_side_to_move == Player::White ? 0 : 7;
-    if (movement.from.rank == 7 &&
-        movement.from.file == player_perspective_first_file) {
+    if (movement.from.rank() == 7 &&
+        movement.from.file() == player_perspective_first_file) {
       current_player_castling_rights.king_side = false;
-    } else if (movement.from.rank == 0 &&
-               movement.from.file == player_perspective_first_file) {
+    } else if (movement.from.rank() == 0 &&
+               movement.from.file() == player_perspective_first_file) {
       current_player_castling_rights.queen_side = false;
     }
   }
@@ -91,7 +91,7 @@ void Position::move_piece(const Movement &movement) {
   } else if (movement.move_type == MoveType::EnPassant) {
     IndexType offset = captured.player == Player::White ? -1 : 1;
     captured =
-        consult_legal_position(movement.to.file + offset, movement.to.rank);
+        consult_legal_position(movement.to.file() + offset, movement.to.rank());
     consult_legal_position(movement.to) = consult_legal_position(movement.from);
     consult_legal_position(movement.from) = empty_square;
   } else if (movement.move_type == MoveType::PawnPromotion) {
@@ -152,8 +152,8 @@ void Position::undo_move() {
     IndexType offset = undo.captured.player == Player::White ? -1 : 1;
     consult_legal_position(undo.movement.from) =
         consult_legal_position(undo.movement.to);
-    consult_legal_position(undo.movement.to.file + offset,
-                           undo.movement.to.rank) = undo.captured;
+    consult_legal_position(undo.movement.to.file() + offset,
+                           undo.movement.to.rank()) = undo.captured;
   } else if (undo.movement.move_type == MoveType::PawnPromotion) {
     consult_legal_position(undo.movement.to).piece = Piece::Pawn;
     consult_legal_position(undo.movement.from) =

@@ -11,11 +11,9 @@
 #include <cstdint>
 #include <vector>
 
-using i32 = int32_t;
-using u64 = uint64_t;
 using IndexType = int;
 using CounterType = int;
-using WeightType = i32;
+using WeightType = int32_t;
 
 constexpr CounterType NumberOfPieces = 6;
 constexpr IndexType BoardHeight = 8;
@@ -28,7 +26,7 @@ constexpr IndexType FileOffset = NumberOfFiles - BoardHeight;
 using PieceSquareTable = WeightType[BoardHeight][BoardWidth];
 using PieceSquareTablePointer = const PieceSquareTable *;
 
-enum class Piece {
+enum class Piece : char {
   Pawn = 0,
   Knight,
   Bishop,
@@ -39,7 +37,7 @@ enum class Piece {
   OutOfBounds,
 };
 
-enum class Player {
+enum class Player : char {
   White = 1,
   Black = -1,
   None,
@@ -51,7 +49,7 @@ struct CastlingRights {
   CastlingRights() : king_side(true), queen_side(true) {}
 };
 
-enum class MoveType {
+enum class MoveType : char {
   KingSideCastling,
   QueenSideCastling,
   EnPassant,
@@ -60,9 +58,17 @@ enum class MoveType {
 };
 
 struct PiecePlacement {
-  IndexType file;
-  IndexType rank;
-  PiecePlacement(IndexType file, IndexType rank) : file(file), rank(rank) {}
+  constexpr static const int8_t padding = 4;
+  IndexType file() const { return m_data & padding; }
+  IndexType rank() const { return m_data >> padding; }
+  PiecePlacement() {}
+  PiecePlacement(const IndexType &file, const IndexType &rank) {
+    m_data = file + (rank << padding);
+  }
+
+private:
+  uint8_t m_data; // file is stored in the 4 least significant bits, while rank
+                  // is store in the others 4
 };
 
 struct Square {
@@ -79,6 +85,7 @@ struct Movement {
   PiecePlacement from;
   PiecePlacement to;
   MoveType move_type;
+  Movement() = default;
   Movement(PiecePlacement from, PiecePlacement to, Square captured,
            MoveType move_type)
       : from(from), to(to), move_type(move_type) {}
