@@ -10,7 +10,6 @@
 
 #include "position.h"
 #include "thread.h"
-#include "transposition_table.h"
 #include <ostream>
 #include <sstream>
 
@@ -57,7 +56,6 @@ private:
   void position();
   void set_option(std::istringstream &is);
 
-  TranspositionTable m_transposition_table;
   EngineOptions m_engine_options;
   ThreadPool m_threads;
   Position m_position;

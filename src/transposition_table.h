@@ -55,8 +55,13 @@ class TranspositionTable {
   static_assert(sizeof(TTBucket) == 64, "TTBucket is not 64 bytes");
 
 public:
-  TranspositionTable() = default;
-  ~TranspositionTable() = default;
+  static TranspositionTable &get_instance() {
+    static TranspositionTable instance;
+    return instance;
+  }
+  TranspositionTable(const TranspositionTable &) = delete;
+  TranspositionTable &operator=(const TranspositionTable &) = delete;
+
   /*!
    * Search the transposition table for the TTEntry with "key" and sets "found"
    * to true if it was found, otherwise sets "found" to false and returns a
@@ -69,6 +74,9 @@ public:
   void clear();
 
 private:
+  TranspositionTable() = default;
+  ~TranspositionTable() = default;
+
   size_t m_table_size{0};
   size_t m_table_mask{0};
   std::unique_ptr<TTBucket[]> m_table;
