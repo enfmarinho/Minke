@@ -6,7 +6,7 @@
  */
 
 #include "uci.h"
-#include "evaluation.h"
+#include "move_generation.h"
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -28,17 +28,20 @@ void UCI::loop() {
     token.clear();
     iss >> std::skipws >> token;
     if (token == "quit" || token == "stop") {
-      // TODO stop search thread and print best movement found so far
+      m_engine.stop();
     } else if (token == "go") {
-      go();
+      m_engine.go();
     } else if (token == "position") {
-      position();
+      position(iss);
     } else if (token == "ucinewgame") {
-      reset();
+      m_engine.reset();
     } else if (token == "setoption") {
       set_option(iss);
     } else if (token == "eval") {
-      eval();
+      // TODO print position evaluation
+      // std::cout << "The position evaluation is " <<
+      // eval::evaluate(m_position)
+      //           << std::endl;
     } else if (token == "uci") {
       std::cout << "id name Minke 0.0.1 \n"
                 << "id author Eduardo Marinho \n"
@@ -55,24 +58,10 @@ void UCI::loop() {
   } while (token != "quit");
 }
 
-void UCI::go() {
-  // TODO start move search.
-}
-
-void UCI::eval() {
-  std::cout << "The position evaluation is " << eval::evaluate(m_position)
-            << std::endl;
-}
-
-void UCI::reset() {
-  m_position.reset();
-  // TODO reset transposition table
-}
-
-void UCI::position() {
+void UCI::position(std::istringstream &iss) {
   // TODO set up positions.
 }
 
-void UCI::set_option(std::istringstream &is) {
+void UCI::set_option(std::istringstream &iss) {
   // TODO
 }

@@ -8,8 +8,7 @@
 #ifndef UCI_H
 #define UCI_H
 
-#include "position.h"
-#include "thread.h"
+#include "engine.h"
 #include <ostream>
 #include <sstream>
 
@@ -50,15 +49,11 @@ private:
     }
   };
 
-  void go();
-  void eval();
-  void reset();
-  void position();
-  void set_option(std::istringstream &is);
+  void position(std::istringstream &);
+  void set_option(std::istringstream &);
 
+  Engine m_engine;
   EngineOptions m_engine_options;
-  ThreadPool m_threads;
-  Position m_position;
 };
 
 #endif // #ifndef UCI_H
