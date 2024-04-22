@@ -5,8 +5,8 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "uci.h"
-#include "move_generation.h"
+#include "uci.hpp"
+#include "move_generation.hpp"
 #include <iostream>
 #include <sstream>
 #include <string>

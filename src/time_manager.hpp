@@ -5,8 +5,8 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef TIME_MANAGER_H
-#define TIME_MANAGER_H
+#ifndef TIME_MANAGER_HPP
+#define TIME_MANAGER_HPP
 
 #include <chrono>
 
@@ -25,4 +25,4 @@ private:
   TimeType m_start_time;
 };
 
-#endif // #endif TIME_MANAGER_H
+#endif // #endif TIME_MANAGER_HPP

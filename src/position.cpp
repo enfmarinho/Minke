@@ -5,9 +5,8 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "position.h"
-#include "game_elements.h"
-#include "weights.h"
+#include "position.hpp"
+#include "game_elements.hpp"
 
 Position::Position()
     : m_white_castling_rights(), m_black_castling_rights(),

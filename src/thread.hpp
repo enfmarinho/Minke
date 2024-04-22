@@ -5,11 +5,11 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef THREAD_H
-#define THREAD_H
+#ifndef THREAD_HPP
+#define THREAD_HPP
 
-#include "hashing.h"
-#include "time_manager.h"
+#include "hashing.hpp"
+#include "time_manager.hpp"
 #include <cstdint>
 #include <thread>
 
@@ -40,4 +40,4 @@ private:
 //   std::vector<Thread *> m_threads;
 // };
 
-#endif // #ifndef THREAD_H
+#endif // #ifndef THREAD_HPP

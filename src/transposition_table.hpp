@@ -5,11 +5,11 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef TRANSPOSITION_TABLE_H
-#define TRANSPOSITION_TABLE_H
+#ifndef TRANSPOSITION_TABLE_HPP
+#define TRANSPOSITION_TABLE_HPP
 
-#include "game_elements.h"
-#include "hashing.h"
+#include "game_elements.hpp"
+#include "hashing.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -82,4 +82,4 @@ private:
   std::unique_ptr<TTBucket[]> m_table;
 };
 
-#endif // #ifndef TRANSPOSITION_TABLE_H
+#endif // #ifndef TRANSPOSITION_TABLE_HPP

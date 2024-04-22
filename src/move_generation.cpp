@@ -5,9 +5,9 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "move_generation.h"
-#include "game_elements.h"
-#include "position.h"
+#include "move_generation.hpp"
+#include "game_elements.hpp"
+#include "position.hpp"
 
 Movement move_generation::progressive_deepening(Position &position) {
   IndexType current = 0;

@@ -5,14 +5,14 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef EVALUATION_H
-#define EVALUATION_H
+#ifndef EVALUATION_HPP
+#define EVALUATION_HPP
 
-#include "game_elements.h"
-#include "position.h"
+#include "game_elements.hpp"
+#include "position.hpp"
 
 namespace eval {
 WeightType evaluate(const Position &position);
 }; // namespace eval
 
-#endif // #ifndef EVALUATION_H
+#endif // #ifndef EVALUATION_HPP

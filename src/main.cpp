@@ -5,7 +5,7 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "uci.h"
+#include "uci.hpp"
 #include <cstdlib>
 
 int main(int argc, char *argv[]) {

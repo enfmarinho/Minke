@@ -5,10 +5,10 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef UCI_H
-#define UCI_H
+#ifndef UCI_HPP
+#define UCI_HPP
 
-#include "engine.h"
+#include "engine.hpp"
 #include <ostream>
 #include <sstream>
 
@@ -56,4 +56,4 @@ private:
   EngineOptions m_engine_options;
 };
 
-#endif // #ifndef UCI_H
+#endif // #ifndef UCI_HPP

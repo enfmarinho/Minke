@@ -5,15 +5,15 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "game_elements.h"
-#include "position.h"
+#include "game_elements.hpp"
+#include "position.hpp"
 
-#ifndef MOVE_GENERATION_H
-#define MOVE_GENERATION_H
+#ifndef MOVE_GENERATION_HPP
+#define MOVE_GENERATION_HPP
 
 namespace move_generation {
 Movement progressive_deepening(Position &position);
 Movement minimax(Position &position, const IndexType &depth);
 } // namespace move_generation
 
-#endif // #ifndef MOVE_GENERATION_H
+#endif // #ifndef MOVE_GENERATION_HPP

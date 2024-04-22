@@ -5,10 +5,10 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef POSITION_H
-#define POSITION_H
+#ifndef POSITION_HPP
+#define POSITION_HPP
 
-#include "game_elements.h"
+#include "game_elements.hpp"
 #include <stack>
 
 class Position {
@@ -59,4 +59,4 @@ private:
   Player m_side_to_move;
 };
 
-#endif // #ifndef POSITION_H
+#endif // #ifndef POSITION_HPP

@@ -5,11 +5,11 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef HASHING_H
-#define HASHING_H
+#ifndef HASHING_HPP
+#define HASHING_HPP
 
-#include "game_elements.h"
-#include "position.h"
+#include "game_elements.hpp"
+#include "position.hpp"
 #include <cstdint>
 
 using HashType = uint64_t;
@@ -301,4 +301,4 @@ constexpr static const HashType RandomArray[781] = {
 };
 }; // namespace zobrist
 
-#endif // #ifndef HASHING_H
+#endif // #ifndef HASHING_HPP

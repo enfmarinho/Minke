@@ -5,10 +5,10 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "evaluation.h"
-#include "game_elements.h"
-#include "position.h"
-#include "weights.h"
+#include "evaluation.hpp"
+#include "game_elements.hpp"
+#include "position.hpp"
+#include "weights.hpp"
 
 WeightType eval::evaluate(const Position &position) {
   WeightType mid_game_evaluation = 0, end_game_evaluation = 0, game_state = 0;

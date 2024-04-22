@@ -5,11 +5,11 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef ENGINE_H
-#define ENGINE_H
+#ifndef ENGINE_HPP
+#define ENGINE_HPP
 
-#include "position.h"
-#include "thread.h"
+#include "position.hpp"
+#include "thread.hpp"
 #include <vector>
 
 class Engine {
@@ -25,4 +25,4 @@ private:
   Position m_position;
 };
 
-#endif // #ifndef ENGINE_H
+#endif // #ifndef ENGINE_HPP
