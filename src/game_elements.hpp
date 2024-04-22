@@ -11,9 +11,9 @@
 #include <cstdint>
 #include <vector>
 
-using IndexType = int;
+using IndexType = int; // TODO change to int8_t
 using CounterType = int;
-using WeightType = int32_t;
+using WeightType = int32_t; // TODO change to int16_t
 
 constexpr CounterType NumberOfPieces = 6;
 constexpr IndexType BoardHeight = 8;
