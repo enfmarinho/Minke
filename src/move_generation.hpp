@@ -7,12 +7,13 @@
 
 #include "game_elements.hpp"
 #include "position.hpp"
+#include "thread.hpp"
 
 #ifndef MOVE_GENERATION_HPP
 #define MOVE_GENERATION_HPP
 
 namespace move_generation {
-Movement progressive_deepening(Position &position);
+Movement progressive_deepening(Position &position, Thread &thread);
 Movement minimax(Position &position, const IndexType &depth);
 } // namespace move_generation
 

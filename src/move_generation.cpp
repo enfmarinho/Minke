@@ -8,13 +8,14 @@
 #include "move_generation.hpp"
 #include "game_elements.hpp"
 #include "position.hpp"
+#include "thread.hpp"
 
-Movement move_generation::progressive_deepening(Position &position) {
-  IndexType current = 0;
-  Movement best_move = minimax(position, ++current);
-  bool stop_search = false; // TODO remove this, should not be here
-  while (!stop_search) {
-    best_move = minimax(position, ++current);
+Movement move_generation::progressive_deepening(Position &position,
+                                                Thread &thread) {
+  IndexType current_depth = 0;
+  Movement best_move = minimax(position, ++current_depth);
+  while (!thread.should_stop()) {
+    best_move = minimax(position, ++current_depth);
   }
   return best_move;
 }

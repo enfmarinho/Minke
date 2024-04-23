@@ -7,8 +7,8 @@
 #include <thread>
 
 void Engine::go() {
-  *m_thread.get() =
-      std::thread(move_generation::progressive_deepening, std::ref(m_position));
+  *m_thread.get() = std::thread(move_generation::progressive_deepening,
+                                std::ref(m_position), std::ref(m_thread));
 }
 
 void Engine::reset() {
@@ -16,10 +16,7 @@ void Engine::reset() {
   TranspositionTable::get().clear();
 }
 
-void Engine::stop() {
-  m_thread.stop_search();
-  m_thread.get()->join();
-}
+void Engine::stop() { m_thread.stop_search(); }
 
 void Engine::eval() {
   std::cout << "The position evaluation is " << eval::evaluate(m_position)

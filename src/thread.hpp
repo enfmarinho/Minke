@@ -8,17 +8,18 @@
 #ifndef THREAD_HPP
 #define THREAD_HPP
 
-#include "hashing.hpp"
 #include "time_manager.hpp"
 #include <cstdint>
 #include <thread>
 
 class Thread {
 public:
-  void init(HashType hash) { m_hash = hash; /* TODO */ }
   void stop_search() {
     m_stop = true;
     m_thread.join();
+  }
+  bool should_stop() {
+    return m_stop; // TODO remove this, just a STUB
   }
   void search();
   std::thread *get() { return &m_thread; }
@@ -26,7 +27,6 @@ public:
 private:
   std::thread m_thread;
   bool m_stop{false};
-  HashType m_hash;
   uint64_t m_nodes_searched{0};
   uint8_t m_game_ply{0};
   uint8_t m_search_ply{0};
