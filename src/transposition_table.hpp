@@ -55,7 +55,7 @@ class TranspositionTable {
   static_assert(sizeof(TTBucket) == 64, "TTBucket is not 64 bytes");
 
 public:
-  static TranspositionTable &get_instance() {
+  static TranspositionTable &get() {
     static TranspositionTable instance;
     return instance;
   }

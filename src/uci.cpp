@@ -38,10 +38,7 @@ void UCI::loop() {
     } else if (token == "setoption") {
       set_option(iss);
     } else if (token == "eval") {
-      // TODO print position evaluation
-      // std::cout << "The position evaluation is " <<
-      // eval::evaluate(m_position)
-      //           << std::endl;
+      m_engine.eval();
     } else if (token == "uci") {
       std::cout << "id name Minke 0.0.1 \n"
                 << "id author Eduardo Marinho \n"

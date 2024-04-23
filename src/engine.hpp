@@ -16,6 +16,7 @@ class Engine {
 public:
   void go();
   void stop();
+  void eval();
   void reset();
   void set_position(const std::string &fen,
                     const std::vector<std::string> &move_list);
