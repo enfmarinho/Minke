@@ -8,23 +8,19 @@
 #ifndef THREAD_HPP
 #define THREAD_HPP
 
+#include "position.hpp"
 #include "time_manager.hpp"
 #include <cstdint>
 #include <thread>
 
 class Thread {
 public:
-  void stop_search() {
-    if (!m_stop) {
-      m_stop = true;
-      m_thread.join();
-    }
-  }
+  void stop_search();
   bool should_stop() {
     return m_stop; // TODO remove this, just a STUB
   }
-  void search();
-  std::thread *get() { return &m_thread; }
+  void wait() { m_thread.join(); }
+  void search(Position &position);
   void max_depth(uint8_t new_max_depth) { m_max_depth = new_max_depth; }
 
 private:

@@ -7,23 +7,17 @@
 
 #include "engine.hpp"
 #include "evaluation.hpp"
-#include "game_elements.hpp"
 #include "move_generation.hpp"
 #include "transposition_table.hpp"
-#include <functional>
 #include <iostream>
 #include <sstream>
-#include <thread>
 
 Engine::Engine(uint8_t max_depth, int hash_size) {
   m_thread.max_depth(max_depth);
   TranspositionTable::get().resize(hash_size);
 }
 
-void Engine::go() {
-  *m_thread.get() = std::thread(move_generation::progressive_deepening,
-                                std::ref(m_position), std::ref(m_thread));
-}
+void Engine::go() { m_thread.search(m_position); }
 
 void Engine::stop() { m_thread.stop_search(); }
 
@@ -32,7 +26,7 @@ void Engine::eval() {
             << std::endl;
 }
 
-void Engine::wait() { m_thread.get()->join(); }
+void Engine::wait() { m_thread.wait(); }
 
 void Engine::set_position(const std::string &fen,
                           const std::vector<std::string> &move_list) {
