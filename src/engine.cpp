@@ -12,8 +12,7 @@
 #include <iostream>
 #include <sstream>
 
-Engine::Engine(uint8_t max_depth, int hash_size) {
-  m_thread.max_depth(max_depth);
+Engine::Engine(uint8_t max_depth, int hash_size) : m_thread(max_depth) {
   TranspositionTable::get().resize(hash_size);
 }
 
@@ -30,8 +29,9 @@ void Engine::wait() { m_thread.wait(); }
 
 void Engine::set_position(const std::string &fen,
                           const std::vector<std::string> &move_list) {
-  // TODO
+  m_position.reset(fen);
   TranspositionTable::get().clear();
+  // TODO parse moves and make them
 }
 
 void Engine::set_option(std::istringstream &iss) {

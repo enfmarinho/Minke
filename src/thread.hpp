@@ -15,6 +15,7 @@
 
 class Thread {
 public:
+  Thread(uint8_t max_depth);
   void stop_search();
   bool should_stop() {
     return m_stop; // TODO remove this, just a STUB
@@ -25,11 +26,11 @@ public:
 
 private:
   std::thread m_thread;
-  bool m_stop{false};
-  uint64_t m_nodes_searched{0};
-  uint8_t m_game_ply{0};
-  uint8_t m_search_ply{0};
-  uint64_t m_nodes_counter{0};
+  bool m_stop;
+  uint64_t m_nodes_searched;
+  uint8_t m_game_ply;
+  uint8_t m_search_ply;
+  uint64_t m_nodes_counter;
   TimeManager m_time_manager;
   uint8_t m_max_depth;
 };
