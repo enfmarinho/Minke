@@ -8,7 +8,7 @@
 #include "uci.hpp"
 #include "engine.hpp"
 #include "game_elements.hpp"
-#include "move_generation.hpp"
+#include "search.hpp"
 #include <ios>
 #include <iostream>
 #include <sstream>

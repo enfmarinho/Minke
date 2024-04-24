@@ -7,7 +7,7 @@
 
 #include "engine.hpp"
 #include "evaluation.hpp"
-#include "move_generation.hpp"
+#include "search.hpp"
 #include "transposition_table.hpp"
 #include <iostream>
 #include <sstream>

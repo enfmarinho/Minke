@@ -6,8 +6,8 @@
  */
 
 #include "thread.hpp"
-#include "move_generation.hpp"
 #include "position.hpp"
+#include "search.hpp"
 #include <cstdint>
 
 Thread::Thread(uint8_t max_depth)
@@ -22,6 +22,6 @@ void Thread::stop_search() {
 }
 
 void Thread::search(Position &position) {
-  m_thread = std::thread(move_generation::progressive_deepening,
-                         std::ref(position), std::ref(*this));
+  m_thread = std::thread(search::progressive_deepening, std::ref(position),
+                         std::ref(*this));
 }

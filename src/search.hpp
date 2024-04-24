@@ -9,12 +9,12 @@
 #include "position.hpp"
 #include "thread.hpp"
 
-#ifndef MOVE_GENERATION_HPP
-#define MOVE_GENERATION_HPP
+#ifndef SEARCH_HPP
+#define SEARCH_HPP
 
-namespace move_generation {
+namespace search {
 Movement progressive_deepening(Position &position, Thread &thread);
 Movement minimax(Position &position, const IndexType &depth);
-} // namespace move_generation
+} // namespace search
 
-#endif // #ifndef MOVE_GENERATION_HPP
+#endif // #ifndef SEARCH_HPP
