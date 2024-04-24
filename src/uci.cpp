@@ -6,6 +6,8 @@
  */
 
 #include "uci.hpp"
+#include "engine.hpp"
+#include "game_elements.hpp"
 #include "move_generation.hpp"
 #include <ios>
 #include <iostream>
@@ -13,9 +15,8 @@
 #include <string>
 #include <vector>
 
-UCI::UCI(int argc, char *argv[]) {
-  // TODO built object.
-}
+UCI::UCI(int argc, char *argv[])
+    : m_engine(EngineOptions::max_depth_default, EngineOptions::hash_default) {}
 
 void UCI::loop() {
   std::cout << "Minke Chess Engine by Eduardo Marinho" << std::endl;
@@ -36,7 +37,7 @@ void UCI::loop() {
     } else if (token == "position") {
       position(iss);
     } else if (token == "ucinewgame") {
-      m_engine.reset();
+      m_engine.set_position(StartFEN, std::vector<std::string>());
     } else if (token == "setoption") {
       set_option(iss);
     } else if (token == "eval") {
@@ -61,7 +62,7 @@ void UCI::position(std::istringstream &iss) {
   std::string token, fen, move;
   iss >> token;
   if (token == "startpos") {
-    fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    fen = StartFEN;
     iss >> move; // consume the "moves" token, if there is one.
   } else if (token == "fen") {
     while (iss >> token && token != "moves") {

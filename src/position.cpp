@@ -8,16 +8,19 @@
 #include "position.hpp"
 #include "game_elements.hpp"
 
-Position::Position()
-    : m_white_castling_rights(), m_black_castling_rights(),
-      m_white_king_position(0 + FileOffset, 4 + RankOffset),
-      m_black_king_position(7 + FileOffset, 4 + RankOffset), m_en_passant(-1),
-      m_fifty_move_counter(0), m_side_to_move(Player::White) {
-  reset(); // initialize m_board
+Position::Position() {
+  reset(StartFEN); // initialize m_board
 }
 
-void Position::reset() {
-  // TODO
+void Position::reset(const std::string &fen) {
+  // m_white_castling_rights = CastlingRights();
+  // m_black_castling_rights = CastlingRights();
+  // m_white_king_position = PiecePlacement(0 + FileOffset, 4 + RankOffset);
+  // m_black_king_position = PiecePlacement(7 + FileOffset, 4 + RankOffset);
+  // m_en_passant = -1;
+  // m_fifty_move_counter = 0;
+  // m_side_to_move = Player::White;
+  // TODO make board be equivalent a fen string.
 }
 
 Square Position::consult_position(const PiecePlacement &position) const {

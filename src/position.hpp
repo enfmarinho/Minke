@@ -15,7 +15,7 @@ class Position {
 public:
   Position();
   ~Position() = default;
-  void reset();
+  void reset(const std::string &fen);
   Square consult_position(const PiecePlacement &position) const;
   Square consult_position(const IndexType &file, const IndexType &rank) const;
   Square consult_legal_position(const PiecePlacement &position) const;

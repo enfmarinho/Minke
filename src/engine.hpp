@@ -15,11 +15,12 @@
 
 class Engine {
 public:
+  Engine(uint8_t max_depth, int hash_size);
+  ~Engine() = default;
   void go();
   void stop();
   void eval();
   void wait();
-  void reset();
   void set_position(const std::string &fen,
                     const std::vector<std::string> &move_list);
   void set_option(std::istringstream &iss);
