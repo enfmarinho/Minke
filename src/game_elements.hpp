@@ -11,8 +11,6 @@
 #include <cstdint>
 #include <vector>
 
-#define StartFEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-
 using IndexType = int; // TODO change to int8_t
 using CounterType = int;
 using WeightType = int32_t; // TODO change to int16_t
@@ -27,6 +25,10 @@ constexpr IndexType FileOffset = NumberOfFiles - BoardHeight;
 
 using PieceSquareTable = WeightType[BoardHeight][BoardWidth];
 using PieceSquareTablePointer = const PieceSquareTable *;
+
+constexpr auto StartFEN =
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+constexpr int MaxMoves = 256;
 
 enum class Piece : char {
   Pawn = 0,

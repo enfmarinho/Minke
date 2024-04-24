@@ -31,6 +31,8 @@ public:
   CastlingRights black_castling_rights() const;
   IndexType en_passant_rank() const;
   PastMovement last_move() const;
+  PiecePlacement black_king_position() const;
+  PiecePlacement white_king_position() const;
 
 private:
   bool check() const;

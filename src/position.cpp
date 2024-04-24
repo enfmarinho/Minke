@@ -186,44 +186,6 @@ void Position::undo_move() {
   }
 }
 
-MovementList Position::get_legal_moves() const {
-  MovementList movement_list;
-  if (double_check()) {
-    legal_king_moves(m_side_to_move == Player::White ? m_white_king_position
-                                                     : m_black_king_position,
-                     &movement_list);
-    return movement_list;
-  }
-  for (IndexType file = 0; file < BoardHeight; ++file) {
-    for (IndexType rank = 0; rank < BoardWidth; ++rank) {
-      PiecePlacement current_square = PiecePlacement(file, rank);
-      switch (consult_legal_position(current_square).piece) {
-      case Piece::Pawn:
-        legal_pawn_moves(current_square, &movement_list);
-        break;
-      case Piece::Knight:
-        legal_knight_moves(current_square, &movement_list);
-        break;
-      case Piece::Bishop:
-        legal_bishop_moves(current_square, &movement_list);
-        break;
-      case Piece::Rook:
-        legal_rook_moves(current_square, &movement_list);
-        break;
-      case Piece::Queen:
-        legal_queen_moves(current_square, &movement_list);
-        break;
-      case Piece::King:
-        legal_king_moves(current_square, &movement_list);
-        break;
-      default:
-        break;
-      }
-    }
-  }
-  return movement_list;
-}
-
 Player Position::side_to_move() const { return m_side_to_move; }
 
 CastlingRights Position::white_castling_rights() const {
@@ -238,40 +200,9 @@ IndexType Position::en_passant_rank() const { return m_en_passant; }
 
 PastMovement Position::last_move() const { return m_game_history.top(); }
 
-bool Position::check() const {
-  return false; // TODO remove this, just a STUB.
+PiecePlacement Position::black_king_position() const {
+  return m_black_king_position;
 }
-
-bool Position::double_check() const {
-  return false; // TODO remove this, just a STUB.
-}
-
-void Position::legal_pawn_moves(const PiecePlacement &position,
-                                MovementList *movement_list) const {
-  // TODO
-}
-
-void Position::legal_knight_moves(const PiecePlacement &position,
-                                  MovementList *movement_list) const {
-  // TODO
-}
-
-void Position::legal_bishop_moves(const PiecePlacement &position,
-                                  MovementList *movement_list) const {
-  // TODO
-}
-
-void Position::legal_rook_moves(const PiecePlacement &position,
-                                MovementList *movement_list) const {
-  // TODO
-}
-
-void Position::legal_queen_moves(const PiecePlacement &position,
-                                 MovementList *movement_list) const {
-  // TODO
-}
-
-void Position::legal_king_moves(const PiecePlacement &position,
-                                MovementList *movement_list) const {
-  // TODO
+PiecePlacement Position::white_king_position() const {
+  return m_white_king_position;
 }
