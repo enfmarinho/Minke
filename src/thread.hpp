@@ -15,8 +15,10 @@
 class Thread {
 public:
   void stop_search() {
-    m_stop = true;
-    m_thread.join();
+    if (!m_stop) {
+      m_stop = true;
+      m_thread.join();
+    }
   }
   bool should_stop() {
     return m_stop; // TODO remove this, just a STUB
