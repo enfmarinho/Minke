@@ -23,6 +23,7 @@ public:
   }
   void search();
   std::thread *get() { return &m_thread; }
+  void max_depth(uint8_t new_max_depth) { m_max_depth = new_max_depth; }
 
 private:
   std::thread m_thread;
@@ -32,6 +33,7 @@ private:
   uint8_t m_search_ply{0};
   uint64_t m_nodes_counter{0};
   TimeManager m_time_manager;
+  uint8_t m_max_depth;
 };
 
 // TODO implement a thread pool

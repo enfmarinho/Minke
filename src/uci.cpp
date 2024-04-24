@@ -7,9 +7,11 @@
 
 #include "uci.hpp"
 #include "move_generation.hpp"
+#include <ios>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 UCI::UCI(int argc, char *argv[]) {
   // TODO built object.
@@ -56,9 +58,28 @@ void UCI::loop() {
 }
 
 void UCI::position(std::istringstream &iss) {
-  // TODO set up positions.
+  std::string token, fen, move;
+  iss >> token;
+  if (token == "startpos") {
+    fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    iss >> move; // consume the "moves" token, if there is one.
+  } else if (token == "fen") {
+    while (iss >> token && token != "moves") {
+      fen += token + " ";
+    }
+  } else {
+    return;
+  }
+
+  std::vector<std::string> movements;
+  while (iss >> move) {
+    movements.push_back(move);
+  }
+
+  m_engine.set_position(fen, movements);
 }
 
 void UCI::set_option(std::istringstream &iss) {
-  // TODO
+  m_engine.wait();
+  m_engine.set_option(iss);
 }

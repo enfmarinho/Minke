@@ -32,17 +32,9 @@ private:
     static constexpr int hash_default = 16;
     static constexpr int hash_min = 1;
     static constexpr int hash_max = 131072;
-    int max_depth;
-    int threads;
-    int hash;
-    EngineOptions()
-        : max_depth(max_depth_default), threads(threads_default),
-          hash(hash_default) {}
     friend std::ostream &operator<<(std::ostream &os, const EngineOptions &eo) {
       os << "option name MaxDepth type spin default " << max_depth_default
          << " min " << max_depth_min << " max " << max_depth_max << "\n";
-      os << "option name Threads type spin default " << threads_default
-         << " min " << threads_min << " max " << threads_max << "\n";
       os << "option name Hash type spin default " << hash_default << " min "
          << hash_min << " max " << hash_max << "\n";
       return os;

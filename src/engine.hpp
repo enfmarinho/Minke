@@ -10,6 +10,7 @@
 
 #include "position.hpp"
 #include "thread.hpp"
+#include <sstream>
 #include <vector>
 
 class Engine {
@@ -17,9 +18,11 @@ public:
   void go();
   void stop();
   void eval();
+  void wait();
   void reset();
   void set_position(const std::string &fen,
                     const std::vector<std::string> &move_list);
+  void set_option(std::istringstream &iss);
 
 private:
   Thread m_thread;
