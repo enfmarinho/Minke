@@ -5,8 +5,8 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef MOVE_GENERATION_H
-#define MOVE_GENERATION_H
+#ifndef MOVE_GENERATION_HPP
+#define MOVE_GENERATION_HPP
 
 #include "game_elements.hpp"
 #include "position.hpp"
@@ -28,4 +28,4 @@ private:
   Movement m_movement_list[MaxMoves], *last;
 };
 
-#endif // #ifndef MOVE_GENERATION_H
+#endif // #ifndef MOVE_GENERATION_HPP
