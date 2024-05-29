@@ -8,17 +8,20 @@
 #ifndef THREAD_HPP
 #define THREAD_HPP
 
+#include "game_elements.hpp"
 #include "position.hpp"
-#include "time_manager.hpp"
 #include <cstdint>
 #include <thread>
 
 class Thread {
 public:
   Thread(uint8_t max_depth);
+  ~Thread() = default;
+
   void stop_search();
   bool should_stop() {
-    return m_stop; // TODO remove this, just a STUB
+    // TODO checks for stop scenarios, such as time management
+    return m_stop;
   }
   void wait() { m_thread.join(); }
   void search(Position &position);
@@ -31,14 +34,7 @@ private:
   uint8_t m_game_ply;
   uint8_t m_search_ply;
   uint64_t m_nodes_counter;
-  TimeManager m_time_manager;
-  uint8_t m_max_depth;
+  CounterType m_max_depth;
 };
-
-// TODO implement a thread pool
-// class ThreadPool {
-// private:
-//   std::vector<Thread *> m_threads;
-// };
 
 #endif // #ifndef THREAD_HPP

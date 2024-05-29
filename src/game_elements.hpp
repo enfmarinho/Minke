@@ -44,7 +44,7 @@ enum class Piece : char {
 enum class Player : char {
   White = 1,
   Black = -1,
-  None,
+  None = 0,
 };
 
 struct CastlingRights {

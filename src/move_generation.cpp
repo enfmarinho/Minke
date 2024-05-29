@@ -5,7 +5,7 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "move_generation.h"
+#include "move_generation.hpp"
 
 MoveList::MoveList(const Position &position) {
   MovementList movement_list;
@@ -42,6 +42,14 @@ MoveList::MoveList(const Position &position) {
       }
     }
   }
+}
+
+bool MoveList::check() {
+  return false; // TODO remove this, just a STUB
+}
+
+bool MoveList::double_check() {
+  return false; // TODO remove this, just a STUB
 }
 
 void MoveList::legal_pawn_moves(const PiecePlacement &position) const {}

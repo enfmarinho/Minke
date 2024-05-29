@@ -12,7 +12,7 @@
 
 Thread::Thread(uint8_t max_depth)
     : m_stop(false), m_nodes_searched(0), m_game_ply(0), m_search_ply(0),
-      m_nodes_counter(0), m_time_manager(), m_max_depth(max_depth) {}
+      m_nodes_counter(0), m_max_depth(max_depth) {}
 
 void Thread::stop_search() {
   if (!m_stop) {
