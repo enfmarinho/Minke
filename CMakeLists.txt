@@ -24,6 +24,7 @@ add_executable(
   "src/evaluation.cpp"
   "src/hashing.cpp"
   "src/main.cpp"
+  "src/move_generation.cpp"
   "src/position.cpp"
   "src/search.cpp"
   "src/thread.cpp"
