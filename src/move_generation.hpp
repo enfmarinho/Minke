@@ -17,6 +17,9 @@ public:
   bool check();
   bool double_check();
 
+  Movement *begin() { return m_movement_list; };
+  Movement *end() { return m_end; }
+
 private:
   void legal_pawn_moves(const PiecePlacement &position) const;
   void legal_knight_moves(const PiecePlacement &position) const;
@@ -25,7 +28,7 @@ private:
   void legal_queen_moves(const PiecePlacement &position) const;
   void legal_king_moves(const PiecePlacement &position) const;
 
-  Movement m_movement_list[MaxMoves], *last;
+  Movement m_movement_list[MaxMoves], *m_end;
 };
 
 #endif // #ifndef MOVE_GENERATION_HPP

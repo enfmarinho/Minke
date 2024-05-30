@@ -22,6 +22,7 @@ void Thread::stop_search() {
 }
 
 void Thread::search(Position &position) {
-  m_thread = std::thread(search::progressive_deepening, std::ref(position),
+  m_stop = false;
+  m_thread = std::thread(search::iterative_deepening, std::ref(position),
                          std::ref(*this));
 }

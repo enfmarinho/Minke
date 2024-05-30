@@ -9,7 +9,7 @@
 #define TRANSPOSITION_TABLE_HPP
 
 #include "game_elements.hpp"
-#include "hashing.hpp"
+#include "position.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -24,20 +24,20 @@ public:
     UpperBound,
   };
 
-  HashType key() const { return m_key; }
+  HashType key() const { return m_hash; }
   IndexType depth() const { return m_depth; }
   Movement movement() const { return m_best_movement; }
   WeightType evaluation() const { return m_evaluation; }
   BoundType bound() const { return m_bound; }
-  int relative_age(IndexType half_move_count) const;
-  int replace_factor(const IndexType &half_move_count) const;
-  void save(const HashType &key, const IndexType &depth,
+  CounterType relative_age(const CounterType &half_move_count) const;
+  CounterType replace_factor(const CounterType &half_move_count) const;
+  void save(const HashType &hash, const IndexType &depth,
             const Movement &movement, const WeightType &evaluation,
-            const IndexType &half_move, const BoundType &bound);
+            const CounterType &half_move_counter, const BoundType &bound);
   void reset() { m_bound = BoundType::Empty; }
 
 private:
-  HashType m_key;           // 8 bytes
+  HashType m_hash;          // 8 bytes
   int8_t m_depth;           // 1 byte // TODO change to indextype
   Movement m_best_movement; // 3 bytes
   int16_t m_evaluation;     // 2 bytes // TODO change to WeightType
@@ -68,8 +68,7 @@ public:
    * pointer to the TTEntry with the least value, i.e. the one that should be
    * replaced.
    */
-  TTEntry *probe(const HashType &key, bool &found,
-                 const IndexType &half_move_count);
+  TTEntry *probe(const Position &position, bool &found);
   void resize(size_t MB);
   void clear();
 

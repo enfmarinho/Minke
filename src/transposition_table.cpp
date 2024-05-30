@@ -7,37 +7,38 @@
 
 #include "transposition_table.hpp"
 #include "game_elements.hpp"
-#include "hashing.hpp"
+#include "position.hpp"
 #include <cstddef>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <strings.h>
 
-IndexType TTEntry::relative_age(IndexType half_move_counter) const {
+CounterType TTEntry::relative_age(const CounterType &half_move_counter) const {
   return half_move_counter - m_half_move_count;
 }
 
-int TTEntry::replace_factor(const IndexType &half_move_counter) const {
+CounterType
+TTEntry::replace_factor(const CounterType &half_move_counter) const {
   return int(m_depth) - int(relative_age(half_move_counter)) * 2;
 }
 
-void TTEntry::save(const HashType &key, const IndexType &depth,
+void TTEntry::save(const HashType &hash, const IndexType &depth,
                    const Movement &movement, const WeightType &evaluation,
-                   const IndexType &half_move, const BoundType &bound) {
-  m_key = key;
+                   const CounterType &half_move_counter,
+                   const BoundType &bound) {
+  m_hash = hash;
   m_depth = depth;
   m_best_movement = movement;
   m_evaluation = evaluation;
-  m_half_move_count = half_move;
+  m_half_move_count = half_move_counter;
   m_bound = bound;
 }
 
-TTEntry *TranspositionTable::probe(const HashType &key, bool &found,
-                                   const IndexType &half_move_counter) {
-  HashType table_index = key & m_table_mask;
+TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
+  HashType table_index = position.get_hash() & m_table_mask;
   for (TTEntry &entry : m_table[table_index].entry) {
-    if (entry.key() == key) {
+    if (entry.key() == position.get_hash()) {
       return found = true, &entry;
     }
   }
@@ -45,8 +46,9 @@ TTEntry *TranspositionTable::probe(const HashType &key, bool &found,
   TTBucket *bucket = &m_table[table_index];
   TTEntry *replace = &(bucket->entry[0]);
   for (IndexType index = 0; index < bucket_size; ++index) {
-    if (replace->replace_factor(half_move_counter) >
-        bucket->entry[index].replace_factor(half_move_counter)) {
+    if (replace->replace_factor(position.get_half_move_counter() >
+                                bucket->entry[index].replace_factor(
+                                    position.get_half_move_counter()))) {
       replace = &m_table[table_index].entry[index];
     }
   }

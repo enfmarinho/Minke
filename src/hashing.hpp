@@ -10,13 +10,10 @@
 
 #include "game_elements.hpp"
 #include "position.hpp"
-#include <cstdint>
-
-using HashType = uint64_t;
 
 namespace zobrist {
 HashType hash(const Position &position);
-HashType rehash(const Position &position, const HashType &previous_hash);
+HashType rehash(const Position &position);
 IndexType piece_starter_index(const Square &piece_square);
 IndexType position_index(const PiecePlacement &piece_placement);
 IndexType position_index(const IndexType &file, const IndexType &rank);

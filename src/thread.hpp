@@ -26,6 +26,7 @@ public:
   void wait() { m_thread.join(); }
   void search(Position &position);
   void max_depth(uint8_t new_max_depth) { m_max_depth = new_max_depth; }
+  CounterType max_depth() { return m_max_depth; }
 
 private:
   std::thread m_thread;
