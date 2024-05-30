@@ -7,20 +7,15 @@
 
 #include "position.hpp"
 #include "game_elements.hpp"
+#include "hashing.hpp"
 
 Position::Position() {
   reset(StartFEN); // initialize m_board
 }
 
 void Position::reset(const std::string &fen) {
-  // m_white_castling_rights = CastlingRights();
-  // m_black_castling_rights = CastlingRights();
-  // m_white_king_position = PiecePlacement(0 + FileOffset, 4 + RankOffset);
-  // m_black_king_position = PiecePlacement(7 + FileOffset, 4 + RankOffset);
-  // m_en_passant = -1;
-  // m_fifty_move_counter = 0;
-  // m_side_to_move = Player::White;
-  // TODO make board be equivalent a fen string.
+  // TODO make board be equivalent a fen string
+  m_hash = zobrist::hash(*this);
 }
 
 Square Position::consult_position(const PiecePlacement &position) const {
@@ -135,6 +130,7 @@ void Position::move_piece(const Movement &movement) {
   m_game_history.push(PastMovement(movement, captured, past_fifty_move_counter,
                                    past_en_passant, past_white_castling_rights,
                                    past_black_castling_rights));
+  m_hash = zobrist::rehash(*this);
 }
 
 void Position::undo_move() {
@@ -184,25 +180,33 @@ void Position::undo_move() {
     consult_legal_position(file, 2) = Square(Piece::None, Player::None);
     consult_legal_position(file, 3) = Square(Piece::None, Player::None);
   }
+  m_hash = zobrist::rehash(*this);
 }
 
-Player Position::side_to_move() const { return m_side_to_move; }
+const Player &Position::side_to_move() const { return m_side_to_move; }
 
-CastlingRights Position::white_castling_rights() const {
+const CastlingRights &Position::white_castling_rights() const {
   return m_white_castling_rights;
 }
 
-CastlingRights Position::black_castling_rights() const {
+const CastlingRights &Position::black_castling_rights() const {
   return m_black_castling_rights;
 }
 
-IndexType Position::en_passant_rank() const { return m_en_passant; }
+const IndexType &Position::en_passant_rank() const { return m_en_passant; }
 
-PastMovement Position::last_move() const { return m_game_history.top(); }
+const PastMovement &Position::last_move() const { return m_game_history.top(); }
 
-PiecePlacement Position::black_king_position() const {
+const PiecePlacement &Position::black_king_position() const {
   return m_black_king_position;
 }
-PiecePlacement Position::white_king_position() const {
+
+const PiecePlacement &Position::white_king_position() const {
   return m_white_king_position;
+}
+
+const HashType &Position::get_hash() const { return m_hash; }
+
+const CounterType &Position::get_half_move_counter() const {
+  return m_game_half_move_conter;
 }
