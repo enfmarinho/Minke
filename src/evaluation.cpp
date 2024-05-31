@@ -8,15 +8,9 @@
 #include "evaluation.hpp"
 #include "game_elements.hpp"
 #include "position.hpp"
-#include "transposition_table.hpp"
 #include "weights.hpp"
 
 WeightType eval::evaluate(const Position &position) {
-  bool found;
-  TTEntry *entry = TranspositionTable::get().probe(position, found);
-  if (found) {
-    return entry->evaluation();
-  }
   WeightType mid_game_evaluation = 0, end_game_evaluation = 0, game_state = 0;
   for (IndexType file = 0; file < BoardHeight; ++file) {
     for (IndexType rank = 0; rank < BoardWidth; ++rank) {
