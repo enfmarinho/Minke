@@ -21,8 +21,17 @@ void Thread::stop_search() {
   }
 }
 
+bool Thread::should_stop() {
+  // TODO checks for stop scenarios, such as time management
+  return m_stop;
+}
+
+void Thread::wait() { m_thread.join(); }
+
 void Thread::search(Position &position) {
   m_stop = false;
   m_thread = std::thread(search::iterative_deepening, std::ref(position),
                          std::ref(*this));
 }
+
+void Thread::max_depth(uint8_t new_max_depth) { m_max_depth = new_max_depth; }

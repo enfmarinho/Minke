@@ -19,14 +19,10 @@ public:
   ~Thread() = default;
 
   void stop_search();
-  bool should_stop() {
-    // TODO checks for stop scenarios, such as time management
-    return m_stop;
-  }
-  void wait() { m_thread.join(); }
+  bool should_stop();
+  void wait();
   void search(Position &position);
-  void max_depth(uint8_t new_max_depth) { m_max_depth = new_max_depth; }
-  CounterType max_depth() { return m_max_depth; }
+  void max_depth(uint8_t new_max_depth);
 
 private:
   std::thread m_thread;
