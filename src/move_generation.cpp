@@ -8,6 +8,7 @@
 #include "move_generation.hpp"
 
 MoveList::MoveList(const Position &position) {
+  m_end = m_movement_list;
   MovementList movement_list;
   if (double_check()) {
     legal_king_moves(position.side_to_move() == Player::White
