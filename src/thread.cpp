@@ -12,8 +12,8 @@
 #include <cstdint>
 
 Thread::Thread(uint8_t max_depth, uint64_t node_limit)
-    : m_stop(true), m_nodes_searched(0), m_depth_ply_searched(0),
-      m_node_limit(node_limit), m_max_depth(max_depth) {}
+    : m_stop(true), m_nodes_searched(0), m_node_limit(node_limit),
+      m_max_depth(max_depth) {}
 
 void Thread::stop_search() {
   if (!m_stop) {
@@ -34,9 +34,12 @@ bool Thread::should_stop(CounterType depth) const {
 void Thread::wait() { m_thread.join(); }
 
 void Thread::search(Position &position) {
-  m_stop = false;
-  m_thread = std::thread(search::iterative_deepening, std::ref(position),
-                         std::ref(*this));
+  if (m_stop) {
+    m_stop = false;
+    m_thread = std::thread(search::iterative_deepening, std::ref(position),
+                           std::ref(*this));
+  }
+}
 
 void Thread::max_depth(CounterType new_max_depth) {
   m_max_depth = new_max_depth;

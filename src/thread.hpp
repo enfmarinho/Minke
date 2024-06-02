@@ -31,7 +31,6 @@ private:
   std::thread m_thread;
   bool m_stop;
   uint64_t m_nodes_searched;
-  uint8_t m_depth_ply_searched;
   uint64_t m_node_limit;
   CounterType m_max_depth;
 };
