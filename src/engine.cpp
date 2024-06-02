@@ -9,10 +9,12 @@
 #include "evaluation.hpp"
 #include "search.hpp"
 #include "transposition_table.hpp"
+#include <cstdint>
 #include <iostream>
 #include <sstream>
 
-Engine::Engine(uint8_t max_depth, int hash_size) : m_thread(max_depth) {
+Engine::Engine(uint8_t max_depth, uint64_t node_limit, int hash_size)
+    : m_thread(max_depth, node_limit) {
   TranspositionTable::get().resize(hash_size);
 }
 

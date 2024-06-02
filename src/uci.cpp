@@ -16,7 +16,9 @@
 #include <vector>
 
 UCI::UCI(int argc, char *argv[])
-    : m_engine(EngineOptions::max_depth_default, EngineOptions::hash_default) {}
+    : m_engine(EngineOptions::max_depth_default,
+               EngineOptions::node_limit_default, EngineOptions::hash_default) {
+}
 
 void UCI::loop() {
   std::cout << "Minke Chess Engine by Eduardo Marinho" << std::endl;

@@ -10,12 +10,13 @@
 
 #include "position.hpp"
 #include "thread.hpp"
+#include <cstdint>
 #include <sstream>
 #include <vector>
 
 class Engine {
 public:
-  Engine(uint8_t max_depth, int hash_size);
+  Engine(uint8_t max_depth, uint64_t node_limit, int hash_size);
   ~Engine() = default;
   void go();
   void stop();
