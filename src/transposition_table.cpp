@@ -20,15 +20,15 @@ CounterType TTEntry::relative_age(const CounterType &half_move_counter) const {
 
 CounterType
 TTEntry::replace_factor(const CounterType &half_move_counter) const {
-  return int(m_depth) - int(relative_age(half_move_counter)) * 2;
+  return m_depth_ply - relative_age(half_move_counter) * 2;
 }
 
-void TTEntry::save(const HashType &hash, const IndexType &depth,
+void TTEntry::save(const HashType &hash, const IndexType &depth_ply,
                    const Movement &movement, const WeightType &evaluation,
                    const CounterType &half_move_counter,
                    const BoundType &bound) {
   m_hash = hash;
-  m_depth = depth;
+  m_depth_ply = depth_ply;
   m_best_movement = movement;
   m_evaluation = evaluation;
   m_half_move_count = half_move_counter;

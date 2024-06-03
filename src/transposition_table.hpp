@@ -25,20 +25,20 @@ public:
   };
 
   HashType key() const { return m_hash; }
-  IndexType depth() const { return m_depth; }
+  IndexType depth_ply() const { return m_depth_ply; }
   Movement movement() const { return m_best_movement; }
   WeightType evaluation() const { return m_evaluation; }
   BoundType bound() const { return m_bound; }
   CounterType relative_age(const CounterType &half_move_count) const;
   CounterType replace_factor(const CounterType &half_move_count) const;
-  void save(const HashType &hash, const IndexType &depth,
+  void save(const HashType &hash, const IndexType &depth_ply,
             const Movement &movement, const WeightType &evaluation,
             const CounterType &half_move_counter, const BoundType &bound);
   void reset() { m_bound = BoundType::Empty; }
 
 private:
   HashType m_hash;          // 8 bytes
-  int8_t m_depth;           // 1 byte // TODO change to indextype
+  int8_t m_depth_ply;       // 1 byte // TODO change to indextype
   Movement m_best_movement; // 3 bytes
   int16_t m_evaluation;     // 2 bytes // TODO change to WeightType
   int8_t m_half_move_count; // 1 byte // TOOD check if it can be CounterType
@@ -63,10 +63,10 @@ public:
   TranspositionTable &operator=(const TranspositionTable &) = delete;
 
   /*!
-   * Search the transposition table for the TTEntry with "key" and sets "found"
-   * to true if it was found, otherwise sets "found" to false and returns a
-   * pointer to the TTEntry with the least value, i.e. the one that should be
-   * replaced.
+   * Search the transposition table for the TTEntry with position hash and sets
+   * "found" to true if it was found, otherwise sets "found" to false and
+   * returns a pointer to the TTEntry with the least value, i.e. the one that
+   * should be replaced.
    */
   TTEntry *probe(const Position &position, bool &found);
   void resize(size_t MB);
