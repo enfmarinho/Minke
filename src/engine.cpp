@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <iostream>
 #include <sstream>
+#include <string>
 
 Engine::Engine(uint8_t max_depth, uint64_t node_limit, int hash_size)
     : m_thread(max_depth, node_limit) {
@@ -31,9 +32,18 @@ void Engine::wait() { m_thread.wait(); }
 
 void Engine::set_position(const std::string &fen,
                           const std::vector<std::string> &move_list) {
-  m_position.reset(fen);
+  if (!m_position.reset(fen)) {
+    std::cerr
+        << "Since the FEN string was invalid, the board representation may "
+           "have been be corrupted. To be safe, set the game board again!"
+        << std::endl;
+    return;
+  }
   TranspositionTable::get().clear();
-  // TODO parse moves and make them
+  for (const std::string &algebraic_notation : move_list) {
+    Movement move(algebraic_notation);
+    m_position.move(move);
+  }
 }
 
 void Engine::set_option(std::istringstream &iss) {

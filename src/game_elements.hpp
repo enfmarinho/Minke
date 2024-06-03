@@ -51,7 +51,7 @@ enum class Player : char {
 struct CastlingRights {
   bool king_side;
   bool queen_side;
-  CastlingRights() : king_side(true), queen_side(true) {}
+  CastlingRights() : king_side(false), queen_side(false) {}
 };
 
 enum class MoveType : char {
@@ -94,6 +94,9 @@ struct Movement {
   Movement(PiecePlacement from, PiecePlacement to, Square captured,
            MoveType move_type)
       : from(from), to(to), move_type(move_type) {}
+  Movement(const std::string &algebraic_notation) {
+    // TODO build move from algebraic_notation
+  }
 };
 using MovementList = std::vector<Movement>;
 

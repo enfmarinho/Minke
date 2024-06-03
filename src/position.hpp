@@ -15,7 +15,7 @@ class Position {
 public:
   Position();
   ~Position() = default;
-  void reset(const std::string &fen);
+  bool reset(const std::string &fen);
   Square consult_position(const PiecePlacement &position) const;
   Square consult_position(const IndexType &file, const IndexType &rank) const;
   Square consult_legal_position(const PiecePlacement &position) const;
@@ -23,8 +23,9 @@ public:
                                 const IndexType &rank) const;
   Square &consult_legal_position(const PiecePlacement &position);
   Square &consult_legal_position(const IndexType &file, const IndexType &rank);
-  void move_piece(const Movement &movement);
+  void move(const Movement &movement);
   void undo_move();
+  std::string get_algebraic_notation(const Movement &move) const;
   const Player &side_to_move() const;
   const CastlingRights &white_castling_rights() const;
   const CastlingRights &black_castling_rights() const;
@@ -43,11 +44,10 @@ private:
   PiecePlacement m_white_king_position;
   PiecePlacement m_black_king_position;
   IndexType m_en_passant;
-  CounterType m_fifty_move_counter;
+  CounterType m_fifty_move_counter_ply;
   Player m_side_to_move;
   HashType m_hash;
-  CounterType
-      m_game_half_move_conter; //!< Count all the half moves made in the match
+  CounterType m_game_clock_ply; //!< Count all the half moves made in the match
 };
 
 #endif // #ifndef POSITION_HPP

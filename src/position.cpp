@@ -8,14 +8,104 @@
 #include "position.hpp"
 #include "game_elements.hpp"
 #include "hashing.hpp"
+#include <array>
+#include <cassert>
+#include <cctype>
+#include <ios>
+#include <iostream>
+#include <sstream>
+#include <string>
 
-Position::Position() {
-  reset(StartFEN); // initialize m_board
-}
+Position::Position() { assert(reset(StartFEN)); }
 
-void Position::reset(const std::string &fen) {
-  // TODO make board be equivalent a fen string
+bool Position::reset(const std::string &fen) {
+  std::stringstream iss(fen);
+  std::array<std::string, 6> fen_arguments;
+  for (IndexType index = 0; index < 6; ++index) {
+    iss >> std::skipws >> fen_arguments[index];
+    if (iss.fail()) {
+      std::cerr << "INVALID FEN: wrong format." << std::endl;
+      return false;
+    }
+  }
+
+  IndexType file = 7, rank = 0;
+  for (char c : fen_arguments[0]) {
+    if (c == '/') {
+      --file;
+      rank = 0;
+      continue;
+    }
+    IndexType n_of_empty_squares = std::isdigit(c);
+    if (n_of_empty_squares == 0) {
+      char piece = std::tolower(c);
+      Player player = std::isupper(c) ? Player::White : Player::Black;
+      if (piece == 'p')
+        consult_legal_position(file, rank) = Square(Piece::Pawn, player);
+      else if (piece == 'n')
+        consult_legal_position(file, rank) = Square(Piece::Knight, player);
+      else if (piece == 'b')
+        consult_legal_position(file, rank) = Square(Piece::Bishop, player);
+      else if (piece == 'r')
+        consult_legal_position(file, rank) = Square(Piece::Rook, player);
+      else if (piece == 'q')
+        consult_legal_position(file, rank) = Square(Piece::Queen, player);
+      else if (piece == 'k')
+        consult_legal_position(file, rank) = Square(Piece::King, player);
+      ++rank;
+    }
+    for (; n_of_empty_squares > 0; --n_of_empty_squares, ++rank) {
+      consult_legal_position(file, rank) = Square(Piece::None, Player::None);
+    }
+  }
+
+  if (fen_arguments[1] == "w") {
+    m_side_to_move = Player::White;
+  } else if (fen_arguments[1] == "b") {
+    m_side_to_move = Player::Black;
+  } else {
+    std::cerr << "INVALID FEN: invalid player, it should be 'w' or 'b'."
+              << std::endl;
+    return false;
+  }
+
+  for (char castling : fen_arguments[2]) {
+    if (castling == 'K')
+      m_white_castling_rights.king_side = true;
+    else if (castling == 'Q')
+      m_white_castling_rights.queen_side = true;
+    else if (castling == 'k')
+      m_black_castling_rights.king_side = true;
+    else if (castling == 'q')
+      m_black_castling_rights.queen_side = true;
+  }
+
+  if (fen_arguments[3] == "-") {
+    m_en_passant = -1;
+  } else {
+    try {
+      m_en_passant = std::stoi(fen_arguments[3]) - 1;
+    } catch (const std::exception &) {
+      std::cerr << "INVALID FEN: en passant square is not a number nor '-'."
+                << std::endl;
+      return false;
+    }
+  }
+  try {
+    m_fifty_move_counter_ply = std::stoi(fen_arguments[4]);
+  } catch (const std::exception &) {
+    std::cerr << "INVALID FEN: halfmove clock is not a number." << std::endl;
+    return false;
+  }
+  try {
+    m_game_clock_ply = std::stoi(fen_arguments[5]);
+  } catch (const std::exception &) {
+    std::cerr << "INVALID FEN: game clock is not a number." << std::endl;
+    return false;
+  }
+
   m_hash = zobrist::hash(*this);
+  return true;
 }
 
 Square Position::consult_position(const PiecePlacement &position) const {
@@ -45,10 +135,10 @@ Square &Position::consult_legal_position(const PiecePlacement &position) {
   return m_board[position.file() + FileOffset][position.rank() + RankOffset];
 }
 
-void Position::move_piece(const Movement &movement) {
+void Position::move(const Movement &movement) {
   CastlingRights past_white_castling_rights = m_white_castling_rights;
   CastlingRights past_black_castling_rights = m_black_castling_rights;
-  CounterType past_fifty_move_counter = m_fifty_move_counter++;
+  CounterType past_fifty_move_counter = m_fifty_move_counter_ply++;
   IndexType past_en_passant = m_en_passant;
   m_en_passant = -1;
   Square captured = consult_legal_position(movement.to);
@@ -56,9 +146,9 @@ void Position::move_piece(const Movement &movement) {
 
   Piece piece_being_moved = consult_legal_position(movement.from).piece;
   if (consult_legal_position(movement.to).piece != Piece::None) {
-    m_fifty_move_counter = 0;
+    m_fifty_move_counter_ply = 0;
   } else if (piece_being_moved == Piece::Pawn) {
-    m_fifty_move_counter = 0;
+    m_fifty_move_counter_ply = 0;
     if (abs(movement.to.file() - movement.from.file()) == 2) {
       m_en_passant = movement.to.rank();
     }
@@ -137,7 +227,7 @@ void Position::undo_move() {
   PastMovement undo = m_game_history.top();
   m_game_history.pop();
   m_en_passant = undo.past_en_passant;
-  m_fifty_move_counter = undo.past_fifty_move_counter;
+  m_fifty_move_counter_ply = undo.past_fifty_move_counter;
   m_white_castling_rights = undo.past_white_castling_rights;
   m_black_castling_rights = undo.past_black_castling_rights;
   m_side_to_move =
@@ -183,6 +273,11 @@ void Position::undo_move() {
   m_hash = zobrist::rehash(*this);
 }
 
+std::string Position::get_algebraic_notation(const Movement &move) const {
+  // TODO implement this.
+  return ""; // just a STUB.
+}
+
 const Player &Position::side_to_move() const { return m_side_to_move; }
 
 const CastlingRights &Position::white_castling_rights() const {
@@ -208,5 +303,5 @@ const PiecePlacement &Position::white_king_position() const {
 const HashType &Position::get_hash() const { return m_hash; }
 
 const CounterType &Position::get_half_move_counter() const {
-  return m_game_half_move_conter;
+  return m_game_clock_ply;
 }
