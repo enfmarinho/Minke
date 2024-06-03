@@ -36,6 +36,7 @@ void Thread::wait() { m_thread.join(); }
 void Thread::search(Position &position) {
   if (m_stop) {
     m_stop = false;
+    m_nodes_searched = 0;
     m_thread = std::thread(search::iterative_deepening, std::ref(position),
                            std::ref(*this));
   }
