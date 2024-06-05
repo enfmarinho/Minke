@@ -15,7 +15,7 @@
 
 class Thread {
 public:
-  Thread(uint8_t max_depth, uint64_t node_limit);
+  Thread();
   ~Thread() = default;
 
   void reset();

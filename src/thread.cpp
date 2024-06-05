@@ -14,9 +14,7 @@
 #include <cstdint>
 #include <limits>
 
-Thread::Thread(uint8_t max_depth, uint64_t node_limit)
-    : m_stop(true), m_nodes_searched(0), m_node_limit(node_limit),
-      m_max_depth(max_depth) {}
+Thread::Thread() { reset(); }
 
 void Thread::reset() {
   m_stop = true;

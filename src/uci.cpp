@@ -6,18 +6,18 @@
  */
 
 #include "uci.hpp"
-#include "engine.hpp"
+#include "evaluation.hpp"
 #include "game_elements.hpp"
 #include "search.hpp"
+#include "transposition_table.hpp"
 #include <ios>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
-UCI::UCI(int argc, char *argv[])
-    : m_engine(EngineOptions::max_depth_default,
-               EngineOptions::node_limit_default, EngineOptions::hash_default) {
+UCI::UCI(int argc, char *argv[]) {
+  TranspositionTable::get().resize(EngineOptions::hash_default);
 }
 
 void UCI::loop() {
@@ -33,18 +33,18 @@ void UCI::loop() {
     token.clear();
     iss >> std::skipws >> token;
     if (token == "quit" || token == "stop") {
-      m_engine.stop();
+      m_thread.stop_search();
     } else if (token == "go") {
-      m_engine.parse_go_limits(iss);
-      m_engine.go();
+      parse_go_limits(iss);
+      go();
     } else if (token == "position") {
       position(iss);
     } else if (token == "ucinewgame") {
-      m_engine.set_position(StartFEN, std::vector<std::string>());
+      set_position(StartFEN, std::vector<std::string>());
     } else if (token == "setoption") {
       set_option(iss);
     } else if (token == "eval") {
-      m_engine.eval();
+      eval();
     } else if (token == "uci") {
       std::cout << "id name Minke 0.0.1 \n"
                 << "id author Eduardo Marinho \n"
@@ -54,6 +54,10 @@ void UCI::loop() {
       std::cout << "readyok" << std::endl;
     } else if (token == "help" || token == "--help") {
       std::cout << "TODO write help message." << std::endl;
+    } else if (token == "d") {
+      // TODO Display the current position, with ASCII art and FEN.
+    } else if (token == "bench") {
+      // TODO run benchmark
     } else if (!token.empty()) {
       std::cout << "Unknown command: '" << token
                 << "'. Type help for information." << std::endl;
@@ -75,15 +79,64 @@ void UCI::position(std::istringstream &iss) {
     return;
   }
 
-  std::vector<std::string> movements;
+  std::vector<std::string> move_list;
   while (iss >> move) {
-    movements.push_back(move);
+    move_list.push_back(move);
   }
+  set_position(fen, move_list);
+}
 
-  m_engine.set_position(fen, movements);
+void UCI::set_position(const std::string &fen,
+                       const std::vector<std::string> &move_list) {
+  if (!m_position.reset(fen)) {
+    std::cerr
+        << "Since the FEN string was invalid, the board representation may "
+           "have been be corrupted. To be safe, set the game board again!"
+        << std::endl;
+    return;
+  }
+  TranspositionTable::get().clear();
+  for (const std::string &algebraic_notation : move_list) {
+    m_position.move(m_position.get_movement(algebraic_notation));
+  }
 }
 
 void UCI::set_option(std::istringstream &iss) {
-  m_engine.wait();
-  m_engine.set_option(iss);
+  m_thread.wait();
+  std::string token, garbage;
+  int value;
+  iss >> garbage; // Consume the "name" token
+  iss >> token;
+  iss >> garbage; // Consume the "value" token.
+  iss >> value;
+  // TODO check if values are valid
+  if (token == "Hash") {
+    TranspositionTable::get().resize(value);
+  }
 }
+
+void UCI::eval() {
+  std::cout << "The position evaluation is " << eval::evaluate(m_position)
+            << std::endl;
+}
+
+void UCI::parse_go_limits(std::istringstream &iss) {
+  std::string token;
+  while (iss >> token) {
+    if (token == "infinite") {
+      m_thread.infinite();
+      return;
+    }
+
+    CounterType option;
+    iss >> option;
+    if (token == "depth")
+      m_thread.max_depth_ply(option);
+    else if (token == "nodes")
+      m_thread.node_limit(option);
+    else if (token == "movetime")
+      m_thread.movetime(option);
+  }
+}
+
+void UCI::go() { m_thread.search(m_position); }

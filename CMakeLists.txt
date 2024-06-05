@@ -20,7 +20,6 @@ add_compile_options(
 # Add and link executable.
 add_executable(
   minke
-  "src/engine.cpp"
   "src/evaluation.cpp"
   "src/hashing.cpp"
   "src/main.cpp"
