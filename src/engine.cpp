@@ -41,8 +41,7 @@ void Engine::set_position(const std::string &fen,
   }
   TranspositionTable::get().clear();
   for (const std::string &algebraic_notation : move_list) {
-    Movement move(algebraic_notation);
-    m_position.move(move);
+    m_position.move(m_position.get_movement(algebraic_notation));
   }
 }
 

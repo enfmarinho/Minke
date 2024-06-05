@@ -274,8 +274,55 @@ void Position::undo_move() {
 }
 
 std::string Position::get_algebraic_notation(const Movement &move) const {
-  // TODO implement this.
-  return ""; // just a STUB.
+  std::string algebraic_notation;
+  algebraic_notation.push_back('a' + move.from.rank());
+  algebraic_notation.push_back('1' + move.from.file());
+  algebraic_notation.push_back('a' + move.to.rank());
+  algebraic_notation.push_back('1' + move.to.file());
+  if (move.move_type == MoveType::PawnPromotionQueen) {
+    algebraic_notation.push_back('q');
+  } else if (move.move_type == MoveType::PawnPromotionKnight) {
+    algebraic_notation.push_back('n');
+  } else if (move.move_type == MoveType::PawnPromotionRook) {
+    algebraic_notation.push_back('r');
+  } else if (move.move_type == MoveType::PawnPromotionBishop) {
+    algebraic_notation.push_back('b');
+  }
+  return algebraic_notation;
+}
+
+Movement Position::get_movement(const std::string &algebraic_notation) const {
+  PiecePlacement from(static_cast<IndexType>(algebraic_notation[1] - '1'),
+                      static_cast<IndexType>(algebraic_notation[0] - 'a'));
+  PiecePlacement to(static_cast<IndexType>(algebraic_notation[3] - '1'),
+                    static_cast<IndexType>(algebraic_notation[2] - 'a'));
+  MoveType move_type = MoveType::Regular;
+
+  // Castling
+  if ((from.rank() == 4 && to.rank() == 6) &&
+      consult_legal_position(from).piece == Piece::King)
+    move_type = MoveType::KingSideCastling;
+  else if ((from.rank() == 4 && to.rank() == 2) &&
+           consult_legal_position(from).piece == Piece::King)
+    move_type = MoveType::QueenSideCastling;
+  // En passant
+  else if (to.rank() == en_passant_rank() && from.file() != to.file() &&
+           consult_legal_position(from).piece == Piece::Pawn) {
+    move_type = MoveType::EnPassant;
+  }
+  // Pawn promotion
+  else if (algebraic_notation.size() == 5) {
+    if (tolower(algebraic_notation[4]) == 'q')
+      move_type = MoveType::PawnPromotionQueen;
+    else if (tolower(algebraic_notation[4]) == 'n')
+      move_type = MoveType::PawnPromotionKnight;
+    else if (tolower(algebraic_notation[4]) == 'r')
+      move_type = MoveType::PawnPromotionRook;
+    else if (tolower(algebraic_notation[4]) == 'b')
+      move_type = MoveType::PawnPromotionBishop;
+  }
+
+  return Movement(from, to, move_type);
 }
 
 const Player &Position::side_to_move() const { return m_side_to_move; }

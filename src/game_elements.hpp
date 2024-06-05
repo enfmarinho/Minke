@@ -9,7 +9,6 @@
 #define GAME_ELEMENTS_HPP
 
 #include <cstdint>
-#include <vector>
 
 using IndexType = int; // TODO change to int8_t
 using CounterType = int;
@@ -58,7 +57,10 @@ enum class MoveType : char {
   KingSideCastling,
   QueenSideCastling,
   EnPassant,
-  PawnPromotion,
+  PawnPromotionKnight,
+  PawnPromotionBishop,
+  PawnPromotionRook,
+  PawnPromotionQueen,
   Regular,
 };
 
@@ -91,14 +93,9 @@ struct Movement {
   PiecePlacement to;
   MoveType move_type;
   Movement() = default;
-  Movement(PiecePlacement from, PiecePlacement to, Square captured,
-           MoveType move_type)
+  Movement(PiecePlacement from, PiecePlacement to, MoveType move_type)
       : from(from), to(to), move_type(move_type) {}
-  Movement(const std::string &algebraic_notation) {
-    // TODO build move from algebraic_notation
-  }
 };
-using MovementList = std::vector<Movement>;
 
 struct PastMovement {
   Movement movement;
