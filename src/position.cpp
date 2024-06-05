@@ -181,9 +181,18 @@ void Position::move(const Movement &movement) {
         consult_legal_position(movement.to.file() + offset, movement.to.rank());
     consult_legal_position(movement.to) = consult_legal_position(movement.from);
     consult_legal_position(movement.from) = empty_square;
-  } else if (movement.move_type == MoveType::PawnPromotion) {
+  } else if (movement.move_type == MoveType::PawnPromotionQueen) {
     consult_legal_position(movement.from) = empty_square;
     consult_legal_position(movement.to) = Square(Piece::Queen, m_side_to_move);
+  } else if (movement.move_type == MoveType::PawnPromotionKnight) {
+    consult_legal_position(movement.from) = empty_square;
+    consult_legal_position(movement.to) = Square(Piece::Knight, m_side_to_move);
+  } else if (movement.move_type == MoveType::PawnPromotionRook) {
+    consult_legal_position(movement.from) = empty_square;
+    consult_legal_position(movement.to) = Square(Piece::Rook, m_side_to_move);
+  } else if (movement.move_type == MoveType::PawnPromotionBishop) {
+    consult_legal_position(movement.from) = empty_square;
+    consult_legal_position(movement.to) = Square(Piece::Bishop, m_side_to_move);
   } else if (movement.move_type == MoveType::KingSideCastling) {
     IndexType file;
     if (m_side_to_move == Player::White) {
@@ -242,7 +251,10 @@ void Position::undo_move() {
         consult_legal_position(undo.movement.to);
     consult_legal_position(undo.movement.to.file() + offset,
                            undo.movement.to.rank()) = undo.captured;
-  } else if (undo.movement.move_type == MoveType::PawnPromotion) {
+  } else if (undo.movement.move_type == MoveType::PawnPromotionQueen ||
+             undo.movement.move_type == MoveType::PawnPromotionKnight ||
+             undo.movement.move_type == MoveType::PawnPromotionBishop ||
+             undo.movement.move_type == MoveType::PawnPromotionRook) {
     consult_legal_position(undo.movement.to).piece = Piece::Pawn;
     consult_legal_position(undo.movement.from) =
         consult_legal_position(undo.movement.to);
