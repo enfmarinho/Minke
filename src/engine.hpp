@@ -18,6 +18,7 @@ class Engine {
 public:
   Engine(uint8_t max_depth, uint64_t node_limit, int hash_size);
   ~Engine() = default;
+  void parse_go_limits(std::istringstream &iss);
   void go();
   void stop();
   void eval();

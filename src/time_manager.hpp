@@ -8,14 +8,21 @@
 #ifndef TIME_MANAGER_HPP
 #define TIME_MANAGER_HPP
 
+#include "game_elements.hpp"
 #include <chrono>
 
 class TimeManager {
+public:
   using TimeType = std::chrono::steady_clock::time_point;
 
   static TimeManager &get() {
     static TimeManager instance;
     return instance;
+  }
+  static inline TimePoint now() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+               std::chrono::steady_clock::now().time_since_epoch())
+        .count();
   }
 
   void stop() {}
