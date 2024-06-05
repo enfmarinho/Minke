@@ -10,6 +10,7 @@
 
 #include "game_elements.hpp"
 #include <stack>
+#include <string>
 
 class Position {
 public:
@@ -26,6 +27,7 @@ public:
   void move(const Movement &movement);
   void undo_move();
   std::string get_algebraic_notation(const Movement &move) const;
+  Movement get_movement(const std::string &algebraic_notation) const;
   const Player &side_to_move() const;
   const CastlingRights &white_castling_rights() const;
   const CastlingRights &black_castling_rights() const;
