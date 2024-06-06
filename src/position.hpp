@@ -25,7 +25,6 @@ public:
   Square &consult_legal_position(const PiecePlacement &position);
   Square &consult_legal_position(const IndexType &file, const IndexType &rank);
   void move(const Movement &movement);
-  void undo_move();
   std::string get_algebraic_notation(const Movement &move) const;
   Movement get_movement(const std::string &algebraic_notation) const;
   const Player &side_to_move() const;

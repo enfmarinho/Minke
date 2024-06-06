@@ -232,59 +232,6 @@ void Position::move(const Movement &movement) {
   m_hash = zobrist::rehash(*this);
 }
 
-void Position::undo_move() {
-  PastMovement undo = m_game_history.top();
-  m_game_history.pop();
-  m_en_passant = undo.past_en_passant;
-  m_fifty_move_counter_ply = undo.past_fifty_move_counter;
-  m_white_castling_rights = undo.past_white_castling_rights;
-  m_black_castling_rights = undo.past_black_castling_rights;
-  m_side_to_move =
-      (m_side_to_move == Player::White) ? Player::Black : Player::White;
-  if (undo.movement.move_type == MoveType::Regular) {
-    consult_legal_position(undo.movement.from) =
-        consult_legal_position(undo.movement.to);
-    consult_legal_position(undo.movement.to) = undo.captured;
-  } else if (undo.movement.move_type == MoveType::EnPassant) {
-    IndexType offset = undo.captured.player == Player::White ? -1 : 1;
-    consult_legal_position(undo.movement.from) =
-        consult_legal_position(undo.movement.to);
-    consult_legal_position(undo.movement.to.file() + offset,
-                           undo.movement.to.rank()) = undo.captured;
-  } else if (undo.movement.move_type == MoveType::PawnPromotionQueen ||
-             undo.movement.move_type == MoveType::PawnPromotionKnight ||
-             undo.movement.move_type == MoveType::PawnPromotionBishop ||
-             undo.movement.move_type == MoveType::PawnPromotionRook) {
-    consult_legal_position(undo.movement.to).piece = Piece::Pawn;
-    consult_legal_position(undo.movement.from) =
-        consult_legal_position(undo.movement.to);
-    consult_legal_position(undo.movement.to) = undo.captured;
-  } else if (undo.movement.move_type == MoveType::KingSideCastling) {
-    IndexType file;
-    if (m_side_to_move == Player::White) {
-      file = 0;
-    } else {
-      file = 7;
-    }
-    consult_legal_position(file, 4) = consult_legal_position(file, 6);
-    consult_legal_position(file, 7) = consult_legal_position(file, 5);
-    consult_legal_position(file, 6) = Square(Piece::None, Player::None);
-    consult_legal_position(file, 5) = Square(Piece::None, Player::None);
-  } else if (undo.movement.move_type == MoveType::QueenSideCastling) {
-    IndexType file;
-    if (m_side_to_move == Player::White) {
-      file = 0;
-    } else {
-      file = 7;
-    }
-    consult_legal_position(file, 4) = consult_legal_position(file, 2);
-    consult_legal_position(file, 0) = consult_legal_position(file, 3);
-    consult_legal_position(file, 2) = Square(Piece::None, Player::None);
-    consult_legal_position(file, 3) = Square(Piece::None, Player::None);
-  }
-  m_hash = zobrist::rehash(*this);
-}
-
 std::string Position::get_algebraic_notation(const Movement &move) const {
   std::string algebraic_notation;
   algebraic_notation.push_back('a' + move.from.rank());
