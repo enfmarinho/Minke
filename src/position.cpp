@@ -301,7 +301,3 @@ const HashType &Position::get_hash() const { return m_hash; }
 const CounterType &Position::get_half_move_counter() const {
   return m_game_clock_ply;
 }
-
-bool Position::in_bounds(const PiecePlacement &placement) {
-  return placement.index() & 0x88;
-}
