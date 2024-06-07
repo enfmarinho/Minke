@@ -24,8 +24,7 @@ public:
                                 const IndexType &rank) const;
   Square &consult_legal_position(const PiecePlacement &position);
   Square &consult_legal_position(const IndexType &file, const IndexType &rank);
-  void move(const Movement &movement);
-  std::string get_algebraic_notation(const Movement &move) const;
+  bool move(const Movement &movement);
   Movement get_movement(const std::string &algebraic_notation) const;
   const Player &side_to_move() const;
   const CastlingRights &white_castling_rights() const;

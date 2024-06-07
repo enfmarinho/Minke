@@ -10,6 +10,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <string>
 
 using IndexType = int; // TODO change to int8_t
 using CounterType = int;
@@ -97,6 +98,23 @@ struct Movement {
   Movement() = default;
   Movement(PiecePlacement from, PiecePlacement to, MoveType move_type)
       : from(from), to(to), move_type(move_type) {}
+  std::string get_algebraic_notation() {
+    std::string algebraic_notation;
+    algebraic_notation.push_back('a' + from.rank());
+    algebraic_notation.push_back('1' + from.file());
+    algebraic_notation.push_back('a' + to.rank());
+    algebraic_notation.push_back('1' + to.file());
+    if (move_type == MoveType::PawnPromotionQueen) {
+      algebraic_notation.push_back('q');
+    } else if (move_type == MoveType::PawnPromotionKnight) {
+      algebraic_notation.push_back('n');
+    } else if (move_type == MoveType::PawnPromotionRook) {
+      algebraic_notation.push_back('r');
+    } else if (move_type == MoveType::PawnPromotionBishop) {
+      algebraic_notation.push_back('b');
+    }
+    return algebraic_notation;
+  }
 };
 
 struct PastMovement {

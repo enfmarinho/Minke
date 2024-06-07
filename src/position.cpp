@@ -232,24 +232,6 @@ void Position::move(const Movement &movement) {
   m_hash = zobrist::rehash(*this);
 }
 
-std::string Position::get_algebraic_notation(const Movement &move) const {
-  std::string algebraic_notation;
-  algebraic_notation.push_back('a' + move.from.rank());
-  algebraic_notation.push_back('1' + move.from.file());
-  algebraic_notation.push_back('a' + move.to.rank());
-  algebraic_notation.push_back('1' + move.to.file());
-  if (move.move_type == MoveType::PawnPromotionQueen) {
-    algebraic_notation.push_back('q');
-  } else if (move.move_type == MoveType::PawnPromotionKnight) {
-    algebraic_notation.push_back('n');
-  } else if (move.move_type == MoveType::PawnPromotionRook) {
-    algebraic_notation.push_back('r');
-  } else if (move.move_type == MoveType::PawnPromotionBishop) {
-    algebraic_notation.push_back('b');
-  }
-  return algebraic_notation;
-}
-
 Movement Position::get_movement(const std::string &algebraic_notation) const {
   PiecePlacement from(static_cast<IndexType>(algebraic_notation[1] - '1'),
                       static_cast<IndexType>(algebraic_notation[0] - 'a'));
