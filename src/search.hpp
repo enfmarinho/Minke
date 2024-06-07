@@ -13,8 +13,10 @@
 #define SEARCH_HPP
 
 namespace search {
-Movement progressive_deepening(Position &position, Thread &thread);
-Movement minimax(Position &position, const IndexType &depth);
+void iterative_deepening(Position &position, Thread &thread);
+WeightType alpha_beta_search(WeightType alpha, WeightType beta,
+                             const CounterType &depth, const Position &position,
+                             Thread &thread);
 } // namespace search
 
 #endif // #ifndef SEARCH_HPP

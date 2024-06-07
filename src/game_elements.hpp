@@ -18,6 +18,7 @@ using WeightType = int32_t; // TODO change to int16_t
 using HashType = uint64_t;
 using TimePoint = std::chrono::milliseconds::rep;
 
+constexpr WeightType ScoreNone = -2000000;
 constexpr CounterType NumberOfPieces = 6;
 constexpr IndexType BoardHeight = 8;
 constexpr IndexType BoardWidth = 8;
