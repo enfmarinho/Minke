@@ -225,15 +225,15 @@ bool Position::move(const Movement &movement) {
     consult_legal_position(file, 4) = empty_square;
     consult_legal_position(file, 0) = empty_square;
   }
-  m_game_history.push(PastMovement(movement, captured, past_fifty_move_counter,
-                                   past_en_passant, past_white_castling_rights,
-                                   past_black_castling_rights));
   // Required because of the pseudo-legal move generator, less than not ideal
   if (under_atack(*this, m_side_to_move == Player::White
                              ? m_white_king_position
                              : m_black_king_position)) {
     return false;
   }
+  m_game_history.push(PastMovement(movement, captured, past_fifty_move_counter,
+                                   past_en_passant, past_white_castling_rights,
+                                   past_black_castling_rights));
   m_side_to_move =
       (m_side_to_move == Player::White) ? Player::Black : Player::White;
   m_hash = zobrist::rehash(*this);
