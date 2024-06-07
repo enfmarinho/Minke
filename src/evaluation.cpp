@@ -14,7 +14,10 @@ WeightType eval::evaluate(const Position &position) {
   WeightType mid_game_evaluation = 0, end_game_evaluation = 0, game_state = 0;
   for (IndexType file = 0; file < BoardHeight; ++file) {
     for (IndexType rank = 0; rank < BoardWidth; ++rank) {
-      Square square = position.consult_position(file, rank);
+      Square square = position.consult_legal_position(file, rank);
+      if (square.piece == Piece::None) {
+        continue;
+      }
       WeightType piece_multiplication_factor =
           static_cast<WeightType>(square.player);
       IndexType piece_idx = static_cast<IndexType>(square.piece);
