@@ -21,10 +21,6 @@ using TimePoint = std::chrono::milliseconds::rep;
 constexpr CounterType NumberOfPieces = 6;
 constexpr IndexType BoardHeight = 8;
 constexpr IndexType BoardWidth = 8;
-constexpr IndexType NumberOfFiles = 12;
-constexpr IndexType NumberOfRanks = 10;
-constexpr IndexType RankOffset = NumberOfRanks - BoardWidth;
-constexpr IndexType FileOffset = NumberOfFiles - BoardHeight;
 
 using PieceSquareTable = WeightType[BoardHeight][BoardWidth];
 using PieceSquareTablePointer = const PieceSquareTable *;
@@ -68,9 +64,10 @@ enum class MoveType : char {
 };
 
 struct PiecePlacement {
-  constexpr static const int8_t padding = 4;
-  IndexType file() const { return m_data & padding; }
+  constexpr static const uint8_t padding = 4;
+  IndexType file() const { return m_data & 7; }
   IndexType rank() const { return m_data >> padding; }
+  IndexType index() const { return m_data; }
   PiecePlacement() {}
   PiecePlacement(const IndexType &file, const IndexType &rank) {
     m_data = file + (rank << padding);

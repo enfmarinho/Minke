@@ -8,6 +8,7 @@
 #include "position.hpp"
 #include "game_elements.hpp"
 #include "hashing.hpp"
+#include "move_generation.hpp"
 #include <array>
 #include <cassert>
 #include <cctype>
@@ -108,34 +109,34 @@ bool Position::reset(const std::string &fen) {
   return true;
 }
 
-Square Position::consult_position(const PiecePlacement &position) const {
-  return consult_position(position.file(), position.rank());
+Square Position::consult_position(const PiecePlacement &placement) const {
+  return m_board[placement.index()];
 }
 
 Square Position::consult_position(const IndexType &file,
                                   const IndexType &rank) const {
-  return m_board[file][rank];
+  return m_board[file * 16 + rank];
 }
 
 Square Position::consult_legal_position(const IndexType &file,
                                         const IndexType &rank) const {
-  return m_board[file + FileOffset][rank + RankOffset];
+  return m_board[file * 16 + rank];
 }
 
-Square Position::consult_legal_position(const PiecePlacement &position) const {
-  return m_board[position.file() + FileOffset][position.rank() + RankOffset];
+Square Position::consult_legal_position(const PiecePlacement &placement) const {
+  return m_board[placement.index()];
 }
 
 Square &Position::consult_legal_position(const IndexType &file,
                                          const IndexType &rank) {
-  return m_board[file + FileOffset][rank + RankOffset];
+  return m_board[file * 16 + rank];
 }
 
-Square &Position::consult_legal_position(const PiecePlacement &position) {
-  return m_board[position.file() + FileOffset][position.rank() + RankOffset];
+Square &Position::consult_legal_position(const PiecePlacement &placement) {
+  return m_board[placement.index()];
 }
 
-void Position::move(const Movement &movement) {
+bool Position::move(const Movement &movement) {
   CastlingRights past_white_castling_rights = m_white_castling_rights;
   CastlingRights past_black_castling_rights = m_black_castling_rights;
   CounterType past_fifty_move_counter = m_fifty_move_counter_ply++;
@@ -224,12 +225,19 @@ void Position::move(const Movement &movement) {
     consult_legal_position(file, 4) = empty_square;
     consult_legal_position(file, 0) = empty_square;
   }
-  m_side_to_move =
-      (m_side_to_move == Player::White) ? Player::Black : Player::White;
   m_game_history.push(PastMovement(movement, captured, past_fifty_move_counter,
                                    past_en_passant, past_white_castling_rights,
                                    past_black_castling_rights));
+  // Required because of the pseudo-legal move generator, less than not ideal
+  if (under_atack(*this, m_side_to_move == Player::White
+                             ? m_white_king_position
+                             : m_black_king_position)) {
+    return false;
+  }
+  m_side_to_move =
+      (m_side_to_move == Player::White) ? Player::Black : Player::White;
   m_hash = zobrist::rehash(*this);
+  return true;
 }
 
 Movement Position::get_movement(const std::string &algebraic_notation) const {
@@ -292,4 +300,8 @@ const HashType &Position::get_hash() const { return m_hash; }
 
 const CounterType &Position::get_half_move_counter() const {
   return m_game_clock_ply;
+}
+
+bool Position::in_bounds(const PiecePlacement &placement) {
+  return placement.index() & 0x88;
 }

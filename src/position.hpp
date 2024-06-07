@@ -17,12 +17,12 @@ public:
   Position();
   ~Position() = default;
   bool reset(const std::string &fen);
-  Square consult_position(const PiecePlacement &position) const;
+  Square consult_position(const PiecePlacement &placement) const;
   Square consult_position(const IndexType &file, const IndexType &rank) const;
-  Square consult_legal_position(const PiecePlacement &position) const;
+  Square consult_legal_position(const PiecePlacement &placement) const;
   Square consult_legal_position(const IndexType &file,
                                 const IndexType &rank) const;
-  Square &consult_legal_position(const PiecePlacement &position);
+  Square &consult_legal_position(const PiecePlacement &placement);
   Square &consult_legal_position(const IndexType &file, const IndexType &rank);
   bool move(const Movement &movement);
   Movement get_movement(const std::string &algebraic_notation) const;
@@ -35,9 +35,10 @@ public:
   const PiecePlacement &white_king_position() const;
   const HashType &get_hash() const;
   const CounterType &get_half_move_counter() const;
+  bool in_bounds(const PiecePlacement &placement);
 
 private:
-  Square m_board[NumberOfFiles][NumberOfRanks];
+  Square m_board[0x80];
   std::stack<PastMovement> m_game_history;
   CastlingRights m_white_castling_rights;
   CastlingRights m_black_castling_rights;
