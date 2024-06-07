@@ -37,7 +37,7 @@ bool Thread::should_stop() const {
 }
 
 bool Thread::should_stop(CounterType depth) const {
-  return should_stop() && depth > m_max_depth;
+  return m_stop || (should_stop() && depth > m_max_depth);
 }
 
 void Thread::wait() { m_thread.join(); }
