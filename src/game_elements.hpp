@@ -29,6 +29,17 @@ constexpr auto StartFEN =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 constexpr int MaxMoves = 256;
 
+namespace directions {
+constexpr IndexType north = 16;
+constexpr IndexType south = -16;
+constexpr IndexType east = 1;
+constexpr IndexType west = -1;
+constexpr IndexType Northeast = 17;
+constexpr IndexType Southeast = -15;
+constexpr IndexType Northwest = 15;
+constexpr IndexType Southwest = -17;
+}; // namespace directions
+
 enum class Piece : char {
   Pawn = 0,
   Knight,
