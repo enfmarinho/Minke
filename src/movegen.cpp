@@ -52,6 +52,9 @@ bool under_attack(const Position &position, const PiecePlacement &pp,
   }
   for (const IndexType &offset :
        move_offsets::Sliders[0]) { // Bishop directions
+    if (offset == 0) {
+      break;
+    }
     for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
          to.index() += offset) {
       const Square &to_square = position.consult_legal_position(to);
@@ -63,6 +66,9 @@ bool under_attack(const Position &position, const PiecePlacement &pp,
     }
   }
   for (const IndexType &offset : move_offsets::Sliders[1]) { // Rook directions
+    if (offset == 0) {
+      break;
+    }
     for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
          to.index() += offset) {
       const Square &to_square = position.consult_legal_position(to);
