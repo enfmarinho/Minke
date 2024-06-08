@@ -111,7 +111,7 @@ bool Position::reset(const std::string &fen) {
 
 Square Position::consult_legal_position(const IndexType &file,
                                         const IndexType &rank) const {
-  return m_board[file * 16 + rank];
+  return m_board[file + (rank << 4)];
 }
 
 Square Position::consult_legal_position(const PiecePlacement &placement) const {
@@ -120,7 +120,7 @@ Square Position::consult_legal_position(const PiecePlacement &placement) const {
 
 Square &Position::consult_legal_position(const IndexType &file,
                                          const IndexType &rank) {
-  return m_board[file * 16 + rank];
+  return m_board[file + (rank << 4)];
 }
 
 Square &Position::consult_legal_position(const PiecePlacement &placement) {
