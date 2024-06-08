@@ -84,9 +84,9 @@ HashType zobrist::rehash(const Position &position) {
   return new_hash;
 }
 
-IndexType zobrist::piece_starter_index(const Square &piece_square) {
-  return BoardWidth * BoardHeight *
-         (static_cast<IndexType>(piece_square.piece) +
+int zobrist::piece_starter_index(const Square &piece_square) {
+  return static_cast<int>(BoardWidth * BoardHeight) *
+         (static_cast<int>(piece_square.piece) +
           (piece_square.player == Player::White ? 0 : NumberOfPieces));
 }
 

@@ -14,16 +14,16 @@
 namespace zobrist {
 HashType hash(const Position &position);
 HashType rehash(const Position &position);
-IndexType piece_starter_index(const Square &piece_square);
+int piece_starter_index(const Square &piece_square);
 IndexType position_index(const PiecePlacement &piece_placement);
 IndexType position_index(const IndexType &file, const IndexType &rank);
 
-constexpr static const IndexType white_king_side_castling_rights_index = 768;
-constexpr static const IndexType white_queen_side_castling_rights_index = 769;
-constexpr static const IndexType black_king_side_castling_rights_index = 770;
-constexpr static const IndexType black_queen_side_castling_rights_index = 771;
-constexpr static const IndexType en_passant_starter_index = 772;
-constexpr static const IndexType black_turn_index = 780;
+constexpr static const int white_king_side_castling_rights_index = 768;
+constexpr static const int white_queen_side_castling_rights_index = 769;
+constexpr static const int black_king_side_castling_rights_index = 770;
+constexpr static const int black_queen_side_castling_rights_index = 771;
+constexpr static const int en_passant_starter_index = 772;
+constexpr static const int black_turn_index = 780;
 
 // Random array of unsigned 64 bit integers for performing Zobrist Hashing.
 //
