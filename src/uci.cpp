@@ -5,12 +5,12 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "uci.hpp"
-#include "evaluation.hpp"
-#include "game_elements.hpp"
-#include "move_generation.hpp"
-#include "search.hpp"
-#include "transposition_table.hpp"
+#include "uci.h"
+#include "evaluate.h"
+#include "game_elements.h"
+#include "movegen.h"
+#include "search.h"
+#include "tt.h"
 #include <ios>
 #include <iostream>
 #include <sstream>

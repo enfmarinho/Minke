@@ -5,11 +5,11 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef THREAD_HPP
-#define THREAD_HPP
+#ifndef THREAD_H
+#define THREAD_H
 
-#include "game_elements.hpp"
-#include "position.hpp"
+#include "game_elements.h"
+#include "position.h"
 #include <cstdint>
 #include <thread>
 
@@ -41,4 +41,4 @@ private:
   TimePoint m_movetime;
 };
 
-#endif // #ifndef THREAD_HPP
+#endif // #ifndef THREAD_H

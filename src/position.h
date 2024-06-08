@@ -5,10 +5,10 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef POSITION_HPP
-#define POSITION_HPP
+#ifndef POSITION_H
+#define POSITION_H
 
-#include "game_elements.hpp"
+#include "game_elements.h"
 #include <stack>
 #include <string>
 
@@ -50,4 +50,4 @@ private:
   CounterType m_game_clock_ply; //!< Count all the half moves made in the match
 };
 
-#endif // #ifndef POSITION_HPP
+#endif // #ifndef POSITION_H

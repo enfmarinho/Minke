@@ -5,9 +5,9 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "move_generation.hpp"
-#include "game_elements.hpp"
-#include "position.hpp"
+#include "movegen.h"
+#include "game_elements.h"
+#include "position.h"
 #include <cassert>
 
 bool under_attack(const Position &position, const PiecePlacement &pp,

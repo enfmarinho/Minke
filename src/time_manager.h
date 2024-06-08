@@ -5,10 +5,10 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef TIME_MANAGER_HPP
-#define TIME_MANAGER_HPP
+#ifndef TIME_MANAGER_H
+#define TIME_MANAGER_H
 
-#include "game_elements.hpp"
+#include "game_elements.h"
 #include <chrono>
 
 class TimeManager {

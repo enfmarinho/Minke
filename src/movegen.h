@@ -5,11 +5,11 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef MOVE_GENERATION_HPP
-#define MOVE_GENERATION_HPP
+#ifndef MOVEGEN_H
+#define MOVEGEN_H
 
-#include "game_elements.hpp"
-#include "position.hpp"
+#include "game_elements.h"
+#include "position.h"
 
 bool under_attack(const Position &position, const PiecePlacement &pp,
                   const Player &player);
@@ -35,4 +35,4 @@ private:
   Movement m_movement_list[MaxMoves], *m_end;
 };
 
-#endif // #ifndef MOVE_GENERATION_HPP
+#endif // #ifndef MOVEGEN_H

@@ -5,10 +5,10 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "position.hpp"
-#include "game_elements.hpp"
-#include "hashing.hpp"
-#include "move_generation.hpp"
+#include "position.h"
+#include "game_elements.h"
+#include "hashing.h"
+#include "movegen.h"
 #include <array>
 #include <cassert>
 #include <cctype>

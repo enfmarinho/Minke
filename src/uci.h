@@ -5,12 +5,12 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef UCI_HPP
-#define UCI_HPP
+#ifndef UCI_H
+#define UCI_H
 
-#include "game_elements.hpp"
-#include "position.hpp"
-#include "thread.hpp"
+#include "game_elements.h"
+#include "position.h"
+#include "thread.h"
 #include <ostream>
 #include <sstream>
 
@@ -46,4 +46,4 @@ private:
   Position m_position;
 };
 
-#endif // #ifndef UCI_HPP
+#endif // #ifndef UCI_H

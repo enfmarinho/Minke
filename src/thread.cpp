@@ -5,11 +5,11 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "thread.hpp"
-#include "game_elements.hpp"
-#include "position.hpp"
-#include "search.hpp"
-#include "time_manager.hpp"
+#include "thread.h"
+#include "game_elements.h"
+#include "position.h"
+#include "search.h"
+#include "time_manager.h"
 #include <chrono>
 #include <cstdint>
 #include <limits>

@@ -5,8 +5,8 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef GAME_ELEMENTS_HPP
-#define GAME_ELEMENTS_HPP
+#ifndef GAME_ELEMENTS_H
+#define GAME_ELEMENTS_H
 
 #include <chrono>
 #include <cstdint>
@@ -173,4 +173,4 @@ struct PastMovement {
         past_black_castling_rights(past_black_castling_rights) {}
 };
 
-#endif // #ifndef GAME_ELEMENTS_HPP
+#endif // #ifndef GAME_ELEMENTS_H

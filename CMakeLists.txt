@@ -20,13 +20,13 @@ add_compile_options(
 # Add and link executable.
 add_executable(
   minke
-  "src/evaluation.cpp"
+  "src/evaluate.cpp"
   "src/hashing.cpp"
   "src/main.cpp"
-  "src/move_generation.cpp"
+  "src/movegen.cpp"
   "src/position.cpp"
   "src/search.cpp"
   "src/thread.cpp"
-  "src/transposition_table.cpp"
+  "src/tt.cpp"
   "src/uci.cpp")
 target_compile_features(minke PUBLIC cxx_std_17)

@@ -5,9 +5,9 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "transposition_table.hpp"
-#include "game_elements.hpp"
-#include "position.hpp"
+#include "tt.h"
+#include "game_elements.h"
+#include "position.h"
 #include <cstddef>
 #include <cstdlib>
 #include <iostream>

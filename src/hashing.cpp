@@ -5,9 +5,9 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "hashing.hpp"
-#include "game_elements.hpp"
-#include "position.hpp"
+#include "hashing.h"
+#include "game_elements.h"
+#include "position.h"
 
 HashType zobrist::hash(const Position &position) {
   HashType key = 0;

@@ -5,10 +5,10 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef WEIGHTS_HPP
-#define WEIGHTS_HPP
+#ifndef WEIGHTS_H
+#define WEIGHTS_H
 
-#include "game_elements.hpp"
+#include "game_elements.h"
 
 namespace weights {
 
@@ -188,4 +188,4 @@ constexpr PieceSquareTablePointer EndGamePointerTable[6] = {
 
 } // namespace weights
 
-#endif // #ifndef WEIGHTS_HPP
+#endif // #ifndef WEIGHTS_H

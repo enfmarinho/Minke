@@ -5,13 +5,13 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "search.hpp"
-#include "evaluation.hpp"
-#include "game_elements.hpp"
-#include "move_generation.hpp"
-#include "position.hpp"
-#include "thread.hpp"
-#include "transposition_table.hpp"
+#include "search.h"
+#include "evaluate.h"
+#include "game_elements.h"
+#include "movegen.h"
+#include "position.h"
+#include "thread.h"
+#include "tt.h"
 #include <cassert>
 #include <iostream>
 
