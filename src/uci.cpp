@@ -8,6 +8,7 @@
 #include "uci.hpp"
 #include "evaluation.hpp"
 #include "game_elements.hpp"
+#include "move_generation.hpp"
 #include "search.hpp"
 #include "transposition_table.hpp"
 #include <ios>
@@ -59,6 +60,15 @@ void UCI::loop() {
       m_position.print_board();
     } else if (token == "bench") {
       // TODO run benchmark
+    } else if (token == "movelist") {
+      MoveList movelist(m_position);
+      for (Movement move : movelist) {
+        Position copy = m_position;
+        if (copy.move(move)) {
+          std::cout << move.get_algebraic_notation() << ' ';
+        }
+      }
+      std::cout << std::endl;
     } else if (!token.empty()) {
       std::cout << "Unknown command: '" << token
                 << "'. Type help for information." << std::endl;
