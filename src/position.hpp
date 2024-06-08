@@ -34,6 +34,7 @@ public:
   const HashType &get_hash() const;
   const CounterType &get_half_move_counter() const;
   bool in_bounds(const PiecePlacement &placement);
+  void print_board();
 
 private:
   Square m_board[0x80];

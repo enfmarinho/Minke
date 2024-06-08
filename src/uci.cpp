@@ -56,6 +56,7 @@ void UCI::loop() {
       std::cout << "TODO write help message." << std::endl;
     } else if (token == "d") {
       // TODO Display the current position, with ASCII art and FEN.
+      m_position.print_board();
     } else if (token == "bench") {
       // TODO run benchmark
     } else if (!token.empty()) {

@@ -292,3 +292,35 @@ const HashType &Position::get_hash() const { return m_hash; }
 const CounterType &Position::get_half_move_counter() const {
   return m_game_clock_ply;
 }
+
+void Position::print_board() {
+  for (IndexType file = 7; file >= 0; ++file) {
+    for (IndexType rank = 0; rank < BoardWidth; ++rank) {
+      auto piece = consult_legal_position(file, rank).piece;
+      auto player = consult_legal_position(file, rank).player;
+      char s;
+      if (piece == Piece::King) {
+        s = 'k';
+      } else if (piece == Piece::Queen) {
+        s = 'q';
+      } else if (piece == Piece::Bishop) {
+        s = 'b';
+      } else if (piece == Piece::Rook) {
+        s = 'r';
+      } else if (piece == Piece::Pawn) {
+        s = 'p';
+      } else if (piece == Piece::Knight) {
+        s = 'n';
+      } else {
+        s = ' ';
+      }
+      if (player == Player::Black) {
+        s = toupper(s);
+      } else if (player == Player::None && piece != Piece::None) {
+        assert(false);
+      }
+      std::cout << s;
+    }
+    std::cout << std::endl;
+  }
+};
