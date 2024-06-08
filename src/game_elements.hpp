@@ -102,18 +102,21 @@ enum class MoveType : char {
 };
 
 struct PiecePlacement {
-  constexpr static const uint8_t padding = 4;
-  IndexType file() const { return m_data & 7; }
-  IndexType rank() const { return m_data >> padding; }
-  IndexType index() const { return m_data; }
-  PiecePlacement() {}
+  constexpr static const IndexType padding = 4;
+  IndexType file() const { return m_index & 7; }
+  IndexType rank() const { return m_index >> padding; }
+  IndexType index() const { return m_index; }
+  IndexType &index() { return m_index; }
+  bool out_of_bounds() const { return m_index & 0x88; }
+  PiecePlacement(){};
+  PiecePlacement(IndexType index) : m_index(index){};
   PiecePlacement(const IndexType &file, const IndexType &rank) {
-    m_data = file + (rank << padding);
+    m_index = file + (rank << padding);
   }
 
 private:
-  uint8_t m_data; // file is stored in the 4 least significant bits, while rank
-                  // is store in the others 4
+  IndexType m_index; // file is stored in the 4 least significant bits, while
+                     // rank is store in the others 4
 };
 
 struct Square {
