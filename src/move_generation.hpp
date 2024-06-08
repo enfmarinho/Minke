@@ -11,22 +11,25 @@
 #include "game_elements.hpp"
 #include "position.hpp"
 
+bool under_atack(const Position &position, const PiecePlacement &sq);
+
 class MoveList {
 public:
   MoveList(const Position &position);
-  bool check();
-  bool double_check();
 
   Movement *begin() { return m_movement_list; };
   Movement *end() { return m_end; }
 
 private:
-  void legal_pawn_moves(const PiecePlacement &position) const;
-  void legal_knight_moves(const PiecePlacement &position) const;
-  void legal_bishop_moves(const PiecePlacement &position) const;
-  void legal_rook_moves(const PiecePlacement &position) const;
-  void legal_queen_moves(const PiecePlacement &position) const;
-  void legal_king_moves(const PiecePlacement &position) const;
+  void pseudolegal_pawn_moves(const Position &position,
+                              const PiecePlacement &from);
+  void pseudolegal_knight_moves(const Position &position,
+                                const PiecePlacement &from);
+  void pseudolegal_king_moves(const Position &position,
+                              const PiecePlacement &from);
+  void pseudolegal_sliders_moves(const Position &position,
+                                 const PiecePlacement &from);
+  void sort_moves();
 
   Movement m_movement_list[MaxMoves], *m_end;
 };
