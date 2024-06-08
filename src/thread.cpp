@@ -32,12 +32,13 @@ void Thread::stop_search() {
 }
 
 bool Thread::should_stop() const {
-  return m_stop || (!m_infinite && m_nodes_searched >= m_node_limit &&
-                    TimeManager::now() - m_start_time >= m_movetime);
+  return m_stop ||
+         (!m_infinite && (m_nodes_searched >= m_node_limit ||
+                          TimeManager::now() - m_start_time >= m_movetime));
 }
 
 bool Thread::should_stop(CounterType depth) const {
-  return m_stop || (should_stop() && depth > m_max_depth);
+  return m_stop || should_stop() || (!m_infinite && depth > m_max_depth);
 }
 
 void Thread::wait() { m_thread.join(); }
