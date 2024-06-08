@@ -37,11 +37,11 @@ public:
   void reset() { m_bound = BoundType::Empty; }
 
 private:
-  HashType m_hash;          // 8 bytes
-  int8_t m_depth_ply;       // 1 byte // TODO change to indextype
-  Movement m_best_movement; // 3 bytes
-  int16_t m_evaluation;     // 2 bytes // TODO change to WeightType
-  int8_t m_half_move_count; // 1 byte // TOOD check if it can be CounterType
+  HashType m_hash;                      // 8 bytes
+  IndexType m_depth_ply;                // 1 byte
+  Movement m_best_movement;             // 3 bytes
+  int16_t m_evaluation;                 // 2 bytes // TODO change to WeightType
+  IndexType m_half_move_count;          // 1 byte
   BoundType m_bound = BoundType::Empty; // 1 byte
 };
 
