@@ -47,7 +47,7 @@ MoveList::MoveList(const Position &position) {
 void MoveList::pseudolegal_pawn_moves(const Position &position,
                                       const PiecePlacement &from) {
   IndexType original_file;
-  int8_t offset;
+  IndexType offset;
   Player adversary;
   if (position.side_to_move() == Player::White) {
     original_file = 1;
@@ -69,15 +69,15 @@ void MoveList::pseudolegal_pawn_moves(const Position &position,
     *(m_end++) = Movement(from, singlemove, MoveType::Regular);
   }
 
-  PiecePlacement capture_left(from.index() + offset + directions::West),
-      capture_right(from.index() + offset + directions::East);
+  PiecePlacement capture_left(from.index() + offset + directions::West);
   if (!capture_left.out_of_bounds() &&
       position.consult_legal_position(capture_left).player == adversary) {
-    *(m_end++) = Movement(from, capture_left, MoveType::Regular);
+    *(m_end++) = Movement(from, capture_left, MoveType::Capture);
   }
+  PiecePlacement capture_right(from.index() + offset + directions::East);
   if (!capture_right.out_of_bounds() &&
       position.consult_legal_position(capture_right).player == adversary) {
-    *(m_end++) = Movement(from, capture_right, MoveType::Regular);
+    *(m_end++) = Movement(from, capture_right, MoveType::Capture);
   }
 }
 
@@ -117,9 +117,13 @@ void MoveList::pseudolegal_king_moves(const Position &position,
                                       const PiecePlacement &from) {
   for (IndexType offset : move_offsets::AllDirections) {
     PiecePlacement to(from.index() + offset);
-    if (!to.out_of_bounds() &&
-        position.consult_legal_position(to).player == position.side_to_move()) {
-      *(m_end++) = Movement(from, to, MoveType::Regular);
+    if (!to.out_of_bounds()) {
+      const Player &to_player = position.consult_legal_position(to).player;
+      if (to_player == Player::None) {
+        *(m_end++) = Movement(from, to, MoveType::Regular);
+      } else if (to_player != position.side_to_move()) {
+        *(m_end++) = Movement(from, to, MoveType::Capture);
+      }
     }
   }
 }
