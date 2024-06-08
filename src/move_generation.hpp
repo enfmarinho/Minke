@@ -11,7 +11,8 @@
 #include "game_elements.hpp"
 #include "position.hpp"
 
-bool under_atack(const Position &position, const PiecePlacement &sq);
+bool under_attack(const Position &position, const PiecePlacement &pp,
+                  const Player &player);
 
 class MoveList {
 public:

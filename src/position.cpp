@@ -217,9 +217,10 @@ bool Position::move(const Movement &movement) {
     consult_legal_position(file, 0) = empty_square;
   }
   // Required because of the pseudo-legal move generator, less than not ideal
-  if (under_atack(*this, m_side_to_move == Player::White
-                             ? m_white_king_position
-                             : m_black_king_position)) {
+  if (under_attack(*this,
+                   m_side_to_move == Player::White ? m_white_king_position
+                                                   : m_black_king_position,
+                   m_side_to_move)) {
     return false;
   }
   m_game_history.push(PastMovement(movement, captured, past_fifty_move_counter,

@@ -8,10 +8,71 @@
 #include "move_generation.hpp"
 #include "game_elements.hpp"
 #include "position.hpp"
-#include <cstdint>
+#include <cassert>
 
-bool under_atack(const Position &position, const PiecePlacement &pp) {
-  // TODO implement this
+bool under_attack(const Position &position, const PiecePlacement &pp,
+                  const Player &player) {
+  Player opponent;
+  IndexType opponent_pawn_offset;
+  if (player == Player::Black) {
+    opponent = Player::White;
+    opponent_pawn_offset = directions::North;
+  } else if (player == Player::White) {
+    opponent = Player::Black;
+    opponent_pawn_offset = directions::South;
+  } else {
+    assert(false);
+  }
+
+  auto under_pawn_thread = [](const Position &position,
+                              const PiecePlacement &pawn_atacker_pos,
+                              const Player &opponent) -> bool {
+    if (!pawn_atacker_pos.out_of_bounds()) {
+      const Square &sq = position.consult_legal_position(pawn_atacker_pos);
+      if (sq.player == opponent && sq.piece == Piece::Pawn)
+        return true;
+    }
+    return false;
+  };
+  PiecePlacement east_pawn_attacker(pp.index() + opponent_pawn_offset +
+                                    directions::East);
+  PiecePlacement west_pawn_attacker(pp.index() + opponent_pawn_offset +
+                                    directions::West);
+  if (under_pawn_thread(position, east_pawn_attacker, opponent) ||
+      under_pawn_thread(position, west_pawn_attacker, opponent))
+    return true;
+
+  for (const IndexType &offset : move_offsets::Knight) {
+    PiecePlacement to(pp.index() + offset);
+    if (!to.out_of_bounds()) {
+      const Square &to_square = position.consult_legal_position(to);
+      if (to_square.player == opponent && to_square.piece == Piece::Knight)
+        return true;
+    }
+  }
+  for (const IndexType &offset :
+       move_offsets::Sliders[0]) { // Bishop directions
+    for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
+         to.index() += offset) {
+      const Square &to_square = position.consult_legal_position(to);
+      if (to_square.player == opponent &&
+          (to_square.piece == Piece::Bishop || to_square.piece == Piece::Queen))
+        return true;
+      if (to_square.player != Player::None)
+        break;
+    }
+  }
+  for (const IndexType &offset : move_offsets::Sliders[1]) { // Rook directions
+    for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
+         to.index() += offset) {
+      const Square &to_square = position.consult_legal_position(to);
+      if (to_square.player == opponent &&
+          (to_square.piece == Piece::Rook || to_square.piece == Piece::Queen))
+        return true;
+      if (to_square.player != Player::None)
+        break;
+    }
+  }
   return false;
 }
 
