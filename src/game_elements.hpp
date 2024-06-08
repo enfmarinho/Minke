@@ -32,15 +32,40 @@ constexpr auto StartFEN =
 constexpr int MaxMoves = 256;
 
 namespace directions {
-constexpr IndexType north = 16;
-constexpr IndexType south = -16;
-constexpr IndexType east = 1;
-constexpr IndexType west = -1;
+constexpr IndexType North = 16;
+constexpr IndexType South = -16;
+constexpr IndexType East = 1;
+constexpr IndexType West = -1;
 constexpr IndexType Northeast = 17;
 constexpr IndexType Southeast = -15;
 constexpr IndexType Northwest = 15;
 constexpr IndexType Southwest = -17;
 }; // namespace directions
+namespace move_offsets {
+constexpr IndexType Knight[8] = {directions::East * 2 + directions::North,
+                                 directions::East * 2 + directions::South,
+                                 directions::South * 2 + directions::East,
+                                 directions::South * 2 + directions::West,
+                                 directions::West * 2 + directions::South,
+                                 directions::West * 2 + directions::North,
+                                 directions::North * 2 + directions::West,
+                                 directions::North * 2 + directions::East};
+constexpr IndexType AllDirections[8] = {
+    directions::East,      directions::West,      directions::South,
+    directions::North,     directions::Southeast, directions::Southwest,
+    directions::Northeast, directions::Northwest};
+
+constexpr IndexType Sliders[3][8] = {
+    {directions::Southeast, directions::Southwest, directions::Northeast,
+     directions::Northwest}, // Bishop
+    {directions::North, directions::South, directions::East,
+     directions::West}, // Rook
+    {directions::East, directions::West, directions::South, directions::North,
+     directions::Southeast, directions::Southwest, directions::Northeast,
+     directions::Northwest} // Queen
+};
+
+} // namespace move_offsets
 
 enum class Piece : char {
   Pawn = 0,
