@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <string>
 
-using IndexType = int; // TODO change to int8_t
+using IndexType = int8_t;
 using CounterType = int;
 using WeightType = int32_t; // TODO change to int16_t
 using HashType = uint64_t;
@@ -23,6 +23,7 @@ constexpr CounterType NumberOfPieces = 6;
 constexpr IndexType BoardHeight = 8;
 constexpr IndexType BoardWidth = 8;
 
+// TODO change this to 0x80 boards to facilitate indexing.
 using PieceSquareTable = WeightType[BoardHeight][BoardWidth];
 using PieceSquareTablePointer = const PieceSquareTable *;
 
@@ -49,7 +50,6 @@ enum class Piece : char {
   Queen,
   King,
   None,
-  OutOfBounds,
 };
 
 enum class Player : char {
@@ -73,6 +73,7 @@ enum class MoveType : char {
   PawnPromotionRook,
   PawnPromotionQueen,
   Regular,
+  Capture,
 };
 
 struct PiecePlacement {
