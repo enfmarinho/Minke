@@ -32,14 +32,14 @@ constexpr auto StartFEN =
 constexpr int MaxMoves = 256;
 
 namespace directions {
-constexpr IndexType North = 16;
-constexpr IndexType South = -16;
-constexpr IndexType East = 1;
-constexpr IndexType West = -1;
-constexpr IndexType Northeast = 17;
-constexpr IndexType Southeast = -15;
-constexpr IndexType Northwest = 15;
-constexpr IndexType Southwest = -17;
+constexpr IndexType North = 1;
+constexpr IndexType South = -1;
+constexpr IndexType East = 16;
+constexpr IndexType West = -16;
+constexpr IndexType Northeast = North + East;
+constexpr IndexType Northwest = North + West;
+constexpr IndexType Southeast = South + East;
+constexpr IndexType Southwest = South + West;
 }; // namespace directions
 namespace move_offsets {
 constexpr IndexType Knight[8] = {directions::East * 2 + directions::North,
