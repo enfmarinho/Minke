@@ -33,6 +33,7 @@ public:
   const PiecePlacement &white_king_position() const;
   const HashType &get_hash() const;
   const CounterType &get_half_move_counter() const;
+  std::string get_fen() const;
   bool in_bounds(const PiecePlacement &placement);
   void print_board() const;
 

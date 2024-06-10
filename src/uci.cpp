@@ -56,11 +56,8 @@ void UCI::loop() {
     } else if (token == "help" || token == "--help") {
       std::cout << "TODO write help message." << std::endl;
     } else if (token == "d") {
-      // TODO Display the current position, with ASCII art and FEN.
       m_position.print_board();
-    } else if (token == "bench") {
-      // TODO run benchmark
-    } else if (token == "movelist") {
+      std::cout << "Move list: ";
       MoveList movelist(m_position);
       for (Movement move : movelist) {
         Position copy = m_position;
@@ -70,6 +67,8 @@ void UCI::loop() {
           std::cout << "(" << move.get_algebraic_notation() << ") ";
       }
       std::cout << std::endl;
+    } else if (token == "bench") {
+      // TODO run benchmark
     } else if (!token.empty()) {
       std::cout << "Unknown command: '" << token
                 << "'. Type help for information." << std::endl;

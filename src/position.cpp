@@ -296,33 +296,128 @@ const PiecePlacement &Position::white_king_position() const {
 
 const HashType &Position::get_hash() const { return m_hash; }
 
+std::string Position::get_fen() const {
+  std::string fen;
+  for (IndexType file = 7; file >= 0; --file) {
+    IndexType counter = 0;
+    for (IndexType rank = 0; rank < BoardWidth; ++rank) {
+      const Square &curr_square = consult_legal_position(file, rank);
+      if (curr_square.piece == Piece::None) {
+        ++counter;
+        continue;
+      } else if (counter > 0) {
+        fen += ('0' + counter);
+        counter = 0;
+      }
+
+      char piece;
+      if (curr_square.piece == Piece::King)
+        piece = 'k';
+      else if (curr_square.piece == Piece::Queen)
+        piece = 'q';
+      else if (curr_square.piece == Piece::Bishop)
+        piece = 'b';
+      else if (curr_square.piece == Piece::Rook)
+        piece = 'r';
+      else if (curr_square.piece == Piece::Pawn)
+        piece = 'p';
+      else if (curr_square.piece == Piece::Knight)
+        piece = 'n';
+
+      if (curr_square.player == Player::White)
+        fen += toupper(piece);
+      else
+        fen += piece;
+    }
+    if (counter > 0) {
+      fen += ('0' + counter);
+    }
+    if (file != 0) {
+      fen += '/';
+    }
+  }
+  fen += (m_side_to_move == Player::White ? " w " : " b ");
+  bool none = true;
+  if (m_white_castling_rights.king_side) {
+    none = false;
+    fen += "K";
+  }
+  if (m_white_castling_rights.queen_side) {
+    none = false;
+    fen += "Q";
+  }
+  if (m_black_castling_rights.king_side) {
+    none = false;
+    fen += "k";
+  }
+  if (m_black_castling_rights.queen_side) {
+    none = false;
+    fen += "q";
+  }
+  if (none)
+    fen += "-";
+
+  fen += ' ';
+  if (m_en_passant == -1)
+    fen += "-";
+  else {
+    fen += static_cast<char>(m_en_passant + 'a');
+    fen += (m_side_to_move == Player::White ? '6' : '3');
+  }
+  fen += ' ';
+
+  fen += static_cast<char>(m_fifty_move_counter_ply + '0');
+  fen += ' ';
+  fen += static_cast<char>(m_game_clock_ply + '0');
+
+  return fen;
+}
+
 const CounterType &Position::get_half_move_counter() const {
   return m_game_clock_ply;
 }
 
 void Position::print_board() const {
-  for (IndexType file = 7; file >= 0; --file) {
-    for (IndexType rank = 0; rank < BoardWidth; ++rank) {
-      const Square &curr_square = consult_legal_position(file, rank);
-      char s;
-      if (curr_square.piece == Piece::King)
-        s = 'k';
-      else if (curr_square.piece == Piece::Queen)
-        s = 'q';
-      else if (curr_square.piece == Piece::Bishop)
-        s = 'b';
-      else if (curr_square.piece == Piece::Rook)
-        s = 'r';
-      else if (curr_square.piece == Piece::Pawn)
-        s = 'p';
-      else if (curr_square.piece == Piece::Knight)
-        s = 'n';
-      else
-        s = ' ';
-      std::cout << (curr_square.player == Player::White
-                        ? s
-                        : static_cast<char>(toupper(s)));
+  auto print_line = []() -> void {
+    for (IndexType i = 0; i < 8; ++i) {
+      std::cout << "+";
+      for (IndexType j = 0; j < 3; ++j) {
+        std::cout << "-";
+      }
     }
-    std::cout << std::endl;
+    std::cout << "+\n";
+  };
+
+  for (IndexType file = 7; file >= 0; --file) {
+    print_line();
+    for (IndexType rank = 0; rank < BoardWidth; ++rank) {
+      std::cout << "| ";
+      const Square &curr_square = consult_legal_position(file, rank);
+      char piece;
+      if (curr_square.piece == Piece::King)
+        piece = 'k';
+      else if (curr_square.piece == Piece::Queen)
+        piece = 'q';
+      else if (curr_square.piece == Piece::Bishop)
+        piece = 'b';
+      else if (curr_square.piece == Piece::Rook)
+        piece = 'r';
+      else if (curr_square.piece == Piece::Pawn)
+        piece = 'p';
+      else if (curr_square.piece == Piece::Knight)
+        piece = 'n';
+      else
+        piece = ' ';
+      std::cout << (curr_square.player == Player::White
+                        ? static_cast<char>(toupper(piece))
+                        : piece)
+                << " ";
+    }
+    std::cout << "| " << file + 1 << std::endl;
   }
+  print_line();
+  for (char rank_simbol = 'a'; rank_simbol <= 'h'; ++rank_simbol) {
+    std::cout << "  " << rank_simbol << " ";
+  }
+  std::cout << "\n\nFEN: " << get_fen() << std::endl;
 };
