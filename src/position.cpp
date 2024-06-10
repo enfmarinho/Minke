@@ -37,8 +37,7 @@ bool Position::reset(const std::string &fen) {
       rank = 0;
       continue;
     }
-    IndexType n_of_empty_squares = std::isdigit(c);
-    if (n_of_empty_squares == 0) {
+    if (!std::isdigit(c)) {
       char piece = std::tolower(c);
       Player player = std::isupper(c) ? Player::White : Player::Black;
       if (piece == 'p')
@@ -60,9 +59,11 @@ bool Position::reset(const std::string &fen) {
         }
       }
       ++rank;
-    }
-    for (; n_of_empty_squares > 0; --n_of_empty_squares, ++rank) {
-      consult_legal_position(file, rank) = Square(Piece::None, Player::None);
+    } else {
+      for (IndexType n_of_empty_squares = c - '0'; n_of_empty_squares > 0;
+           --n_of_empty_squares, ++rank) {
+        consult_legal_position(file, rank) = Square(Piece::None, Player::None);
+      }
     }
   }
 
@@ -90,13 +91,7 @@ bool Position::reset(const std::string &fen) {
   if (fen_arguments[3] == "-") {
     m_en_passant = -1;
   } else {
-    try {
-      m_en_passant = std::stoi(fen_arguments[3]) - 1;
-    } catch (const std::exception &) {
-      std::cerr << "INVALID FEN: en passant square is not a number nor '-'."
-                << std::endl;
-      return false;
-    }
+    m_en_passant = fen_arguments[3][0] - 'a';
   }
   try {
     m_fifty_move_counter_ply = std::stoi(fen_arguments[4]);
