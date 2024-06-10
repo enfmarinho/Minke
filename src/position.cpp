@@ -51,8 +51,14 @@ bool Position::reset(const std::string &fen) {
         consult_legal_position(file, rank) = Square(Piece::Rook, player);
       else if (piece == 'q')
         consult_legal_position(file, rank) = Square(Piece::Queen, player);
-      else if (piece == 'k')
+      else if (piece == 'k') {
         consult_legal_position(file, rank) = Square(Piece::King, player);
+        if (player == Player::White) {
+          m_white_king_position = PiecePlacement(file, rank);
+        } else {
+          m_black_king_position = PiecePlacement(file, rank);
+        }
+      }
       ++rank;
     }
     for (; n_of_empty_squares > 0; --n_of_empty_squares, ++rank) {
