@@ -14,7 +14,7 @@ WeightType eval::evaluate(const Position &position) {
   WeightType mid_game_evaluation = 0, end_game_evaluation = 0, game_state = 0;
   for (IndexType file = 0; file < BoardHeight; ++file) {
     for (IndexType rank = 0; rank < BoardWidth; ++rank) {
-      Square square = position.consult_legal_position(file, rank);
+      Square square = position.consult(file, rank);
       if (square.piece == Piece::None) {
         continue;
       }

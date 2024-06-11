@@ -14,9 +14,9 @@
 namespace zobrist {
 HashType hash(const Position &position);
 HashType rehash(const Position &position);
-int piece_starter_index(const Square &piece_square);
-IndexType position_index(const PiecePlacement &piece_placement);
-IndexType position_index(const IndexType &file, const IndexType &rank);
+int piece_start_index(const Square &piece_square);
+IndexType placement_index(const PiecePlacement &piece_placement);
+IndexType placement_index(const IndexType &file, const IndexType &rank);
 
 constexpr static const int white_king_side_castling_rights_index = 768;
 constexpr static const int white_queen_side_castling_rights_index = 769;
@@ -33,7 +33,7 @@ constexpr static const int black_turn_index = 780;
 // 6) if the piece is black. With that, the 768 first values are used for the
 // pieces, the other 13 are used for position characteristics, like
 // castling rights, a possible en passant and the side to move.
-constexpr static const HashType RandomArray[781] = {
+constexpr static const HashType ZobristArray[781] = {
     14324818556722364514ULL, 16293220493692152430ULL, 6569208820410948345ULL,
     13328526507882839907ULL, 12122222716870026902ULL, 12242192744463129641ULL,
     5715895881093390033ULL,  15766891204433374001ULL, 13224609573491875567ULL,

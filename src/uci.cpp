@@ -58,10 +58,10 @@ void UCI::loop() {
     } else if (token == "help" || token == "--help") {
       std::cout << "TODO write help message." << std::endl;
     } else if (token == "d") {
-      m_position.print_board();
+      m_position.print();
       std::cout << "Move list: ";
       MoveList movelist(m_position);
-      for (Movement move : movelist) {
+      for (Move move : movelist) {
         Position copy = m_position;
         if (copy.move(move))
           std::cout << move.get_algebraic_notation() << ' ';

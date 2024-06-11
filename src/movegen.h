@@ -18,8 +18,8 @@ class MoveList {
 public:
   MoveList(const Position &position);
 
-  Movement *begin() { return m_movement_list; };
-  Movement *end() { return m_end; }
+  Move *begin() { return m_movement_list; };
+  Move *end() { return m_end; }
 
 private:
   void pseudolegal_pawn_moves(const Position &position,
@@ -32,7 +32,7 @@ private:
                                  const PiecePlacement &from);
   void sort_moves();
 
-  Movement m_movement_list[MaxMoves], *m_end;
+  Move m_movement_list[MaxMoves], *m_end;
 };
 
 #endif // #ifndef MOVEGEN_H

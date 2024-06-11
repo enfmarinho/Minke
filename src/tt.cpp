@@ -24,12 +24,12 @@ TTEntry::replace_factor(const CounterType &half_move_counter) const {
 }
 
 void TTEntry::save(const HashType &hash, const IndexType &depth_ply,
-                   const Movement &movement, const WeightType &evaluation,
+                   const Move &movement, const WeightType &evaluation,
                    const CounterType &half_move_counter,
                    const BoundType &bound) {
   m_hash = hash;
   m_depth_ply = depth_ply;
-  m_best_movement = movement;
+  m_best_move = movement;
   m_evaluation = evaluation;
   m_half_move_count = half_move_counter;
   m_bound = bound;

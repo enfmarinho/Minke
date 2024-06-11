@@ -26,20 +26,20 @@ public:
 
   HashType key() const { return m_hash; }
   IndexType depth_ply() const { return m_depth_ply; }
-  Movement movement() const { return m_best_movement; }
+  Move best_move() const { return m_best_move; }
   WeightType evaluation() const { return m_evaluation; }
   BoundType bound() const { return m_bound; }
   CounterType relative_age(const CounterType &half_move_count) const;
   CounterType replace_factor(const CounterType &half_move_count) const;
   void save(const HashType &hash, const IndexType &depth_ply,
-            const Movement &movement, const WeightType &evaluation,
+            const Move &movement, const WeightType &evaluation,
             const CounterType &half_move_counter, const BoundType &bound);
   void reset() { m_bound = BoundType::Empty; }
 
 private:
   HashType m_hash;                      // 8 bytes
   IndexType m_depth_ply;                // 1 byte
-  Movement m_best_movement;             // 3 bytes
+  Move m_best_move;                     // 3 bytes
   int16_t m_evaluation;                 // 2 bytes // TODO change to WeightType
   IndexType m_half_move_count;          // 1 byte
   BoundType m_bound = BoundType::Empty; // 1 byte

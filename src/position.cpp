@@ -41,17 +41,17 @@ bool Position::reset(const std::string &fen) {
       char piece = std::tolower(c);
       Player player = std::isupper(c) ? Player::White : Player::Black;
       if (piece == 'p')
-        consult_legal_position(file, rank) = Square(Piece::Pawn, player);
+        consult(file, rank) = Square(Piece::Pawn, player);
       else if (piece == 'n')
-        consult_legal_position(file, rank) = Square(Piece::Knight, player);
+        consult(file, rank) = Square(Piece::Knight, player);
       else if (piece == 'b')
-        consult_legal_position(file, rank) = Square(Piece::Bishop, player);
+        consult(file, rank) = Square(Piece::Bishop, player);
       else if (piece == 'r')
-        consult_legal_position(file, rank) = Square(Piece::Rook, player);
+        consult(file, rank) = Square(Piece::Rook, player);
       else if (piece == 'q')
-        consult_legal_position(file, rank) = Square(Piece::Queen, player);
+        consult(file, rank) = Square(Piece::Queen, player);
       else if (piece == 'k') {
-        consult_legal_position(file, rank) = Square(Piece::King, player);
+        consult(file, rank) = Square(Piece::King, player);
         if (player == Player::White) {
           m_white_king_position = PiecePlacement(file, rank);
         } else {
@@ -62,7 +62,7 @@ bool Position::reset(const std::string &fen) {
     } else {
       for (IndexType n_of_empty_squares = c - '0'; n_of_empty_squares > 0;
            --n_of_empty_squares, ++rank) {
-        consult_legal_position(file, rank) = Square(Piece::None, Player::None);
+        consult(file, rank) = Square(Piece::None, Player::None);
       }
     }
   }
@@ -110,35 +110,33 @@ bool Position::reset(const std::string &fen) {
   return true;
 }
 
-Square Position::consult_legal_position(const IndexType &file,
-                                        const IndexType &rank) const {
+Square Position::consult(const IndexType &file, const IndexType &rank) const {
   return m_board[file + (rank << 4)];
 }
 
-Square Position::consult_legal_position(const PiecePlacement &placement) const {
+Square Position::consult(const PiecePlacement &placement) const {
   return m_board[placement.index()];
 }
 
-Square &Position::consult_legal_position(const IndexType &file,
-                                         const IndexType &rank) {
+Square &Position::consult(const IndexType &file, const IndexType &rank) {
   return m_board[file + (rank << 4)];
 }
 
-Square &Position::consult_legal_position(const PiecePlacement &placement) {
+Square &Position::consult(const PiecePlacement &placement) {
   return m_board[placement.index()];
 }
 
-bool Position::move(const Movement &movement) {
+bool Position::move(const Move &movement) {
   CastlingRights past_white_castling_rights = m_white_castling_rights;
   CastlingRights past_black_castling_rights = m_black_castling_rights;
   CounterType past_fifty_move_counter = m_fifty_move_counter_ply++;
   IndexType past_en_passant = m_en_passant;
   m_en_passant = -1;
-  Square captured = consult_legal_position(movement.to);
+  Square captured = consult(movement.to);
   Square empty_square = Square(Piece::None, Player::None);
 
-  Piece piece_being_moved = consult_legal_position(movement.from).piece;
-  if (consult_legal_position(movement.to).piece != Piece::None) {
+  Piece piece_being_moved = consult(movement.from).piece;
+  if (consult(movement.to).piece != Piece::None) {
     m_fifty_move_counter_ply = 0;
   } else if (piece_being_moved == Piece::Pawn) {
     m_fifty_move_counter_ply = 0;
@@ -166,26 +164,25 @@ bool Position::move(const Movement &movement) {
   }
 
   if (movement.move_type == MoveType::Regular) {
-    consult_legal_position(movement.to) = consult_legal_position(movement.from);
-    consult_legal_position(movement.from) = empty_square;
+    consult(movement.to) = consult(movement.from);
+    consult(movement.from) = empty_square;
   } else if (movement.move_type == MoveType::EnPassant) {
     IndexType offset = captured.player == Player::White ? -1 : 1;
-    captured =
-        consult_legal_position(movement.to.file() + offset, movement.to.rank());
-    consult_legal_position(movement.to) = consult_legal_position(movement.from);
-    consult_legal_position(movement.from) = empty_square;
+    captured = consult(movement.to.file() + offset, movement.to.rank());
+    consult(movement.to) = consult(movement.from);
+    consult(movement.from) = empty_square;
   } else if (movement.move_type == MoveType::PawnPromotionQueen) {
-    consult_legal_position(movement.from) = empty_square;
-    consult_legal_position(movement.to) = Square(Piece::Queen, m_side_to_move);
+    consult(movement.from) = empty_square;
+    consult(movement.to) = Square(Piece::Queen, m_side_to_move);
   } else if (movement.move_type == MoveType::PawnPromotionKnight) {
-    consult_legal_position(movement.from) = empty_square;
-    consult_legal_position(movement.to) = Square(Piece::Knight, m_side_to_move);
+    consult(movement.from) = empty_square;
+    consult(movement.to) = Square(Piece::Knight, m_side_to_move);
   } else if (movement.move_type == MoveType::PawnPromotionRook) {
-    consult_legal_position(movement.from) = empty_square;
-    consult_legal_position(movement.to) = Square(Piece::Rook, m_side_to_move);
+    consult(movement.from) = empty_square;
+    consult(movement.to) = Square(Piece::Rook, m_side_to_move);
   } else if (movement.move_type == MoveType::PawnPromotionBishop) {
-    consult_legal_position(movement.from) = empty_square;
-    consult_legal_position(movement.to) = Square(Piece::Bishop, m_side_to_move);
+    consult(movement.from) = empty_square;
+    consult(movement.to) = Square(Piece::Bishop, m_side_to_move);
   } else if (movement.move_type == MoveType::KingSideCastling) {
     IndexType file;
     if (m_side_to_move == Player::White) {
@@ -197,10 +194,10 @@ bool Position::move(const Movement &movement) {
       m_black_castling_rights.queen_side = false;
       file = 7;
     }
-    consult_legal_position(file, 6) = consult_legal_position(file, 4);
-    consult_legal_position(file, 5) = consult_legal_position(file, 7);
-    consult_legal_position(file, 4) = empty_square;
-    consult_legal_position(file, 7) = empty_square;
+    consult(file, 6) = consult(file, 4);
+    consult(file, 5) = consult(file, 7);
+    consult(file, 4) = empty_square;
+    consult(file, 7) = empty_square;
   } else if (movement.move_type == MoveType::QueenSideCastling) {
     IndexType file;
     if (m_side_to_move == Player::White) {
@@ -212,10 +209,10 @@ bool Position::move(const Movement &movement) {
       m_black_castling_rights.queen_side = false;
       file = 7;
     }
-    consult_legal_position(file, 2) = consult_legal_position(file, 4);
-    consult_legal_position(file, 3) = consult_legal_position(file, 0);
-    consult_legal_position(file, 4) = empty_square;
-    consult_legal_position(file, 0) = empty_square;
+    consult(file, 2) = consult(file, 4);
+    consult(file, 3) = consult(file, 0);
+    consult(file, 4) = empty_square;
+    consult(file, 0) = empty_square;
   }
   // Required because of the pseudo-legal move generator, less than not ideal
   if (under_attack(*this,
@@ -224,16 +221,16 @@ bool Position::move(const Movement &movement) {
                    m_side_to_move)) {
     return false;
   }
-  m_game_history.push(PastMovement(movement, captured, past_fifty_move_counter,
-                                   past_en_passant, past_white_castling_rights,
-                                   past_black_castling_rights));
+  m_game_history.push(PastMove(movement, captured, past_fifty_move_counter,
+                               past_en_passant, past_white_castling_rights,
+                               past_black_castling_rights));
   m_side_to_move =
       (m_side_to_move == Player::White) ? Player::Black : Player::White;
   m_hash = zobrist::rehash(*this);
   return true;
 }
 
-Movement Position::get_movement(const std::string &algebraic_notation) const {
+Move Position::get_movement(const std::string &algebraic_notation) const {
   PiecePlacement from(static_cast<IndexType>(algebraic_notation[1] - '1'),
                       static_cast<IndexType>(algebraic_notation[0] - 'a'));
   PiecePlacement to(static_cast<IndexType>(algebraic_notation[3] - '1'),
@@ -242,14 +239,14 @@ Movement Position::get_movement(const std::string &algebraic_notation) const {
 
   // Castling
   if ((from.rank() == 4 && to.rank() == 6) &&
-      consult_legal_position(from).piece == Piece::King)
+      consult(from).piece == Piece::King)
     move_type = MoveType::KingSideCastling;
   else if ((from.rank() == 4 && to.rank() == 2) &&
-           consult_legal_position(from).piece == Piece::King)
+           consult(from).piece == Piece::King)
     move_type = MoveType::QueenSideCastling;
   // En passant
   else if (to.rank() == en_passant_rank() && from.file() != to.file() &&
-           consult_legal_position(from).piece == Piece::Pawn) {
+           consult(from).piece == Piece::Pawn) {
     move_type = MoveType::EnPassant;
   }
   // Pawn promotion
@@ -264,7 +261,7 @@ Movement Position::get_movement(const std::string &algebraic_notation) const {
       move_type = MoveType::PawnPromotionBishop;
   }
 
-  return Movement(from, to, move_type);
+  return Move(from, to, move_type);
 }
 
 const Player &Position::side_to_move() const { return m_side_to_move; }
@@ -279,7 +276,7 @@ const CastlingRights &Position::black_castling_rights() const {
 
 const IndexType &Position::en_passant_rank() const { return m_en_passant; }
 
-const PastMovement &Position::last_move() const { return m_game_history.top(); }
+const PastMove &Position::last_move() const { return m_game_history.top(); }
 
 const PiecePlacement &Position::black_king_position() const {
   return m_black_king_position;
@@ -296,7 +293,7 @@ std::string Position::get_fen() const {
   for (IndexType file = 7; file >= 0; --file) {
     IndexType counter = 0;
     for (IndexType rank = 0; rank < BoardWidth; ++rank) {
-      const Square &curr_square = consult_legal_position(file, rank);
+      const Square &curr_square = consult(file, rank);
       if (curr_square.piece == Piece::None) {
         ++counter;
         continue;
@@ -372,7 +369,7 @@ const CounterType &Position::get_half_move_counter() const {
   return m_game_clock_ply;
 }
 
-void Position::print_board() const {
+void Position::print() const {
   auto print_line = []() -> void {
     for (IndexType i = 0; i < 8; ++i) {
       std::cout << "+";
@@ -387,7 +384,7 @@ void Position::print_board() const {
     print_line();
     for (IndexType rank = 0; rank < BoardWidth; ++rank) {
       std::cout << "| ";
-      const Square &curr_square = consult_legal_position(file, rank);
+      const Square &curr_square = consult(file, rank);
       char piece;
       if (curr_square.piece == Piece::King)
         piece = 'k';

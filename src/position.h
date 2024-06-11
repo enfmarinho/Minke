@@ -17,29 +17,27 @@ public:
   Position();
   ~Position() = default;
   bool reset(const std::string &fen);
-  Square consult_legal_position(const PiecePlacement &placement) const;
-  Square consult_legal_position(const IndexType &file,
-                                const IndexType &rank) const;
-  Square &consult_legal_position(const PiecePlacement &placement);
-  Square &consult_legal_position(const IndexType &file, const IndexType &rank);
-  bool move(const Movement &movement);
-  Movement get_movement(const std::string &algebraic_notation) const;
+  Square consult(const PiecePlacement &placement) const;
+  Square consult(const IndexType &file, const IndexType &rank) const;
+  Square &consult(const PiecePlacement &placement);
+  Square &consult(const IndexType &file, const IndexType &rank);
+  bool move(const Move &movement);
+  Move get_movement(const std::string &algebraic_notation) const;
   const Player &side_to_move() const;
   const CastlingRights &white_castling_rights() const;
   const CastlingRights &black_castling_rights() const;
   const IndexType &en_passant_rank() const;
-  const PastMovement &last_move() const;
+  const PastMove &last_move() const;
   const PiecePlacement &black_king_position() const;
   const PiecePlacement &white_king_position() const;
   const HashType &get_hash() const;
   const CounterType &get_half_move_counter() const;
   std::string get_fen() const;
-  bool in_bounds(const PiecePlacement &placement);
-  void print_board() const;
+  void print() const;
 
 private:
   Square m_board[0x80];
-  std::stack<PastMovement> m_game_history;
+  std::stack<PastMove> m_game_history;
   CastlingRights m_white_castling_rights;
   CastlingRights m_black_castling_rights;
   PiecePlacement m_white_king_position;
