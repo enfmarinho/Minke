@@ -186,12 +186,8 @@ bool Position::move(const Move &movement) {
   } else if (movement.move_type == MoveType::KingSideCastling) {
     IndexType file;
     if (m_side_to_move == Player::White) {
-      m_white_castling_rights.king_side = false;
-      m_white_castling_rights.queen_side = false;
       file = 0;
     } else {
-      m_black_castling_rights.king_side = false;
-      m_black_castling_rights.queen_side = false;
       file = 7;
     }
     consult(file, 6) = consult(file, 4);
@@ -214,7 +210,7 @@ bool Position::move(const Move &movement) {
     consult(file, 4) = empty_square;
     consult(file, 0) = empty_square;
   }
-  // Required because of the pseudo-legal move generator, less than not ideal
+  // Required because of the pseudo-legal move generator
   if (under_attack(*this,
                    m_side_to_move == Player::White ? m_white_king_position
                                                    : m_black_king_position,
