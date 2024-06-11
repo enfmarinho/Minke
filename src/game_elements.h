@@ -106,6 +106,7 @@ private:
   IndexType m_index; // file is stored in the 4 least significant bits, while
                      // rank is store in the others 4
 };
+static_assert(sizeof(PiecePlacement) == 1);
 
 struct Square {
   Piece piece;
@@ -116,6 +117,7 @@ struct Square {
   }
   Square(Piece piece, Player player) : piece(piece), player(player) {}
 };
+static_assert(sizeof(Square) == 2);
 
 struct Move {
   PiecePlacement from;
@@ -142,6 +144,7 @@ struct Move {
     return algebraic_notation;
   }
 };
+static_assert(sizeof(Move) == 3);
 
 struct PastMove {
   Move movement;
