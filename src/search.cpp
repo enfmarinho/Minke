@@ -20,12 +20,14 @@ void search::iterative_deepening(Position &position, Thread &thread) {
   TTEntry *move;
   for (CounterType depth_ply = 1; !thread.should_stop(depth_ply); ++depth_ply) {
     alpha_beta_search(ScoreNone, -ScoreNone, depth_ply, position, thread);
-    move = TranspositionTable::get().probe(position, found);
-    assert(found);
-    std::cout << "depth " << depth_ply << " bestmove "
-              << move->movement().get_algebraic_notation() << std::endl;
+    if (!thread.should_stop()) {
+      move = TranspositionTable::get().probe(position, found);
+      assert(found);
+      std::cout << "depth " << depth_ply << " bestmove "
+                << move->best_move().get_algebraic_notation() << std::endl;
+    }
   }
-  std::cout << "bestmove " << move->movement().get_algebraic_notation()
+  std::cout << "bestmove " << move->best_move().get_algebraic_notation()
             << std::endl;
 }
 
