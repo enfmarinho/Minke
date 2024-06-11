@@ -60,8 +60,9 @@ void UCI::loop() {
     } else if (token == "d") {
       m_position.print();
       std::cout << "Move list: ";
-      MoveList movelist(m_position);
-      for (Move move : movelist) {
+      MoveList move_list(m_position);
+      while (move_list.remaining_moves()) {
+        Move move = move_list.next_move();
         Position copy = m_position;
         if (copy.move(move))
           std::cout << move.get_algebraic_notation() << ' ';

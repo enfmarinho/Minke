@@ -10,16 +10,18 @@
 
 #include "game_elements.h"
 #include "position.h"
+#include <cstdint>
 
 bool under_attack(const Position &position, const PiecePlacement &pp,
                   const Player &player);
 
 class MoveList {
 public:
-  MoveList(const Position &position);
+  using size_type = size_t;
 
-  Move *begin() { return m_movement_list; };
-  Move *end() { return m_end; }
+  MoveList(const Position &position);
+  [[nodiscard]] size_type remaining_moves() const;
+  [[nodiscard]] Move next_move();
 
 private:
   void pseudolegal_pawn_moves(const Position &position,
@@ -30,9 +32,12 @@ private:
                               const PiecePlacement &from);
   void pseudolegal_sliders_moves(const Position &position,
                                  const PiecePlacement &from);
-  void sort_moves();
+  void pseudolegal_castling_moves(const Position &position);
+  void calculate_see();
 
-  Move m_movement_list[MaxMoves], *m_end;
+  Move m_move_list[MaxMoves], *m_end;
+  WeightType m_see[MaxMoves];
+  uint8_t m_start_index;
 };
 
 #endif // #ifndef MOVEGEN_H

@@ -48,7 +48,8 @@ WeightType search::alpha_beta_search(WeightType alpha, WeightType beta,
   }
   Move best_move;
   MoveList move_list(position);
-  for (const Move &move : move_list) {
+  while (move_list.remaining_moves()) {
+    Move move = move_list.next_move();
     Position pos_copy = position;
     if (!pos_copy.move(move)) {
       continue;

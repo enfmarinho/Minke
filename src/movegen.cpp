@@ -9,6 +9,7 @@
 #include "game_elements.h"
 #include "position.h"
 #include <cassert>
+#include <utility>
 
 bool under_attack(const Position &position, const PiecePlacement &pp,
                   const Player &player) {
@@ -81,8 +82,8 @@ bool under_attack(const Position &position, const PiecePlacement &pp,
   return false;
 }
 
-MoveList::MoveList(const Position &position) {
-  m_end = m_movement_list;
+MoveList::MoveList(const Position &position) : m_start_index{0} {
+  m_end = m_move_list;
   for (IndexType file = 0; file < BoardHeight; ++file) {
     for (IndexType rank = 0; rank < BoardWidth; ++rank) {
       PiecePlacement current = PiecePlacement(file, rank);
@@ -107,7 +108,28 @@ MoveList::MoveList(const Position &position) {
       }
     }
   }
-  // TODO check for castling
+
+  pseudolegal_castling_moves(position);
+  calculate_see();
+}
+
+[[nodiscard]] MoveList::size_type MoveList::remaining_moves() const {
+  return m_end - (m_move_list + m_start_index);
+}
+
+[[nodiscard]] Move MoveList::next_move() {
+  size_type best_move_index = m_start_index;
+  WeightType best_score = m_see[best_move_index];
+  for (size_type index = 0, remaining = remaining_moves(); index < remaining;
+       ++index) {
+    if (best_score < m_see[m_start_index + index]) {
+      best_move_index = m_start_index + index;
+      best_score = m_see[best_move_index];
+    }
+  }
+  std::swap(m_move_list[m_start_index], m_move_list[best_move_index]);
+  std::swap(m_see[m_start_index], m_see[best_move_index]);
+  return m_move_list[m_start_index++];
 }
 
 void MoveList::pseudolegal_pawn_moves(const Position &position,
@@ -191,6 +213,39 @@ void MoveList::pseudolegal_king_moves(const Position &position,
   }
 }
 
-void MoveList::sort_moves() {
+void MoveList::pseudolegal_castling_moves(const Position &position) {
+  CastlingRights castling_rights;
+  PiecePlacement king_placement;
+  IndexType player_perspective_first_file;
+  if (position.side_to_move() == Player::White) {
+    castling_rights = position.white_castling_rights();
+    king_placement = position.white_king_position();
+    player_perspective_first_file = 0;
+  } else {
+    castling_rights = position.black_castling_rights();
+    king_placement = position.black_king_position();
+    player_perspective_first_file = 7;
+  }
+
+  if (under_attack(position, king_placement, position.side_to_move()))
+    return;
+
+  if (castling_rights.king_side &&
+      position.consult(player_perspective_first_file, 5).piece == Piece::None &&
+      position.consult(player_perspective_first_file, 6).piece == Piece::None)
+    *(m_end++) =
+        Move(king_placement, PiecePlacement(player_perspective_first_file, 6),
+             MoveType::KingSideCastling);
+
+  if (castling_rights.queen_side &&
+      position.consult(player_perspective_first_file, 1).piece == Piece::None &&
+      position.consult(player_perspective_first_file, 2).piece == Piece::None &&
+      position.consult(player_perspective_first_file, 3).piece == Piece::None)
+    *(m_end++) =
+        Move(king_placement, PiecePlacement(player_perspective_first_file, 2),
+             MoveType::QueenSideCastling);
+}
+
+void MoveList::calculate_see() {
   // TODO implement this
 }
