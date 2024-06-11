@@ -41,7 +41,10 @@ bool Thread::should_stop(CounterType depth) const {
   return m_stop || should_stop() || (!m_infinite && depth > m_max_depth);
 }
 
-void Thread::wait() { m_thread.join(); }
+void Thread::wait() {
+  if (!m_stop)
+    m_thread.join();
+}
 
 void Thread::search(Position &position) {
   if (m_stop) {

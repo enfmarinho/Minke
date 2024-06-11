@@ -36,6 +36,8 @@ void UCI::loop() {
     if (token == "quit" || token == "stop") {
       m_thread.stop_search();
     } else if (token == "go") {
+      m_thread.wait();
+      m_thread.reset();
       parse_go_limits(iss);
       go();
     } else if (token == "position") {
