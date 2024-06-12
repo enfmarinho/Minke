@@ -20,7 +20,7 @@ WeightType eval::evaluate(const Position &position) {
       }
       WeightType piece_multiplication_factor =
           static_cast<WeightType>(square.player);
-      IndexType piece_idx = static_cast<IndexType>(square.piece);
+      IndexType piece_idx = piece_index(square.piece);
       IndexType file_idx;
       if (square.player == Player::White) {
         file_idx = file;

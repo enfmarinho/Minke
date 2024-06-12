@@ -55,6 +55,7 @@ constexpr IndexType Sliders[3][8] = {
 
 } // namespace offsets
 
+#define piece_index(piece) static_cast<IndexType>(piece)
 enum class Piece : char {
   Pawn = 0,
   Knight,

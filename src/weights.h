@@ -47,7 +47,7 @@ constexpr WeightType EndGameMaterialTable[NumberOfPieces] = {
     EndGameRook, EndGameQueen,  EndGameKing};
 
 /// SEE weights
-constexpr WeightType SEE_weights[NumberOfPieces] = {
+constexpr WeightType SEE_table[NumberOfPieces] = {
     (MidGamePawn + EndGamePawn) / 2,     (MidGameKnight + EndGameKnight) / 2,
     (MidGameBishop + EndGameBishop) / 2, (MidGameRook + EndGameRook) / 2,
     (MidGameQueen + EndGameQueen) / 2,   (MidGameKing + EndGameKing) / 2,
