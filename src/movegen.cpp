@@ -13,75 +13,10 @@
 #include <cstdlib>
 #include <utility>
 
-bool under_attack(const Position &position, const PiecePlacement &pp,
-                  const Player &player) {
-  Player opponent;
-  IndexType opponent_pawn_offset;
-  if (player == Player::Black) {
-    opponent = Player::White;
-    opponent_pawn_offset = offsets::North;
-  } else if (player == Player::White) {
-    opponent = Player::Black;
-    opponent_pawn_offset = offsets::South;
-  } else {
-    assert(false);
-  }
-
-  auto under_pawn_thread = [](const Position &position,
-                              const PiecePlacement &pawn_atacker_pos,
-                              const Player &opponent) -> bool {
-    if (!pawn_atacker_pos.out_of_bounds()) {
-      const Square &sq = position.consult(pawn_atacker_pos);
-      if (sq.player == opponent && sq.piece == Piece::Pawn)
-        return true;
-    }
-    return false;
-  };
-  PiecePlacement east_pawn_attacker(pp.index() + opponent_pawn_offset +
-                                    offsets::East);
-  PiecePlacement west_pawn_attacker(pp.index() + opponent_pawn_offset +
-                                    offsets::West);
-  if (under_pawn_thread(position, east_pawn_attacker, opponent) ||
-      under_pawn_thread(position, west_pawn_attacker, opponent))
-    return true;
-
-  for (const IndexType &offset : offsets::Knight) {
-    PiecePlacement to(pp.index() + offset);
-    if (!to.out_of_bounds()) {
-      const Square &to_square = position.consult(to);
-      if (to_square.player == opponent && to_square.piece == Piece::Knight)
-        return true;
-    }
-  }
-  for (const IndexType &offset : offsets::Sliders[0]) { // Bishop directions
-    if (offset == 0) {
-      break;
-    }
-    for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
-         to.index() += offset) {
-      const Square &to_square = position.consult(to);
-      if (to_square.player == opponent &&
-          (to_square.piece == Piece::Bishop || to_square.piece == Piece::Queen))
-        return true;
-      if (to_square.player != Player::None)
-        break;
-    }
-  }
-  for (const IndexType &offset : offsets::Sliders[1]) { // Rook directions
-    if (offset == 0) {
-      break;
-    }
-    for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
-         to.index() += offset) {
-      const Square &to_square = position.consult(to);
-      if (to_square.player == opponent &&
-          (to_square.piece == Piece::Rook || to_square.piece == Piece::Queen))
-        return true;
-      if (to_square.player != Player::None)
-        break;
-    }
-  }
-  return false;
+bool under_attack(const Position &position, const Player &player,
+                  const PiecePlacement &pp) {
+  PiecePlacement trash;
+  return cheapest_attacker(position, player, pp, trash) != Piece::None;
 }
 
 MoveList::MoveList(const Position &position) : m_start_index{0} {
@@ -229,7 +164,7 @@ void MoveList::pseudolegal_castling_moves(const Position &position) {
     player_perspective_first_file = 7;
   }
 
-  if (under_attack(position, king_placement, position.side_to_move()))
+  if (under_attack(position, position.side_to_move(), king_placement))
     return;
 
   if (castling_rights.king_side &&
@@ -248,12 +183,96 @@ void MoveList::pseudolegal_castling_moves(const Position &position) {
              MoveType::QueenSideCastling);
 }
 
-Piece cheapest_attacker(const Position &position, const PiecePlacement &pp,
-                        const PiecePlacement &pp_atacker) {
+Piece cheapest_attacker(const Position &position, const Player &player,
+                        const PiecePlacement &pp, PiecePlacement &pp_atacker) {
+  Player opponent;
+  IndexType opponent_pawn_offset;
+  if (player == Player::Black) {
+    opponent = Player::White;
+    opponent_pawn_offset = offsets::North;
+  } else if (player == Player::White) {
+    opponent = Player::Black;
+    opponent_pawn_offset = offsets::South;
+  } else {
+    assert(false);
+  }
+
+  auto under_pawn_thread =
+      [&position, &opponent](const PiecePlacement &pawn_atacker_pos) -> bool {
+    if (!pawn_atacker_pos.out_of_bounds()) {
+      const Square &sq = position.consult(pawn_atacker_pos);
+      if (sq.player == opponent && sq.piece == Piece::Pawn)
+        return true;
+    }
+    return false;
+  };
+
+  PiecePlacement east_pawn_attacker(pp.index() + opponent_pawn_offset +
+                                    offsets::East);
+  if (under_pawn_thread(east_pawn_attacker))
+    return pp_atacker = east_pawn_attacker, Piece::Pawn;
+
+  PiecePlacement west_pawn_attacker(pp.index() + opponent_pawn_offset +
+                                    offsets::West);
+  if (under_pawn_thread(west_pawn_attacker))
+    return pp_atacker = west_pawn_attacker, Piece::Pawn;
+
+  for (const IndexType &offset : offsets::Knight) {
+    PiecePlacement to(pp.index() + offset);
+    if (!to.out_of_bounds()) {
+      const Square &to_square = position.consult(to);
+      if (to_square.player == opponent && to_square.piece == Piece::Knight)
+        return pp_atacker = to, Piece::Knight;
+    }
+  }
+
+  bool queen_attacks = false;
+  for (const IndexType &offset : offsets::Sliders[0]) { // Bishop directions
+    if (offset == 0) {
+      break;
+    }
+    for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
+         to.index() += offset) {
+      const Square &to_square = position.consult(to);
+      if (to_square.player == opponent && to_square.piece == Piece::Bishop)
+        return pp_atacker = to, Piece::Bishop;
+      if (to_square.piece == Piece::Queen) {
+        queen_attacks = true;
+        pp_atacker = to;
+        break;
+      }
+      if (to_square.player != Player::None)
+        break;
+    }
+  }
+  for (const IndexType &offset : offsets::Sliders[1]) { // Rook directions
+    if (offset == 0) {
+      break;
+    }
+    for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
+         to.index() += offset) {
+      const Square &to_square = position.consult(to);
+      if (to_square.player == opponent && to_square.piece == Piece::Rook)
+        return pp_atacker = to, Piece::Rook;
+      if (to_square.piece == Piece::Queen) {
+        pp_atacker = to;
+        queen_attacks = true;
+        break;
+      }
+      if (to_square.player != Player::None)
+        break;
+    }
+  }
+
+  if (queen_attacks)
+    return Piece::Queen;
+
   return Piece::None;
 }
 
 bool SEE(const Position &position, const Move &move) {
+  Player player = position.side_to_move(),
+         opponent = player == Player::White ? Player::Black : Player::White;
   Position copy_position = position;
   WeightType material_gain = weights::SEE_weights[static_cast<IndexType>(
       copy_position.consult(move.to).piece)];
@@ -261,9 +280,10 @@ bool SEE(const Position &position, const Move &move) {
       copy_position.consult(move.from).piece)];
   copy_position.consult(move.from) = empty_square;
 
-  while (material_gain < material_risk) {
+  while (material_gain <= material_risk) {
     PiecePlacement pp_atacker;
-    Piece attacker = cheapest_attacker(copy_position, move.to, pp_atacker);
+    Piece attacker =
+        cheapest_attacker(copy_position, player, move.to, pp_atacker);
     if (attacker == Piece::None)
       return true;
 
@@ -274,7 +294,7 @@ bool SEE(const Position &position, const Move &move) {
     if (material_gain < -material_risk)
       return false;
 
-    attacker = cheapest_attacker(copy_position, move.to, pp_atacker);
+    attacker = cheapest_attacker(copy_position, opponent, move.to, pp_atacker);
     if (attacker == Piece::None)
       return false;
 
