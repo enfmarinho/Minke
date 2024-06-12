@@ -386,11 +386,12 @@ void Position::print() const {
                         : piece)
                 << " ";
     }
-    std::cout << "| " << file + 1 << std::endl;
+    std::cout << "| " << file + 1 << "\n";
   }
   print_line();
   for (char rank_simbol = 'a'; rank_simbol <= 'h'; ++rank_simbol) {
     std::cout << "  " << rank_simbol << " ";
   }
-  std::cout << "\n\nFEN: " << get_fen() << std::endl;
+  std::cout << "\n\nFEN: " << get_fen();
+  std::cout << "\nHash: " << m_hash << "\n";
 };
