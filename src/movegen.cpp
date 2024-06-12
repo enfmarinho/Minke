@@ -247,12 +247,14 @@ Piece cheapest_attacker(const Position &position, const Player &player,
     for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
          to.index() += offset) {
       const Square &to_square = position.consult(to);
-      if (to_square.player == opponent && to_square.piece == Piece::Bishop)
-        return pp_atacker = to, Piece::Bishop;
-      if (to_square.piece == Piece::Queen) {
-        queen_attacks = true;
-        pp_atacker = to;
-        break;
+      if (to_square.player == opponent) {
+        if (to_square.piece == Piece::Bishop)
+          return pp_atacker = to, Piece::Bishop;
+        if (to_square.piece == Piece::Queen) {
+          queen_attacks = true;
+          pp_atacker = to;
+          break;
+        }
       }
       if (to_square.player != Player::None)
         break;
@@ -265,12 +267,14 @@ Piece cheapest_attacker(const Position &position, const Player &player,
     for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
          to.index() += offset) {
       const Square &to_square = position.consult(to);
-      if (to_square.player == opponent && to_square.piece == Piece::Rook)
-        return pp_atacker = to, Piece::Rook;
-      if (to_square.piece == Piece::Queen) {
-        pp_atacker = to;
-        queen_attacks = true;
-        break;
+      if (to_square.player == opponent) {
+        if (to_square.piece == Piece::Rook)
+          return pp_atacker = to, Piece::Rook;
+        if (to_square.piece == Piece::Queen) {
+          pp_atacker = to;
+          queen_attacks = true;
+          break;
+        }
       }
       if (to_square.player != Player::None)
         break;
