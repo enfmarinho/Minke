@@ -11,6 +11,7 @@
 #include "weights.h"
 #include <cassert>
 #include <cstdlib>
+#include <cstring>
 #include <utility>
 
 bool under_attack(const Position &position, const Player &player,
@@ -19,8 +20,8 @@ bool under_attack(const Position &position, const Player &player,
   return cheapest_attacker(position, player, pp, trash) != Piece::None;
 }
 
-MoveList::MoveList(const Position &position) : m_start_index{0} {
-  m_end = m_move_list;
+MoveList::MoveList(const Position &position)
+    : m_end(m_move_list), m_start_index{0} {
   for (IndexType file = 0; file < BoardHeight; ++file) {
     for (IndexType rank = 0; rank < BoardWidth; ++rank) {
       PiecePlacement current = PiecePlacement(file, rank);
@@ -47,7 +48,7 @@ MoveList::MoveList(const Position &position) : m_start_index{0} {
   }
 
   pseudolegal_castling_moves(position);
-  calculate_see();
+  calculate_scores(position);
 }
 
 [[nodiscard]] MoveList::size_type MoveList::remaining_moves() const {
@@ -56,30 +57,33 @@ MoveList::MoveList(const Position &position) : m_start_index{0} {
 
 [[nodiscard]] Move MoveList::next_move() {
   size_type best_move_index = m_start_index;
-  WeightType best_score = m_see[best_move_index];
+  WeightType best_score = m_move_scores[best_move_index];
   for (size_type index = 0, remaining = remaining_moves(); index < remaining;
        ++index) {
-    if (best_score < m_see[m_start_index + index]) {
+    if (best_score < m_move_scores[m_start_index + index]) {
       best_move_index = m_start_index + index;
-      best_score = m_see[best_move_index];
+      best_score = m_move_scores[best_move_index];
     }
   }
   std::swap(m_move_list[m_start_index], m_move_list[best_move_index]);
-  std::swap(m_see[m_start_index], m_see[best_move_index]);
+  std::swap(m_move_scores[m_start_index], m_move_scores[best_move_index]);
   return m_move_list[m_start_index++];
 }
 
 void MoveList::pseudolegal_pawn_moves(const Position &position,
                                       const PiecePlacement &from) {
   IndexType original_file;
+  IndexType promotion_file;
   IndexType offset;
   Player adversary;
   if (position.side_to_move() == Player::White) {
     original_file = 1;
+    promotion_file = 7;
     offset = offsets::North;
     adversary = Player::Black;
   } else {
     original_file = 6;
+    promotion_file = 0;
     offset = offsets::South;
     adversary = Player::White;
   }
@@ -89,19 +93,28 @@ void MoveList::pseudolegal_pawn_moves(const Position &position,
     *(m_end++) = Move(from, doublemove, MoveType::Regular);
   }
   PiecePlacement singlemove(from.index() + offset);
-  if (position.consult(singlemove).piece == Piece::None) {
-    *(m_end++) = Move(from, singlemove, MoveType::Regular);
+  if (position.consult(singlemove).piece == Piece::None) { // single move
+    *(m_end++) = Move(from, singlemove,
+                      (from.index() + offset == promotion_file
+                           ? MoveType::PawnPromotionQueen
+                           : MoveType::Regular));
   }
 
   PiecePlacement capture_left(from.index() + offset + offsets::West);
   if (!capture_left.out_of_bounds() &&
-      position.consult(capture_left).player == adversary) {
-    *(m_end++) = Move(from, capture_left, MoveType::Capture);
+      position.consult(capture_left).player == adversary) { // left capture
+    *(m_end++) = Move(from, capture_left,
+                      (from.index() + offset == promotion_file
+                           ? MoveType::PawnPromotionQueen
+                           : MoveType::Capture));
   }
   PiecePlacement capture_right(from.index() + offset + offsets::East);
   if (!capture_right.out_of_bounds() &&
-      position.consult(capture_right).player == adversary) {
-    *(m_end++) = Move(from, capture_right, MoveType::Capture);
+      position.consult(capture_right).player == adversary) { // right capture
+    *(m_end++) = Move(from, capture_right,
+                      (from.index() + offset == promotion_file
+                           ? MoveType::PawnPromotionQueen
+                           : MoveType::Capture));
   }
 }
 
@@ -118,7 +131,7 @@ void MoveList::pseudolegal_knight_moves(const Position &position,
 
 void MoveList::pseudolegal_sliders_moves(const Position &position,
                                          const PiecePlacement &from) {
-  IndexType piece_index = static_cast<IndexType>(position.consult(from).piece);
+  IndexType piece_index = piece_index(position.consult(from).piece);
   for (IndexType offset : offsets::Sliders[piece_index - 2]) {
     PiecePlacement to(from.index() + offset);
     while (!to.out_of_bounds()) {
@@ -274,10 +287,10 @@ bool SEE(const Position &position, const Move &move) {
   Player player = position.side_to_move(),
          opponent = player == Player::White ? Player::Black : Player::White;
   Position copy_position = position;
-  WeightType material_gain = weights::SEE_weights[static_cast<IndexType>(
-      copy_position.consult(move.to).piece)];
-  WeightType material_risk = weights::SEE_weights[static_cast<IndexType>(
-      copy_position.consult(move.from).piece)];
+  WeightType material_gain =
+      weights::SEE_table[piece_index(copy_position.consult(move.to).piece)];
+  WeightType material_risk =
+      weights::SEE_table[piece_index(copy_position.consult(move.from).piece)];
   copy_position.consult(move.from) = empty_square;
 
   while (material_gain <= material_risk) {
@@ -289,7 +302,7 @@ bool SEE(const Position &position, const Move &move) {
 
     copy_position.consult(pp_atacker) = empty_square;
     material_gain -= material_risk;
-    material_risk = weights::SEE_weights[static_cast<IndexType>(attacker)];
+    material_risk = weights::SEE_table[piece_index(attacker)];
 
     if (material_gain < -material_risk)
       return false;
@@ -300,11 +313,31 @@ bool SEE(const Position &position, const Move &move) {
 
     copy_position.consult(pp_atacker) = empty_square;
     material_gain += material_risk;
-    material_risk = weights::SEE_weights[static_cast<IndexType>(attacker)];
+    material_risk = weights::SEE_table[piece_index(attacker)];
   }
 
   return true;
 }
 
-  // TODO implement this
+void MoveList::calculate_scores(const Position &position) {
+  static constexpr WeightType ScoreQueenPromotion = 50000;
+  static constexpr WeightType ScoreCapture = 20000;
+
+  memset(m_move_scores, 0, remaining_moves());
+  for (size_type index = 0, remaining = remaining_moves(); index < remaining;
+       ++index) {
+    Move move = m_move_list[index];
+    if (move.move_type == MoveType::PawnPromotionQueen) {
+      m_move_scores[index] = ScoreQueenPromotion;
+    } else if (move.move_type == MoveType::Capture) {
+      m_move_scores[index] =
+          ScoreCapture +
+          weights::SEE_table[piece_index(position.consult(move.to).piece)] -
+          weights::SEE_table[piece_index(position.consult(move.from).piece)] /
+              5 +
+          ScoreCapture * SEE(position, move);
+    } else {
+      // TODO killer attacks
+    }
+  }
 }

@@ -37,10 +37,10 @@ private:
   void pseudolegal_sliders_moves(const Position &position,
                                  const PiecePlacement &from);
   void pseudolegal_castling_moves(const Position &position);
-  void calculate_see();
+  void calculate_scores(const Position &position);
 
   Move m_move_list[MaxMoves], *m_end;
-  WeightType m_see[MaxMoves];
+  WeightType m_move_scores[MaxMoves];
   uint8_t m_start_index;
 };
 
