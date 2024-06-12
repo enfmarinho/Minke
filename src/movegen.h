@@ -14,6 +14,9 @@
 
 bool under_attack(const Position &position, const PiecePlacement &pp,
                   const Player &player);
+Piece cheapest_attacker(const Position &position, const PiecePlacement &pp,
+                        const PiecePlacement &pp_atacker);
+bool SEE(const Position &position, const Move &move);
 
 class MoveList {
 public:

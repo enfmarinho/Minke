@@ -8,7 +8,9 @@
 #include "movegen.h"
 #include "game_elements.h"
 #include "position.h"
+#include "weights.h"
 #include <cassert>
+#include <cstdlib>
 #include <utility>
 
 bool under_attack(const Position &position, const PiecePlacement &pp,
@@ -246,6 +248,43 @@ void MoveList::pseudolegal_castling_moves(const Position &position) {
              MoveType::QueenSideCastling);
 }
 
-void MoveList::calculate_see() {
+Piece cheapest_attacker(const Position &position, const PiecePlacement &pp,
+                        const PiecePlacement &pp_atacker) {
+  return Piece::None;
+}
+
+bool SEE(const Position &position, const Move &move) {
+  Position copy_position = position;
+  WeightType material_gain = weights::SEE_weights[static_cast<IndexType>(
+      copy_position.consult(move.to).piece)];
+  WeightType material_risk = weights::SEE_weights[static_cast<IndexType>(
+      copy_position.consult(move.from).piece)];
+  copy_position.consult(move.from) = empty_square;
+
+  while (material_gain < material_risk) {
+    PiecePlacement pp_atacker;
+    Piece attacker = cheapest_attacker(copy_position, move.to, pp_atacker);
+    if (attacker == Piece::None)
+      return true;
+
+    copy_position.consult(pp_atacker) = empty_square;
+    material_gain -= material_risk;
+    material_risk = weights::SEE_weights[static_cast<IndexType>(attacker)];
+
+    if (material_gain < -material_risk)
+      return false;
+
+    attacker = cheapest_attacker(copy_position, move.to, pp_atacker);
+    if (attacker == Piece::None)
+      return false;
+
+    copy_position.consult(pp_atacker) = empty_square;
+    material_gain += material_risk;
+    material_risk = weights::SEE_weights[static_cast<IndexType>(attacker)];
+  }
+
+  return true;
+}
+
   // TODO implement this
 }
