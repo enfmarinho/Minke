@@ -162,7 +162,8 @@ bool Position::move(const Move &movement) {
     }
   }
 
-  if (movement.move_type == MoveType::Regular) {
+  if (movement.move_type == MoveType::Regular ||
+      movement.move_type == MoveType::Capture) {
     consult(movement.to) = consult(movement.from);
     consult(movement.from) = empty_square;
   } else if (movement.move_type == MoveType::EnPassant) {
@@ -183,27 +184,13 @@ bool Position::move(const Move &movement) {
     consult(movement.from) = empty_square;
     consult(movement.to) = Square(Piece::Bishop, m_side_to_move);
   } else if (movement.move_type == MoveType::KingSideCastling) {
-    IndexType file;
-    if (m_side_to_move == Player::White) {
-      file = 0;
-    } else {
-      file = 7;
-    }
+    IndexType file = m_side_to_move == Player::White ? 0 : 7;
     consult(file, 6) = consult(file, 4);
     consult(file, 5) = consult(file, 7);
     consult(file, 4) = empty_square;
     consult(file, 7) = empty_square;
   } else if (movement.move_type == MoveType::QueenSideCastling) {
-    IndexType file;
-    if (m_side_to_move == Player::White) {
-      m_white_castling_rights.king_side = false;
-      m_white_castling_rights.queen_side = false;
-      file = 0;
-    } else {
-      m_black_castling_rights.king_side = false;
-      m_black_castling_rights.queen_side = false;
-      file = 7;
-    }
+    IndexType file = m_side_to_move == Player::White ? 0 : 7;
     consult(file, 2) = consult(file, 4);
     consult(file, 3) = consult(file, 0);
     consult(file, 4) = empty_square;
