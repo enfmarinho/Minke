@@ -133,7 +133,6 @@ bool Position::move(const Move &movement) {
   IndexType past_en_passant = m_en_passant;
   m_en_passant = -1;
   Square captured = consult(movement.to);
-  Square empty_square = Square(Piece::None, Player::None);
 
   Piece piece_being_moved = consult(movement.from).piece;
   if (consult(movement.to).piece != Piece::None) {

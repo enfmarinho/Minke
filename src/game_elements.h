@@ -96,8 +96,8 @@ struct PiecePlacement {
   IndexType index() const { return m_index; }
   IndexType &index() { return m_index; }
   bool out_of_bounds() const { return m_index & 0x88; }
-  PiecePlacement(){};
-  PiecePlacement(IndexType index) : m_index(index){};
+  PiecePlacement() {};
+  PiecePlacement(IndexType index) : m_index(index) {};
   PiecePlacement(const IndexType &file, const IndexType &rank) {
     m_index = file + (rank << padding);
   }
@@ -117,6 +117,7 @@ struct Square {
   }
   Square(Piece piece, Player player) : piece(piece), player(player) {}
 };
+const Square empty_square = Square(Piece::None, Player::None);
 static_assert(sizeof(Square) == 2);
 
 struct Move {
