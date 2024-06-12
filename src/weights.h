@@ -46,6 +46,13 @@ constexpr WeightType EndGameMaterialTable[NumberOfPieces] = {
     EndGamePawn, EndGameKnight, EndGameBishop,
     EndGameRook, EndGameQueen,  EndGameKing};
 
+/// SEE weights
+constexpr WeightType SEE_weights[NumberOfPieces] = {
+    (MidGamePawn + EndGamePawn) / 2,     (MidGameKnight + EndGameKnight) / 2,
+    (MidGameBishop + EndGameBishop) / 2, (MidGameRook + EndGameRook) / 2,
+    (MidGameQueen + EndGameQueen) / 2,   (MidGameKing + EndGameKing) / 2,
+};
+
 /// Piece-squares tables.
 /// IMPORTANT: the tables are indexed based on the position of the white pieces,
 /// if you want to access the values for black pieces the index must be fixed by
