@@ -51,15 +51,18 @@ MoveList::MoveList(const Position &position)
   calculate_scores(position);
 }
 
-[[nodiscard]] MoveList::size_type MoveList::remaining_moves() const {
-  return m_end - (m_move_list + m_start_index);
+[[nodiscard]] bool MoveList::empty() const {
+  return m_move_list + m_start_index == m_end;
+}
+
+[[nodiscard]] MoveList::size_type MoveList::size() const {
+  return m_end - m_move_list;
 }
 
 [[nodiscard]] Move MoveList::next_move() {
   size_type best_move_index = m_start_index;
   WeightType best_score = m_move_scores[best_move_index];
-  for (size_type index = 0, remaining = remaining_moves(); index < remaining;
-       ++index) {
+  for (size_type index = 0, remaining = size(); index < remaining; ++index) {
     if (best_score < m_move_scores[m_start_index + index]) {
       best_move_index = m_start_index + index;
       best_score = m_move_scores[best_move_index];
@@ -327,9 +330,8 @@ void MoveList::calculate_scores(const Position &position) {
   static constexpr WeightType ScoreQueenPromotion = 50000;
   static constexpr WeightType ScoreCapture = 20000;
 
-  memset(m_move_scores, 0, remaining_moves());
-  for (size_type index = 0, remaining = remaining_moves(); index < remaining;
-       ++index) {
+  memset(m_move_scores, 0, size());
+  for (size_type index = 0, remaining = size(); index < remaining; ++index) {
     Move move = m_move_list[index];
     if (move.move_type == MoveType::PawnPromotionQueen) {
       m_move_scores[index] = ScoreQueenPromotion;

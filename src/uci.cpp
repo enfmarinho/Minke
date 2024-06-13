@@ -61,7 +61,7 @@ void UCI::loop() {
       m_position.print();
       std::cout << "Move list: ";
       MoveList move_list(m_position);
-      while (move_list.remaining_moves()) {
+      while (!move_list.empty()) {
         Move move = move_list.next_move();
         Position copy = m_position;
         if (copy.move(move))

@@ -37,18 +37,16 @@ WeightType search::alpha_beta_search(WeightType alpha, WeightType beta,
   thread.increase_nodes_searched_counter();
   bool found;
   TTEntry *entry = TranspositionTable::get().probe(position, found);
-  if (found && entry->depth_ply() >= depth_ply) {
+  if (found && entry->depth_ply() >= depth_ply)
     return entry->evaluation();
-  }
-  if (thread.should_stop()) {
+  if (thread.should_stop())
     return ScoreNone;
-  }
-  if (depth_ply == 0) {
+  if (depth_ply == 0)
     return eval::evaluate(position); // TODO do a quiesce search
-  }
+
   Move best_move;
   MoveList move_list(position);
-  while (move_list.remaining_moves()) {
+  while (!move_list.empty()) {
     Move move = move_list.next_move();
     Position pos_copy = position;
     if (!pos_copy.move(move)) {

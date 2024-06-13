@@ -24,7 +24,8 @@ public:
   using size_type = size_t;
 
   MoveList(const Position &position);
-  [[nodiscard]] size_type remaining_moves() const;
+  [[nodiscard]] bool empty() const;
+  [[nodiscard]] size_type size() const;
   [[nodiscard]] Move next_move();
 
 private:
