@@ -56,7 +56,7 @@ MoveList::MoveList(const Position &position)
 }
 
 [[nodiscard]] MoveList::size_type MoveList::size() const {
-  return m_end - m_move_list;
+  return m_end - (m_move_list + m_start_index);
 }
 
 [[nodiscard]] Move MoveList::next_move() {
