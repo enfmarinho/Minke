@@ -21,6 +21,7 @@ public:
   Square &consult(const PiecePlacement &placement);
   Square &consult(const IndexType &file, const IndexType &rank);
   bool move(const Move &movement);
+  void undo_move();
   Move get_movement(const std::string &algebraic_notation) const;
   const Player &side_to_move() const;
   const CastlingRights &white_castling_rights() const;

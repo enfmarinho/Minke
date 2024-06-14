@@ -11,6 +11,7 @@
 #include "movegen.h"
 #include "search.h"
 #include "tt.h"
+#include <cassert>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -111,7 +112,7 @@ void UCI::set_position(const std::string &fen,
   }
   TranspositionTable::get().clear();
   for (const std::string &algebraic_notation : move_list) {
-    m_position.move(m_position.get_movement(algebraic_notation));
+    assert(m_position.move(m_position.get_movement(algebraic_notation)));
   }
 }
 

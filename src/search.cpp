@@ -33,7 +33,7 @@ void search::iterative_deepening(Position &position, Thread &thread) {
 
 WeightType search::alpha_beta_search(WeightType alpha, WeightType beta,
                                      const CounterType &depth_ply,
-                                     const Position &position, Thread &thread) {
+                                     Position &position, Thread &thread) {
   thread.increase_nodes_searched_counter();
   bool found;
   TTEntry *entry = TranspositionTable::get().probe(position, found);
@@ -48,12 +48,11 @@ WeightType search::alpha_beta_search(WeightType alpha, WeightType beta,
   MoveList move_list(position);
   while (!move_list.empty()) {
     Move move = move_list.next_move();
-    Position pos_copy = position;
-    if (!pos_copy.move(move)) {
+    if (!position.move(move))
       continue;
-    }
     WeightType score =
-        alpha_beta_search(-beta, -alpha, depth_ply - 1, pos_copy, thread);
+        alpha_beta_search(-beta, -alpha, depth_ply - 1, position, thread);
+    position.undo_move();
     if (score >= beta)
       return beta;
     else if (score > alpha)
@@ -63,8 +62,8 @@ WeightType search::alpha_beta_search(WeightType alpha, WeightType beta,
     entry->save(
         position.get_hash(), depth_ply, best_move, alpha,
         position.get_half_move_counter(),
-        TTEntry::BoundType::LowerBound); // TODO bound is just a STUB, needs to
-                                         // be change, i.e. IT'S NOT CORRECT
+        TTEntry::BoundType::Empty); // TODO bound is just a STUB, needs to
+                                    // be change, i.e. IT'S NOT CORRECT
   }
   return alpha;
 }

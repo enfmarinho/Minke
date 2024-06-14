@@ -15,7 +15,7 @@
 namespace search {
 void iterative_deepening(Position &position, Thread &thread);
 WeightType alpha_beta_search(WeightType alpha, WeightType beta,
-                             const CounterType &depth, const Position &position,
+                             const CounterType &depth, Position &position,
                              Thread &thread);
 } // namespace search
 
