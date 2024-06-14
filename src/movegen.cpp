@@ -330,20 +330,20 @@ void MoveList::calculate_scores(const Position &position) {
   static constexpr WeightType ScoreQueenPromotion = 50000;
   static constexpr WeightType ScoreCapture = 20000;
 
-  memset(m_move_scores, 0, size());
   for (size_type index = 0, remaining = size(); index < remaining; ++index) {
     Move move = m_move_list[index];
-    if (move.move_type == MoveType::PawnPromotionQueen) {
-      m_move_scores[index] = ScoreQueenPromotion;
-    } else if (move.move_type == MoveType::Capture) {
+    if (move.move_type == MoveType::Capture) {
       m_move_scores[index] =
           ScoreCapture +
           weights::SEE_table[piece_index(position.consult(move.to).piece)] -
           weights::SEE_table[piece_index(position.consult(move.from).piece)] /
               5 +
           ScoreCapture * SEE(position, move);
+    } else if (move.move_type == MoveType::PawnPromotionQueen) {
+      m_move_scores[index] = ScoreQueenPromotion;
     } else {
-      // TODO killer attacks
+      m_move_scores[index] = position.consult_history(move.to);
     }
+    // TODO implement killer heuristic
   }
 }

@@ -127,6 +127,21 @@ Square &Position::consult(const PiecePlacement &placement) {
   return m_board[placement.index()];
 }
 
+WeightType Position::consult_history(const PiecePlacement &to) const {
+  return m_move_history[piece_index(consult(to).piece) +
+                        (m_side_to_move == Player::White ? 0 : 6)][to.index()];
+}
+
+WeightType &Position::consult_history(const PiecePlacement &to) {
+  return m_move_history[piece_index(consult(to).piece) +
+                        (m_side_to_move == Player::White ? 0 : 6)][to.index()];
+}
+
+void Position::increment_history(const PiecePlacement &to,
+                                 const CounterType &depth) {
+  consult_history(to) += depth * depth;
+}
+
 bool Position::move(const Move &movement) {
   CastlingRights past_white_castling_rights = m_white_castling_rights;
   CastlingRights past_black_castling_rights = m_black_castling_rights;

@@ -20,6 +20,9 @@ public:
   Square consult(const IndexType &file, const IndexType &rank) const;
   Square &consult(const PiecePlacement &placement);
   Square &consult(const IndexType &file, const IndexType &rank);
+  WeightType consult_history(const PiecePlacement &to) const;
+  WeightType &consult_history(const PiecePlacement &to);
+  void increment_history(const PiecePlacement &to, const CounterType &depth);
   bool move(const Move &movement);
   void undo_move();
   Move get_movement(const std::string &algebraic_notation) const;
@@ -38,6 +41,7 @@ public:
 private:
   Square m_board[0x80];
   PastMove m_game_history[HalfMovesPerMatch];
+  WeightType m_move_history[NumberOfPieces * 2][0x80];
   CastlingRights m_white_castling_rights;
   CastlingRights m_black_castling_rights;
   PiecePlacement m_white_king_position;

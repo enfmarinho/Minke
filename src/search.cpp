@@ -53,9 +53,10 @@ WeightType search::alpha_beta_search(WeightType alpha, WeightType beta,
     WeightType score =
         alpha_beta_search(-beta, -alpha, depth_ply - 1, position, thread);
     position.undo_move();
-    if (score >= beta)
+    if (score >= beta) {
+      position.increment_history(move.to, depth_ply);
       return beta;
-    else if (score > alpha)
+    } else if (score > alpha)
       alpha = score, best_move = move;
   }
   if (!thread.should_stop()) {
