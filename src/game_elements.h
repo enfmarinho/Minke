@@ -29,6 +29,7 @@ using PieceSquareTablePointer = const PieceSquareTable *;
 constexpr auto StartFEN =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 constexpr int MaxMoves = 256;
+constexpr int HalfMovesPerMatch = 2048;
 
 namespace offsets {
 constexpr IndexType North = 1;
@@ -164,6 +165,7 @@ struct PastMove {
         past_fifty_move_counter(past_fifty_move_counter),
         past_white_castling_rights(past_white_castling_rights),
         past_black_castling_rights(past_black_castling_rights) {}
+  PastMove() = default;
 };
 
 #endif // #ifndef GAME_ELEMENTS_H

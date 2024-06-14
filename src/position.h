@@ -9,7 +9,6 @@
 #define POSITION_H
 
 #include "game_elements.h"
-#include <stack>
 #include <string>
 
 class Position {
@@ -37,15 +36,16 @@ public:
 
 private:
   Square m_board[0x80];
-  std::stack<PastMove> m_game_history;
+  PastMove m_game_history[HalfMovesPerMatch];
   CastlingRights m_white_castling_rights;
   CastlingRights m_black_castling_rights;
   PiecePlacement m_white_king_position;
   PiecePlacement m_black_king_position;
-  IndexType m_en_passant;
-  CounterType m_fifty_move_counter_ply;
+  IndexType m_en_passant; //!< Rank of possible en passant move
+  CounterType
+      m_fifty_move_counter_ply; //!<  Move counter since last irreversible move
   Player m_side_to_move;
-  HashType m_hash;
+  HashType m_hash;              //!< Zobrist hash of this position.
   CounterType m_game_clock_ply; //!< Count all the half moves made in the match
 };
 

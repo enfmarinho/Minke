@@ -202,9 +202,9 @@ bool Position::move(const Move &movement) {
                                                    : m_black_king_position)) {
     return false;
   }
-  m_game_history.push(PastMove(movement, captured, past_fifty_move_counter,
-                               past_en_passant, past_white_castling_rights,
-                               past_black_castling_rights));
+  m_game_history[m_game_clock_ply++] =
+      PastMove(movement, captured, past_fifty_move_counter, past_en_passant,
+               past_white_castling_rights, past_black_castling_rights);
   m_side_to_move =
       (m_side_to_move == Player::White) ? Player::Black : Player::White;
   m_hash = zobrist::rehash(*this);
@@ -257,7 +257,9 @@ const CastlingRights &Position::black_castling_rights() const {
 
 const IndexType &Position::en_passant_rank() const { return m_en_passant; }
 
-const PastMove &Position::last_move() const { return m_game_history.top(); }
+const PastMove &Position::last_move() const {
+  return m_game_history[m_game_clock_ply];
+}
 
 const PiecePlacement &Position::black_king_position() const {
   return m_black_king_position;
