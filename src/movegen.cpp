@@ -342,7 +342,7 @@ void MoveList::calculate_scores(const Position &position) {
     } else if (move.move_type == MoveType::PawnPromotionQueen) {
       m_move_scores[index] = ScoreQueenPromotion;
     } else {
-      m_move_scores[index] = position.consult_history(move.to);
+      m_move_scores[index] = position.consult_history(move);
     }
     // TODO implement killer heuristic
   }

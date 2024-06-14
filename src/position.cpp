@@ -127,19 +127,20 @@ Square &Position::consult(const PiecePlacement &placement) {
   return m_board[placement.index()];
 }
 
-WeightType Position::consult_history(const PiecePlacement &to) const {
-  return m_move_history[piece_index(consult(to).piece) +
-                        (m_side_to_move == Player::White ? 0 : 6)][to.index()];
+WeightType Position::consult_history(const Move &move) const {
+  return m_move_history[piece_index(consult(move.to).piece) +
+                        (m_side_to_move == Player::White ? 0 : 6)]
+                       [move.to.index()];
 }
 
-WeightType &Position::consult_history(const PiecePlacement &to) {
-  return m_move_history[piece_index(consult(to).piece) +
-                        (m_side_to_move == Player::White ? 0 : 6)][to.index()];
+WeightType &Position::consult_history(const Move &move) {
+  return m_move_history[piece_index(consult(move.from).piece) +
+                        (m_side_to_move == Player::White ? 0 : 6)]
+                       [move.to.index()];
 }
 
-void Position::increment_history(const PiecePlacement &to,
-                                 const CounterType &depth) {
-  consult_history(to) += depth * depth;
+void Position::increment_history(const Move &move, const CounterType &depth) {
+  consult_history(move) += depth * depth;
 }
 
 bool Position::move(const Move &movement) {
