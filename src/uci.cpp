@@ -60,8 +60,9 @@ void UCI::loop() {
       std::cout << "TODO write help message." << std::endl;
     } else if (token == "d") {
       m_position.print();
-      std::cout << "Move list: ";
       MoveList move_list(m_position);
+      std::cout << "Move list "
+                << "(" << move_list.size() << "): ";
       while (!move_list.empty()) {
         Move move = move_list.next_move();
         Position copy = m_position;
