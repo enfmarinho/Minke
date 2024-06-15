@@ -16,8 +16,8 @@ using IndexType = int8_t;
 using CounterType = int;
 using WeightType = int32_t; // TODO change to int16_t
 using HashType = uint64_t;
-using TimePoint = std::chrono::milliseconds::rep;
-using TimeType = std::chrono::steady_clock::time_point;
+using TimeType = std::chrono::milliseconds::rep;
+using TimePoint = std::chrono::steady_clock::time_point;
 
 constexpr WeightType ScoreNone = -2000000;
 constexpr CounterType NumberOfPieces = 6;

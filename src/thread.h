@@ -37,8 +37,8 @@ private:
   uint64_t m_nodes_searched;
   uint64_t m_node_limit;
   CounterType m_max_depth;
-  TimePoint m_start_time;
-  TimePoint m_movetime;
+  TimeType m_start_time;
+  TimeType m_movetime;
 };
 
 #endif // #ifndef THREAD_H

@@ -13,7 +13,7 @@
 #include <cstdint>
 #include <limits>
 
-static inline TimePoint now() {
+static inline TimeType now() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(
              std::chrono::steady_clock::now().time_since_epoch())
       .count();
@@ -26,7 +26,7 @@ void Thread::reset() {
   m_infinite = false;
   m_nodes_searched = 0;
   m_node_limit = m_max_depth = std::numeric_limits<CounterType>::max();
-  m_movetime = std::numeric_limits<TimePoint>::max();
+  m_movetime = std::numeric_limits<TimeType>::max();
 }
 
 void Thread::stop_search() {
