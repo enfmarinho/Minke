@@ -9,10 +9,15 @@
 #include "game_elements.h"
 #include "position.h"
 #include "search.h"
-#include "time_manager.h"
 #include <chrono>
 #include <cstdint>
 #include <limits>
+
+static inline TimePoint now() {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
+             std::chrono::steady_clock::now().time_since_epoch())
+      .count();
+}
 
 Thread::Thread() { reset(); }
 
@@ -32,9 +37,8 @@ void Thread::stop_search() {
 }
 
 bool Thread::should_stop() const {
-  return m_stop ||
-         (!m_infinite && (m_nodes_searched >= m_node_limit ||
-                          TimeManager::now() - m_start_time >= m_movetime));
+  return m_stop || (!m_infinite && (m_nodes_searched >= m_node_limit ||
+                                    now() - m_start_time >= m_movetime));
 }
 
 bool Thread::should_stop(CounterType depth) const {
@@ -49,7 +53,7 @@ void Thread::wait() {
 void Thread::search(Position &position) {
   if (m_stop) {
     m_stop = false;
-    m_start_time = TimeManager::now();
+    m_start_time = now();
     m_thread = std::thread(search::iterative_deepening, std::ref(position),
                            std::ref(*this));
   }
