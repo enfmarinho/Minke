@@ -216,7 +216,7 @@ bool Position::move(const Move &movement) {
     consult(file, 0) = empty_square;
   }
   m_game_history[m_game_clock_ply++] =
-      PastMove(movement, captured, past_fifty_move_counter, past_en_passant,
+      PastMove(movement, captured, past_en_passant, past_fifty_move_counter,
                past_white_castling_rights, past_black_castling_rights);
   m_side_to_move =
       (m_side_to_move == Player::White) ? Player::Black : Player::White;
