@@ -220,7 +220,7 @@ bool Position::move(const Move &movement) {
                past_white_castling_rights, past_black_castling_rights);
   m_side_to_move =
       (m_side_to_move == Player::White) ? Player::Black : Player::White;
-  m_hash = zobrist::hash(*this); // TODO optimize this with rehash
+  m_hash = zobrist::rehash(*this);
   // Required because of the pseudo-legal move generator
   if (under_attack(*this, m_side_to_move,
                    m_side_to_move == Player::White ? m_white_king_position
@@ -232,7 +232,15 @@ bool Position::move(const Move &movement) {
 }
 
 void Position::undo_move() {
+  m_hash = zobrist::rehash(*this);
   PastMove undo = last_move();
+  --m_game_clock_ply;
+  m_en_passant = undo.past_en_passant;
+  m_fifty_move_counter_ply = undo.past_fifty_move_counter;
+  m_white_castling_rights = undo.past_white_castling_rights;
+  m_black_castling_rights = undo.past_black_castling_rights;
+  m_side_to_move =
+      (m_side_to_move == Player::White) ? Player::Black : Player::White;
   if (undo.movement.move_type == MoveType::Regular ||
       undo.movement.move_type == MoveType::Capture) {
     consult(undo.movement.from) = consult(undo.movement.to);
@@ -251,26 +259,18 @@ void Position::undo_move() {
     consult(undo.movement.from) = consult(undo.movement.to);
     consult(undo.movement.to) = undo.captured;
   } else if (undo.movement.move_type == MoveType::KingSideCastling) {
-    IndexType file = m_side_to_move == Player::White ? 7 : 0;
+    IndexType file = m_side_to_move == Player::White ? 0 : 7;
     consult(file, 4) = consult(file, 6);
     consult(file, 7) = consult(file, 5);
     consult(file, 6) = empty_square;
     consult(file, 5) = empty_square;
   } else if (undo.movement.move_type == MoveType::QueenSideCastling) {
-    IndexType file = m_side_to_move == Player::White ? 7 : 0;
+    IndexType file = m_side_to_move == Player::White ? 0 : 7;
     consult(file, 4) = consult(file, 2);
     consult(file, 0) = consult(file, 3);
     consult(file, 2) = empty_square;
     consult(file, 3) = empty_square;
   }
-  m_en_passant = undo.past_en_passant;
-  m_fifty_move_counter_ply = undo.past_fifty_move_counter;
-  m_white_castling_rights = undo.past_white_castling_rights;
-  m_black_castling_rights = undo.past_black_castling_rights;
-  m_side_to_move =
-      (m_side_to_move == Player::White) ? Player::Black : Player::White;
-  m_hash = zobrist::hash(*this); // TODO optimize this with rehash
-  --m_game_clock_ply;
 }
 
 Move Position::get_movement(const std::string &algebraic_notation) const {
