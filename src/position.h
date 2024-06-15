@@ -48,7 +48,7 @@ private:
   PiecePlacement m_black_king_position;
   IndexType m_en_passant; //!< Rank of possible en passant move
   CounterType
-      m_fifty_move_counter_ply; //!<  Move counter since last irreversible move
+      m_fifty_move_counter_ply; //!< Move counter since last irreversible move
   Player m_side_to_move;
   HashType m_hash;              //!< Zobrist hash of this position.
   CounterType m_game_clock_ply; //!< Count all the half moves made in the match

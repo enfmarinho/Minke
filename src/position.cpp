@@ -251,13 +251,13 @@ void Position::undo_move() {
     consult(undo.movement.from) = consult(undo.movement.to);
     consult(undo.movement.to) = undo.captured;
   } else if (undo.movement.move_type == MoveType::KingSideCastling) {
-    IndexType file = m_side_to_move == Player::White ? 0 : 7;
+    IndexType file = m_side_to_move == Player::White ? 7 : 0;
     consult(file, 4) = consult(file, 6);
     consult(file, 7) = consult(file, 5);
     consult(file, 6) = empty_square;
     consult(file, 5) = empty_square;
   } else if (undo.movement.move_type == MoveType::QueenSideCastling) {
-    IndexType file = m_side_to_move == Player::White ? 0 : 7;
+    IndexType file = m_side_to_move == Player::White ? 7 : 0;
     consult(file, 4) = consult(file, 2);
     consult(file, 0) = consult(file, 3);
     consult(file, 2) = empty_square;
