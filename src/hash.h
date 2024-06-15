@@ -5,8 +5,8 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifndef HASHING_H
-#define HASHING_H
+#ifndef HASH_H
+#define HASH_H
 
 #include "game_elements.h"
 #include "position.h"
@@ -298,4 +298,4 @@ constexpr static const HashType ZobristArray[781] = {
 };
 }; // namespace zobrist
 
-#endif // #ifndef HASHING_H
+#endif // #ifndef HASH_H

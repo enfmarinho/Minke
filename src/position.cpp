@@ -7,7 +7,7 @@
 
 #include "position.h"
 #include "game_elements.h"
-#include "hashing.h"
+#include "hash.h"
 #include "movegen.h"
 #include <array>
 #include <cassert>

@@ -5,7 +5,7 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "hashing.h"
+#include "hash.h"
 #include "game_elements.h"
 #include "position.h"
 
