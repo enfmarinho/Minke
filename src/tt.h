@@ -24,6 +24,9 @@ public:
     UpperBound,
   };
 
+  TTEntry() = default;
+  ~TTEntry() = default;
+
   HashType key() const { return m_hash; }
   IndexType depth_ply() const { return m_depth_ply; }
   Move best_move() const { return m_best_move; }
@@ -48,6 +51,8 @@ private:
 class TranspositionTable {
   constexpr static IndexType bucket_size = 4;
   struct TTBucket {
+    TTBucket() = default;
+    ~TTBucket() = default;
     std::array<TTEntry, bucket_size> entry;
   };
 
