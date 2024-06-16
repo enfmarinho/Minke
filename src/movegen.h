@@ -23,7 +23,7 @@ class MoveList {
 public:
   using size_type = size_t;
 
-  MoveList(const Position &position);
+  MoveList(const Position &position, const Move &move);
   [[nodiscard]] bool empty() const;
   [[nodiscard]] size_type size() const;
   [[nodiscard]] Move next_move();
@@ -38,7 +38,7 @@ private:
   void pseudolegal_sliders_moves(const Position &position,
                                  const PiecePlacement &from);
   void pseudolegal_castling_moves(const Position &position);
-  void calculate_scores(const Position &position);
+  void calculate_scores(const Position &position, const Move &move);
 
   Move m_move_list[MaxMoves], *m_end;
   WeightType m_move_scores[MaxMoves];

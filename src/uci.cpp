@@ -60,7 +60,12 @@ void UCI::loop() {
       std::cout << "TODO write help message." << std::endl;
     } else if (token == "d") {
       m_position.print();
-      MoveList move_list(m_position);
+      bool found;
+      auto entry = TranspositionTable::get().probe(m_position, found);
+      Move ttmove = move_none;
+      if (found)
+        ttmove = entry->best_move();
+      MoveList move_list(m_position, ttmove);
       std::cout << "Move list "
                 << "(" << move_list.size() << "): ";
       while (!move_list.empty()) {

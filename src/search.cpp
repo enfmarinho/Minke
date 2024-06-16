@@ -44,8 +44,10 @@ WeightType search::alpha_beta_search(WeightType alpha, WeightType beta,
   if (depth_ply == 0)
     return eval::evaluate(position); // TODO do a quiesce search
 
-  Move best_move;
-  MoveList move_list(position);
+  Move best_move = move_none;
+  if (found)
+    best_move = entry->best_move();
+  MoveList move_list(position, best_move);
   while (!move_list.empty()) {
     Move move = move_list.next_move();
     if (!position.move(move))

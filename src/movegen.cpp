@@ -20,7 +20,7 @@ bool under_attack(const Position &position, const Player &player,
   return cheapest_attacker(position, player, pp, trash) != Piece::None;
 }
 
-MoveList::MoveList(const Position &position)
+MoveList::MoveList(const Position &position, const Move &move)
     : m_end(m_move_list), m_start_index{0} {
   for (IndexType file = 0; file < BoardHeight; ++file) {
     for (IndexType rank = 0; rank < BoardWidth; ++rank) {
@@ -48,7 +48,7 @@ MoveList::MoveList(const Position &position)
   }
 
   pseudolegal_castling_moves(position);
-  calculate_scores(position);
+  calculate_scores(position, move);
 }
 
 [[nodiscard]] bool MoveList::empty() const {
@@ -326,13 +326,16 @@ bool SEE(const Position &position, const Move &move) {
   return true;
 }
 
-void MoveList::calculate_scores(const Position &position) {
+void MoveList::calculate_scores(const Position &position, const Move &tt_move) {
+  static constexpr WeightType ScoreTTHit = 70000;
   static constexpr WeightType ScoreQueenPromotion = 50000;
   static constexpr WeightType ScoreCapture = 20000;
 
   for (size_type index = 0, remaining = size(); index < remaining; ++index) {
     Move move = m_move_list[index];
-    if (move.move_type == MoveType::Capture) {
+    if (move == tt_move) {
+      m_move_scores[index] = ScoreTTHit;
+    } else if (move.move_type == MoveType::Capture) {
       m_move_scores[index] =
           ScoreCapture +
           weights::SEE_table[piece_index(position.consult(move.to).piece)] -

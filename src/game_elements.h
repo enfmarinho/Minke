@@ -104,6 +104,9 @@ struct PiecePlacement {
   PiecePlacement(const IndexType &file, const IndexType &rank) {
     m_index = file + (rank << padding);
   }
+  friend bool operator==(const PiecePlacement &lhs, const PiecePlacement &rhs) {
+    return lhs.m_index == rhs.m_index;
+  }
 
 private:
   IndexType m_index; // file is stored in the 4 least significant bits, while
@@ -147,7 +150,12 @@ struct Move {
     }
     return algebraic_notation;
   }
+  friend bool operator==(const Move &lhs, const Move &rhs) {
+    return lhs.move_type == rhs.move_type && lhs.from == rhs.from &&
+           lhs.to == rhs.to;
+  }
 };
+const Move move_none = Move();
 static_assert(sizeof(Move) == 3);
 
 struct PastMove {
