@@ -99,6 +99,9 @@ struct PiecePlacement {
   IndexType index() const { return m_index; }
   IndexType &index() { return m_index; }
   bool out_of_bounds() const { return m_index & 0x88; }
+  PiecePlacement mirrored() const {
+    return PiecePlacement(m_index ^ 119); // 119 is (7 << 4) + 7
+  }
   PiecePlacement() {};
   PiecePlacement(IndexType index) : m_index(index) {};
   PiecePlacement(const IndexType &file, const IndexType &rank) {
