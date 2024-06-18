@@ -29,4 +29,4 @@ add_executable(
   "src/thread.cpp"
   "src/tt.cpp"
   "src/uci.cpp")
-target_compile_features(minke PUBLIC cxx_std_17)
+target_compile_features(minke PUBLIC cxx_std_20)
