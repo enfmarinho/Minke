@@ -9,9 +9,9 @@
 #include "game_elements.h"
 #include "position.h"
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <span>
-#include <utility>
 
 IndexType feature_index(const Square &sq, const PiecePlacement &pp) {
   return (pp.rank() * 8 + pp.file()) +
@@ -63,25 +63,33 @@ void Network::reset(const Position &position) {
   }
 }
 
-int32_t Network::crelu(const int16_t &input) {
+int32_t Network::crelu(const int16_t &input) const {
   return int32_t(); // TODO just a STUB
 }
 
-WeightType Network::evaluate(const Player &stm) {
-  std::array<int16_t, HiddenLayerSize> &curr_player =
-      m_accumulators.back().white_neurons;
-  std::array<int16_t, HiddenLayerSize> &adversary =
-      m_accumulators.back().black_neurons;
-  if (stm == Player::Black)
-    std::swap(curr_player, adversary);
-
+int32_t Network::weight_sum_reduction(
+    const std::array<int16_t, HiddenLayerSize> &player,
+    const std::array<int16_t, HiddenLayerSize> &adversary) const {
   int32_t eval = 0;
   for (int neuron_index = 0; neuron_index < HiddenLayerSize; ++neuron_index) {
-    eval += crelu(curr_player[neuron_index]) * m_output_weights[neuron_index];
+    eval += crelu(player[neuron_index]) * m_output_weights[neuron_index];
     eval += crelu(adversary[neuron_index]) *
             m_output_weights[neuron_index + HiddenLayerSize];
   }
-  return eval + m_output_bias;
+  return eval + m_output_bias; // TODO check quantization
+}
+
+WeightType Network::eval(const Player &stm) const {
+  switch (stm) {
+  case Player::White:
+    return weight_sum_reduction(m_accumulators.back().white_neurons,
+                                m_accumulators.back().black_neurons);
+  case Player::Black:
+    return weight_sum_reduction(m_accumulators.back().black_neurons,
+                                m_accumulators.back().white_neurons);
+  default:
+    assert(false); // Must not reach this
+  }
 }
 
 Network::Accumulator::Accumulator(std::span<int16_t, HiddenLayerSize> bias) {

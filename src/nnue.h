@@ -21,6 +21,7 @@ constexpr int InputLayerSize = 64 * 12;
 constexpr int HiddenLayerSize = 64;
 
 // TODO check and fix quantization
+// NOTE: Network must be initialized using reset().
 class Network {
 public:
   Network();
@@ -33,7 +34,7 @@ public:
   void remove_feature(const Square &sq, const PiecePlacement &pp);
 
   void reset(const Position &position);
-  WeightType evaluate(const Player &stm);
+  WeightType eval(const Player &stm) const;
 
 private:
   struct Accumulator {
@@ -47,7 +48,10 @@ private:
     int16_t *operator[](Player player);
   };
 
-  int32_t crelu(const int16_t &input);
+  int32_t crelu(const int16_t &input) const;
+  int32_t weight_sum_reduction(
+      const std::array<int16_t, HiddenLayerSize> &player,
+      const std::array<int16_t, HiddenLayerSize> &adversary) const;
 
   std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
   std::array<std::array<int16_t, HiddenLayerSize>, InputLayerSize>
