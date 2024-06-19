@@ -21,10 +21,11 @@ add_compile_options(
 add_executable(
   minke
   "src/evaluate.cpp"
-  "src/nnue.cpp"
+  "src/game_state.cpp"
   "src/hash.cpp"
   "src/main.cpp"
   "src/movegen.cpp"
+  "src/nnue.cpp"
   "src/position.cpp"
   "src/search.cpp"
   "src/thread.cpp"
