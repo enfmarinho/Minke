@@ -7,6 +7,7 @@
 
 #include "movegen.h"
 #include "game_elements.h"
+#include "game_state.h"
 #include "position.h"
 #include "weights.h"
 #include <cassert>
@@ -20,35 +21,35 @@ bool under_attack(const Position &position, const Player &player,
   return cheapest_attacker(position, player, pp, trash) != Piece::None;
 }
 
-MoveList::MoveList(const Position &position, const Move &move)
+MoveList::MoveList(const GameState &game_state, const Move &move)
     : m_end(m_move_list), m_start_index{0} {
   for (IndexType file = 0; file < BoardHeight; ++file) {
     for (IndexType rank = 0; rank < BoardWidth; ++rank) {
       PiecePlacement current = PiecePlacement(file, rank);
-      const Square &square = position.consult(current);
+      const Square &square = game_state.position().consult(current);
       if (square.player == Player::None ||
-          position.side_to_move() != square.player) {
+          game_state.position().side_to_move() != square.player) {
         continue;
       }
       switch (square.piece) {
       case Piece::Pawn:
-        pseudolegal_pawn_moves(position, current);
+        pseudolegal_pawn_moves(game_state.position(), current);
         break;
       case Piece::Knight:
-        pseudolegal_knight_moves(position, current);
+        pseudolegal_knight_moves(game_state.position(), current);
         break;
       case Piece::King:
-        pseudolegal_king_moves(position, current);
+        pseudolegal_king_moves(game_state.position(), current);
         break;
       default:
-        pseudolegal_sliders_moves(position, current);
+        pseudolegal_sliders_moves(game_state.position(), current);
         break;
       }
     }
   }
 
-  pseudolegal_castling_moves(position);
-  calculate_scores(position, move);
+  pseudolegal_castling_moves(game_state.position());
+  calculate_scores(game_state, move);
 }
 
 [[nodiscard]] bool MoveList::empty() const {
@@ -326,7 +327,8 @@ bool SEE(const Position &position, const Move &move) {
   return true;
 }
 
-void MoveList::calculate_scores(const Position &position, const Move &tt_move) {
+void MoveList::calculate_scores(const GameState &game_state,
+                                const Move &tt_move) {
   static constexpr WeightType ScoreTTHit = 70000;
   static constexpr WeightType ScoreQueenPromotion = 50000;
   static constexpr WeightType ScoreCapture = 20000;
@@ -338,14 +340,16 @@ void MoveList::calculate_scores(const Position &position, const Move &tt_move) {
     } else if (move.move_type == MoveType::Capture) {
       m_move_scores[index] =
           ScoreCapture +
-          weights::SEE_table[piece_index(position.consult(move.to).piece)] -
-          weights::SEE_table[piece_index(position.consult(move.from).piece)] /
+          weights::SEE_table[piece_index(
+              game_state.position().consult(move.to).piece)] -
+          weights::SEE_table[piece_index(
+              game_state.position().consult(move.from).piece)] /
               5 +
-          ScoreCapture * SEE(position, move);
+          ScoreCapture * SEE(game_state.position(), move);
     } else if (move.move_type == MoveType::PawnPromotionQueen) {
       m_move_scores[index] = ScoreQueenPromotion;
     } else {
-      m_move_scores[index] = position.consult_history(move);
+      m_move_scores[index] = game_state.consult_history(move);
     }
     // TODO implement killer heuristic
   }

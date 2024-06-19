@@ -34,12 +34,16 @@ void GameState::undo_move() {
   m_net.pop();
 }
 
-void GameState::reset(const std::string &fen) {
+bool GameState::reset(const std::string &fen) {
   m_position_stack.clear();
   m_position_stack.emplace_back();
 
-  position().reset(fen);
+  if (!position().reset(fen))
+    return false;
+
   m_net.reset(position());
+  return true;
+}
 
 WeightType GameState::consult_history(const Move &move) const {
   return m_move_history[piece_index(position().consult(move.to).piece) +

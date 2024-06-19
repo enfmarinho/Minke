@@ -9,6 +9,7 @@
 #define MOVEGEN_H
 
 #include "game_elements.h"
+#include "game_state.h"
 #include "position.h"
 #include <cstdint>
 
@@ -23,7 +24,7 @@ class MoveList {
 public:
   using size_type = size_t;
 
-  MoveList(const Position &position, const Move &move);
+  MoveList(const GameState &game_state, const Move &move);
   [[nodiscard]] bool empty() const;
   [[nodiscard]] size_type size() const;
   [[nodiscard]] Move next_move();
@@ -38,7 +39,7 @@ private:
   void pseudolegal_sliders_moves(const Position &position,
                                  const PiecePlacement &from);
   void pseudolegal_castling_moves(const Position &position);
-  void calculate_scores(const Position &position, const Move &move);
+  void calculate_scores(const GameState &game_state, const Move &move);
 
   Move m_move_list[MaxMoves], *m_end;
   WeightType m_move_scores[MaxMoves];

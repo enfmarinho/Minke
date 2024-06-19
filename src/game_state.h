@@ -22,7 +22,7 @@ public:
 
   bool make_move(const Move &move);
   void undo_move();
-  void reset(const std::string &fen);
+  bool reset(const std::string &fen);
   WeightType consult_history(const Move &move) const;
   WeightType &consult_history(const Move &move);
   void increment_history(const Move &move, const CounterType &depth);

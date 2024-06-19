@@ -13,16 +13,13 @@
 
 class Position {
 public:
-  Position();
+  Position() = default;
   ~Position() = default;
   bool reset(const std::string &fen);
   Square consult(const PiecePlacement &placement) const;
   Square consult(const IndexType &file, const IndexType &rank) const;
   Square &consult(const PiecePlacement &placement);
   Square &consult(const IndexType &file, const IndexType &rank);
-  WeightType consult_history(const Move &move) const;
-  WeightType &consult_history(const Move &move);
-  void increment_history(const Move &move, const CounterType &depth);
   bool move(const Move &movement);
   void undo_move();
   Move get_movement(const std::string &algebraic_notation) const;

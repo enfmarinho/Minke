@@ -59,18 +59,19 @@ void UCI::loop() {
     } else if (token == "help" || token == "--help") {
       std::cout << "TODO write help message." << std::endl;
     } else if (token == "d") {
-      m_position.print();
+      m_game_state.position().print();
       bool found;
-      auto entry = TranspositionTable::get().probe(m_position, found);
+      auto entry =
+          TranspositionTable::get().probe(m_game_state.position(), found);
       Move ttmove = move_none;
       if (found)
         ttmove = entry->best_move();
-      MoveList move_list(m_position, ttmove);
-      std::cout << "Move list "
-                << "(" << move_list.size() << "): ";
+      MoveList move_list(m_game_state, ttmove);
+      std::cout << "Move list (" << move_list.size()
+                << " pseudo-legal moves): ";
       while (!move_list.empty()) {
         Move move = move_list.next_move();
-        Position copy = m_position;
+        Position copy = m_game_state.position(); // Avoid update the NN
         if (copy.move(move))
           std::cout << move.get_algebraic_notation() << ' ';
         else
@@ -109,16 +110,17 @@ void UCI::position(std::istringstream &iss) {
 
 void UCI::set_position(const std::string &fen,
                        const std::vector<std::string> &move_list) {
-  if (!m_position.reset(fen)) {
-    std::cerr
-        << "Since the FEN string was invalid, the board representation may "
-           "have been be corrupted. To be safe, set the game board again!"
-        << std::endl;
+  if (!m_game_state.reset(fen)) {
+    std::cerr << "Since the FEN string was invalid, the game state "
+                 "representation may have been be corrupted. To be safe, set "
+                 "the game board again!"
+              << std::endl;
     return;
   }
   TranspositionTable::get().clear();
   for (const std::string &algebraic_notation : move_list) {
-    assert(m_position.move(m_position.get_movement(algebraic_notation)));
+    assert(m_game_state.make_move(
+        m_game_state.position().get_movement(algebraic_notation)));
   }
 }
 
@@ -137,8 +139,8 @@ void UCI::set_option(std::istringstream &iss) {
 }
 
 void UCI::eval() {
-  std::cout << "The position evaluation is " << eval::evaluate(m_position)
-            << std::endl;
+  std::cout << "The position evaluation is "
+            << eval::evaluate(m_game_state.position()) << std::endl;
 }
 
 void UCI::parse_go_limits(std::istringstream &iss) {
@@ -160,4 +162,4 @@ void UCI::parse_go_limits(std::istringstream &iss) {
   }
 }
 
-void UCI::go() { m_thread.search(m_position); }
+void UCI::go() { m_thread.search(m_game_state); }

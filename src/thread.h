@@ -9,7 +9,7 @@
 #define THREAD_H
 
 #include "game_elements.h"
-#include "position.h"
+#include "game_state.h"
 #include <cstdint>
 #include <thread>
 
@@ -23,7 +23,7 @@ public:
   bool should_stop() const;
   bool should_stop(CounterType depth) const;
   void wait();
-  void search(Position &position);
+  void search(GameState &game_state);
   void max_depth_ply(CounterType new_max_depth_ply);
   void movetime(CounterType mivetime);
   void node_limit(uint64_t new_node_limit);

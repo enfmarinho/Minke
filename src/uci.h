@@ -9,7 +9,7 @@
 #define UCI_H
 
 #include "game_elements.h"
-#include "position.h"
+#include "game_state.h"
 #include "thread.h"
 #include <ostream>
 #include <sstream>
@@ -43,7 +43,7 @@ private:
 
   EngineOptions m_engine_options;
   Thread m_thread;
-  Position m_position;
+  GameState m_game_state;
 };
 
 #endif // #ifndef UCI_H

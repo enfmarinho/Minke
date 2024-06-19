@@ -6,16 +6,16 @@
  */
 
 #include "game_elements.h"
-#include "position.h"
+#include "game_state.h"
 #include "thread.h"
 
 #ifndef SEARCH_H
 #define SEARCH_H
 
 namespace search {
-void iterative_deepening(Position &position, Thread &thread);
+void iterative_deepening(GameState &game_state, Thread &thread);
 WeightType alpha_beta_search(WeightType alpha, WeightType beta,
-                             const CounterType &depth, Position &position,
+                             const CounterType &depth, GameState &game_state,
                              Thread &thread);
 } // namespace search
 

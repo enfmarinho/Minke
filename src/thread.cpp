@@ -7,7 +7,7 @@
 
 #include "thread.h"
 #include "game_elements.h"
-#include "position.h"
+#include "game_state.h"
 #include "search.h"
 #include <chrono>
 #include <cstdint>
@@ -50,11 +50,11 @@ void Thread::wait() {
     m_thread.join();
 }
 
-void Thread::search(Position &position) {
+void Thread::search(GameState &game_state) {
   if (m_stop) {
     m_stop = false;
     m_start_time = now();
-    m_thread = std::thread(search::iterative_deepening, std::ref(position),
+    m_thread = std::thread(search::iterative_deepening, std::ref(game_state),
                            std::ref(*this));
   }
 }
