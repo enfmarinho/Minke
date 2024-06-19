@@ -13,7 +13,7 @@
 
 namespace zobrist {
 HashType hash(const Position &position);
-HashType rehash(const Position &position);
+HashType rehash(const Position &position, const PastMove &last_move);
 int piece_start_index(const Square &piece_square);
 IndexType placement_index(const PiecePlacement &piece_placement);
 IndexType placement_index(const IndexType &file, const IndexType &rank);

@@ -197,62 +197,17 @@ bool Position::move(const Move &movement) {
     consult(file, 4) = empty_square;
     consult(file, 0) = empty_square;
   }
-  m_game_history[m_game_clock_ply++] =
-      PastMove(movement, captured, past_en_passant, past_fifty_move_counter,
-               past_white_castling_rights, past_black_castling_rights);
   m_side_to_move =
       (m_side_to_move == Player::White) ? Player::Black : Player::White;
-  m_hash = zobrist::rehash(*this);
-  // Required because of the pseudo-legal move generator
-  if (under_attack(*this, m_side_to_move,
-                   m_side_to_move == Player::White ? m_white_king_position
-                                                   : m_black_king_position)) {
-    undo_move();
-    return false;
-  }
-  return true;
-}
+  m_hash = zobrist::rehash(*this, PastMove(movement, captured, past_en_passant,
+                                           past_fifty_move_counter,
+                                           past_white_castling_rights,
+                                           past_black_castling_rights));
 
-void Position::undo_move() {
-  m_hash = zobrist::rehash(*this);
-  PastMove undo = last_move();
-  --m_game_clock_ply;
-  m_en_passant = undo.past_en_passant;
-  m_fifty_move_counter_ply = undo.past_fifty_move_counter;
-  m_white_castling_rights = undo.past_white_castling_rights;
-  m_black_castling_rights = undo.past_black_castling_rights;
-  m_side_to_move =
-      (m_side_to_move == Player::White) ? Player::Black : Player::White;
-  if (undo.movement.move_type == MoveType::Regular ||
-      undo.movement.move_type == MoveType::Capture) {
-    consult(undo.movement.from) = consult(undo.movement.to);
-    consult(undo.movement.to) = undo.captured;
-  } else if (undo.movement.move_type == MoveType::EnPassant) {
-    IndexType offset =
-        undo.captured.player == Player::White ? offsets::North : offsets::South;
-    consult(undo.movement.from) = consult(undo.movement.to);
-    consult(undo.movement.to) = empty_square;
-    consult(undo.movement.to.index() + offset) = undo.captured;
-  } else if (undo.movement.move_type == MoveType::PawnPromotionQueen ||
-             undo.movement.move_type == MoveType::PawnPromotionKnight ||
-             undo.movement.move_type == MoveType::PawnPromotionBishop ||
-             undo.movement.move_type == MoveType::PawnPromotionRook) {
-    consult(undo.movement.to).piece = Piece::Pawn;
-    consult(undo.movement.from) = consult(undo.movement.to);
-    consult(undo.movement.to) = undo.captured;
-  } else if (undo.movement.move_type == MoveType::KingSideCastling) {
-    IndexType file = m_side_to_move == Player::White ? 0 : 7;
-    consult(file, 4) = consult(file, 6);
-    consult(file, 7) = consult(file, 5);
-    consult(file, 6) = empty_square;
-    consult(file, 5) = empty_square;
-  } else if (undo.movement.move_type == MoveType::QueenSideCastling) {
-    IndexType file = m_side_to_move == Player::White ? 0 : 7;
-    consult(file, 4) = consult(file, 2);
-    consult(file, 0) = consult(file, 3);
-    consult(file, 2) = empty_square;
-    consult(file, 3) = empty_square;
-  }
+  // Required because of the pseudo-legal move generator
+  return !under_attack(*this, m_side_to_move,
+                       m_side_to_move == Player::White ? m_white_king_position
+                                                       : m_black_king_position);
 }
 
 Move Position::get_movement(const std::string &algebraic_notation) const {
@@ -300,10 +255,6 @@ const CastlingRights &Position::black_castling_rights() const {
 }
 
 const IndexType &Position::en_passant_rank() const { return m_en_passant; }
-
-const PastMove &Position::last_move() const {
-  return m_game_history[m_game_clock_ply - 1];
-}
 
 const PiecePlacement &Position::black_king_position() const {
   return m_black_king_position;

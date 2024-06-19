@@ -39,9 +39,8 @@ HashType zobrist::hash(const Position &position) {
   return key;
 }
 
-HashType zobrist::rehash(const Position &position) {
+HashType zobrist::rehash(const Position &position, const PastMove &last_move) {
   HashType new_key = position.get_hash();
-  PastMove last_move = position.last_move();
   IndexType piece_index =
       piece_start_index(position.consult(last_move.movement.to));
   IndexType destination_index = placement_index(last_move.movement.to);
