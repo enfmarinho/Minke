@@ -38,8 +38,8 @@ private:
                     const std::vector<std::string> &move_list);
   void position(std::istringstream &);
   void set_option(std::istringstream &);
-  void parse_go_limits(std::istringstream &);
-  void bench();
+  void parse_go_limits(std::istringstream &, bool bench = false);
+  void bench(std::istringstream &);
   void eval();
   void go();
 

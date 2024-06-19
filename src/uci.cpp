@@ -61,7 +61,7 @@ void UCI::loop() {
     } else if (token == "d") {
       print_debug_info();
     } else if (token == "bench") {
-      bench();
+      bench(iss);
     } else if (!token.empty()) {
       std::cout << "Unknown command: '" << token
                 << "'. Type help for information." << std::endl;
@@ -140,26 +140,28 @@ void UCI::set_option(std::istringstream &iss) {
   }
 }
 
-void UCI::bench() {
+void UCI::bench(std::istringstream &iss) {
   m_thread.wait();
   m_thread.reset();
-  m_thread.max_depth_ply(8); // TODO make search limits to be defined by args
-  TranspositionTable::get().clear();
-  TimeType start_time = now();
+  m_thread.max_depth_ply(8); // TODO increase max_depth_ply
+  parse_go_limits(iss, true);
 
+  TimeType total_time = 0;
   std::vector<std::string> fen_list = {StartFEN};
   for (const std::string &fen : fen_list) {
     m_game_state.reset(fen);
+    TranspositionTable::get().clear();
+    TimeType start_time = now();
     go();
+    m_thread.wait();
+    total_time += now() - start_time;
   }
-  m_thread.wait();
-  TimeType time_taken = now() - start_time;
 
   std::cerr << "\n==========================\n";
-  std::cerr << "Total time: " << time_taken << "ms\n";
+  std::cerr << "Total time: " << total_time << "ms\n";
   std::cerr << "Nodes searched: " << m_thread.nodes_searched() << "\n";
   std::cerr << "Nodes per second: "
-            << m_thread.nodes_searched() * 1000 / time_taken;
+            << m_thread.nodes_searched() * 1000 / total_time;
   std::cerr << "\n==========================";
   std::cerr << std::endl;
 }
@@ -169,10 +171,10 @@ void UCI::eval() {
             << eval::evaluate(m_game_state.position()) << std::endl;
 }
 
-void UCI::parse_go_limits(std::istringstream &iss) {
+void UCI::parse_go_limits(std::istringstream &iss, bool bench) {
   std::string token;
   while (iss >> token) {
-    if (token == "infinite") {
+    if (token == "infinite" && !bench) {
       m_thread.infinite();
       return;
     }
