@@ -21,6 +21,7 @@ add_compile_options(
 add_executable(
   minke
   "src/evaluate.cpp"
+  "src/nnue.cpp"
   "src/hash.cpp"
   "src/main.cpp"
   "src/movegen.cpp"
