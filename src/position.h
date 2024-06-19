@@ -11,6 +11,7 @@
 #include "game_elements.h"
 #include <string>
 
+// NOTE: Position must be initialized using reset().
 class Position {
 public:
   Position() = default;
