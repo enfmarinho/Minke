@@ -33,6 +33,7 @@ private:
     }
   };
 
+  void print_debug_info() const;
   void set_position(const std::string &fen,
                     const std::vector<std::string> &move_list);
   void position(std::istringstream &);

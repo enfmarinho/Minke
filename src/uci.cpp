@@ -12,7 +12,6 @@
 #include "search.h"
 #include "tt.h"
 #include <cassert>
-#include <cstdint>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -60,25 +59,7 @@ void UCI::loop() {
     } else if (token == "help" || token == "--help") {
       std::cout << "TODO write help message." << std::endl;
     } else if (token == "d") {
-      m_game_state.position().print();
-      bool found;
-      auto entry =
-          TranspositionTable::get().probe(m_game_state.position(), found);
-      Move ttmove = move_none;
-      if (found)
-        ttmove = entry->best_move();
-      MoveList move_list(m_game_state, ttmove);
-      std::cout << "Move list (" << move_list.size()
-                << " pseudo-legal moves): ";
-      while (!move_list.empty()) {
-        Move move = move_list.next_move();
-        Position copy = m_game_state.position(); // Avoid update the NN
-        if (copy.move(move))
-          std::cout << move.get_algebraic_notation() << ' ';
-        else
-          std::cout << "(" << move.get_algebraic_notation() << ") ";
-      }
-      std::cout << std::endl;
+      print_debug_info();
     } else if (token == "bench") {
       bench();
     } else if (!token.empty()) {
@@ -86,6 +67,26 @@ void UCI::loop() {
                 << "'. Type help for information." << std::endl;
     }
   } while (token != "quit");
+}
+
+void UCI::print_debug_info() const {
+  m_game_state.position().print();
+  bool found;
+  auto entry = TranspositionTable::get().probe(m_game_state.position(), found);
+  Move ttmove = move_none;
+  if (found)
+    ttmove = entry->best_move();
+  MoveList move_list(m_game_state, ttmove);
+  std::cout << "Move list (" << move_list.size() << " pseudo-legal moves): ";
+  while (!move_list.empty()) {
+    Move move = move_list.next_move();
+    Position copy = m_game_state.position(); // Avoid update the NN
+    if (copy.move(move))
+      std::cout << move.get_algebraic_notation() << ' ';
+    else
+      std::cout << "(" << move.get_algebraic_notation() << ") ";
+  }
+  std::cout << std::endl;
 }
 
 void UCI::position(std::istringstream &iss) {
