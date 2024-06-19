@@ -35,6 +35,15 @@ void TTEntry::save(const HashType &hash, const IndexType &depth_ply,
   m_bound = bound;
 }
 
+void TTEntry::reset() {
+  m_hash = 0;
+  m_depth_ply = 0;
+  m_best_move = Move();
+  m_evaluation = 0;
+  m_half_move_count = 0;
+  m_bound = BoundType::Empty;
+}
+
 TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
   HashType table_index = position.get_hash() & m_table_mask;
   for (TTEntry &entry : m_table[table_index].entry) {
@@ -49,7 +58,7 @@ TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
     if (replace->replace_factor(position.get_half_move_counter() >
                                 bucket->entry[index].replace_factor(
                                     position.get_half_move_counter()))) {
-      replace = &m_table[table_index].entry[index];
+      replace = &bucket->entry[index];
     }
   }
   return found = false, replace;

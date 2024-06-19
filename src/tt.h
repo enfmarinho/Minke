@@ -37,7 +37,7 @@ public:
   void save(const HashType &hash, const IndexType &depth_ply,
             const Move &movement, const WeightType &evaluation,
             const CounterType &half_move_counter, const BoundType &bound);
-  void reset() { m_bound = BoundType::Empty; }
+  void reset();
 
 private:
   HashType m_hash;                      // 8 bytes
