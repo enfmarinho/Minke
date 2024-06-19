@@ -67,4 +67,6 @@ void Thread::node_limit(uint64_t new_node_limit) {
 
 void Thread::increase_nodes_searched_counter() { ++m_nodes_searched; }
 
+uint64_t Thread::nodes_searched() { return m_nodes_searched; }
+
 void Thread::infinite() { m_infinite = true; }
