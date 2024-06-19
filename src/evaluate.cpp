@@ -14,24 +14,22 @@ WeightType eval::evaluate(const Position &position) {
   WeightType mid_game_evaluation = 0, end_game_evaluation = 0, game_state = 0;
   for (IndexType file = 0; file < BoardHeight; ++file) {
     for (IndexType rank = 0; rank < BoardWidth; ++rank) {
-      Square square = position.consult(file, rank);
+      PiecePlacement pp(file, rank);
+      Square square = position.consult(pp);
       if (square.piece == Piece::None) {
         continue;
       }
       WeightType piece_multiplication_factor =
           static_cast<WeightType>(square.player);
       IndexType piece_idx = piece_index(square.piece);
-      IndexType file_idx;
-      if (square.player == Player::White) {
-        file_idx = file;
-      } else {
-        file_idx = file ^ 7;
+      if (square.player == Player::Black) {
+        pp = pp.mirrored();
       }
       mid_game_evaluation +=
-          (*weights::MidGamePointerTable[piece_idx])[file_idx][rank] *
+          (*weights::MidGamePointerTable[piece_idx])[pp.file()][pp.rank()] *
           piece_multiplication_factor;
       end_game_evaluation +=
-          (*weights::EndGamePointerTable[piece_idx])[file_idx][rank] *
+          (*weights::EndGamePointerTable[piece_idx])[pp.file()][pp.rank()] *
           piece_multiplication_factor;
       game_state += weights::PhaseTable[piece_idx];
     }
