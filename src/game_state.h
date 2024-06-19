@@ -22,9 +22,10 @@ public:
 
   bool make_move(const Move &move);
   void undo_move();
-
   void reset(const std::string &fen);
-
+  WeightType consult_history(const Move &move) const;
+  WeightType &consult_history(const Move &move);
+  void increment_history(const Move &move, const CounterType &depth);
   WeightType eval() const;
   const Position &position() const;
   Position &position();
@@ -34,6 +35,7 @@ private:
   void pop();
 
   std::vector<Position> m_position_stack;
+  WeightType m_move_history[NumberOfPieces * 2][0x80];
   Network m_net;
 };
 

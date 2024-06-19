@@ -7,10 +7,15 @@
 
 #include "game_state.h"
 #include "game_elements.h"
+#include "position.h"
 #include <cassert>
 #include <string>
 
-GameState::GameState() { reset(StartFEN); }
+GameState::GameState() {
+  // TODO check if it's worth to reserve space on m_position_stack
+  // m_position_stack.reserve(200);
+  reset(StartFEN);
+}
 
 bool GameState::make_move(const Move &move) {
   push();
@@ -35,6 +40,21 @@ void GameState::reset(const std::string &fen) {
 
   position().reset(fen);
   m_net.reset(position());
+
+WeightType GameState::consult_history(const Move &move) const {
+  return m_move_history[piece_index(position().consult(move.to).piece) +
+                        (position().side_to_move() == Player::White ? 0 : 6)]
+                       [move.to.index()];
+}
+
+WeightType &GameState::consult_history(const Move &move) {
+  return m_move_history[piece_index(position().consult(move.from).piece) +
+                        (position().side_to_move() == Player::White ? 0 : 6)]
+                       [move.to.index()];
+}
+
+void GameState::increment_history(const Move &move, const CounterType &depth) {
+  consult_history(move) += depth * depth;
 }
 
 WeightType GameState::eval() const {
