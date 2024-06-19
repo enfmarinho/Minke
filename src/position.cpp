@@ -18,8 +18,6 @@
 #include <sstream>
 #include <string>
 
-Position::Position() { assert(reset(StartFEN)); }
-
 bool Position::reset(const std::string &fen) {
   std::stringstream iss(fen);
   std::array<std::string, 6> fen_arguments;
