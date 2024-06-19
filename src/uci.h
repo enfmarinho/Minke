@@ -38,6 +38,7 @@ private:
   void position(std::istringstream &);
   void set_option(std::istringstream &);
   void parse_go_limits(std::istringstream &);
+  void bench();
   void eval();
   void go();
 
