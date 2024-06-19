@@ -57,6 +57,12 @@ constexpr IndexType Sliders[3][8] = {
 
 } // namespace offsets
 
+inline TimeType now() {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
+             std::chrono::steady_clock::now().time_since_epoch())
+      .count();
+}
+
 #define piece_index(piece) static_cast<IndexType>(piece)
 enum class Piece : char {
   Pawn = 0,
