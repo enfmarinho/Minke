@@ -6,6 +6,7 @@
  */
 
 #include "uci.h"
+#include "benchmark.h"
 #include "evaluate.h"
 #include "game_elements.h"
 #include "movegen.h"
@@ -147,8 +148,7 @@ void UCI::bench(std::istringstream &iss) {
   parse_go_limits(iss, true);
 
   TimeType total_time = 0;
-  std::vector<std::string> fen_list = {StartFEN};
-  for (const std::string &fen : fen_list) {
+  for (const std::string &fen : benchmark_fen_list) {
     m_game_state.reset(fen);
     TranspositionTable::get().clear();
     TimeType start_time = now();
