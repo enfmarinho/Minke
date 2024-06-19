@@ -40,8 +40,10 @@ bool Thread::should_stop(CounterType depth) const {
 }
 
 void Thread::wait() {
-  if (!m_stop)
+  if (!m_stop) {
     m_thread.join();
+    m_stop = true;
+  }
 }
 
 void Thread::search(GameState &game_state) {
