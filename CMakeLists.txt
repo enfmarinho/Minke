@@ -16,7 +16,8 @@ add_compile_options(
   "-Wcast-align"
   "-Wcast-qual")
 # add_compile_options("-g") # Flag to produce debug info.
-add_compile_options("-O3" "-march=native") # Optimization flag
+add_compile_options("-pthread")
+add_compile_options("-O3" "-march=native") # Optimization flags
 
 # Add and link executable.
 add_executable(
