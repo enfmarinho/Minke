@@ -16,6 +16,14 @@
 #include <cassert>
 #include <iostream>
 
+void search::search(GameState &game_state, Thread &thread) {
+  iterative_deepening<true>(game_state, thread);
+}
+void search::perft(GameState &game_state, Thread &thread) {
+  iterative_deepening<false>(game_state, thread);
+}
+
+template <bool print_moves>
 void search::iterative_deepening(GameState &game_state, Thread &thread) {
   bool found;
   TTEntry *move;
@@ -24,12 +32,14 @@ void search::iterative_deepening(GameState &game_state, Thread &thread) {
     if (!thread.should_stop()) {
       move = TranspositionTable::get().probe(game_state.position(), found);
       assert(found);
-      std::cout << "depth " << depth_ply << " bestmove "
-                << move->best_move().get_algebraic_notation() << std::endl;
+      if constexpr (print_moves)
+        std::cout << "depth " << depth_ply << " bestmove "
+                  << move->best_move().get_algebraic_notation() << std::endl;
     }
   }
-  std::cout << "bestmove " << move->best_move().get_algebraic_notation()
-            << std::endl;
+  if constexpr (print_moves)
+    std::cout << "bestmove " << move->best_move().get_algebraic_notation()
+              << std::endl;
 }
 
 WeightType search::alpha_beta_search(WeightType alpha, WeightType beta,

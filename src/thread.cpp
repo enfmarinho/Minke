@@ -50,8 +50,8 @@ void Thread::search(GameState &game_state) {
   if (m_stop) {
     m_stop = false;
     m_start_time = now();
-    m_thread = std::thread(search::iterative_deepening, std::ref(game_state),
-                           std::ref(*this));
+    m_thread =
+        std::thread(search::search, std::ref(game_state), std::ref(*this));
   }
 }
 

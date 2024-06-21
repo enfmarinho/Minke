@@ -13,6 +13,9 @@
 #define SEARCH_H
 
 namespace search {
+void search(GameState &game_state, Thread &thread);
+void perft(GameState &game_state, Thread &thread);
+template <bool print_moves>
 void iterative_deepening(GameState &game_state, Thread &thread);
 WeightType alpha_beta_search(WeightType alpha, WeightType beta,
                              const CounterType &depth, GameState &game_state,
