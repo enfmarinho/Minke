@@ -111,19 +111,6 @@ void MoveList::pseudolegal_pawn_moves(const Position &position,
     offset = offsets::South;
     adversary = Player::White;
   }
-  PiecePlacement doublemove(from.index() + 2 * offset);
-  if (from.file() == original_file &&
-      position.consult(doublemove).piece == Piece::None) { // double move
-    *(m_end++) = Move(from, doublemove, MoveType::Regular);
-  }
-  PiecePlacement singlemove(from.index() + offset);
-  if (position.consult(singlemove).piece == Piece::None) { // single move
-    *(m_end++) = Move(from, singlemove,
-                      (from.index() + offset == promotion_file
-                           ? MoveType::PawnPromotionQueen
-                           : MoveType::Regular));
-  }
-
   PiecePlacement capture_left(from.index() + offset + offsets::West);
   if (!capture_left.out_of_bounds() &&
       position.consult(capture_left).player == adversary) { // left capture
@@ -139,6 +126,21 @@ void MoveList::pseudolegal_pawn_moves(const Position &position,
                       (from.index() + offset == promotion_file
                            ? MoveType::PawnPromotionQueen
                            : MoveType::Capture));
+  }
+
+  PiecePlacement singlemove(from.index() + offset);
+  if (position.consult(singlemove).piece == Piece::None) { // single move
+    *(m_end++) = Move(from, singlemove,
+                      (from.index() + offset == promotion_file
+                           ? MoveType::PawnPromotionQueen
+                           : MoveType::Regular));
+  } else {
+    return;
+  }
+  PiecePlacement doublemove(from.index() + 2 * offset);
+  if (from.file() == original_file &&
+      position.consult(doublemove).piece == Piece::None) { // double move
+    *(m_end++) = Move(from, doublemove, MoveType::Regular);
   }
 }
 
