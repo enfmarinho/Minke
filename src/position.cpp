@@ -149,6 +149,8 @@ bool Position::move(const Move &movement) {
   if (piece_being_moved == Piece::King) {
     current_player_castling_rights.king_side = false;
     current_player_castling_rights.queen_side = false;
+    (m_side_to_move == Player::White ? m_white_king_position
+                                     : m_black_king_position) = movement.to;
   } else if (piece_being_moved == Piece::Rook) {
     IndexType player_perspective_first_file =
         m_side_to_move == Player::White ? 0 : 7;
