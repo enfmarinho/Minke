@@ -33,15 +33,20 @@ private:
     }
   };
 
-  void print_debug_info() const;
+  void position(std::istringstream &);
   void set_position(const std::string &fen,
                     const std::vector<std::string> &move_list);
-  void position(std::istringstream &);
+
   void set_option(std::istringstream &);
-  void parse_go_limits(std::istringstream &, bool bench = false);
+
+  /// Returns true if perft argument was passed and false otherwise.
+  bool parse_go(std::istringstream &, bool bench = false);
+  void perft();
+  void go();
+
+  void print_debug_info() const;
   void bench(std::istringstream &);
   void eval();
-  void go();
 
   EngineOptions m_engine_options;
   Thread m_thread;

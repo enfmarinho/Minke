@@ -40,8 +40,7 @@ void UCI::loop() {
     } else if (token == "go") {
       m_thread.wait();
       m_thread.reset();
-      parse_go_limits(iss);
-      go();
+      parse_go(iss) ? perft() : go();
     } else if (token == "position") {
       position(iss);
     } else if (token == "ucinewgame") {
@@ -145,7 +144,7 @@ void UCI::bench(std::istringstream &iss) {
   m_thread.wait();
   m_thread.reset();
   m_thread.max_depth_ply(8); // TODO increase max_depth_ply
-  parse_go_limits(iss, true);
+  parse_go(iss, true);
 
   TimeType total_time = 0;
   for (const std::string &fen : benchmark_fen_list) {
@@ -171,23 +170,28 @@ void UCI::eval() {
             << eval::evaluate(m_game_state.position()) << std::endl;
 }
 
-void UCI::parse_go_limits(std::istringstream &iss, bool bench) {
+bool UCI::parse_go(std::istringstream &iss, bool bench) {
   std::string token;
   while (iss >> token) {
     if (token == "infinite" && !bench) {
       m_thread.infinite();
-      return;
+      return false;
     }
 
     CounterType option;
     iss >> option;
-    if (token == "depth")
+    if (token == "perft" &&
+        !iss.fail()) { // Don't "perft" if depth hasn't been passed
+      m_thread.max_depth_ply(option);
+      return true;
+    } else if (token == "depth")
       m_thread.max_depth_ply(option);
     else if (token == "nodes")
       m_thread.node_limit(option);
     else if (token == "movetime")
       m_thread.movetime(option);
   }
+  return false;
 }
 
 void UCI::go() { m_thread.search(m_game_state); }
