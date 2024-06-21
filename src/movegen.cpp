@@ -11,6 +11,7 @@
 #include "position.h"
 #include "weights.h"
 #include <cassert>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <utility>
@@ -22,35 +23,41 @@ bool under_attack(const Position &position, const Player &attacker_player,
          Piece::None;
 }
 
-MoveList::MoveList(const GameState &game_state, const Move &move)
-    : m_end(m_move_list), m_start_index{0} {
+MoveList::MoveList(const GameState &game_state, const Move &move) {
+  gen_pseudolegal_moves(game_state.position());
+  calculate_scores(game_state, move);
+}
+
+MoveList::MoveList(const Position &position, const Move &move) {
+  gen_pseudolegal_moves(position);
+}
+
+void MoveList::gen_pseudolegal_moves(const Position &position) {
   for (IndexType file = 0; file < BoardHeight; ++file) {
     for (IndexType rank = 0; rank < BoardWidth; ++rank) {
       PiecePlacement current = PiecePlacement(file, rank);
-      const Square &square = game_state.position().consult(current);
+      const Square &square = position.consult(current);
       if (square.player == Player::None ||
-          game_state.position().side_to_move() != square.player) {
+          position.side_to_move() != square.player) {
         continue;
       }
       switch (square.piece) {
       case Piece::Pawn:
-        pseudolegal_pawn_moves(game_state.position(), current);
+        pseudolegal_pawn_moves(position, current);
         break;
       case Piece::Knight:
-        pseudolegal_knight_moves(game_state.position(), current);
+        pseudolegal_knight_moves(position, current);
         break;
       case Piece::King:
-        pseudolegal_king_moves(game_state.position(), current);
+        pseudolegal_king_moves(position, current);
         break;
       default:
-        pseudolegal_sliders_moves(game_state.position(), current);
+        pseudolegal_sliders_moves(position, current);
         break;
       }
     }
   }
-
-  pseudolegal_castling_moves(game_state.position());
-  calculate_scores(game_state, move);
+  pseudolegal_castling_moves(position);
 }
 
 [[nodiscard]] bool MoveList::empty() const {
@@ -59,6 +66,18 @@ MoveList::MoveList(const GameState &game_state, const Move &move)
 
 [[nodiscard]] MoveList::size_type MoveList::size() const {
   return m_end - (m_move_list + m_start_index);
+}
+
+[[nodiscard]] MoveList::size_type
+MoveList::n_legal_moves(Position &position) const {
+  size_type counter = 0;
+  for (uint8_t index = 0; index < m_end - m_move_list; ++index) {
+    Position cp_position = position;
+    if (cp_position.move(m_move_list[index])) {
+      ++counter;
+    }
+  }
+  return counter;
 }
 
 [[nodiscard]] Move MoveList::next_move() {
