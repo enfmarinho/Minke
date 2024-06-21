@@ -28,7 +28,7 @@ MoveList::MoveList(const GameState &game_state, const Move &move) {
   calculate_scores(game_state, move);
 }
 
-MoveList::MoveList(const Position &position, const Move &move) {
+MoveList::MoveList(const Position &position) {
   gen_pseudolegal_moves(position);
 }
 

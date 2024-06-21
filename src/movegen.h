@@ -25,7 +25,7 @@ public:
   using size_type = size_t;
 
   MoveList(const GameState &game_state, const Move &move);
-  MoveList(const Position &position, const Move &move);
+  MoveList(const Position &position);
   [[nodiscard]] bool empty() const;
   [[nodiscard]] size_type size() const;
   [[nodiscard]] size_type n_legal_moves(Position &position) const;
