@@ -59,6 +59,8 @@ void Thread::movetime(CounterType movetime) {
   m_movetime = std::chrono::milliseconds(movetime).count();
 }
 
+CounterType Thread::max_depth_ply() { return m_max_depth; }
+
 void Thread::max_depth_ply(CounterType new_max_depth) {
   m_max_depth = new_max_depth;
 }

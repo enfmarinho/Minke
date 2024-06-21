@@ -24,6 +24,7 @@ public:
   bool should_stop(CounterType depth) const;
   void wait();
   void search(GameState &game_state);
+  CounterType max_depth_ply();
   void max_depth_ply(CounterType new_max_depth_ply);
   void movetime(CounterType mivetime);
   void node_limit(uint64_t new_node_limit);
