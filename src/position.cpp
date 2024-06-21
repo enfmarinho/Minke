@@ -206,7 +206,7 @@ bool Position::move(const Move &movement) {
 
   // Required because of the pseudo-legal move generator
   return !under_attack(*this, m_side_to_move,
-                       m_side_to_move == Player::White ? m_white_king_position
+                       m_side_to_move == Player::Black ? m_white_king_position
                                                        : m_black_king_position);
 }
 

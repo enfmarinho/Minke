@@ -15,10 +15,11 @@
 #include <cstring>
 #include <utility>
 
-bool under_attack(const Position &position, const Player &player,
-                  const PiecePlacement &pp) {
+bool under_attack(const Position &position, const Player &attacker_player,
+                  const PiecePlacement &pp_defender) {
   PiecePlacement trash;
-  return cheapest_attacker(position, player, pp, trash) != Piece::None;
+  return cheapest_attacker(position, attacker_player, pp_defender, trash) !=
+         Piece::None;
 }
 
 MoveList::MoveList(const GameState &game_state, const Move &move)
@@ -200,25 +201,21 @@ void MoveList::pseudolegal_castling_moves(const Position &position) {
              MoveType::QueenSideCastling);
 }
 
-Piece cheapest_attacker(const Position &position, const Player &player,
+Piece cheapest_attacker(const Position &position, const Player &attacker_player,
                         const PiecePlacement &pp, PiecePlacement &pp_atacker) {
-  Player opponent;
   IndexType opponent_pawn_offset;
-  if (player == Player::Black) {
-    opponent = Player::White;
+  if (attacker_player == Player::White) {
     opponent_pawn_offset = offsets::North;
-  } else if (player == Player::White) {
-    opponent = Player::Black;
-    opponent_pawn_offset = offsets::South;
   } else {
-    assert(false);
+    opponent_pawn_offset = offsets::South;
   }
+  assert(attacker_player != Player::None);
 
-  auto under_pawn_thread =
-      [&position, &opponent](const PiecePlacement &pawn_atacker_pos) -> bool {
+  auto under_pawn_thread = [&position, &attacker_player](
+                               const PiecePlacement &pawn_atacker_pos) -> bool {
     if (!pawn_atacker_pos.out_of_bounds()) {
       const Square &sq = position.consult(pawn_atacker_pos);
-      if (sq.player == opponent && sq.piece == Piece::Pawn)
+      if (sq.player == attacker_player && sq.piece == Piece::Pawn)
         return true;
     }
     return false;
@@ -238,7 +235,8 @@ Piece cheapest_attacker(const Position &position, const Player &player,
     PiecePlacement to(pp.index() + offset);
     if (!to.out_of_bounds()) {
       const Square &to_square = position.consult(to);
-      if (to_square.player == opponent && to_square.piece == Piece::Knight)
+      if (to_square.player == attacker_player &&
+          to_square.piece == Piece::Knight)
         return pp_atacker = to, Piece::Knight;
     }
   }
@@ -251,7 +249,7 @@ Piece cheapest_attacker(const Position &position, const Player &player,
     for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
          to.index() += offset) {
       const Square &to_square = position.consult(to);
-      if (to_square.player == opponent) {
+      if (to_square.player == attacker_player) {
         if (to_square.piece == Piece::Bishop)
           return pp_atacker = to, Piece::Bishop;
         if (to_square.piece == Piece::Queen) {
@@ -271,7 +269,7 @@ Piece cheapest_attacker(const Position &position, const Player &player,
     for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
          to.index() += offset) {
       const Square &to_square = position.consult(to);
-      if (to_square.player == opponent) {
+      if (to_square.player == attacker_player) {
         if (to_square.piece == Piece::Rook)
           return pp_atacker = to, Piece::Rook;
         if (to_square.piece == Piece::Queen) {
@@ -304,7 +302,7 @@ bool SEE(const Position &position, const Move &move) {
   while (material_gain <= material_risk) {
     PiecePlacement pp_atacker;
     Piece attacker =
-        cheapest_attacker(copy_position, player, move.to, pp_atacker);
+        cheapest_attacker(copy_position, opponent, move.to, pp_atacker);
     if (attacker == Piece::None)
       return true;
 
@@ -315,7 +313,7 @@ bool SEE(const Position &position, const Move &move) {
     if (material_gain < -material_risk)
       return false;
 
-    attacker = cheapest_attacker(copy_position, opponent, move.to, pp_atacker);
+    attacker = cheapest_attacker(copy_position, player, move.to, pp_atacker);
     if (attacker == Piece::None)
       return false;
 

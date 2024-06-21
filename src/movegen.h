@@ -13,9 +13,9 @@
 #include "position.h"
 #include <cstdint>
 
-bool under_attack(const Position &position, const Player &player,
-                  const PiecePlacement &pp);
-Piece cheapest_attacker(const Position &position, const Player &player,
+bool under_attack(const Position &position, const Player &attacker_player,
+                  const PiecePlacement &pp_defender);
+Piece cheapest_attacker(const Position &position, const Player &attacker_player,
                         const PiecePlacement &pp_defender,
                         PiecePlacement &pp_atacker);
 bool SEE(const Position &position, const Move &move);
