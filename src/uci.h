@@ -10,7 +10,9 @@
 
 #include "game_elements.h"
 #include "game_state.h"
+#include "position.h"
 #include "thread.h"
+#include <cstdint>
 #include <ostream>
 #include <sstream>
 
@@ -41,7 +43,7 @@ private:
 
   /// Returns true if perft argument was passed and false otherwise.
   bool parse_go(std::istringstream &, bool bench = false);
-  void perft();
+  int64_t perft(Position &position, CounterType depth, bool root = true);
   void go();
 
   void print_debug_info() const;

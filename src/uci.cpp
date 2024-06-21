@@ -9,10 +9,13 @@
 #include "benchmark.h"
 #include "evaluate.h"
 #include "game_elements.h"
+#include "game_state.h"
 #include "movegen.h"
+#include "position.h"
 #include "search.h"
 #include "tt.h"
 #include <cassert>
+#include <cstdint>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -40,7 +43,10 @@ void UCI::loop() {
     } else if (token == "go") {
       m_thread.wait();
       m_thread.reset();
-      parse_go(iss) ? perft() : go();
+      if (parse_go(iss))
+        perft(m_game_state.position(), m_thread.max_depth_ply());
+      else
+        go();
     } else if (token == "position") {
       position(iss);
     } else if (token == "ucinewgame") {
@@ -156,13 +162,41 @@ void UCI::bench(std::istringstream &iss) {
     total_time += now() - start_time;
   }
 
-  std::cerr << "\n==========================\n";
-  std::cerr << "Total time: " << total_time << "ms\n";
-  std::cerr << "Nodes searched: " << m_thread.nodes_searched() << "\n";
-  std::cerr << "Nodes per second: "
+  std::cout << "\n==========================\n";
+  std::cout << "Total time: " << total_time << "ms\n";
+  std::cout << "Nodes searched: " << m_thread.nodes_searched() << "\n";
+  std::cout << "Nodes per second: "
             << m_thread.nodes_searched() * 1000 / total_time;
-  std::cerr << "\n==========================";
-  std::cerr << std::endl;
+  std::cout << "\n==========================";
+  std::cout << std::endl;
+}
+
+int64_t UCI::perft(Position &position, CounterType depth, bool root) {
+  bool is_leaf = (depth == 2);
+  int64_t count = 0, nodes = 0;
+
+  MoveList move_list(position);
+  while (!move_list.empty()) {
+    Move move = move_list.next_move();
+    Position position_copy = position;
+    if (!position_copy.move(move))
+      continue;
+
+    if (root && depth <= 1)
+      count = 1, ++nodes;
+    else {
+      count = is_leaf ? MoveList(position_copy).n_legal_moves(position_copy)
+                      : perft(position_copy, depth - 1, false);
+      nodes += count;
+    }
+
+    if (root)
+      std::cout << move.get_algebraic_notation() << ": " << count << std::endl;
+  }
+  if (root) {
+    std::cout << "\nNodes searched: " << nodes << std::endl;
+  }
+  return nodes;
 }
 
 void UCI::eval() {
