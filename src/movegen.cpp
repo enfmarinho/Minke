@@ -254,12 +254,12 @@ Piece cheapest_attacker(const Position &position, const Player &attacker_player,
     return false;
   };
 
-  PiecePlacement east_pawn_attacker(pp.index() + opponent_pawn_offset +
+  PiecePlacement east_pawn_attacker(pp.index() - opponent_pawn_offset +
                                     offsets::East);
   if (under_pawn_thread(east_pawn_attacker))
     return pp_atacker = east_pawn_attacker, Piece::Pawn;
 
-  PiecePlacement west_pawn_attacker(pp.index() + opponent_pawn_offset +
+  PiecePlacement west_pawn_attacker(pp.index() - opponent_pawn_offset +
                                     offsets::West);
   if (under_pawn_thread(west_pawn_attacker))
     return pp_atacker = west_pawn_attacker, Piece::Pawn;
