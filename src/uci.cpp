@@ -31,9 +31,8 @@ void UCI::loop() {
 
   std::string input, token;
   do {
-    if (!std::getline(std::cin, input)) {
+    if (!std::getline(std::cin, input))
       input = "quit";
-    }
     std::istringstream iss(input);
 
     token.clear();
@@ -102,17 +101,15 @@ void UCI::position(std::istringstream &iss) {
     fen = StartFEN;
     iss >> move; // consume the "moves" token, if there is one.
   } else if (token == "fen") {
-    while (iss >> token && token != "moves") {
+    while (iss >> token && token != "moves")
       fen += token + " ";
-    }
   } else {
     return;
   }
 
   std::vector<std::string> move_list;
-  while (iss >> move) {
+  while (iss >> move)
     move_list.push_back(move);
-  }
   set_position(fen, move_list);
 }
 
@@ -193,9 +190,9 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
     if (root)
       std::cout << move.get_algebraic_notation() << ": " << count << std::endl;
   }
-  if (root) {
+
+  if (root)
     std::cout << "\nNodes searched: " << nodes << std::endl;
-  }
   return nodes;
 }
 

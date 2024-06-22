@@ -38,9 +38,9 @@ void MoveList::gen_pseudolegal_moves(const Position &position) {
       PiecePlacement current = PiecePlacement(file, rank);
       const Square &square = position.consult(current);
       if (square.player == Player::None ||
-          position.side_to_move() != square.player) {
+          position.side_to_move() != square.player)
         continue;
-      }
+
       switch (square.piece) {
       case Piece::Pawn:
         pseudolegal_pawn_moves(position, current);
@@ -73,9 +73,8 @@ MoveList::n_legal_moves(Position &position) const {
   size_type counter = 0;
   for (uint8_t index = 0; index < m_end - m_move_list; ++index) {
     Position cp_position = position;
-    if (cp_position.move(m_move_list[index])) {
+    if (cp_position.move(m_move_list[index]))
       ++counter;
-    }
   }
   return counter;
 }
@@ -117,29 +116,27 @@ void MoveList::pseudolegal_pawn_moves(const Position &position,
 
   PiecePlacement capture_left(from.index() + offset + offsets::West);
   if (!capture_left.out_of_bounds() &&
-      position.consult(capture_left).player == adversary) { // left capture
+      position.consult(capture_left).player == adversary) // left capture
     *(m_end++) = Move(from, capture_left,
                       (from.index() + offset == promotion_file
                            ? MoveType::PawnPromotionQueen
                            : MoveType::Capture));
-  } else if (!capture_left.out_of_bounds() &&
-             position.en_passant_rank() == capture_left.rank() &&
-             capture_left.file() == en_passant_file) {
+  else if (!capture_left.out_of_bounds() &&
+           position.en_passant_rank() == capture_left.rank() &&
+           capture_left.file() == en_passant_file)
     *(m_end++) = Move(from, capture_left, MoveType::Capture);
-  }
 
   PiecePlacement capture_right(from.index() + offset + offsets::East);
   if (!capture_right.out_of_bounds() &&
-      position.consult(capture_right).player == adversary) { // right capture
+      position.consult(capture_right).player == adversary) // right capture
     *(m_end++) = Move(from, capture_right,
                       (from.index() + offset == promotion_file
                            ? MoveType::PawnPromotionQueen
                            : MoveType::Capture));
-  } else if (!capture_right.out_of_bounds() &&
-             position.en_passant_rank() == capture_right.rank() &&
-             capture_right.file() == en_passant_file) {
+  else if (!capture_right.out_of_bounds() &&
+           position.en_passant_rank() == capture_right.rank() &&
+           capture_right.file() == en_passant_file)
     *(m_end++) = Move(from, capture_right, MoveType::Capture);
-  }
 
   PiecePlacement singlemove(from.index() + offset);
   if (position.consult(singlemove).piece == Piece::None) {
@@ -150,9 +147,8 @@ void MoveList::pseudolegal_pawn_moves(const Position &position,
 
     PiecePlacement doublemove(from.index() + 2 * offset);
     if (from.file() == original_file &&
-        position.consult(doublemove).piece == Piece::None) {
+        position.consult(doublemove).piece == Piece::None)
       *(m_end++) = Move(from, doublemove, MoveType::Regular);
-    }
   }
 }
 
@@ -161,9 +157,8 @@ void MoveList::pseudolegal_knight_moves(const Position &position,
   for (IndexType offset : offsets::Knight) {
     PiecePlacement to(from.index() + offset);
     if (!to.out_of_bounds() &&
-        position.consult(to).player != position.side_to_move()) {
+        position.consult(to).player != position.side_to_move())
       *(m_end++) = Move(from, to, MoveType::Regular);
-    }
   }
 }
 
@@ -192,11 +187,10 @@ void MoveList::pseudolegal_king_moves(const Position &position,
     PiecePlacement to(from.index() + offset);
     if (!to.out_of_bounds()) {
       const Player &to_player = position.consult(to).player;
-      if (to_player == Player::None) {
+      if (to_player == Player::None)
         *(m_end++) = Move(from, to, MoveType::Regular);
-      } else if (to_player != position.side_to_move()) {
+      else if (to_player != position.side_to_move())
         *(m_end++) = Move(from, to, MoveType::Capture);
-      }
     }
   }
 }
@@ -237,11 +231,10 @@ void MoveList::pseudolegal_castling_moves(const Position &position) {
 Piece cheapest_attacker(const Position &position, const Player &attacker_player,
                         const PiecePlacement &pp, PiecePlacement &pp_atacker) {
   IndexType opponent_pawn_offset;
-  if (attacker_player == Player::White) {
+  if (attacker_player == Player::White)
     opponent_pawn_offset = offsets::North;
-  } else {
+  else
     opponent_pawn_offset = offsets::South;
-  }
   assert(attacker_player != Player::None);
 
   auto under_pawn_thread = [&position, &attacker_player](
@@ -276,9 +269,9 @@ Piece cheapest_attacker(const Position &position, const Player &attacker_player,
 
   bool queen_attacks = false;
   for (const IndexType &offset : offsets::Sliders[0]) { // Bishop directions
-    if (offset == 0) {
+    if (offset == 0)
       break;
-    }
+
     for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
          to.index() += offset) {
       const Square &to_square = position.consult(to);
@@ -296,9 +289,9 @@ Piece cheapest_attacker(const Position &position, const Player &attacker_player,
     }
   }
   for (const IndexType &offset : offsets::Sliders[1]) { // Rook directions
-    if (offset == 0) {
+    if (offset == 0)
       break;
-    }
+
     for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
          to.index() += offset) {
       const Square &to_square = position.consult(to);
@@ -366,9 +359,9 @@ void MoveList::calculate_scores(const GameState &game_state,
 
   for (size_type index = 0, remaining = size(); index < remaining; ++index) {
     Move move = m_move_list[index];
-    if (move == tt_move) {
+    if (move == tt_move)
       m_move_scores[index] = ScoreTTHit;
-    } else if (move.move_type == MoveType::Capture) {
+    else if (move.move_type == MoveType::Capture) {
       m_move_scores[index] =
           ScoreCapture +
           weights::SEE_table[piece_index(
@@ -377,11 +370,11 @@ void MoveList::calculate_scores(const GameState &game_state,
               game_state.position().consult(move.from).piece)] /
               5 +
           ScoreCapture * SEE(game_state.position(), move);
-    } else if (move.move_type == MoveType::PawnPromotionQueen) {
+    } else if (move.move_type == MoveType::PawnPromotionQueen)
       m_move_scores[index] = ScoreQueenPromotion;
-    } else {
+    else
       m_move_scores[index] = game_state.consult_history(move);
-    }
+
     // TODO implement killer heuristic
   }
 }

@@ -51,11 +51,10 @@ bool Position::reset(const std::string &fen) {
         consult(file, rank) = Square(Piece::Queen, player);
       else if (piece == 'k') {
         consult(file, rank) = Square(Piece::King, player);
-        if (player == Player::White) {
+        if (player == Player::White)
           m_white_king_position = PiecePlacement(file, rank);
-        } else {
+        else
           m_black_king_position = PiecePlacement(file, rank);
-        }
       }
       ++rank;
     } else {
@@ -87,11 +86,11 @@ bool Position::reset(const std::string &fen) {
       m_black_castling_rights.queen_side = true;
   }
 
-  if (fen_arguments[3] == "-") {
+  if (fen_arguments[3] == "-")
     m_en_passant = -1;
-  } else {
+  else
     m_en_passant = fen_arguments[3][0] - 'a';
-  }
+
   try {
     m_fifty_move_counter_ply = std::stoi(fen_arguments[4]);
   } catch (const std::exception &) {
@@ -134,13 +133,12 @@ bool Position::move(const Move &movement) {
   Square captured = consult(movement.to);
 
   Piece piece_being_moved = consult(movement.from).piece;
-  if (consult(movement.to).piece != Piece::None) {
+  if (consult(movement.to).piece != Piece::None)
     m_fifty_move_counter_ply = 0;
-  } else if (piece_being_moved == Piece::Pawn) {
+  else if (piece_being_moved == Piece::Pawn) {
     m_fifty_move_counter_ply = 0;
-    if (abs(movement.to.file() - movement.from.file()) == 2) {
+    if (abs(movement.to.file() - movement.from.file()) == 2)
       m_en_passant = movement.to.rank();
-    }
   }
 
   CastlingRights &current_player_castling_rights =
@@ -155,12 +153,11 @@ bool Position::move(const Move &movement) {
     IndexType player_perspective_first_file =
         m_side_to_move == Player::White ? 0 : 7;
     if (movement.from.rank() == 7 &&
-        movement.from.file() == player_perspective_first_file) {
+        movement.from.file() == player_perspective_first_file)
       current_player_castling_rights.king_side = false;
-    } else if (movement.from.rank() == 0 &&
-               movement.from.file() == player_perspective_first_file) {
+    else if (movement.from.rank() == 0 &&
+             movement.from.file() == player_perspective_first_file)
       current_player_castling_rights.queen_side = false;
-    }
   }
 
   if (movement.move_type == MoveType::Regular ||
@@ -228,9 +225,8 @@ Move Position::get_movement(const std::string &algebraic_notation) const {
     move_type = MoveType::QueenSideCastling;
   // En passant
   else if (to.rank() == en_passant_rank() && from.file() != to.file() &&
-           consult(from).piece == Piece::Pawn) {
+           consult(from).piece == Piece::Pawn)
     move_type = MoveType::EnPassant;
-  }
   // Pawn promotion
   else if (algebraic_notation.size() == 5) {
     if (tolower(algebraic_notation[4]) == 'q')
@@ -301,12 +297,10 @@ std::string Position::get_fen() const {
       else
         fen += piece;
     }
-    if (counter > 0) {
+    if (counter > 0)
       fen += ('0' + counter);
-    }
-    if (file != 0) {
+    if (file != 0)
       fen += '/';
-    }
   }
   fen += (m_side_to_move == Player::White ? " w " : " b ");
   bool none = true;
@@ -353,9 +347,8 @@ void Position::print() const {
   auto print_line = []() -> void {
     for (IndexType i = 0; i < 8; ++i) {
       std::cout << "+";
-      for (IndexType j = 0; j < 3; ++j) {
+      for (IndexType j = 0; j < 3; ++j)
         std::cout << "-";
-      }
     }
     std::cout << "+\n";
   };

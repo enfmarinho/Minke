@@ -47,9 +47,8 @@ void TTEntry::reset() {
 TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
   HashType table_index = position.get_hash() & m_table_mask;
   for (TTEntry &entry : m_table[table_index].entry) {
-    if (entry.key() == position.get_hash()) {
+    if (entry.key() == position.get_hash())
       return found = true, &entry;
-    }
   }
 
   TTBucket *bucket = &m_table[table_index];
@@ -57,9 +56,8 @@ TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
   for (IndexType index = 0; index < bucket_size; ++index) {
     if (replace->replace_factor(position.get_half_move_counter() >
                                 bucket->entry[index].replace_factor(
-                                    position.get_half_move_counter()))) {
+                                    position.get_half_move_counter())))
       replace = &bucket->entry[index];
-    }
   }
   return found = false, replace;
 }

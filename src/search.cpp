@@ -75,12 +75,10 @@ WeightType search::alpha_beta_search(WeightType alpha, WeightType beta,
     } else if (score > alpha)
       alpha = score, best_move = move;
   }
-  if (!thread.should_stop()) {
-    entry->save(
-        game_state.position().get_hash(), depth_ply, best_move, alpha,
-        game_state.position().get_half_move_counter(),
-        TTEntry::BoundType::Empty); // TODO bound is just a STUB, needs to
-                                    // be change, i.e. IT'S NOT CORRECT
-  }
+  if (!thread.should_stop())
+    entry->save(game_state.position().get_hash(), depth_ply, best_move, alpha,
+                game_state.position().get_half_move_counter(),
+                TTEntry::BoundType::Empty); // TODO bound is just a STUB
+
   return alpha;
 }
