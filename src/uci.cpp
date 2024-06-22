@@ -82,7 +82,9 @@ void UCI::print_debug_info() const {
   if (found)
     ttmove = entry->best_move();
   MoveList move_list(m_game_state, ttmove);
-  std::cout << "Move list (" << move_list.size() << " pseudo-legal moves): ";
+  int n_legal_moves = move_list.n_legal_moves(m_game_state.position());
+  std::cout << "Move list (" << n_legal_moves << "|"
+            << move_list.size() - n_legal_moves << "): ";
   while (!move_list.empty()) {
     Move move = move_list.next_move();
     Position copy = m_game_state.position(); // Avoid update the NN
