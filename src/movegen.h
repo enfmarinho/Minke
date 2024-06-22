@@ -28,7 +28,7 @@ public:
   MoveList(const Position &position);
   [[nodiscard]] bool empty() const;
   [[nodiscard]] size_type size() const;
-  [[nodiscard]] size_type n_legal_moves(Position &position) const;
+  [[nodiscard]] size_type n_legal_moves(Position position) const;
   [[nodiscard]] Move next_move();
 
 private:

@@ -69,7 +69,7 @@ void MoveList::gen_pseudolegal_moves(const Position &position) {
 }
 
 [[nodiscard]] MoveList::size_type
-MoveList::n_legal_moves(Position &position) const {
+MoveList::n_legal_moves(Position position) const {
   size_type counter = 0;
   for (uint8_t index = 0; index < m_end - m_move_list; ++index) {
     Position cp_position = position;
