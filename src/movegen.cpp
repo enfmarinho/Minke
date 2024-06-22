@@ -199,22 +199,29 @@ void MoveList::pseudolegal_castling_moves(const Position &position) {
   CastlingRights castling_rights;
   PiecePlacement king_placement;
   IndexType player_perspective_first_file;
+  Player adversary;
   if (position.side_to_move() == Player::White) {
     castling_rights = position.white_castling_rights();
     king_placement = position.white_king_position();
     player_perspective_first_file = 0;
+    adversary = Player::Black;
   } else {
     castling_rights = position.black_castling_rights();
     king_placement = position.black_king_position();
     player_perspective_first_file = 7;
+    adversary = Player::White;
   }
 
-  if (under_attack(position, position.side_to_move(), king_placement))
+  if (under_attack(position, adversary, king_placement))
     return;
 
   if (castling_rights.king_side &&
       position.consult(player_perspective_first_file, 5).piece == Piece::None &&
-      position.consult(player_perspective_first_file, 6).piece == Piece::None)
+      position.consult(player_perspective_first_file, 6).piece == Piece::None &&
+      !under_attack(position, adversary,
+                    PiecePlacement(player_perspective_first_file, 5)) &&
+      !under_attack(position, adversary,
+                    PiecePlacement(player_perspective_first_file, 6)))
     *(m_end++) =
         Move(king_placement, PiecePlacement(player_perspective_first_file, 6),
              MoveType::KingSideCastling);
@@ -222,7 +229,11 @@ void MoveList::pseudolegal_castling_moves(const Position &position) {
   if (castling_rights.queen_side &&
       position.consult(player_perspective_first_file, 1).piece == Piece::None &&
       position.consult(player_perspective_first_file, 2).piece == Piece::None &&
-      position.consult(player_perspective_first_file, 3).piece == Piece::None)
+      position.consult(player_perspective_first_file, 3).piece == Piece::None &&
+      !under_attack(position, adversary,
+                    PiecePlacement(player_perspective_first_file, 2)) &&
+      !under_attack(position, adversary,
+                    PiecePlacement(player_perspective_first_file, 3)))
     *(m_end++) =
         Move(king_placement, PiecePlacement(player_perspective_first_file, 2),
              MoveType::QueenSideCastling);
