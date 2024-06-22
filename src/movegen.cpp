@@ -218,6 +218,8 @@ void MoveList::pseudolegal_castling_moves(const Position &position) {
   if (castling_rights.king_side &&
       position.consult(player_perspective_first_file, 5).piece == Piece::None &&
       position.consult(player_perspective_first_file, 6).piece == Piece::None &&
+      position.consult(player_perspective_first_file, 7) ==
+          Square(Piece::Rook, position.side_to_move()) &&
       !under_attack(position, adversary,
                     PiecePlacement(player_perspective_first_file, 5)) &&
       !under_attack(position, adversary,
@@ -230,6 +232,8 @@ void MoveList::pseudolegal_castling_moves(const Position &position) {
       position.consult(player_perspective_first_file, 1).piece == Piece::None &&
       position.consult(player_perspective_first_file, 2).piece == Piece::None &&
       position.consult(player_perspective_first_file, 3).piece == Piece::None &&
+      position.consult(player_perspective_first_file, 0) ==
+          Square(Piece::Rook, position.side_to_move()) &&
       !under_attack(position, adversary,
                     PiecePlacement(player_perspective_first_file, 2)) &&
       !under_attack(position, adversary,
@@ -240,7 +244,8 @@ void MoveList::pseudolegal_castling_moves(const Position &position) {
 }
 
 Piece cheapest_attacker(const Position &position, const Player &attacker_player,
-                        const PiecePlacement &pp, PiecePlacement &pp_atacker) {
+                        const PiecePlacement &pp_defender,
+                        PiecePlacement &pp_atacker) {
   IndexType opponent_pawn_offset;
   if (attacker_player == Player::White)
     opponent_pawn_offset = offsets::North;
@@ -258,18 +263,18 @@ Piece cheapest_attacker(const Position &position, const Player &attacker_player,
     return false;
   };
 
-  PiecePlacement east_pawn_attacker(pp.index() - opponent_pawn_offset +
+  PiecePlacement east_pawn_attacker(pp_defender.index() - opponent_pawn_offset +
                                     offsets::East);
   if (under_pawn_thread(east_pawn_attacker))
     return pp_atacker = east_pawn_attacker, Piece::Pawn;
 
-  PiecePlacement west_pawn_attacker(pp.index() - opponent_pawn_offset +
+  PiecePlacement west_pawn_attacker(pp_defender.index() - opponent_pawn_offset +
                                     offsets::West);
   if (under_pawn_thread(west_pawn_attacker))
     return pp_atacker = west_pawn_attacker, Piece::Pawn;
 
   for (const IndexType &offset : offsets::Knight) {
-    PiecePlacement to(pp.index() + offset);
+    PiecePlacement to(pp_defender.index() + offset);
     if (!to.out_of_bounds()) {
       const Square &to_square = position.consult(to);
       if (to_square.player == attacker_player &&
@@ -283,7 +288,7 @@ Piece cheapest_attacker(const Position &position, const Player &attacker_player,
     if (offset == 0)
       break;
 
-    for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
+    for (PiecePlacement to(pp_defender.index() + offset); !to.out_of_bounds();
          to.index() += offset) {
       const Square &to_square = position.consult(to);
       if (to_square.player == attacker_player) {
@@ -303,7 +308,7 @@ Piece cheapest_attacker(const Position &position, const Player &attacker_player,
     if (offset == 0)
       break;
 
-    for (PiecePlacement to(pp.index() + offset); !to.out_of_bounds();
+    for (PiecePlacement to(pp_defender.index() + offset); !to.out_of_bounds();
          to.index() += offset) {
       const Square &to_square = position.consult(to);
       if (to_square.player == attacker_player) {
@@ -322,6 +327,15 @@ Piece cheapest_attacker(const Position &position, const Player &attacker_player,
 
   if (queen_attacks)
     return Piece::Queen;
+
+  for (const IndexType &offset : offsets::AllDirections) {
+    PiecePlacement to(pp_defender.index() + offset);
+    if (!to.out_of_bounds()) {
+      const Square &to_square = position.consult(to);
+      if (to_square.player == attacker_player && to_square.piece == Piece::King)
+        return pp_atacker = to, Piece::King;
+    }
+  }
 
   return Piece::None;
 }

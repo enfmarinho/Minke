@@ -131,6 +131,9 @@ struct Square {
     player = Player::None;
   }
   Square(Piece piece, Player player) : piece(piece), player(player) {}
+  friend bool operator==(const Square &lhs, const Square &rhs) {
+    return lhs.piece == rhs.piece && lhs.player == rhs.player;
+  }
 };
 const Square empty_square = Square(Piece::None, Player::None);
 static_assert(sizeof(Square) == 2);
