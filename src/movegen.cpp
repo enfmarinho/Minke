@@ -124,7 +124,7 @@ void MoveList::pseudolegal_pawn_moves(const Position &position,
   else if (!capture_left.out_of_bounds() &&
            position.en_passant_rank() == capture_left.rank() &&
            capture_left.file() == en_passant_file)
-    *(m_end++) = Move(from, capture_left, MoveType::Capture);
+    *(m_end++) = Move(from, capture_left, MoveType::EnPassant);
 
   PiecePlacement capture_right(from.index() + offset + offsets::East);
   if (!capture_right.out_of_bounds() &&
@@ -136,7 +136,7 @@ void MoveList::pseudolegal_pawn_moves(const Position &position,
   else if (!capture_right.out_of_bounds() &&
            position.en_passant_rank() == capture_right.rank() &&
            capture_right.file() == en_passant_file)
-    *(m_end++) = Move(from, capture_right, MoveType::Capture);
+    *(m_end++) = Move(from, capture_right, MoveType::EnPassant);
 
   PiecePlacement singlemove(from.index() + offset);
   if (position.consult(singlemove).piece == Piece::None) {
