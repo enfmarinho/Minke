@@ -13,7 +13,9 @@ You must give the path to the reference binary, to your chess engine binary, to
 a file with a list of FEN and the desired perft depth. 
 You can run it like:
     python3.11 compare_perft.py stockfish path_to_your_engine fen_list.txt 5
-If the command-line arguments are not provided you'll be asked via stdin. '''
+If the command-line arguments are not provided you'll be asked via stdin. 
+If the path to the file with the list of FENs (fen_list.txt) is "-" the fen will
+be read via stdin. That is to make it easier to use'''
 import subprocess
 import sys
 import time
@@ -105,7 +107,11 @@ def main():
 
     ref_pipe = open_pipe(ref_path)
     yours_pipe = open_pipe(yours_path)
-    fen_dataset = read_dataset(dataset_path)
+    if dataset_path == "-":
+        print("Test on FEN: ", end='', flush=True)
+        fen_dataset = [sys.stdin.readline().strip()]
+    else:
+        fen_dataset = read_dataset(dataset_path)
 
     # Ignore chess engine info
     ignore_first_line(ref_pipe)
