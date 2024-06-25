@@ -49,8 +49,24 @@ WeightType search::alpha_beta_search(WeightType alpha, WeightType beta,
   bool found;
   TTEntry *entry =
       TranspositionTable::get().probe(game_state.position(), found);
-  if (found && entry->depth_ply() >= depth_ply)
-    return entry->evaluation();
+  if (found && entry->depth_ply() >= depth_ply) {
+    switch (entry->bound()) {
+    case TTEntry::BoundType::Exact:
+      return entry->evaluation();
+    case TTEntry::BoundType::LowerBound:
+      alpha = std::max(entry->evaluation(), alpha);
+      break;
+    case TTEntry::BoundType::UpperBound:
+      beta = std::min(entry->evaluation(), beta);
+      break;
+    default:
+      std::cerr << "TT hit, but entry bound is empty.";
+      assert(false);
+    }
+    if (alpha >= beta)
+      return entry->evaluation();
+  }
+
   if (thread.should_stop())
     return ScoreNone;
   if (depth_ply == 0)
