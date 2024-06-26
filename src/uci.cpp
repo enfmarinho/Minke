@@ -78,7 +78,7 @@ void UCI::print_debug_info() const {
   m_game_state.position().print();
   bool found;
   auto entry = TranspositionTable::get().probe(m_game_state.position(), found);
-  Move ttmove = move_none;
+  Move ttmove = MoveNone;
   if (found)
     ttmove = entry->best_move();
   MoveList move_list(m_game_state, ttmove);

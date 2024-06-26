@@ -163,38 +163,38 @@ bool Position::move(const Move &movement) {
   if (movement.move_type == MoveType::Regular ||
       movement.move_type == MoveType::Capture) {
     consult(movement.to) = consult(movement.from);
-    consult(movement.from) = empty_square;
+    consult(movement.from) = EmptySquare;
   } else if (movement.move_type == MoveType::EnPassant) {
     IndexType offset =
         side_to_move() == Player::White ? offsets::South : offsets::North;
     consult(movement.to) = consult(movement.from);
-    consult(movement.from) = empty_square;
+    consult(movement.from) = EmptySquare;
     captured = consult(movement.to.index() + offset);
-    consult(movement.to.index() + offset) = empty_square;
+    consult(movement.to.index() + offset) = EmptySquare;
   } else if (movement.move_type == MoveType::PawnPromotionQueen) {
-    consult(movement.from) = empty_square;
+    consult(movement.from) = EmptySquare;
     consult(movement.to) = Square(Piece::Queen, m_side_to_move);
   } else if (movement.move_type == MoveType::PawnPromotionKnight) {
-    consult(movement.from) = empty_square;
+    consult(movement.from) = EmptySquare;
     consult(movement.to) = Square(Piece::Knight, m_side_to_move);
   } else if (movement.move_type == MoveType::PawnPromotionRook) {
-    consult(movement.from) = empty_square;
+    consult(movement.from) = EmptySquare;
     consult(movement.to) = Square(Piece::Rook, m_side_to_move);
   } else if (movement.move_type == MoveType::PawnPromotionBishop) {
-    consult(movement.from) = empty_square;
+    consult(movement.from) = EmptySquare;
     consult(movement.to) = Square(Piece::Bishop, m_side_to_move);
   } else if (movement.move_type == MoveType::KingSideCastling) {
     IndexType file = m_side_to_move == Player::White ? 0 : 7;
     consult(file, 6) = consult(file, 4);
     consult(file, 5) = consult(file, 7);
-    consult(file, 4) = empty_square;
-    consult(file, 7) = empty_square;
+    consult(file, 4) = EmptySquare;
+    consult(file, 7) = EmptySquare;
   } else if (movement.move_type == MoveType::QueenSideCastling) {
     IndexType file = m_side_to_move == Player::White ? 0 : 7;
     consult(file, 2) = consult(file, 4);
     consult(file, 3) = consult(file, 0);
-    consult(file, 4) = empty_square;
-    consult(file, 0) = empty_square;
+    consult(file, 4) = EmptySquare;
+    consult(file, 0) = EmptySquare;
   }
   m_side_to_move =
       (m_side_to_move == Player::White) ? Player::Black : Player::White;

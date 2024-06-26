@@ -80,12 +80,12 @@ WeightType search::alpha_beta_search(WeightType alpha, WeightType beta,
       bound = TTEntry::BoundType::LowerBound;
     else if (eval >= beta)
       bound = TTEntry::BoundType::UpperBound;
-    entry->save(game_state.position().get_hash(), 0, move_none, eval,
+    entry->save(game_state.position().get_hash(), 0, MoveNone, eval,
                 game_state.position().get_hash(), bound);
     return eval;
   }
 
-  Move best_move = move_none;
+  Move best_move = MoveNone;
   WeightType best_eval = ScoreNone;
   if (found) {
     best_move = entry->best_move();

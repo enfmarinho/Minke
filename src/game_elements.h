@@ -135,7 +135,7 @@ struct Square {
     return lhs.piece == rhs.piece && lhs.player == rhs.player;
   }
 };
-const Square empty_square = Square(Piece::None, Player::None);
+const Square EmptySquare = Square(Piece::None, Player::None);
 static_assert(sizeof(Square) == 2);
 
 struct Move {
@@ -167,7 +167,7 @@ struct Move {
            lhs.to == rhs.to;
   }
 };
-const Move move_none = Move();
+const Move MoveNone = Move();
 static_assert(sizeof(Move) == 3);
 
 struct PastMove {

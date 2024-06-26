@@ -357,7 +357,7 @@ bool SEE(const Position &position, const Move &move) {
       weights::SEE_table[piece_index(copy_position.consult(move.to).piece)];
   WeightType material_risk =
       weights::SEE_table[piece_index(copy_position.consult(move.from).piece)];
-  copy_position.consult(move.from) = empty_square;
+  copy_position.consult(move.from) = EmptySquare;
 
   while (material_gain <= material_risk) {
     PiecePlacement pp_atacker;
@@ -366,7 +366,7 @@ bool SEE(const Position &position, const Move &move) {
     if (attacker == Piece::None)
       return true;
 
-    copy_position.consult(pp_atacker) = empty_square;
+    copy_position.consult(pp_atacker) = EmptySquare;
     material_gain -= material_risk;
     material_risk = weights::SEE_table[piece_index(attacker)];
 
@@ -377,7 +377,7 @@ bool SEE(const Position &position, const Move &move) {
     if (attacker == Piece::None)
       return false;
 
-    copy_position.consult(pp_atacker) = empty_square;
+    copy_position.consult(pp_atacker) = EmptySquare;
     material_gain += material_risk;
     material_risk = weights::SEE_table[piece_index(attacker)];
   }
