@@ -62,6 +62,14 @@ TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
   return ttentry;
 }
 
+WeightType search::quiescence(GameState &game_state) {
+  return eval::evaluate(game_state.position()); // TODO remove this, just a STUB
+  return game_state.eval();
+}
+
+WeightType search::alpha_beta(WeightType alpha, WeightType beta,
+                              const CounterType &depth_ply,
+                              GameState &game_state, Thread &thread) {
   thread.increase_nodes_searched_counter();
   bool found;
   TTEntry *entry =
@@ -87,9 +95,7 @@ TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
   if (thread.should_stop())
     return ScoreNone;
   if (depth_ply == 0) {
-    // WeightType eval = game_state.eval(); // TODO do a quiesce search
-    WeightType eval = eval::evaluate(
-        game_state.position()); // TODO STUB while nn is incomplete
+    WeightType eval = quiescence(game_state);
     TTEntry::BoundType bound = TTEntry::BoundType::Exact;
     if (eval <= alpha)
       bound = TTEntry::BoundType::LowerBound;
@@ -112,7 +118,7 @@ TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
     if (!game_state.make_move(move))
       continue;
     WeightType eval =
-        alpha_beta_search(-beta, -alpha, depth_ply - 1, game_state, thread);
+        alpha_beta(-beta, -alpha, depth_ply - 1, game_state, thread);
     game_state.undo_move();
 
     if (eval > best_eval) {

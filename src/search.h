@@ -20,8 +20,10 @@ template <bool print_moves>
 void iterative_deepening(GameState &game_state, Thread &thread);
 TTEntry *aspiration(const CounterType &depth, GameState &game_state,
                     Thread &thread);
+WeightType quiescence(GameState &game_state);
+WeightType alpha_beta(WeightType alpha, WeightType beta,
+                      const CounterType &depth, GameState &game_state,
                       Thread &thread);
-                             Thread &thread);
 } // namespace search
 
 #endif // #ifndef SEARCH_H
