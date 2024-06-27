@@ -17,8 +17,8 @@ void search(GameState &game_state, Thread &thread);
 void perft(GameState &game_state, Thread &thread);
 template <bool print_moves>
 void iterative_deepening(GameState &game_state, Thread &thread);
-WeightType alpha_beta_search(WeightType alpha, WeightType beta,
-                             const CounterType &depth, GameState &game_state,
+WeightType aspiration(const CounterType &depth, GameState &game_state,
+                      Thread &thread);
                              Thread &thread);
 } // namespace search
 

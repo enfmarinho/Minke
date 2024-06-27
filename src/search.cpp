@@ -13,6 +13,7 @@
 #include "position.h"
 #include "thread.h"
 #include "tt.h"
+#include "weights.h"
 #include <algorithm>
 #include <cassert>
 #include <iostream>
@@ -30,7 +31,7 @@ void search::iterative_deepening(GameState &game_state, Thread &thread) {
   bool found;
   TTEntry *move;
   for (CounterType depth_ply = 1; !thread.should_stop(depth_ply); ++depth_ply) {
-    alpha_beta_search(ScoreNone, -ScoreNone, depth_ply, game_state, thread);
+    aspiration(depth_ply, game_state, thread);
     if (!thread.should_stop()) {
       move = TranspositionTable::get().probe(game_state.position(), found);
       assert(found);
@@ -44,9 +45,24 @@ void search::iterative_deepening(GameState &game_state, Thread &thread) {
               << std::endl;
 }
 
-WeightType search::alpha_beta_search(WeightType alpha, WeightType beta,
-                                     const CounterType &depth_ply,
-                                     GameState &game_state, Thread &thread) {
+WeightType search::aspiration(const CounterType &depth, GameState &game_state,
+                              Thread &thread) {
+  bool found;
+  TTEntry *entry =
+      TranspositionTable::get().probe(game_state.position(), found);
+  if (!found) {
+    return alpha_beta(ScoreNone, -ScoreNone, depth, game_state, thread);
+  }
+
+  WeightType alpha = entry->evaluation() - weights::EndGamePawn;
+  WeightType beta = entry->evaluation() + weights::EndGamePawn;
+  WeightType eval = alpha_beta(alpha, beta, depth, game_state, thread);
+  if (eval >= beta)
+    eval = alpha_beta(alpha, beta, depth, game_state, thread);
+  else if (eval <= alpha)
+    eval = alpha_beta(alpha, beta, depth, game_state, thread);
+  return eval;
+}
   thread.increase_nodes_searched_counter();
   bool found;
   TTEntry *entry =
