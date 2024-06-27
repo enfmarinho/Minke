@@ -28,13 +28,10 @@ void search::perft(GameState &game_state, Thread &thread) {
 
 template <bool print_moves>
 void search::iterative_deepening(GameState &game_state, Thread &thread) {
-  bool found;
   TTEntry *move;
   for (CounterType depth_ply = 1; !thread.should_stop(depth_ply); ++depth_ply) {
-    aspiration(depth_ply, game_state, thread);
+    move = aspiration(depth_ply, game_state, thread);
     if (!thread.should_stop()) {
-      move = TranspositionTable::get().probe(game_state.position(), found);
-      assert(found);
       if constexpr (print_moves)
         std::cout << "depth " << depth_ply << " bestmove "
                   << move->best_move().get_algebraic_notation() << std::endl;
@@ -45,24 +42,26 @@ void search::iterative_deepening(GameState &game_state, Thread &thread) {
               << std::endl;
 }
 
-WeightType search::aspiration(const CounterType &depth, GameState &game_state,
-                              Thread &thread) {
+TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
+                            Thread &thread) {
   bool found;
-  TTEntry *entry =
+  TTEntry *ttentry =
       TranspositionTable::get().probe(game_state.position(), found);
   if (!found) {
-    return alpha_beta(ScoreNone, -ScoreNone, depth, game_state, thread);
+    alpha_beta(ScoreNone, -ScoreNone, depth, game_state, thread);
+    return ttentry;
   }
 
-  WeightType alpha = entry->evaluation() - weights::EndGamePawn;
-  WeightType beta = entry->evaluation() + weights::EndGamePawn;
+  WeightType alpha = ttentry->evaluation() - weights::EndGamePawn;
+  WeightType beta = ttentry->evaluation() + weights::EndGamePawn;
   WeightType eval = alpha_beta(alpha, beta, depth, game_state, thread);
   if (eval >= beta)
-    eval = alpha_beta(alpha, beta, depth, game_state, thread);
+    alpha_beta(alpha, beta, depth, game_state, thread);
   else if (eval <= alpha)
-    eval = alpha_beta(alpha, beta, depth, game_state, thread);
-  return eval;
+    alpha_beta(alpha, beta, depth, game_state, thread);
+  return ttentry;
 }
+
   thread.increase_nodes_searched_counter();
   bool found;
   TTEntry *entry =

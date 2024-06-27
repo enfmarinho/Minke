@@ -8,6 +8,7 @@
 #include "game_elements.h"
 #include "game_state.h"
 #include "thread.h"
+#include "tt.h"
 
 #ifndef SEARCH_H
 #define SEARCH_H
@@ -17,7 +18,8 @@ void search(GameState &game_state, Thread &thread);
 void perft(GameState &game_state, Thread &thread);
 template <bool print_moves>
 void iterative_deepening(GameState &game_state, Thread &thread);
-WeightType aspiration(const CounterType &depth, GameState &game_state,
+TTEntry *aspiration(const CounterType &depth, GameState &game_state,
+                    Thread &thread);
                       Thread &thread);
                              Thread &thread);
 } // namespace search
