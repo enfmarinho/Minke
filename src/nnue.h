@@ -20,7 +20,15 @@
 constexpr int InputLayerSize = 64 * 12;
 constexpr int HiddenLayerSize = 64;
 
-// TODO check and fix quantization
+constexpr int16_t CreluMin = 0;
+constexpr int16_t CreluMax = 255;
+
+constexpr int Scale = 400;
+
+constexpr int QA = 255;
+constexpr int QB = 64;
+constexpr int QAB = QA * QB;
+
 // NOTE: Network must be initialized using reset().
 class Network {
 public:
@@ -45,10 +53,10 @@ private:
     Accumulator() = delete;
     ~Accumulator() = default;
     void reset(std::span<int16_t, HiddenLayerSize> biasses);
-    int16_t *operator[](Player player);
   };
 
   int32_t crelu(const int16_t &input) const;
+  int32_t screlu(const int16_t &input) const;
   int32_t weight_sum_reduction(
       const std::array<int16_t, HiddenLayerSize> &player,
       const std::array<int16_t, HiddenLayerSize> &adversary) const;
