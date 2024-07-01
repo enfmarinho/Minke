@@ -6,6 +6,7 @@
  */
 
 #include "game_state.h"
+#include "evaluate.h"
 #include "game_elements.h"
 #include "position.h"
 #include <cassert>
@@ -88,6 +89,7 @@ void GameState::increment_history(const Move &move, const CounterType &depth) {
 }
 
 WeightType GameState::eval() const {
+  return eval::evaluate(position());
   return m_net.eval(position().side_to_move());
 }
 

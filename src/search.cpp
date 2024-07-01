@@ -6,7 +6,6 @@
  */
 
 #include "search.h"
-#include "evaluate.h"
 #include "game_elements.h"
 #include "game_state.h"
 #include "movegen.h"
@@ -65,7 +64,6 @@ TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
 }
 
 WeightType search::quiescence(GameState &game_state) {
-  return eval::evaluate(game_state.position()); // TODO remove this, just a STUB
   return game_state.eval();
 }
 
