@@ -9,12 +9,14 @@
 #include "game_elements.h"
 #include "position.h"
 #include <cassert>
+#include <iostream>
 #include <string>
 
 GameState::GameState() {
   // TODO check if it's worth to reserve space on m_position_stack
   // m_position_stack.reserve(200);
   reset(StartFEN);
+  m_pv_index = 0;
 }
 
 bool GameState::make_move(const Move &move) {
@@ -96,3 +98,14 @@ Position &GameState::position() { return m_position_stack.back(); }
 void GameState::push() { m_position_stack.push_back(position()); }
 
 void GameState::pop() { m_position_stack.pop_back(); }
+
+void GameState::print_pv(int depth) const {
+  for (int index = 0; index < depth; ++index)
+    std::cout << m_principal_variation[index].get_algebraic_notation() << " ";
+}
+
+void GameState::set_pv(Move move) { m_principal_variation[m_pv_index] = move; }
+
+void GameState::increase_pv_index() { ++m_pv_index; }
+
+void GameState::decrease_pv_index() { --m_pv_index; }

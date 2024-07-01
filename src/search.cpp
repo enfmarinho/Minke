@@ -28,17 +28,19 @@ void search::perft(GameState &game_state, Thread &thread) {
 
 template <bool print_moves>
 void search::iterative_deepening(GameState &game_state, Thread &thread) {
-  TTEntry *move;
-  for (CounterType depth_ply = 1; !thread.should_stop(depth_ply); ++depth_ply) {
-    move = aspiration(depth_ply, game_state, thread);
+  TTEntry *entry;
+  for (CounterType depth = 1; !thread.should_stop(depth); ++depth) {
+    entry = aspiration(depth, game_state, thread);
     if (!thread.should_stop()) {
-      if constexpr (print_moves)
-        std::cout << "depth " << depth_ply << " bestmove "
-                  << move->best_move().get_algebraic_notation() << std::endl;
+      if constexpr (print_moves) {
+        std::cout << "info depth " << depth << " pv ";
+        game_state.print_pv(depth);
+        std::cout << std::endl;
+      }
     }
   }
   if constexpr (print_moves)
-    std::cout << "bestmove " << move->best_move().get_algebraic_notation()
+    std::cout << "bestmove " << entry->best_move().get_algebraic_notation()
               << std::endl;
 }
 
@@ -85,7 +87,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
       beta = std::min(entry->evaluation(), beta);
       break;
     default:
-      std::cerr << "TT hit, but entry bound is empty.";
+      std::cerr << "TT hit, but entry bound is empty." << std::endl;
       assert(false);
     }
     if (alpha >= beta)
@@ -117,8 +119,10 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
     Move move = move_list.next_move();
     if (!game_state.make_move(move))
       continue;
+    game_state.increase_pv_index();
     WeightType eval =
         alpha_beta(-beta, -alpha, depth_ply - 1, game_state, thread);
+    game_state.decrease_pv_index();
     game_state.undo_move();
 
     if (eval > best_eval) {
@@ -138,6 +142,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
     else if (best_eval >= beta)
       bound = TTEntry::BoundType::UpperBound;
 
+    game_state.set_pv(best_move);
     entry->save(game_state.position().get_hash(), depth_ply, best_move,
                 best_eval, game_state.position().get_half_move_counter(),
                 bound);

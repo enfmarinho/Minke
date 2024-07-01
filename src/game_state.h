@@ -11,6 +11,8 @@
 #include "game_elements.h"
 #include "nnue.h"
 #include "position.h"
+#include <array>
+#include <cstddef>
 #include <vector>
 
 // TODO check if its better to have a stack with past positions or rely on
@@ -30,12 +32,19 @@ public:
   const Position &position() const;
   Position &position();
 
+  void print_pv(int depth) const;
+  void set_pv(Move Move);
+  void increase_pv_index();
+  void decrease_pv_index();
+
 private:
   void push();
   void pop();
 
   std::vector<Position> m_position_stack;
   WeightType m_move_history[NumberOfPieces * 2][0x80];
+  size_t m_pv_index;
+  std::array<Move, MaxSearchDepth> m_principal_variation;
   Network m_net;
 };
 
