@@ -1,23 +1,27 @@
 cmake_minimum_required(VERSION 3.5)
-project(
-  Minke
-  VERSION 0.0.1
-  LANGUAGES CXX)
+project(Minke)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+set(CMAKE_CXX_STANDARD 20)
 
-# Append to existing flags.
-add_compile_options(
-  "-Wall"
-  "-Wpedantic"
-  "-Wshadow"
-  "-Wsign-compare"
-  "-Wold-style-cast"
-  "-Wcast-align"
-  "-Wcast-qual")
-# add_compile_options("-g") # Flag to produce debug info.
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 add_compile_options("-pthread")
-add_compile_options("-O3" "-march=native") # Optimization flags
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  add_compile_options(
+    "-Wall"
+    "-Wpedantic"
+    "-Wshadow"
+    "-Wsign-compare"
+    "-Wold-style-cast"
+    "-Wcast-align"
+    "-Wcast-qual"
+    "-g")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+  add_compile_options("-O3" "-march=native" "-DNDEBUG")
+endif()
 
 # Add and link executable.
 add_executable(
@@ -33,4 +37,4 @@ add_executable(
   "src/thread.cpp"
   "src/tt.cpp"
   "src/uci.cpp")
-target_compile_features(minke PUBLIC cxx_std_20)
+target_link_libraries(minke)
