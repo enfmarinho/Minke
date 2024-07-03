@@ -31,6 +31,7 @@ constexpr auto StartFEN =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 constexpr int MaxMoves = 256;
 constexpr int HalfMovesPerMatch = 2048;
+constexpr int MaxSearchDepth = 128;
 
 namespace offsets {
 constexpr IndexType North = 1;
@@ -145,7 +146,7 @@ struct Move {
   Move() = default;
   Move(PiecePlacement from, PiecePlacement to, MoveType move_type)
       : from(from), to(to), move_type(move_type) {}
-  std::string get_algebraic_notation() {
+  std::string get_algebraic_notation() const {
     std::string algebraic_notation;
     algebraic_notation.push_back('a' + from.rank());
     algebraic_notation.push_back('1' + from.file());

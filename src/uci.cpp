@@ -199,8 +199,8 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
 }
 
 void UCI::eval() {
-  std::cout << "The position evaluation is "
-            << eval::evaluate(m_game_state.position()) << std::endl;
+  std::cout << "The position evaluation is " << m_game_state.eval()
+            << std::endl;
 }
 
 bool UCI::parse_go(std::istringstream &iss, bool bench) {

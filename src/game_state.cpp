@@ -6,15 +6,18 @@
  */
 
 #include "game_state.h"
+#include "evaluate.h"
 #include "game_elements.h"
 #include "position.h"
 #include <cassert>
+#include <iostream>
 #include <string>
 
 GameState::GameState() {
   // TODO check if it's worth to reserve space on m_position_stack
   // m_position_stack.reserve(200);
   reset(StartFEN);
+  m_pv_index = 0;
 }
 
 bool GameState::make_move(const Move &move) {
@@ -24,7 +27,31 @@ bool GameState::make_move(const Move &move) {
     return false;
   }
   m_net.push();
-  // TODO Update nn features
+
+  const Square &moved = position().consult(move.to);
+  m_net.add_feature(moved, move.to);
+  m_net.remove_feature(moved, move.from);
+
+  if (move.move_type == MoveType::Regular) {
+    // Do nothing
+  } else if (move.move_type == MoveType::Capture) {
+    const Square &captured =
+        m_position_stack[m_position_stack.size() - 2].consult(move.to);
+    m_net.remove_feature(captured, move.to);
+  } else if (move.move_type == MoveType::EnPassant) {
+    const Player adversary =
+        (moved.player == Player::White ? Player::Black : Player::White);
+    m_net.remove_feature({Piece::Pawn, adversary}, move.to);
+  } else if (move.move_type == MoveType::KingSideCastling) {
+    const IndexType file = (moved.player == Player::White ? 0 : 7);
+    m_net.add_feature({Piece::Rook, moved.player}, PiecePlacement(file, 5));
+    m_net.remove_feature({Piece::Rook, moved.player}, PiecePlacement(file, 7));
+  } else if (move.move_type == MoveType::QueenSideCastling) {
+    const IndexType file = (moved.player == Player::White ? 0 : 7);
+    m_net.add_feature({Piece::Rook, moved.player}, PiecePlacement(file, 3));
+    m_net.remove_feature({Piece::Rook, moved.player}, PiecePlacement(file, 0));
+  }
+
   return true;
 }
 
@@ -62,6 +89,7 @@ void GameState::increment_history(const Move &move, const CounterType &depth) {
 }
 
 WeightType GameState::eval() const {
+  return eval::evaluate(position());
   return m_net.eval(position().side_to_move());
 }
 
@@ -72,3 +100,14 @@ Position &GameState::position() { return m_position_stack.back(); }
 void GameState::push() { m_position_stack.push_back(position()); }
 
 void GameState::pop() { m_position_stack.pop_back(); }
+
+void GameState::print_pv(int depth) const {
+  for (int index = 0; index < depth; ++index)
+    std::cout << m_principal_variation[index].get_algebraic_notation() << " ";
+}
+
+void GameState::set_pv(Move move) { m_principal_variation[m_pv_index] = move; }
+
+void GameState::increase_pv_index() { ++m_pv_index; }
+
+void GameState::decrease_pv_index() { --m_pv_index; }
