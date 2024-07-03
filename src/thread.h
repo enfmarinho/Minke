@@ -30,6 +30,7 @@ public:
   void node_limit(uint64_t new_node_limit);
   void increase_nodes_searched_counter();
   void infinite();
+  TimeType time_passed() const;
   uint64_t nodes_searched();
 
 private:

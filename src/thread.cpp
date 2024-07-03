@@ -73,4 +73,6 @@ void Thread::increase_nodes_searched_counter() { ++m_nodes_searched; }
 
 uint64_t Thread::nodes_searched() { return m_nodes_searched; }
 
+TimeType Thread::time_passed() const { return now() - m_start_time; }
+
 void Thread::infinite() { m_infinite = true; }

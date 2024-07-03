@@ -32,7 +32,9 @@ void search::iterative_deepening(GameState &game_state, Thread &thread) {
     entry = aspiration(depth, game_state, thread);
     if (!thread.should_stop()) {
       if constexpr (print_moves) {
-        std::cout << "info depth " << depth << " pv ";
+        std::cout << "info depth " << depth << " score cp "
+                  << entry->evaluation() << " nodes " << thread.nodes_searched()
+                  << " time " << thread.time_passed() << " pv ";
         game_state.print_pv(depth);
         std::cout << std::endl;
       }
