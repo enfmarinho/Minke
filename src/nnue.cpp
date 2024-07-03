@@ -7,12 +7,15 @@
 
 #include "nnue.h"
 #include "game_elements.h"
+#include "incbin.h"
 #include "position.h"
 #include <algorithm>
 #include <array>
 #include <cassert>
 #include <cstdint>
 #include <span>
+
+INCBIN(NetParameters, "../src/minke.nnue");
 
 IndexType feature_index(const Square &sq, const PiecePlacement &pp) {
   return (pp.rank() * 8 + pp.file()) +
@@ -21,7 +24,23 @@ IndexType feature_index(const Square &sq, const PiecePlacement &pp) {
 }
 
 Network::Network() {
-  // TODO read NN parameters
+  const int16_t *pointer =
+      reinterpret_cast<const int16_t *>(gNetParametersData);
+
+  for (int j = 0; j < HiddenLayerSize; ++j)
+    for (int i = 0; i < InputLayerSize; ++i)
+      m_hidden_weights[j][i] = *pointer++;
+
+  for (int i = 0; i < HiddenLayerSize; ++i)
+    m_hidden_bias[i] = *pointer++;
+
+  for (int i = 0; i < HiddenLayerSize * 2; ++i)
+    m_output_weights[i] = *pointer++;
+
+  m_output_bias = *pointer++;
+
+  // assert(reinterpret_cast<const unsigned char *>(pointer) ==
+  //        gNetParametersData + gNetParametersSize);
 }
 
 void Network::pop() { m_accumulators.pop_back(); }
