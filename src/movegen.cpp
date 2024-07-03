@@ -61,7 +61,7 @@ void MoveList::gen_pseudolegal_moves(const Position &position) {
 }
 
 [[nodiscard]] bool MoveList::empty() const {
-  return m_move_list + m_start_index == m_end;
+  return m_move_list + m_start_index >= m_end;
 }
 
 [[nodiscard]] MoveList::size_type MoveList::size() const {
