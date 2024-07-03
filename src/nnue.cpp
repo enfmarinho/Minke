@@ -34,9 +34,9 @@ void Network::add_feature(const Square &sq, const PiecePlacement &pp) {
 
   for (int column{0}; column < HiddenLayerSize; ++column) {
     m_accumulators.back().white_neurons[column] +=
-        m_hidden_weights[white_index][column];
+        m_hidden_weights[column][white_index];
     m_accumulators.back().black_neurons[column] +=
-        m_hidden_weights[black_index][column];
+        m_hidden_weights[column][black_index];
   }
 }
 
@@ -46,9 +46,9 @@ void Network::remove_feature(const Square &sq, const PiecePlacement &pp) {
 
   for (int column{0}; column < HiddenLayerSize; ++column) {
     m_accumulators.back().white_neurons[column] -=
-        m_hidden_weights[white_index][column];
+        m_hidden_weights[column][white_index];
     m_accumulators.back().black_neurons[column] -=
-        m_hidden_weights[black_index][column];
+        m_hidden_weights[column][black_index];
   }
 }
 

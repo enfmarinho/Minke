@@ -62,7 +62,7 @@ private:
       const std::array<int16_t, HiddenLayerSize> &adversary) const;
 
   std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
-  std::array<std::array<int16_t, HiddenLayerSize>, InputLayerSize>
+  std::array<std::array<int16_t, InputLayerSize>, HiddenLayerSize>
       m_hidden_weights;
   std::array<int16_t, HiddenLayerSize> m_hidden_bias;
   std::array<int16_t, HiddenLayerSize * 2> m_output_weights;
