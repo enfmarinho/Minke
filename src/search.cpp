@@ -104,13 +104,13 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
     else if (eval >= beta)
       bound = TTEntry::BoundType::UpperBound;
     entry->save(game_state.position().get_hash(), 0, MoveNone, eval,
-                game_state.position().get_hash(), bound);
+                game_state.position().get_half_move_counter(), bound);
     return eval;
   }
 
   Move best_move = MoveNone;
   WeightType best_eval = ScoreNone;
-  if (found) {
+  if (found && entry->best_move() != MoveNone) {
     best_move = entry->best_move();
     best_eval = entry->evaluation();
   }
@@ -134,6 +134,8 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
     } else if (eval > alpha)
       alpha = eval;
   }
+
+  assert(best_move != MoveNone);
 
   if (!thread.should_stop()) {
     TTEntry::BoundType bound = TTEntry::BoundType::Exact;
