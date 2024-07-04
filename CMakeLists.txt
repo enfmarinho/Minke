@@ -26,7 +26,6 @@ endif()
 # Add and link executable.
 add_executable(
   minke
-  "src/evaluate.cpp"
   "src/game_state.cpp"
   "src/hash.cpp"
   "src/main.cpp"

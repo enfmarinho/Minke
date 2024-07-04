@@ -7,7 +7,6 @@
 
 #include "uci.h"
 #include "benchmark.h"
-#include "evaluate.h"
 #include "game_elements.h"
 #include "game_state.h"
 #include "movegen.h"

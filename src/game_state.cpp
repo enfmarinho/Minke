@@ -6,7 +6,6 @@
  */
 
 #include "game_state.h"
-#include "evaluate.h"
 #include "game_elements.h"
 #include "position.h"
 #include <cassert>
