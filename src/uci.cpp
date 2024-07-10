@@ -64,6 +64,7 @@ void UCI::loop() {
       std::cout << "TODO write help message." << std::endl;
     } else if (token == "d") {
       print_debug_info();
+      std::cout << "Eval: " << m_game_state.eval() << std::endl;
     } else if (token == "bench") {
       bench(iss);
     } else if (!token.empty()) {
