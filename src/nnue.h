@@ -18,7 +18,7 @@
 #include <vector>
 
 constexpr int InputLayerSize = 64 * 12;
-constexpr int HiddenLayerSize = 64;
+constexpr int HiddenLayerSize = 64 * 12;
 
 constexpr int16_t CreluMin = 0;
 constexpr int16_t CreluMax = 255;
