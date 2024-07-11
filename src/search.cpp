@@ -130,7 +130,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
       best_move = move;
     } else if (eval >= beta) {
       game_state.increment_history(move, depth_ply);
-      break;
+      return alpha;
     } else if (eval > alpha)
       alpha = eval;
   }
