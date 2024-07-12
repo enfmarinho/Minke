@@ -387,25 +387,26 @@ bool SEE(const Position &position, const Move &move) {
 
 void MoveList::calculate_scores(const GameState &game_state,
                                 const Move &tt_move) {
-  static constexpr WeightType ScoreTTHit = 70000;
-  static constexpr WeightType ScoreQueenPromotion = 50000;
-  static constexpr WeightType ScoreCapture = 20000;
+  static constexpr WeightType TTHitScore = 70000;
+  static constexpr WeightType QueenPromotionScore = 50000;
+  static constexpr WeightType CaptureScore = 20000;
 
   for (size_type index = 0, remaining = size(); index < remaining; ++index) {
     Move move = m_move_list[index];
     if (move == tt_move)
-      m_move_scores[index] = ScoreTTHit;
+      m_move_scores[index] = TTHitScore;
     else if (move.move_type == MoveType::Capture) {
       m_move_scores[index] =
-          ScoreCapture +
-          weights::SEE_table[piece_index(
-              game_state.position().consult(move.to).piece)] -
+          CaptureScore +
+          5 * weights::SEE_table[piece_index(
+                  game_state.position().consult(move.to).piece)] -
           weights::SEE_table[piece_index(
               game_state.position().consult(move.from).piece)] /
-              5 +
-          ScoreCapture * SEE(game_state.position(), move);
+              5 -
+          TTHitScore * !SEE(game_state.position(), move);
+      // TODO implement capture history heuristic
     } else if (move.move_type == MoveType::PawnPromotionQueen)
-      m_move_scores[index] = ScoreQueenPromotion;
+      m_move_scores[index] = QueenPromotionScore;
     else
       m_move_scores[index] = game_state.consult_history(move);
 
