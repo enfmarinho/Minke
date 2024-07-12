@@ -59,9 +59,9 @@ TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
   WeightType beta = ttentry->evaluation() + weights::EndGamePawn;
   WeightType eval = alpha_beta(alpha, beta, depth, game_state, thread);
   if (eval >= beta)
-    alpha_beta(alpha, beta, depth, game_state, thread);
+    alpha_beta(alpha, -ScoreNone, depth, game_state, thread);
   else if (eval <= alpha)
-    alpha_beta(alpha, beta, depth, game_state, thread);
+    alpha_beta(ScoreNone, beta, depth, game_state, thread);
   return ttentry;
 }
 
