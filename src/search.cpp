@@ -112,10 +112,8 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
     Move move = move_list.next_move();
     if (!game_state.make_move(move))
       continue;
-    game_state.increase_pv_index();
     WeightType eval =
         alpha_beta(-beta, -alpha, depth_ply - 1, game_state, thread);
-    game_state.decrease_pv_index();
     game_state.undo_move();
 
     if (eval > best_eval) {

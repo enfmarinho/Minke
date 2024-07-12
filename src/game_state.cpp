@@ -25,6 +25,7 @@ bool GameState::make_move(const Move &move) {
     pop();
     return false;
   }
+  increase_pv_index();
   m_net.push();
 
   const Square &moved = position().consult(move.to);
@@ -58,6 +59,7 @@ void GameState::undo_move() {
   assert(!m_position_stack.empty());
   pop();
   m_net.pop();
+  decrease_pv_index();
 }
 
 bool GameState::reset(const std::string &fen) {
