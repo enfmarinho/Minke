@@ -60,9 +60,7 @@ void MoveList::gen_pseudolegal_moves(const Position &position) {
   pseudolegal_castling_moves(position);
 }
 
-[[nodiscard]] bool MoveList::empty() const {
-  return m_move_list + m_start_index >= m_end;
-}
+[[nodiscard]] bool MoveList::empty() const { return size() <= 0; }
 
 [[nodiscard]] MoveList::size_type MoveList::size() const {
   return m_end - (m_move_list + m_start_index);
