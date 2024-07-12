@@ -72,7 +72,14 @@ WeightType search::quiescence(GameState &game_state) {
 WeightType search::alpha_beta(WeightType alpha, WeightType beta,
                               const CounterType &depth_ply,
                               GameState &game_state, Thread &thread) {
+  if (thread.should_stop())
+    return ScoreNone;
+
+  if (depth_ply == 0)
+    return quiescence(alpha, beta, game_state, thread);
+
   thread.increase_nodes_searched_counter();
+
   bool found;
   TTEntry *entry =
       TranspositionTable::get().probe(game_state.position(), found);
@@ -92,20 +99,6 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
     }
     if (alpha >= beta)
       return entry->evaluation();
-  }
-
-  if (thread.should_stop())
-    return ScoreNone;
-  if (depth_ply == 0) {
-    WeightType eval = quiescence(game_state);
-    TTEntry::BoundType bound = TTEntry::BoundType::Exact;
-    if (eval <= alpha)
-      bound = TTEntry::BoundType::LowerBound;
-    else if (eval >= beta)
-      bound = TTEntry::BoundType::UpperBound;
-    entry->save(game_state.position().get_hash(), 0, MoveNone, eval,
-                game_state.position().get_half_move_counter(), bound);
-    return eval;
   }
 
   Move best_move = MoveNone;
