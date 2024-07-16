@@ -52,11 +52,10 @@ TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
   }
 
   TTBucket *bucket = &m_table[table_index];
-  TTEntry *replace = &(bucket->entry[0]);
-  for (IndexType index = 0; index < bucket_size; ++index) {
-    if (replace->replace_factor(position.get_half_move_counter() >
-                                bucket->entry[index].replace_factor(
-                                    position.get_half_move_counter())))
+  TTEntry *replace = &bucket->entry[0];
+  for (IndexType index = 1; index < bucket_size; ++index) {
+    if (replace->replace_factor(position.get_half_move_counter()) >
+        bucket->entry[index].replace_factor(position.get_half_move_counter()))
       replace = &bucket->entry[index];
   }
   return found = false, replace;
