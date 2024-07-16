@@ -115,6 +115,7 @@ WeightType Network::eval(const Player &stm) const {
   default:
     assert(false); // Must not reach this
   }
+  return WeightType(); // Can't reach this, just to avoid compiler warnings
 }
 
 Network::Accumulator::Accumulator(std::span<int16_t, HiddenLayerSize> bias) {
