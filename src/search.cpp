@@ -118,19 +118,24 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
       continue;
     WeightType eval =
         alpha_beta(-beta, -alpha, depth_ply - 1, game_state, thread);
+    assert(eval >= ScoreNone);
     game_state.undo_move();
 
-    if (eval > best_score) {
+    if (eval >= best_score) {
       best_score = eval;
       best_move = move;
-    } else if (eval >= beta) {
+    }
+
+    if (eval >= beta) {
       game_state.increment_history(move, depth_ply);
       return alpha;
-    } else if (eval > alpha)
+    } else if (eval > alpha) {
       alpha = eval;
+    }
   }
 
-  assert(best_move != MoveNone);
+  // TODO deal with stalemate and checkmate, i.e. positions where there are not
+  // legal moves
 
   if (!thread.should_stop()) { // Save on TT if search was completed
     TTEntry::BoundType bound = TTEntry::BoundType::Exact;
