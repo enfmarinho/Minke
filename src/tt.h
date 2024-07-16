@@ -35,7 +35,7 @@ public:
   CounterType relative_age(const CounterType &half_move_count) const;
   CounterType replace_factor(const CounterType &half_move_count) const;
   void save(const HashType &hash, const IndexType &depth_ply,
-            const Move &movement, const WeightType &evaluation,
+            const Move &best_move, const WeightType &evaluation,
             const CounterType &half_move_counter, const BoundType &bound);
   void reset();
 
