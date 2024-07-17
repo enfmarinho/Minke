@@ -32,11 +32,6 @@ public:
   const Position &position() const;
   Position &position();
 
-  void print_pv(int depth) const;
-  void set_pv(Move Move);
-  void increase_pv_index();
-  void decrease_pv_index();
-
 private:
   void push();
   void pop();

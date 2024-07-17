@@ -25,6 +25,16 @@ void search::perft(GameState &game_state, Thread &thread) {
   iterative_deepening<false>(game_state, thread);
 }
 
+static void print_pv(Position pos, int depth_ply) {
+  for (int i = 0; i < depth_ply; ++i) {
+    bool found;
+    TTEntry *entry = TranspositionTable::get().probe(pos, found);
+    assert(found);
+    pos.move(entry->best_move());
+    std::cout << entry->best_move().get_algebraic_notation() << ' ';
+  }
+}
+
 template <bool print_moves>
 void search::iterative_deepening(GameState &game_state, Thread &thread) {
   TTEntry *entry;
@@ -35,7 +45,7 @@ void search::iterative_deepening(GameState &game_state, Thread &thread) {
         std::cout << "info depth " << depth << " score cp "
                   << entry->evaluation() << " nodes " << thread.nodes_searched()
                   << " time " << thread.time_passed() << " pv ";
-        game_state.print_pv(depth);
+        print_pv(game_state.position(), depth);
         std::cout << std::endl;
       }
     }
@@ -157,7 +167,6 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
     else if (best_score >= beta)
       bound = TTEntry::BoundType::UpperBound;
 
-    game_state.set_pv(best_move);
     entry->save(game_state.position().get_hash(), depth_ply, best_move,
                 best_score, game_state.position().get_half_move_counter(),
                 bound);
