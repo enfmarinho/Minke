@@ -134,8 +134,21 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
     }
   }
 
-  // TODO deal with stalemate and checkmate, i.e. positions where there are not
-  // legal moves
+  if (best_move == MoveNone) { // handle positions under stalemate or checkmate,
+                               // i.e. positions with no legal moves to be made
+    Position &pos = game_state.position();
+    Player adversary;
+    PiecePlacement king_placement;
+    if (pos.side_to_move() == Player::White) {
+      adversary = Player::Black;
+      king_placement = pos.white_king_position();
+    } else {
+      adversary = Player::White;
+      king_placement = pos.black_king_position();
+    }
+    return under_attack(pos, adversary, king_placement) ? -MateScore + depth_ply
+                                                        : 0;
+  }
 
   if (!thread.should_stop()) { // Save on TT if search was completed
     TTEntry::BoundType bound = TTEntry::BoundType::Exact;
