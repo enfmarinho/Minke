@@ -8,6 +8,29 @@
 #include "hash.h"
 #include "game_elements.h"
 #include "position.h"
+#include <array>
+#include <limits>
+#include <random>
+
+// Random array of unsigned 64 bit integers for performing Zobrist Hashing.
+//
+// The indexing for the pieces is as follows: file * BoardWidth + rank +
+// piece_index * BoardWidth * BoardHeight. The piece_index is the value of the
+// enum Piece for the respective piece, but adding "NumberOfPieces" (which is
+// 6) if the piece is black. With that, the 768 first values are used for the
+// pieces, the other 13 are used for position characteristics, like
+// castling rights, a possible en passant and the side to move.
+const static std::array<HashType, 781> ZobristArray = [] {
+  std::mt19937_64 gen(0);
+  std::uniform_int_distribution<HashType> dist(
+      1, std::numeric_limits<HashType>::max());
+
+  std::array<uint64_t, 781> table;
+  for (HashType &value : table)
+    value = dist(gen);
+
+  return table;
+}();
 
 HashType zobrist::hash(const Position &position) {
   HashType key = 0;
@@ -18,23 +41,23 @@ HashType zobrist::hash(const Position &position) {
 
   // En passant possibilities
   if (position.en_passant_rank() != -1)
-    key ^= ZobristArray[en_passant_starter_index + position.en_passant_rank()];
+    key ^= ZobristArray[EnPassantStarterIndex + position.en_passant_rank()];
 
   // Castling rights
   CastlingRights white_castling_rights = position.white_castling_rights();
   CastlingRights black_castling_rights = position.black_castling_rights();
   if (white_castling_rights.king_side)
-    key ^= ZobristArray[white_king_side_castling_rights_index];
+    key ^= ZobristArray[WhiteKingSideCastlingRightsIndex];
   if (white_castling_rights.queen_side)
-    key ^= ZobristArray[white_queen_side_castling_rights_index];
+    key ^= ZobristArray[WhiteQueenSideCastlingRightsIndex];
   if (black_castling_rights.king_side)
-    key ^= ZobristArray[black_king_side_castling_rights_index];
+    key ^= ZobristArray[BlackKingSideCastlingRightsIndex];
   if (black_castling_rights.queen_side)
-    key ^= ZobristArray[black_queen_side_castling_rights_index];
+    key ^= ZobristArray[BlackQueenSideCastlingRightsIndex];
 
   // Black turn
   if (position.side_to_move() == Player::Black)
-    key ^= ZobristArray[black_turn_index];
+    key ^= ZobristArray[BlackTurnIndex];
 
   return key;
 }
@@ -92,27 +115,25 @@ HashType zobrist::rehash(const Position &position, const PastMove &last_move) {
 
   // En passant possibilities
   if (last_move.past_en_passant != -1)
-    new_key ^=
-        ZobristArray[en_passant_starter_index + last_move.past_en_passant];
+    new_key ^= ZobristArray[EnPassantStarterIndex + last_move.past_en_passant];
   if (position.en_passant_rank() != -1)
-    new_key ^=
-        ZobristArray[en_passant_starter_index + position.en_passant_rank()];
+    new_key ^= ZobristArray[EnPassantStarterIndex + position.en_passant_rank()];
 
   // Castling rights
   if (last_move.past_white_castling_rights.king_side !=
       position.white_castling_rights().king_side)
-    new_key ^= ZobristArray[white_king_side_castling_rights_index];
+    new_key ^= ZobristArray[WhiteKingSideCastlingRightsIndex];
   if (last_move.past_white_castling_rights.queen_side !=
       position.white_castling_rights().queen_side)
-    new_key ^= ZobristArray[white_queen_side_castling_rights_index];
+    new_key ^= ZobristArray[WhiteQueenSideCastlingRightsIndex];
   if (last_move.past_black_castling_rights.king_side !=
       position.black_castling_rights().king_side)
-    new_key ^= ZobristArray[black_king_side_castling_rights_index];
+    new_key ^= ZobristArray[BlackKingSideCastlingRightsIndex];
   if (last_move.past_black_castling_rights.queen_side !=
       position.black_castling_rights().queen_side)
-    new_key ^= ZobristArray[black_queen_side_castling_rights_index];
+    new_key ^= ZobristArray[BlackQueenSideCastlingRightsIndex];
 
-  new_key ^= ZobristArray[black_turn_index]; // Change side to move
+  new_key ^= ZobristArray[BlackTurnIndex]; // Change side to move
   return new_key;
 }
 
