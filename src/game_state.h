@@ -38,7 +38,6 @@ private:
 
   std::vector<Position> m_position_stack;
   WeightType m_move_history[NumberOfPieces * 2][0x80];
-  size_t m_pv_index;
   std::array<Move, MaxSearchDepth> m_principal_variation;
   Network m_net;
 };

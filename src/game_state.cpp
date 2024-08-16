@@ -15,7 +15,6 @@ GameState::GameState() {
   // TODO check if it's worth to reserve space on m_position_stack
   // m_position_stack.reserve(200);
   assert(reset(StartFEN));
-  m_pv_index = 0;
 }
 
 bool GameState::make_move(const Move &move) {
