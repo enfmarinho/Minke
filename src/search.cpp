@@ -75,7 +75,8 @@ TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
   return ttentry;
 }
 
-WeightType search::quiescence(GameState &game_state) {
+WeightType search::quiescence(WeightType alpha, WeightType beta,
+                              GameState &game_state, Thread &thread) {
   return game_state.eval();
 }
 

@@ -20,7 +20,8 @@ template <bool print_moves>
 void iterative_deepening(GameState &game_state, Thread &thread);
 TTEntry *aspiration(const CounterType &depth, GameState &game_state,
                     Thread &thread);
-WeightType quiescence(GameState &game_state);
+WeightType quiescence(WeightType alpha, WeightType beta, GameState &game_state,
+                      Thread &thread);
 WeightType alpha_beta(WeightType alpha, WeightType beta,
                       const CounterType &depth, GameState &game_state,
                       Thread &thread);
