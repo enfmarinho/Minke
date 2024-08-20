@@ -25,16 +25,6 @@ void search::perft(GameState &game_state, Thread &thread) {
   iterative_deepening<false>(game_state, thread);
 }
 
-static void print_pv(Position pos, int depth_ply) {
-  for (int i = 0; i < depth_ply; ++i) {
-    bool found;
-    TTEntry *entry = TranspositionTable::get().probe(pos, found);
-    assert(found);
-    pos.move(entry->best_move());
-    std::cout << entry->best_move().get_algebraic_notation() << ' ';
-  }
-}
-
 template <bool print_moves>
 void search::iterative_deepening(GameState &game_state, Thread &thread) {
   TTEntry *entry;
