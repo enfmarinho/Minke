@@ -8,8 +8,10 @@
 #ifndef GAME_ELEMENTS_H
 #define GAME_ELEMENTS_H
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <iostream>
 #include <string>
 
 using IndexType = int8_t;
@@ -189,6 +191,34 @@ struct PastMove {
         past_white_castling_rights(past_white_castling_rights),
         past_black_castling_rights(past_black_castling_rights) {}
   PastMove() = default;
+};
+
+struct PvList {
+  std::array<Move, MaxSearchDepth> m_pv;
+  CounterType m_size{0};
+
+  void update(Move new_move, const PvList &list) {
+    m_pv[0] = new_move;
+    std::copy(list.m_pv.begin(), list.m_pv.begin() + list.m_size, m_pv.begin());
+
+    m_size = list.m_size + 1;
+  }
+
+  void clear() { m_size = 0; }
+
+  void print() {
+    for (int i = 0; i < m_size; ++i) {
+      std::cout << m_pv[i].get_algebraic_notation() << ' ';
+    }
+  }
+
+  PvList &operator=(const PvList &other) {
+    std::copy(other.m_pv.begin(), other.m_pv.begin() + other.m_size,
+              m_pv.begin());
+    m_size = other.m_size;
+
+    return *this;
+  }
 };
 
 #endif // #ifndef GAME_ELEMENTS_H
