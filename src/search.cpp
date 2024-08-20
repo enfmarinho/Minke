@@ -29,13 +29,14 @@ template <bool print_moves>
 void search::iterative_deepening(GameState &game_state, Thread &thread) {
   TTEntry *entry;
   for (CounterType depth = 1; !thread.should_stop(depth); ++depth) {
-    entry = aspiration(depth, game_state, thread);
+    PvList pv_list;
+    entry = aspiration(depth, game_state, thread, pv_list);
     if (!thread.should_stop()) { // Search was successful
       if constexpr (print_moves) {
         std::cout << "info depth " << depth << " score cp "
                   << entry->evaluation() << " nodes " << thread.nodes_searched()
                   << " time " << thread.time_passed() << " pv ";
-        print_pv(game_state.position(), depth);
+        pv_list.print();
         std::cout << std::endl;
       }
     }
@@ -47,18 +48,18 @@ void search::iterative_deepening(GameState &game_state, Thread &thread) {
 }
 
 TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
-                            Thread &thread) {
+                            Thread &thread, PvList &pv_list) {
   bool found;
   TTEntry *ttentry =
       TranspositionTable::get().probe(game_state.position(), found);
   if (!found) {
-    alpha_beta(ScoreNone, -ScoreNone, depth, game_state, thread);
+    alpha_beta(ScoreNone, -ScoreNone, depth, game_state, thread, pv_list);
     return ttentry;
   }
 
   WeightType alpha = ttentry->evaluation() - weights::EndGamePawn;
   WeightType beta = ttentry->evaluation() + weights::EndGamePawn;
-  WeightType eval = alpha_beta(alpha, beta, depth, game_state, thread);
+  WeightType eval = alpha_beta(alpha, beta, depth, game_state, thread, pv_list);
   if (eval >= beta) {
     alpha_beta(alpha, -ScoreNone, depth, game_state, thread, pv_list);
   } else if (eval <= alpha) {
@@ -75,7 +76,8 @@ WeightType search::quiescence(WeightType alpha, WeightType beta,
 
 WeightType search::alpha_beta(WeightType alpha, WeightType beta,
                               const CounterType &depth_ply,
-                              GameState &game_state, Thread &thread) {
+                              GameState &game_state, Thread &thread,
+                              PvList &pv_list) {
   if (thread.should_stop()) // Out of time
     return ScoreNone;
 
@@ -91,6 +93,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
   if (found && entry->depth_ply() >= depth_ply) {
     switch (entry->bound()) {
     case TTEntry::BoundType::Exact:
+      pv_list.update(entry->best_move(), PvList());
       return entry->evaluation();
     case TTEntry::BoundType::LowerBound:
       alpha = std::max(entry->evaluation(), alpha);
@@ -103,7 +106,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
       assert(false);
     }
     if (alpha >= beta) {
-      pv_list.update(entry->best_move(), pv_list);
+      pv_list.update(entry->best_move(), PvList());
       return entry->evaluation();
     }
   }
@@ -118,20 +121,24 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
 
   // TODO check for draw
 
-  MoveList move_list(game_state, best_move);
+  Move best_move = MoveNone;
+  WeightType best_score = ScoreNone;
+  MoveList move_list(game_state, entry->best_move());
   while (!move_list.empty()) {
+    PvList curr_pv;
     Move move = move_list.next_move();
     if (!game_state.make_move(move)) { // Avoid illegal moves
       continue;
     }
     WeightType eval =
-        alpha_beta(-beta, -alpha, depth_ply - 1, game_state, thread);
+        alpha_beta(-beta, -alpha, depth_ply - 1, game_state, thread, curr_pv);
     assert(eval >= ScoreNone);
     game_state.undo_move();
 
     if (eval >= best_score) {
       best_score = eval;
       best_move = move;
+      pv_list.update(best_move, curr_pv);
     }
 
     if (eval >= beta) {

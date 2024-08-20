@@ -19,12 +19,12 @@ void perft(GameState &game_state, Thread &thread);
 template <bool print_moves>
 void iterative_deepening(GameState &game_state, Thread &thread);
 TTEntry *aspiration(const CounterType &depth, GameState &game_state,
-                    Thread &thread);
+                    Thread &thread, PvList &pv_list);
 WeightType quiescence(WeightType alpha, WeightType beta, GameState &game_state,
                       Thread &thread);
 WeightType alpha_beta(WeightType alpha, WeightType beta,
                       const CounterType &depth, GameState &game_state,
-                      Thread &thread);
+                      Thread &thread, PvList &pv_list);
 } // namespace search
 
 #endif // #ifndef SEARCH_H
