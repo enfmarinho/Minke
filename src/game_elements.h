@@ -199,12 +199,11 @@ struct PvList {
 
   void update(Move new_move, const PvList &list) {
     m_pv[0] = new_move;
-    std::copy(list.m_pv.begin(), list.m_pv.begin() + list.m_size, m_pv.begin());
+    std::copy(list.m_pv.begin(), list.m_pv.begin() + list.m_size,
+              m_pv.begin() + 1);
 
     m_size = list.m_size + 1;
   }
-
-  void clear() { m_size = 0; }
 
   void print() {
     for (int i = 0; i < m_size; ++i) {
