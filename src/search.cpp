@@ -40,9 +40,10 @@ void search::iterative_deepening(GameState &game_state, Thread &thread) {
       }
     }
   }
-  if constexpr (print_moves)
+  if constexpr (print_moves) {
     std::cout << "bestmove " << entry->best_move().get_algebraic_notation()
               << std::endl;
+  }
 }
 
 TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
@@ -58,10 +59,12 @@ TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
   WeightType alpha = ttentry->evaluation() - weights::EndGamePawn;
   WeightType beta = ttentry->evaluation() + weights::EndGamePawn;
   WeightType eval = alpha_beta(alpha, beta, depth, game_state, thread);
-  if (eval >= beta)
-    alpha_beta(alpha, -ScoreNone, depth, game_state, thread);
-  else if (eval <= alpha)
-    alpha_beta(ScoreNone, beta, depth, game_state, thread);
+  if (eval >= beta) {
+    alpha_beta(alpha, -ScoreNone, depth, game_state, thread, pv_list);
+  } else if (eval <= alpha) {
+    alpha_beta(ScoreNone, beta, depth, game_state, thread, pv_list);
+  }
+  assert(eval >= alpha && eval <= beta);
   return ttentry;
 }
 
@@ -99,9 +102,12 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
       std::cerr << "TT hit, but entry bound is empty." << std::endl;
       assert(false);
     }
-    if (alpha >= beta)
+    if (alpha >= beta) {
+      pv_list.update(entry->best_move(), pv_list);
       return entry->evaluation();
+    }
   }
+
   Move best_move = MoveNone;
   WeightType best_score = ScoreNone;
   if (found) {
@@ -115,8 +121,9 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
   MoveList move_list(game_state, best_move);
   while (!move_list.empty()) {
     Move move = move_list.next_move();
-    if (!game_state.make_move(move)) // Avoid illegal moves
+    if (!game_state.make_move(move)) { // Avoid illegal moves
       continue;
+    }
     WeightType eval =
         alpha_beta(-beta, -alpha, depth_ply - 1, game_state, thread);
     assert(eval >= ScoreNone);
@@ -153,10 +160,11 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
 
   if (!thread.should_stop()) { // Save on TT if search was completed
     TTEntry::BoundType bound = TTEntry::BoundType::Exact;
-    if (best_score <= alpha)
+    if (best_score <= alpha) {
       bound = TTEntry::BoundType::LowerBound;
-    else if (best_score >= beta)
+    } else if (best_score >= beta) {
       bound = TTEntry::BoundType::UpperBound;
+    }
 
     entry->save(game_state.position().get_hash(), depth_ply, best_move,
                 best_score, game_state.position().get_half_move_counter(),
