@@ -11,7 +11,6 @@
 #include "game_elements.h"
 #include "nnue.h"
 #include "position.h"
-#include <array>
 #include <cstddef>
 #include <vector>
 
@@ -38,7 +37,6 @@ private:
 
   std::vector<Position> m_position_stack;
   WeightType m_move_history[NumberOfPieces * 2][0x80];
-  std::array<Move, MaxSearchDepth> m_principal_variation;
   Network m_net;
 };
 
