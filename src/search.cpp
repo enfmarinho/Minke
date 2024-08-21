@@ -111,14 +111,6 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
     }
   }
 
-  Move best_move = MoveNone;
-  WeightType best_score = ScoreNone;
-  if (found) {
-    assert(entry->best_move() != MoveNone);
-    best_move = entry->best_move();
-    best_score = entry->evaluation();
-  }
-
   // TODO check for draw
 
   Move best_move = MoveNone;
