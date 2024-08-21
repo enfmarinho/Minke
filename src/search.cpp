@@ -123,7 +123,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
 
   Move best_move = MoveNone;
   WeightType best_score = ScoreNone;
-  MoveList move_list(game_state, entry->best_move());
+  MoveList move_list(game_state, (found ? entry->best_move() : MoveNone));
   while (!move_list.empty()) {
     PvList curr_pv;
     Move move = move_list.next_move();
