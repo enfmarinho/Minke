@@ -74,7 +74,7 @@ void UCI::loop() {
   } while (token != "quit");
 }
 
-void UCI::print_debug_info() const {
+void UCI::print_debug_info() {
   m_game_state.position().print();
   bool found;
   auto entry = TranspositionTable::get().probe(m_game_state.position(), found);
@@ -87,11 +87,12 @@ void UCI::print_debug_info() const {
             << move_list.size() - n_legal_moves << "): ";
   while (!move_list.empty()) {
     Move move = move_list.next_move();
-    Position copy = m_game_state.position(); // Avoid update the NN
-    if (copy.move(move))
-      std::cout << move.get_algebraic_notation() << ' ';
+    if (m_game_state.make_move(move))
+      std::cout << move.get_algebraic_notation() << '[' << m_game_state.eval()
+                << "] ";
     else
       std::cout << "(" << move.get_algebraic_notation() << ") ";
+    m_game_state.undo_move();
   }
   std::cout << std::endl;
 }

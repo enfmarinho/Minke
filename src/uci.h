@@ -46,7 +46,7 @@ private:
   int64_t perft(Position &position, CounterType depth, bool root = true);
   void go();
 
-  void print_debug_info() const;
+  void print_debug_info();
   void bench(std::istringstream &);
   void eval();
 
