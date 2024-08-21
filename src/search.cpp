@@ -30,7 +30,11 @@ void search::iterative_deepening(GameState &game_state, Thread &thread) {
   TTEntry *entry;
   for (CounterType depth = 1; !thread.should_stop(depth); ++depth) {
     PvList pv_list;
-    entry = aspiration(depth, game_state, thread, pv_list);
+    // entry = aspiration(depth, game_state, thread, pv_list);
+    alpha_beta(ScoreNone, -ScoreNone, depth, game_state, thread, pv_list);
+    bool found;
+    entry = TranspositionTable::get().probe(game_state.position(), found);
+    assert(found);
     if (!thread.should_stop()) { // Search was successful
       if constexpr (print_moves) {
         std::cout << "info depth " << depth << " score cp "
