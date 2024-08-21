@@ -167,7 +167,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
     game_state.undo_move();
     assert(eval >= ScoreNone);
 
-    if (eval >= best_score) {
+    if (eval > best_score) {
       best_score = eval;
       best_move = move;
       pv_list.update(best_move, curr_pv);
