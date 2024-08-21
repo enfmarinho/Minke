@@ -17,12 +17,12 @@
 #include <cassert>
 #include <iostream>
 
-void search::search(GameState &game_state, Thread &thread) {
-  iterative_deepening<true>(game_state, thread);
-}
-
 void search::perft(GameState &game_state, Thread &thread) {
   iterative_deepening<false>(game_state, thread);
+}
+
+void search::search(GameState &game_state, Thread &thread) {
+  iterative_deepening<true>(game_state, thread);
 }
 
 template <bool print_moves>
@@ -35,6 +35,7 @@ void search::iterative_deepening(GameState &game_state, Thread &thread) {
     bool found;
     entry = TranspositionTable::get().probe(game_state.position(), found);
     assert(found);
+
     if (!thread.should_stop()) { // Search was successful
       if constexpr (print_moves) {
         std::cout << "info depth " << depth << " score cp "
@@ -70,6 +71,7 @@ TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
     alpha_beta(ScoreNone, beta, depth, game_state, thread, pv_list);
   }
   assert(eval >= alpha && eval <= beta);
+
   return ttentry;
 }
 
@@ -82,11 +84,12 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
                               const CounterType &depth_ply,
                               GameState &game_state, Thread &thread,
                               PvList &pv_list) {
-  if (thread.should_stop()) // Out of time
-    return ScoreNone;
 
-  if (depth_ply == 0)
+  if (thread.should_stop()) { // Out of time
+    return ScoreNone;
+  } else if (depth_ply == 0) {
     return quiescence(alpha, beta, game_state, thread);
+  }
 
   thread.increase_nodes_searched_counter();
 
@@ -109,6 +112,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
       std::cerr << "TT hit, but entry bound is empty." << std::endl;
       assert(false);
     }
+
     if (alpha >= beta) {
       pv_list.update(entry->best_move(), PvList());
       return entry->evaluation();
@@ -126,10 +130,11 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
     if (!game_state.make_move(move)) { // Avoid illegal moves
       continue;
     }
+
     WeightType eval =
         alpha_beta(-beta, -alpha, depth_ply - 1, game_state, thread, curr_pv);
-    assert(eval >= ScoreNone);
     game_state.undo_move();
+    assert(eval >= ScoreNone);
 
     if (eval >= best_score) {
       best_score = eval;
@@ -157,6 +162,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
       adversary = Player::White;
       king_placement = pos.black_king_position();
     }
+
     return under_attack(pos, adversary, king_placement) ? -MateScore + depth_ply
                                                         : 0;
   }
@@ -168,10 +174,10 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
     } else if (best_score >= beta) {
       bound = TTEntry::BoundType::UpperBound;
     }
-
     entry->save(game_state.position().get_hash(), depth_ply, best_move,
                 best_score, game_state.position().get_half_move_counter(),
                 bound);
   }
+
   return alpha;
 }
