@@ -64,6 +64,7 @@ TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
 
   WeightType alpha = ttentry->evaluation() - weights::EndGamePawn;
   WeightType beta = ttentry->evaluation() + weights::EndGamePawn;
+  // TODO check alpha and beta arguments
   WeightType eval = alpha_beta(alpha, beta, depth, game_state, thread, pv_list);
   if (eval >= beta) {
     alpha_beta(alpha, -ScoreNone, depth, game_state, thread, pv_list);
@@ -77,7 +78,37 @@ TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
 
 WeightType search::quiescence(WeightType alpha, WeightType beta,
                               GameState &game_state, Thread &thread) {
-  return game_state.eval();
+  if (thread.should_stop()) {
+    return ScoreNone;
+  }
+
+  WeightType stand_pat = game_state.eval();
+  if (stand_pat >= beta) {
+    return beta;
+  } else if (stand_pat > alpha) {
+    alpha = stand_pat;
+  }
+
+  MoveList move_list(game_state, MoveNone);
+  move_list.ignore_non_quiet_moves();
+  while (!move_list.empty()) {
+    Move curr_move = move_list.next_move();
+    if (curr_move.move_type != MoveType::Capture) {
+      break;
+    } else if (!game_state.make_move(curr_move)) {
+      continue;
+    }
+
+    WeightType eval = -quiescence(-beta, -alpha, game_state, thread);
+    game_state.undo_move();
+    if (eval >= beta) {
+      return beta;
+    } else if (eval > alpha) {
+      alpha = eval;
+    }
+  }
+
+  return alpha;
 }
 
 WeightType search::alpha_beta(WeightType alpha, WeightType beta,
@@ -88,7 +119,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
   if (thread.should_stop()) { // Out of time
     return ScoreNone;
   } else if (depth_ply == 0) {
-    return quiescence(alpha, beta, game_state, thread);
+    return quiescence(-beta, -alpha, game_state, thread);
   }
 
   thread.increase_nodes_searched_counter();
