@@ -391,9 +391,10 @@ void MoveList::calculate_scores(const GameState &game_state,
 
   for (size_type index = 0, remaining = size(); index < remaining; ++index) {
     Move move = m_move_list[index];
-    if (move == tt_move)
+    assert(move != MoveNone);
+    if (move == tt_move) {
       m_move_scores[index] = TTHitScore;
-    else if (move.move_type == MoveType::Capture) {
+    } else if (move.move_type == MoveType::Capture) {
       m_move_scores[index] =
           CaptureScore +
           5 * weights::SEE_table[piece_index(
@@ -402,12 +403,19 @@ void MoveList::calculate_scores(const GameState &game_state,
               game_state.position().consult(move.from).piece)] /
               5 -
           TTHitScore * !SEE(game_state.position(), move);
-      // TODO implement capture history heuristic
-    } else if (move.move_type == MoveType::PawnPromotionQueen)
+    } else if (move.move_type == MoveType::PawnPromotionQueen) {
       m_move_scores[index] = QueenPromotionScore;
-    else
+    } else {
       m_move_scores[index] = game_state.consult_history(move);
+    }
+  }
+}
 
-    // TODO implement killer heuristic
+void MoveList::ignore_non_quiet_moves() {
+  for (size_type index = 0, remaining = size(); index < remaining; ++index) {
+    Move curr_move = m_move_list[index];
+    if (curr_move.move_type == MoveType::Capture) {
+      break;
+    }
   }
 }
