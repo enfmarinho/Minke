@@ -24,6 +24,7 @@ bool GameState::make_move(const Move &move) {
     return false;
   }
   m_net.push();
+  m_last_move = move;
 
   const Square &moved = position().consult(move.to);
   m_net.add_feature(moved, move.to);
@@ -61,6 +62,7 @@ void GameState::undo_move() {
 bool GameState::reset(const std::string &fen) {
   m_position_stack.clear();
   m_position_stack.emplace_back();
+  m_last_move = MoveNone;
 
   if (!position().reset(fen))
     return false;
@@ -96,3 +98,5 @@ Position &GameState::position() { return m_position_stack.back(); }
 void GameState::push() { m_position_stack.push_back(position()); }
 
 void GameState::pop() { m_position_stack.pop_back(); }
+
+const Move &GameState::last_move() const { return m_last_move; }

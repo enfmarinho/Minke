@@ -30,12 +30,14 @@ public:
   WeightType eval() const;
   const Position &position() const;
   Position &position();
+  const Move &last_move() const;
 
 private:
   void push();
   void pop();
 
   std::vector<Position> m_position_stack;
+  Move m_last_move;
   WeightType m_move_history[NumberOfPieces * 2][0x80];
   Network m_net;
 };

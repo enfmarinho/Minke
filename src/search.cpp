@@ -85,7 +85,16 @@ WeightType search::quiescence(WeightType alpha, WeightType beta,
   WeightType stand_pat = game_state.eval();
   if (stand_pat >= beta) {
     return beta;
-  } else if (stand_pat > alpha) {
+  }
+
+  // TODO Probably worth to turn off on end game
+  WeightType delta = weights::MidGameQueen + 200;
+  if (game_state.last_move().move_type == MoveType::PawnPromotionQueen) {
+    delta += weights::MidGameQueen;
+  }
+  if (stand_pat < alpha - delta) { // Delta pruning
+    return alpha;
+  } else if (alpha < stand_pat) {
     alpha = stand_pat;
   }
 
