@@ -66,7 +66,11 @@ void UCI::loop() {
       print_debug_info();
       std::cout << "Eval: " << m_game_state.eval() << std::endl;
     } else if (token == "bench") {
-      bench(iss);
+      m_thread.wait();
+      m_thread.reset();
+      m_thread.max_depth_ply(BenchDepth);
+      parse_go(iss, true);
+      bench();
     } else if (!token.empty()) {
       std::cout << "Unknown command: '" << token
                 << "'. Type help for information." << std::endl;
@@ -146,12 +150,7 @@ void UCI::set_option(std::istringstream &iss) {
   }
 }
 
-void UCI::bench(std::istringstream &iss) {
-  m_thread.wait();
-  m_thread.reset();
-  m_thread.max_depth_ply(8); // TODO increase max_depth_ply
-  parse_go(iss, true);
-
+void UCI::bench() {
   TimeType total_time = 0;
   for (const std::string &fen : benchmark_fen_list) {
     m_game_state.reset(fen);

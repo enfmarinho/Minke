@@ -16,6 +16,8 @@
 #include <ostream>
 #include <sstream>
 
+constexpr CounterType BenchDepth = 2;
+
 class UCI {
 public:
   UCI() = delete;
@@ -47,7 +49,7 @@ private:
   void go();
 
   void print_debug_info();
-  void bench(std::istringstream &);
+  void bench();
   void eval();
 
   EngineOptions m_engine_options;
