@@ -23,6 +23,15 @@
 
 UCI::UCI(int argc, char *argv[]) {
   TranspositionTable::get().resize(EngineOptions::hash_default);
+  if (argc > 1 && std::string(argv[1]) == "bench") {
+    if (argc > 2) {
+      m_thread.max_depth_ply(std::stoi(argv[2]));
+    } else {
+      m_thread.max_depth_ply(BenchDepth);
+    }
+    bench();
+    exit(0);
+  }
 }
 
 void UCI::loop() {
