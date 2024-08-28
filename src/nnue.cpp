@@ -113,6 +113,7 @@ WeightType Network::eval(const Player &stm) const {
     return weight_sum_reduction(m_accumulators.back().black_neurons,
                                 m_accumulators.back().white_neurons);
   default:
+    std::cerr << "Tried to use eval function with player none\n";
     assert(false); // Must not reach this
   }
   return WeightType(); // Can't reach this, just to avoid compiler warnings
