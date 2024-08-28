@@ -9,8 +9,6 @@
 #include "game_elements.h"
 #include "position.h"
 #include <array>
-#include <limits>
-#include <random>
 
 // Random array of unsigned 64 bit integers for performing Zobrist Hashing.
 //
@@ -21,13 +19,12 @@
 // pieces, the other 13 are used for position characteristics, like
 // castling rights, a possible en passant and the side to move.
 const static std::array<HashType, 781> ZobristArray = [] {
-  std::mt19937_64 gen(0);
-  std::uniform_int_distribution<HashType> dist(
-      1, std::numeric_limits<HashType>::max());
+  PRNG prng(1070372);
 
-  std::array<uint64_t, 781> table;
-  for (HashType &value : table)
-    value = dist(gen);
+  std::array<HashType, 781> table;
+  for (HashType &value : table) {
+    value = prng.rand<HashType>();
+  }
 
   return table;
 }();
