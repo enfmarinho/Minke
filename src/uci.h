@@ -16,7 +16,7 @@
 #include <ostream>
 #include <sstream>
 
-constexpr CounterType BenchDepth = 2;
+constexpr CounterType BenchDepth = 8;
 
 class UCI {
 public:
