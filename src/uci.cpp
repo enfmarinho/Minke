@@ -214,6 +214,9 @@ void UCI::eval() {
 
 bool UCI::parse_go(std::istringstream &iss, bool bench) {
   std::string token;
+  CounterType time = 0;
+  CounterType movestogo = 0;
+  CounterType inc = 0;
   while (iss >> token) {
     if (token == "infinite" && !bench) {
       m_thread.infinite();
@@ -226,12 +229,33 @@ bool UCI::parse_go(std::istringstream &iss, bool bench) {
         !iss.fail()) { // Don't "perft" if depth hasn't been passed
       m_thread.max_depth_ply(option);
       return true;
-    } else if (token == "depth")
+    } else if (token == "depth") {
       m_thread.max_depth_ply(option);
-    else if (token == "nodes")
+    } else if (token == "nodes") {
       m_thread.node_limit(option);
-    else if (token == "movetime")
-      m_thread.movetime(option);
+    } else if (token == "movetime") {
+      m_thread.set_search_time(option);
+    } else if (token == "wtime" &&
+               m_game_state.position().side_to_move() == Player::White) {
+      time = option;
+    } else if (token == "btime" &&
+               m_game_state.position().side_to_move() == Player::Black) {
+      time = option;
+    } else if (token == "winc" &&
+               m_game_state.position().side_to_move() == Player::White) {
+      inc = option;
+    } else if (token == "binc" &&
+               m_game_state.position().side_to_move() == Player::Black) {
+      inc = option;
+    } else if (token == "movestogo") {
+      movestogo = option;
+    }
+  }
+
+  if (movestogo != 0 && time != 0) {
+    m_thread.set_search_time(inc + time / movestogo);
+  } else if (inc != 0) {
+    m_thread.set_search_time(inc);
   }
   return false;
 }
