@@ -26,12 +26,12 @@ public:
   void search(GameState &game_state);
   CounterType max_depth_ply();
   void max_depth_ply(CounterType new_max_depth_ply);
-  void movetime(CounterType mivetime);
   void node_limit(uint64_t new_node_limit);
   void increase_nodes_searched_counter();
   void infinite();
   TimeType time_passed() const;
   uint64_t nodes_searched();
+  void set_search_time(TimeType search_time);
 
 private:
   std::thread m_thread;
@@ -41,7 +41,7 @@ private:
   uint64_t m_node_limit;
   CounterType m_max_depth;
   TimeType m_start_time;
-  TimeType m_movetime;
+  TimeType m_search_time;
 };
 
 #endif // #ifndef THREAD_H

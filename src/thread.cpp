@@ -9,7 +9,6 @@
 #include "game_elements.h"
 #include "game_state.h"
 #include "search.h"
-#include <chrono>
 #include <cstdint>
 #include <limits>
 
@@ -20,7 +19,7 @@ void Thread::reset() {
   m_infinite = false;
   m_nodes_searched = 0;
   m_node_limit = m_max_depth = std::numeric_limits<CounterType>::max();
-  m_movetime = std::numeric_limits<TimeType>::max();
+  m_search_time = std::numeric_limits<TimeType>::max();
 }
 
 void Thread::stop_search() {
@@ -32,7 +31,7 @@ void Thread::stop_search() {
 
 bool Thread::should_stop() const {
   return m_stop || (!m_infinite && (m_nodes_searched >= m_node_limit ||
-                                    now() - m_start_time >= m_movetime));
+                                    now() - m_start_time >= m_search_time));
 }
 
 bool Thread::should_stop(CounterType depth) const {
@@ -55,10 +54,6 @@ void Thread::search(GameState &game_state) {
   }
 }
 
-void Thread::movetime(CounterType movetime) {
-  m_movetime = std::chrono::milliseconds(movetime).count();
-}
-
 CounterType Thread::max_depth_ply() { return m_max_depth; }
 
 void Thread::max_depth_ply(CounterType new_max_depth) {
@@ -76,3 +71,7 @@ uint64_t Thread::nodes_searched() { return m_nodes_searched; }
 TimeType Thread::time_passed() const { return now() - m_start_time; }
 
 void Thread::infinite() { m_infinite = true; }
+
+void Thread::set_search_time(TimeType search_time) {
+  m_search_time = search_time;
+}
