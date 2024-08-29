@@ -47,7 +47,7 @@ void TTEntry::reset() {
 TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
   HashType table_index = position.get_hash() & m_table_mask;
   for (TTEntry &entry : m_table[table_index].entry) {
-    if (entry.key() == position.get_hash())
+    if (entry.hash() == position.get_hash())
       return found = true, &entry;
   }
 

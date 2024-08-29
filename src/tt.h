@@ -27,7 +27,7 @@ public:
   TTEntry() = default;
   ~TTEntry() = default;
 
-  HashType key() const { return m_hash; }
+  HashType hash() const { return m_hash; }
   IndexType depth_ply() const { return m_depth_ply; }
   Move best_move() const { return m_best_move; }
   WeightType evaluation() const { return m_evaluation; }
