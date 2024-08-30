@@ -60,16 +60,18 @@ void MoveList::gen_pseudolegal_moves(const Position &position) {
   pseudolegal_castling_moves(position);
 }
 
-[[nodiscard]] bool MoveList::empty() const { return size() <= 0; }
+[[nodiscard]] bool MoveList::empty() const {
+  return m_move_list[m_begin] == MoveNone;
+}
 
 [[nodiscard]] MoveList::size_type MoveList::size() const {
-  return m_end - (m_move_list + m_start_index);
+  return m_end - m_begin;
 }
 
 [[nodiscard]] MoveList::size_type
 MoveList::n_legal_moves(Position position) const {
   size_type counter = 0;
-  for (uint8_t index = 0; index < m_end - m_move_list; ++index) {
+  for (uint8_t index = 0; index < m_end; ++index) {
     Position cp_position = position;
     if (cp_position.move(m_move_list[index]))
       ++counter;
@@ -78,17 +80,17 @@ MoveList::n_legal_moves(Position position) const {
 }
 
 [[nodiscard]] Move MoveList::next_move() {
-  size_type best_move_index = m_start_index;
+  size_type best_move_index = m_begin;
   WeightType best_score = m_move_scores[best_move_index];
   for (size_type index = 0, remaining = size(); index < remaining; ++index) {
-    if (best_score < m_move_scores[m_start_index + index]) {
-      best_move_index = m_start_index + index;
+    if (best_score < m_move_scores[m_begin + index]) {
+      best_move_index = m_begin + index;
       best_score = m_move_scores[best_move_index];
     }
   }
-  std::swap(m_move_list[m_start_index], m_move_list[best_move_index]);
-  std::swap(m_move_scores[m_start_index], m_move_scores[best_move_index]);
-  return m_move_list[m_start_index++];
+  std::swap(m_move_list[m_begin], m_move_list[best_move_index]);
+  std::swap(m_move_scores[m_begin], m_move_scores[best_move_index]);
+  return m_move_list[m_begin++];
 }
 
 void MoveList::pseudolegal_pawn_moves(const Position &position,
@@ -116,46 +118,58 @@ void MoveList::pseudolegal_pawn_moves(const Position &position,
   if (!capture_left.out_of_bounds() &&
       position.consult(capture_left).player == adversary) { // left capture
     if (capture_left.file() == promotion_file) {
-      *(m_end++) = Move(from, capture_left, MoveType::PawnPromotionQueen);
-      *(m_end++) = Move(from, capture_left, MoveType::PawnPromotionRook);
-      *(m_end++) = Move(from, capture_left, MoveType::PawnPromotionBishop);
-      *(m_end++) = Move(from, capture_left, MoveType::PawnPromotionKnight);
+      m_move_list[m_end++] =
+          Move(from, capture_left, MoveType::PawnPromotionQueen);
+      m_move_list[m_end++] =
+          Move(from, capture_left, MoveType::PawnPromotionRook);
+      m_move_list[m_end++] =
+          Move(from, capture_left, MoveType::PawnPromotionBishop);
+      m_move_list[m_end++] =
+          Move(from, capture_left, MoveType::PawnPromotionKnight);
     } else
-      *(m_end++) = Move(from, capture_left, MoveType::Capture);
+      m_move_list[m_end++] = Move(from, capture_left, MoveType::Capture);
   } else if (!capture_left.out_of_bounds() &&
              position.en_passant_rank() == capture_left.rank() &&
              capture_left.file() == en_passant_file)
-    *(m_end++) = Move(from, capture_left, MoveType::EnPassant);
+    m_move_list[m_end++] = Move(from, capture_left, MoveType::EnPassant);
 
   PiecePlacement capture_right(from.index() + offset + offsets::East);
   if (!capture_right.out_of_bounds() &&
       position.consult(capture_right).player == adversary) // right capture
     if (capture_right.file() == promotion_file) {
-      *(m_end++) = Move(from, capture_right, MoveType::PawnPromotionQueen);
-      *(m_end++) = Move(from, capture_right, MoveType::PawnPromotionRook);
-      *(m_end++) = Move(from, capture_right, MoveType::PawnPromotionBishop);
-      *(m_end++) = Move(from, capture_right, MoveType::PawnPromotionKnight);
+      m_move_list[m_end++] =
+          Move(from, capture_right, MoveType::PawnPromotionQueen);
+      m_move_list[m_end++] =
+          Move(from, capture_right, MoveType::PawnPromotionRook);
+      m_move_list[m_end++] =
+          Move(from, capture_right, MoveType::PawnPromotionBishop);
+      m_move_list[m_end++] =
+          Move(from, capture_right, MoveType::PawnPromotionKnight);
     } else
-      *(m_end++) = Move(from, capture_right, MoveType::Capture);
+      m_move_list[m_end++] = Move(from, capture_right, MoveType::Capture);
   else if (!capture_right.out_of_bounds() &&
            position.en_passant_rank() == capture_right.rank() &&
            capture_right.file() == en_passant_file)
-    *(m_end++) = Move(from, capture_right, MoveType::EnPassant);
+    m_move_list[m_end++] = Move(from, capture_right, MoveType::EnPassant);
 
   PiecePlacement singlemove(from.index() + offset);
   if (position.consult(singlemove).piece == Piece::None) {
     if (singlemove.file() == promotion_file) {
-      *(m_end++) = Move(from, singlemove, MoveType::PawnPromotionQueen);
-      *(m_end++) = Move(from, singlemove, MoveType::PawnPromotionRook);
-      *(m_end++) = Move(from, singlemove, MoveType::PawnPromotionBishop);
-      *(m_end++) = Move(from, singlemove, MoveType::PawnPromotionKnight);
+      m_move_list[m_end++] =
+          Move(from, singlemove, MoveType::PawnPromotionQueen);
+      m_move_list[m_end++] =
+          Move(from, singlemove, MoveType::PawnPromotionRook);
+      m_move_list[m_end++] =
+          Move(from, singlemove, MoveType::PawnPromotionBishop);
+      m_move_list[m_end++] =
+          Move(from, singlemove, MoveType::PawnPromotionKnight);
     } else
-      *(m_end++) = Move(from, singlemove, MoveType::Regular);
+      m_move_list[m_end++] = Move(from, singlemove, MoveType::Regular);
 
     PiecePlacement doublemove(from.index() + 2 * offset);
     if (from.file() == original_file &&
         position.consult(doublemove).piece == Piece::None)
-      *(m_end++) = Move(from, doublemove, MoveType::Regular);
+      m_move_list[m_end++] = Move(from, doublemove, MoveType::Regular);
   }
 }
 
@@ -165,7 +179,7 @@ void MoveList::pseudolegal_knight_moves(const Position &position,
     PiecePlacement to(from.index() + offset);
     if (!to.out_of_bounds() &&
         position.consult(to).player != position.side_to_move())
-      *(m_end++) = Move(from, to, MoveType::Regular);
+      m_move_list[m_end++] = Move(from, to, MoveType::Regular);
   }
 }
 
@@ -176,10 +190,10 @@ void MoveList::pseudolegal_sliders_moves(const Position &position,
     PiecePlacement to(from.index() + offset);
     while (!to.out_of_bounds()) {
       if (position.consult(to).piece == Piece::None) {
-        *(m_end++) = Move(from, to, MoveType::Regular);
+        m_move_list[m_end++] = Move(from, to, MoveType::Regular);
         to.index() += offset;
       } else if (position.consult(to).player != position.side_to_move()) {
-        *(m_end++) = Move(from, to, MoveType::Capture);
+        m_move_list[m_end++] = Move(from, to, MoveType::Capture);
         break;
       } else {
         break;
@@ -195,9 +209,9 @@ void MoveList::pseudolegal_king_moves(const Position &position,
     if (!to.out_of_bounds()) {
       const Player &to_player = position.consult(to).player;
       if (to_player == Player::None)
-        *(m_end++) = Move(from, to, MoveType::Regular);
+        m_move_list[m_end++] = Move(from, to, MoveType::Regular);
       else if (to_player != position.side_to_move())
-        *(m_end++) = Move(from, to, MoveType::Capture);
+        m_move_list[m_end++] = Move(from, to, MoveType::Capture);
     }
   }
 }
@@ -231,7 +245,7 @@ void MoveList::pseudolegal_castling_moves(const Position &position) {
                     PiecePlacement(player_perspective_first_file, 5)) &&
       !under_attack(position, adversary,
                     PiecePlacement(player_perspective_first_file, 6)))
-    *(m_end++) =
+    m_move_list[m_end++] =
         Move(king_placement, PiecePlacement(player_perspective_first_file, 6),
              MoveType::KingSideCastling);
 
@@ -245,7 +259,7 @@ void MoveList::pseudolegal_castling_moves(const Position &position) {
                     PiecePlacement(player_perspective_first_file, 2)) &&
       !under_attack(position, adversary,
                     PiecePlacement(player_perspective_first_file, 3)))
-    *(m_end++) =
+    m_move_list[m_end++] =
         Move(king_placement, PiecePlacement(player_perspective_first_file, 2),
              MoveType::QueenSideCastling);
 }

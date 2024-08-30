@@ -45,9 +45,9 @@ private:
   void pseudolegal_castling_moves(const Position &position);
   void calculate_scores(const GameState &game_state, const Move &move);
 
-  Move m_move_list[MaxMoves], *m_end{m_move_list};
+  Move m_move_list[MaxMoves];
   WeightType m_move_scores[MaxMoves];
-  uint8_t m_start_index{0};
+  uint8_t m_begin{0}, m_end{0};
 };
 
 #endif // #ifndef MOVEGEN_H
