@@ -100,12 +100,13 @@ void UCI::print_debug_info() {
             << move_list.size() - n_legal_moves << "): ";
   while (!move_list.empty()) {
     Move move = move_list.next_move();
-    if (m_game_state.make_move(move))
+    if (m_game_state.make_move(move)) {
       std::cout << move.get_algebraic_notation() << '[' << m_game_state.eval()
                 << "] ";
-    else
+      m_game_state.undo_move();
+    } else {
       std::cout << "(" << move.get_algebraic_notation() << ") ";
-    m_game_state.undo_move();
+    }
   }
   std::cout << std::endl;
 }
