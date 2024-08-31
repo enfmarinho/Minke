@@ -60,14 +60,15 @@ void GameState::undo_move() {
 }
 
 bool GameState::reset(const std::string &fen) {
-  m_position_stack.clear();
-  m_position_stack.emplace_back();
-  m_last_move = MoveNone;
-
-  if (!position().reset(fen))
+  Position position;
+  if (!position.reset(fen))
     return false;
 
-  m_net.reset(position());
+  m_position_stack.clear();
+  m_position_stack.push_back(position);
+  m_net.reset(position);
+  m_last_move = MoveNone;
+
   return true;
 }
 
