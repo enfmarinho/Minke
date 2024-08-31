@@ -55,8 +55,7 @@ void search::iterative_deepening(GameState &game_state, Thread &thread) {
 TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
                             Thread &thread, PvList &pv_list) {
   bool found;
-  TTEntry *ttentry =
-      TranspositionTable::get().probe(game_state.position(), found);
+  TTEntry *ttentry = TranspositionTable::get().probe(game_state.top(), found);
   if (!found) {
     alpha_beta(ScoreNone, -ScoreNone, depth, game_state, thread, pv_list);
     return ttentry;
@@ -192,7 +191,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
 
   if (best_move == MoveNone) { // handle positions under stalemate or checkmate,
                                // i.e. positions with no legal moves to be made
-    Position &pos = game_state.position();
+    Position &pos = game_state.top();
     Player adversary;
     PiecePlacement king_placement;
     if (pos.side_to_move() == Player::White) {

@@ -28,8 +28,8 @@ public:
   WeightType &consult_history(const Move &move);
   void increment_history(const Move &move, const CounterType &depth);
   WeightType eval() const;
-  const Position &position() const;
-  Position &position();
+  const Position &top() const;
+  Position &top();
   const Move &last_move() const;
 
 private:

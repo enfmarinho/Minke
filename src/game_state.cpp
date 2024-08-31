@@ -18,15 +18,15 @@ GameState::GameState() {
 }
 
 bool GameState::make_move(const Move &move) {
-  m_position_stack.push_back(position());
-  if (!position().move(move)) {
+  m_position_stack.push_back(top());
+  if (!top().move(move)) {
     m_position_stack.pop_back();
     return false;
   }
   m_net.push();
   m_last_move = move;
 
-  const Square &moved = position().consult(move.to);
+  const Square &moved = top().consult(move.to);
   m_net.add_feature(moved, move.to);
   m_net.remove_feature(moved, move.from);
 
@@ -73,14 +73,14 @@ bool GameState::reset(const std::string &fen) {
 }
 
 WeightType GameState::consult_history(const Move &move) const {
-  return m_move_history[piece_index(position().consult(move.to).piece) +
-                        (position().side_to_move() == Player::White ? 0 : 6)]
+  return m_move_history[piece_index(top().consult(move.to).piece) +
+                        (top().side_to_move() == Player::White ? 0 : 6)]
                        [move.to.index()];
 }
 
 WeightType &GameState::consult_history(const Move &move) {
-  return m_move_history[piece_index(position().consult(move.from).piece) +
-                        (position().side_to_move() == Player::White ? 0 : 6)]
+  return m_move_history[piece_index(top().consult(move.from).piece) +
+                        (top().side_to_move() == Player::White ? 0 : 6)]
                        [move.to.index()];
 }
 
@@ -88,12 +88,10 @@ void GameState::increment_history(const Move &move, const CounterType &depth) {
   consult_history(move) += depth * depth;
 }
 
-WeightType GameState::eval() const {
-  return m_net.eval(position().side_to_move());
-}
+WeightType GameState::eval() const { return m_net.eval(top().side_to_move()); }
 
-const Position &GameState::position() const { return m_position_stack.back(); }
+const Position &GameState::top() const { return m_position_stack.back(); }
 
-Position &GameState::position() { return m_position_stack.back(); }
+Position &GameState::top() { return m_position_stack.back(); }
 
 const Move &GameState::last_move() const { return m_last_move; }

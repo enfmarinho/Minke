@@ -51,7 +51,7 @@ void UCI::loop() {
       m_thread.wait();
       m_thread.reset();
       if (parse_go(iss))
-        perft(m_game_state.position(), m_thread.max_depth_ply());
+        perft(m_game_state.top(), m_thread.max_depth_ply());
       else
         go();
     } else if (token == "position") {
@@ -88,14 +88,14 @@ void UCI::loop() {
 }
 
 void UCI::print_debug_info() {
-  m_game_state.position().print();
+  m_game_state.top().print();
   bool found;
-  auto entry = TranspositionTable::get().probe(m_game_state.position(), found);
+  auto entry = TranspositionTable::get().probe(m_game_state.top(), found);
   Move ttmove = MoveNone;
   if (found)
     ttmove = entry->best_move();
   MoveList move_list(m_game_state, ttmove);
-  int n_legal_moves = move_list.n_legal_moves(m_game_state.position());
+  int n_legal_moves = move_list.n_legal_moves(m_game_state.top());
   std::cout << "Move list (" << n_legal_moves << "|"
             << move_list.size() - n_legal_moves << "): ";
   while (!move_list.empty()) {
@@ -142,7 +142,7 @@ void UCI::set_position(const std::string &fen,
   TranspositionTable::get().clear();
   for (const std::string &algebraic_notation : move_list) {
     assert(m_game_state.make_move(
-        m_game_state.position().get_movement(algebraic_notation)));
+        m_game_state.top().get_movement(algebraic_notation)));
   }
 }
 
@@ -237,16 +237,16 @@ bool UCI::parse_go(std::istringstream &iss, bool bench) {
     } else if (token == "movetime") {
       m_thread.set_search_time(option);
     } else if (token == "wtime" &&
-               m_game_state.position().side_to_move() == Player::White) {
+               m_game_state.top().side_to_move() == Player::White) {
       time = option;
     } else if (token == "btime" &&
-               m_game_state.position().side_to_move() == Player::Black) {
+               m_game_state.top().side_to_move() == Player::Black) {
       time = option;
     } else if (token == "winc" &&
-               m_game_state.position().side_to_move() == Player::White) {
+               m_game_state.top().side_to_move() == Player::White) {
       inc = option;
     } else if (token == "binc" &&
-               m_game_state.position().side_to_move() == Player::Black) {
+               m_game_state.top().side_to_move() == Player::Black) {
       inc = option;
     } else if (token == "movestogo") {
       movestogo = option;

@@ -24,7 +24,7 @@ bool under_attack(const Position &position, const Player &attacker_player,
 }
 
 MoveList::MoveList(const GameState &game_state, const Move &move) {
-  gen_pseudolegal_moves(game_state.position());
+  gen_pseudolegal_moves(game_state.top());
   calculate_scores(game_state, move);
 }
 
@@ -60,9 +60,7 @@ void MoveList::gen_pseudolegal_moves(const Position &position) {
   pseudolegal_castling_moves(position);
 }
 
-[[nodiscard]] bool MoveList::empty() const {
-  return m_move_list[m_begin] == MoveNone;
-}
+[[nodiscard]] bool MoveList::empty() const { return m_end == m_begin; }
 
 [[nodiscard]] MoveList::size_type MoveList::size() const {
   return m_end - m_begin;
@@ -71,7 +69,7 @@ void MoveList::gen_pseudolegal_moves(const Position &position) {
 [[nodiscard]] MoveList::size_type
 MoveList::n_legal_moves(Position position) const {
   size_type counter = 0;
-  for (uint8_t index = 0; index < m_end; ++index) {
+  for (uint8_t index = m_begin; index < size(); ++index) {
     Position cp_position = position;
     if (cp_position.move(m_move_list[index]))
       ++counter;
@@ -409,14 +407,13 @@ void MoveList::calculate_scores(const GameState &game_state,
     if (move == tt_move) {
       m_move_scores[index] = TTHitScore;
     } else if (move.move_type == MoveType::Capture) {
-      m_move_scores[index] =
-          CaptureScore +
-          5 * weights::SEE_table[piece_index(
-                  game_state.position().consult(move.to).piece)] -
-          weights::SEE_table[piece_index(
-              game_state.position().consult(move.from).piece)] /
-              5 -
-          TTHitScore * !SEE(game_state.position(), move);
+      m_move_scores[index] = CaptureScore +
+                             5 * weights::SEE_table[piece_index(
+                                     game_state.top().consult(move.to).piece)] -
+                             weights::SEE_table[piece_index(
+                                 game_state.top().consult(move.from).piece)] /
+                                 5 -
+                             TTHitScore * !SEE(game_state.top(), move);
     } else if (move.move_type == MoveType::PawnPromotionQueen) {
       m_move_scores[index] = QueenPromotionScore;
     } else {
