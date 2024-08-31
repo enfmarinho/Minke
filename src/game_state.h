@@ -33,9 +33,6 @@ public:
   const Move &last_move() const;
 
 private:
-  void push();
-  void pop();
-
   std::vector<Position> m_position_stack;
   Move m_last_move;
   WeightType m_move_history[NumberOfPieces * 2][0x80];

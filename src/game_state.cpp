@@ -18,9 +18,9 @@ GameState::GameState() {
 }
 
 bool GameState::make_move(const Move &move) {
-  push();
+  m_position_stack.push_back(position());
   if (!position().move(move)) {
-    pop();
+    m_position_stack.pop_back();
     return false;
   }
   m_net.push();
@@ -55,7 +55,7 @@ bool GameState::make_move(const Move &move) {
 
 void GameState::undo_move() {
   assert(!m_position_stack.empty());
-  pop();
+  m_position_stack.pop_back();
   m_net.pop();
 }
 
@@ -94,9 +94,5 @@ WeightType GameState::eval() const {
 const Position &GameState::position() const { return m_position_stack.back(); }
 
 Position &GameState::position() { return m_position_stack.back(); }
-
-void GameState::push() { m_position_stack.push_back(position()); }
-
-void GameState::pop() { m_position_stack.pop_back(); }
 
 const Move &GameState::last_move() const { return m_last_move; }
