@@ -73,7 +73,6 @@ void UCI::loop() {
       std::cout << "TODO write help message." << std::endl;
     } else if (token == "d") {
       print_debug_info();
-      std::cout << "Eval: " << m_game_state.eval() << std::endl;
     } else if (token == "bench") {
       m_thread.wait();
       m_thread.reset();
@@ -92,8 +91,10 @@ void UCI::print_debug_info() {
   bool found;
   auto entry = TranspositionTable::get().probe(m_game_state.top(), found);
   Move ttmove = MoveNone;
-  if (found)
+  if (found) {
     ttmove = entry->best_move();
+    std::cout << "Best move: " << ttmove.get_algebraic_notation() << std::endl;
+  }
   MoveList move_list(m_game_state, ttmove);
   int n_legal_moves = move_list.n_legal_moves(m_game_state.top());
   std::cout << "Move list (" << n_legal_moves << "|"
@@ -108,7 +109,7 @@ void UCI::print_debug_info() {
       std::cout << "(" << move.get_algebraic_notation() << ") ";
     }
   }
-  std::cout << std::endl;
+  std::cout << "\nEval: " << m_game_state.eval() << std::endl;
 }
 
 void UCI::position(std::istringstream &iss) {
