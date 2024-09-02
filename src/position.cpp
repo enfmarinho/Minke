@@ -127,11 +127,13 @@ Square &Position::consult(const PiecePlacement &placement) {
 bool Position::move(const Move &movement) {
   CastlingRights past_white_castling_rights = m_white_castling_rights;
   CastlingRights past_black_castling_rights = m_black_castling_rights;
-  CounterType past_fifty_move_counter = m_fifty_move_counter_ply++;
+  CounterType past_fifty_move_counter = m_fifty_move_counter_ply;
   IndexType past_en_passant = m_en_passant;
   m_en_passant = -1;
   Square captured = consult(movement.to);
 
+  ++m_fifty_move_counter_ply;
+  ++m_game_clock_ply;
   Piece piece_being_moved = consult(movement.from).piece;
   if (consult(movement.to).piece != Piece::None) { // Capture
     m_fifty_move_counter_ply = 0;
