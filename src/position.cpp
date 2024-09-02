@@ -333,9 +333,9 @@ std::string Position::get_fen() const {
   }
   fen += ' ';
 
-  fen += static_cast<char>(m_fifty_move_counter_ply + '0');
+  fen += std::to_string(m_fifty_move_counter_ply);
   fen += ' ';
-  fen += static_cast<char>(m_game_clock_ply + '0');
+  fen += std::to_string((m_game_clock_ply + 1) / 2);
 
   return fen;
 }
