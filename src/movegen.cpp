@@ -38,9 +38,9 @@ void MoveList::gen_pseudolegal_moves(const Position &position) {
       PiecePlacement current = PiecePlacement(file, rank);
       const Square &square = position.consult(current);
       if (square.player == Player::None ||
-          position.side_to_move() != square.player)
+          position.side_to_move() != square.player) {
         continue;
-
+      }
       switch (square.piece) {
       case Piece::Pawn:
         pseudolegal_pawn_moves(position, current);
@@ -71,8 +71,9 @@ MoveList::n_legal_moves(Position position) const {
   size_type counter = 0;
   for (uint8_t index = m_begin; index < size(); ++index) {
     Position cp_position = position;
-    if (cp_position.move(m_move_list[index]))
+    if (cp_position.move(m_move_list[index])) {
       ++counter;
+    }
   }
   return counter;
 }
@@ -124,16 +125,18 @@ void MoveList::pseudolegal_pawn_moves(const Position &position,
           Move(from, capture_left, MoveType::PawnPromotionBishop);
       m_move_list[m_end++] =
           Move(from, capture_left, MoveType::PawnPromotionKnight);
-    } else
+    } else {
       m_move_list[m_end++] = Move(from, capture_left, MoveType::Capture);
+    }
   } else if (!capture_left.out_of_bounds() &&
              position.en_passant_rank() == capture_left.rank() &&
-             capture_left.file() == en_passant_file)
+             capture_left.file() == en_passant_file) {
     m_move_list[m_end++] = Move(from, capture_left, MoveType::EnPassant);
+  }
 
   PiecePlacement capture_right(from.index() + offset + offsets::East);
   if (!capture_right.out_of_bounds() &&
-      position.consult(capture_right).player == adversary) // right capture
+      position.consult(capture_right).player == adversary) { // right capture
     if (capture_right.file() == promotion_file) {
       m_move_list[m_end++] =
           Move(from, capture_right, MoveType::PawnPromotionQueen);
@@ -143,12 +146,14 @@ void MoveList::pseudolegal_pawn_moves(const Position &position,
           Move(from, capture_right, MoveType::PawnPromotionBishop);
       m_move_list[m_end++] =
           Move(from, capture_right, MoveType::PawnPromotionKnight);
-    } else
+    } else {
       m_move_list[m_end++] = Move(from, capture_right, MoveType::Capture);
-  else if (!capture_right.out_of_bounds() &&
-           position.en_passant_rank() == capture_right.rank() &&
-           capture_right.file() == en_passant_file)
+    }
+  } else if (!capture_right.out_of_bounds() &&
+             position.en_passant_rank() == capture_right.rank() &&
+             capture_right.file() == en_passant_file) {
     m_move_list[m_end++] = Move(from, capture_right, MoveType::EnPassant);
+  }
 
   PiecePlacement singlemove(from.index() + offset);
   if (position.consult(singlemove).piece == Piece::None) {
@@ -161,13 +166,15 @@ void MoveList::pseudolegal_pawn_moves(const Position &position,
           Move(from, singlemove, MoveType::PawnPromotionBishop);
       m_move_list[m_end++] =
           Move(from, singlemove, MoveType::PawnPromotionKnight);
-    } else
+    } else {
       m_move_list[m_end++] = Move(from, singlemove, MoveType::Regular);
+    }
 
     PiecePlacement doublemove(from.index() + 2 * offset);
     if (from.file() == original_file &&
-        position.consult(doublemove).piece == Piece::None)
+        position.consult(doublemove).piece == Piece::None) {
       m_move_list[m_end++] = Move(from, doublemove, MoveType::Regular);
+    }
   }
 }
 
@@ -175,9 +182,13 @@ void MoveList::pseudolegal_knight_moves(const Position &position,
                                         const PiecePlacement &from) {
   for (IndexType offset : offsets::Knight) {
     PiecePlacement to(from.index() + offset);
-    if (!to.out_of_bounds() &&
-        position.consult(to).player != position.side_to_move())
-      m_move_list[m_end++] = Move(from, to, MoveType::Regular);
+    if (!to.out_of_bounds()) {
+      if (position.consult(to).piece == Piece::None) {
+        m_move_list[m_end++] = Move(from, to, MoveType::Regular);
+      } else if (position.consult(to).player != position.side_to_move()) {
+        m_move_list[m_end++] = Move(from, to, MoveType::Regular);
+      }
+    }
   }
 }
 
@@ -206,10 +217,11 @@ void MoveList::pseudolegal_king_moves(const Position &position,
     PiecePlacement to(from.index() + offset);
     if (!to.out_of_bounds()) {
       const Player &to_player = position.consult(to).player;
-      if (to_player == Player::None)
+      if (to_player == Player::None) {
         m_move_list[m_end++] = Move(from, to, MoveType::Regular);
-      else if (to_player != position.side_to_move())
+      } else if (to_player != position.side_to_move()) {
         m_move_list[m_end++] = Move(from, to, MoveType::Capture);
+      }
     }
   }
 }
@@ -231,8 +243,9 @@ void MoveList::pseudolegal_castling_moves(const Position &position) {
     adversary = Player::White;
   }
 
-  if (under_attack(position, adversary, king_placement))
+  if (under_attack(position, adversary, king_placement)) {
     return;
+  }
 
   if (castling_rights.king_side &&
       position.consult(player_perspective_first_file, 5).piece == Piece::None &&
