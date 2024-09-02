@@ -133,9 +133,9 @@ bool Position::move(const Move &movement) {
   Square captured = consult(movement.to);
 
   Piece piece_being_moved = consult(movement.from).piece;
-  if (consult(movement.to).piece != Piece::None)
+  if (consult(movement.to).piece != Piece::None) { // Capture
     m_fifty_move_counter_ply = 0;
-  else if (piece_being_moved == Piece::Pawn) {
+  } else if (piece_being_moved == Piece::Pawn) {
     m_fifty_move_counter_ply = 0;
     if (abs(movement.to.file() - movement.from.file()) == 2)
       m_en_passant = movement.to.rank();
@@ -216,19 +216,7 @@ Move Position::get_movement(const std::string &algebraic_notation) const {
                     static_cast<IndexType>(algebraic_notation[2] - 'a'));
   MoveType move_type = MoveType::Regular;
 
-  // Castling
-  if ((from.rank() == 4 && to.rank() == 6) &&
-      consult(from).piece == Piece::King)
-    move_type = MoveType::KingSideCastling;
-  else if ((from.rank() == 4 && to.rank() == 2) &&
-           consult(from).piece == Piece::King)
-    move_type = MoveType::QueenSideCastling;
-  // En passant
-  else if (to.rank() == en_passant_rank() && from.file() != to.file() &&
-           consult(from).piece == Piece::Pawn)
-    move_type = MoveType::EnPassant;
-  // Pawn promotion
-  else if (algebraic_notation.size() == 5) {
+  if (algebraic_notation.size() == 5) { // Pawn promotion
     if (tolower(algebraic_notation[4]) == 'q')
       move_type = MoveType::PawnPromotionQueen;
     else if (tolower(algebraic_notation[4]) == 'n')
@@ -237,6 +225,17 @@ Move Position::get_movement(const std::string &algebraic_notation) const {
       move_type = MoveType::PawnPromotionRook;
     else if (tolower(algebraic_notation[4]) == 'b')
       move_type = MoveType::PawnPromotionBishop;
+  } else if (consult(to).piece != Piece::None) { // Capture
+    move_type = MoveType::Capture;
+  } else if ((from.rank() == 4 && to.rank() == 6) &&
+             consult(from).piece == Piece::King) { // Castling
+    move_type = MoveType::KingSideCastling;
+  } else if ((from.rank() == 4 && to.rank() == 2) &&
+             consult(from).piece == Piece::King) {
+    move_type = MoveType::QueenSideCastling;
+  } else if (to.rank() == en_passant_rank() && from.file() != to.file() &&
+             consult(from).piece == Piece::Pawn) { // En passant
+    move_type = MoveType::EnPassant;
   }
 
   return Move(from, to, move_type);
