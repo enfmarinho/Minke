@@ -78,7 +78,10 @@ void Network::reset(const Position &position) {
   for (IndexType file = 0; file < BoardHeight; ++file) {
     for (IndexType rank = 0; rank < BoardWidth; ++rank) {
       PiecePlacement pp(file, rank);
-      add_feature(position.consult(pp), pp);
+      const Square &sq = position.consult(pp);
+      if (sq.piece != Piece::None) {
+        add_feature(sq, pp);
+      }
     }
   }
 }
