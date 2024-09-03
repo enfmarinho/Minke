@@ -155,11 +155,26 @@ bool Position::move(const Move &movement) {
     IndexType player_perspective_first_file =
         m_side_to_move == Player::White ? 0 : 7;
     if (movement.from.rank() == 7 &&
-        movement.from.file() == player_perspective_first_file)
+        movement.from.file() == player_perspective_first_file) {
       current_player_castling_rights.king_side = false;
-    else if (movement.from.rank() == 0 &&
-             movement.from.file() == player_perspective_first_file)
+    } else if (movement.from.rank() == 0 &&
+               movement.from.file() == player_perspective_first_file) {
       current_player_castling_rights.queen_side = false;
+    }
+  }
+  CastlingRights &adversary_player_castling_rights =
+      m_side_to_move == Player::White ? m_black_castling_rights
+                                      : m_white_castling_rights;
+  if (captured.piece == Piece::Rook) {
+    IndexType adversary_perspective_first_file =
+        m_side_to_move == Player::White ? 7 : 0;
+    if (movement.to.rank() == 7 &&
+        movement.to.file() == adversary_perspective_first_file) {
+      adversary_player_castling_rights.king_side = false;
+    } else if (movement.to.rank() == 0 &&
+               movement.to.file() == adversary_perspective_first_file) {
+      adversary_player_castling_rights.queen_side = false;
+    }
   }
 
   if (movement.move_type == MoveType::Regular ||
