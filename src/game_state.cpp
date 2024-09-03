@@ -87,6 +87,7 @@ bool GameState::reset(const std::string &fen) {
   if (!position.reset(fen))
     return false;
 
+  std::memset(m_move_history, 0, sizeof(m_move_history));
   m_position_stack.clear();
   m_position_stack.push_back(position);
   m_net.reset(position);
