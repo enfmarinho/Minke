@@ -24,7 +24,7 @@ WeightType quiescence(WeightType alpha, WeightType beta, GameState &game_state,
                       Thread &thread);
 WeightType alpha_beta(WeightType alpha, WeightType beta,
                       const CounterType &depth, GameState &game_state,
-                      Thread &thread, PvList &pv_list);
+                      Thread &thread, PvList &pv_list, Move &ans, bool &found);
 } // namespace search
 
 #endif // #ifndef SEARCH_H
