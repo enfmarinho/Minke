@@ -86,18 +86,18 @@ void Network::reset(const Position &position) {
   }
 }
 
-int32_t Network::crelu(const int16_t &input) const {
+int32_t Network::crelu(const int32_t &input) const {
   return std::clamp(input, CreluMin, CreluMax);
 }
 
-int32_t Network::screlu(const int16_t &input) const {
+int32_t Network::screlu(const int32_t &input) const {
   const int32_t crelu_out = crelu(input);
   return crelu_out * crelu_out;
 }
 
 int32_t Network::weight_sum_reduction(
-    const std::array<int16_t, HiddenLayerSize> &player,
-    const std::array<int16_t, HiddenLayerSize> &adversary) const {
+    const std::array<int32_t, HiddenLayerSize> &player,
+    const std::array<int32_t, HiddenLayerSize> &adversary) const {
   int32_t eval = 0;
   for (int neuron_index = 0; neuron_index < HiddenLayerSize; ++neuron_index) {
     eval += screlu(player[neuron_index]) * m_output_weights[neuron_index];
@@ -122,11 +122,11 @@ WeightType Network::eval(const Player &stm) const {
   return WeightType(); // Can't reach this, just to avoid compiler warnings
 }
 
-Network::Accumulator::Accumulator(std::span<int16_t, HiddenLayerSize> bias) {
+Network::Accumulator::Accumulator(std::span<int32_t, HiddenLayerSize> bias) {
   reset(bias);
 }
 
-void Network::Accumulator::reset(std::span<int16_t, HiddenLayerSize> bias) {
+void Network::Accumulator::reset(std::span<int32_t, HiddenLayerSize> bias) {
   memcpy(white_neurons.data(), bias.data(), bias.size_bytes());
   memcpy(black_neurons.data(), bias.data(), bias.size_bytes());
 }

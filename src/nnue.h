@@ -20,8 +20,8 @@
 constexpr int InputLayerSize = 64 * 12;
 constexpr int HiddenLayerSize = 64 * 12;
 
-constexpr int16_t CreluMin = 0;
-constexpr int16_t CreluMax = 255;
+constexpr int32_t CreluMin = 0;
+constexpr int32_t CreluMax = 255;
 
 constexpr int Scale = 400;
 
@@ -46,27 +46,28 @@ public:
 
 private:
   struct Accumulator {
-    std::array<int16_t, HiddenLayerSize> white_neurons;
-    std::array<int16_t, HiddenLayerSize> black_neurons;
+    std::array<int32_t, HiddenLayerSize> white_neurons;
+    std::array<int32_t, HiddenLayerSize> black_neurons;
 
-    Accumulator(std::span<int16_t, HiddenLayerSize> biasses);
+    Accumulator(std::span<int32_t, HiddenLayerSize> biasses);
     Accumulator() = delete;
     ~Accumulator() = default;
-    void reset(std::span<int16_t, HiddenLayerSize> biasses);
+    void reset(std::span<int32_t, HiddenLayerSize> biasses);
   };
 
-  int32_t crelu(const int16_t &input) const;
-  int32_t screlu(const int16_t &input) const;
+private:
+  int32_t crelu(const int32_t &input) const;
+  int32_t screlu(const int32_t &input) const;
   int32_t weight_sum_reduction(
-      const std::array<int16_t, HiddenLayerSize> &player,
-      const std::array<int16_t, HiddenLayerSize> &adversary) const;
+      const std::array<int32_t, HiddenLayerSize> &player,
+      const std::array<int32_t, HiddenLayerSize> &adversary) const;
 
   std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
-  std::array<std::array<int16_t, InputLayerSize>, HiddenLayerSize>
+  std::array<std::array<int32_t, InputLayerSize>, HiddenLayerSize>
       m_hidden_weights;
-  std::array<int16_t, HiddenLayerSize> m_hidden_bias;
-  std::array<int16_t, HiddenLayerSize * 2> m_output_weights;
-  int16_t m_output_bias;
+  std::array<int32_t, HiddenLayerSize> m_hidden_bias;
+  std::array<int32_t, HiddenLayerSize * 2> m_output_weights;
+  int32_t m_output_bias;
 };
 
 #endif // #ifndef NNUE_H
