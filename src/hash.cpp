@@ -31,10 +31,15 @@ const static std::array<HashType, 781> ZobristArray = [] {
 
 HashType zobrist::hash(const Position &position) {
   HashType key = 0;
-  for (IndexType file = 0; file < BoardHeight; ++file)
-    for (IndexType rank = 0; rank < BoardWidth; ++rank)
-      key ^= ZobristArray[placement_index(file, rank) +
-                          piece_start_index(position.consult(file, rank))];
+  for (IndexType file = 0; file < BoardHeight; ++file) {
+    for (IndexType rank = 0; rank < BoardWidth; ++rank) {
+      Square sq = position.consult(file, rank);
+      if (sq.piece != Piece::None) {
+        key ^=
+            ZobristArray[placement_index(file, rank) + piece_start_index(sq)];
+      }
+    }
+  }
 
   // En passant possibilities
   if (position.en_passant_rank() != -1)
@@ -61,25 +66,40 @@ HashType zobrist::hash(const Position &position) {
 
 HashType zobrist::rehash(const Position &position, const PastMove &last_move) {
   HashType new_key = position.get_hash();
-  IndexType piece_index =
-      piece_start_index(position.consult(last_move.movement.to));
-  IndexType destination_index = placement_index(last_move.movement.to);
+  int piece_index = piece_start_index(position.consult(last_move.movement.to));
+  int to_index = placement_index(last_move.movement.to);
+  int from_index = placement_index(last_move.movement.from.file(),
+                                   last_move.movement.from.rank());
 
-  // Moved piece
-  new_key ^= ZobristArray[piece_index + destination_index];
-  if (last_move.movement.move_type == MoveType::PawnPromotionQueen ||
-      last_move.movement.move_type == MoveType::PawnPromotionRook ||
-      last_move.movement.move_type == MoveType::PawnPromotionBishop ||
-      last_move.movement.move_type == MoveType::PawnPromotionKnight) {
+  // Pawn promotion
+  if (last_move.movement.move_type == MoveType::PawnPromotionQueen) {
     new_key ^=
         ZobristArray[piece_start_index(Square(
-                         Piece::Pawn,
+                         Piece::Queen,
                          (position.consult(last_move.movement.to).player))) +
-                     placement_index(last_move.movement.from)];
-  } else {
+                     placement_index(last_move.movement.to)];
+  } else if (last_move.movement.move_type == MoveType::PawnPromotionKnight) {
     new_key ^=
-        ZobristArray[piece_index + placement_index(last_move.movement.from)];
+        ZobristArray[piece_start_index(Square(
+                         Piece::Knight,
+                         (position.consult(last_move.movement.to).player))) +
+                     placement_index(last_move.movement.to)];
+  } else if (last_move.movement.move_type == MoveType::PawnPromotionRook) {
+    new_key ^=
+        ZobristArray[piece_start_index(Square(
+                         Piece::Rook,
+                         (position.consult(last_move.movement.to).player))) +
+                     placement_index(last_move.movement.to)];
+  } else if (last_move.movement.move_type == MoveType::PawnPromotionBishop) {
+    new_key ^=
+        ZobristArray[piece_start_index(Square(
+                         Piece::Bishop,
+                         (position.consult(last_move.movement.to).player))) +
+                     placement_index(last_move.movement.to)];
+  } else {
+    new_key ^= ZobristArray[piece_index + to_index];
   }
+  new_key ^= ZobristArray[piece_index + from_index];
 
   if (last_move.captured.piece != Piece::None) {               // Capture
     if (last_move.movement.move_type == MoveType::EnPassant) { // En passant
@@ -89,13 +109,13 @@ HashType zobrist::rehash(const Position &position, const PastMove &last_move) {
       new_key ^=
           ZobristArray[piece_start_index(last_move.captured) +
                        placement_index(last_move.movement.to.index() + offset)];
-    } else
-      new_key ^= ZobristArray[piece_start_index(last_move.captured) +
-                              destination_index];
+    } else {
+      new_key ^= ZobristArray[piece_start_index(last_move.captured) + to_index];
+    }
   } else if (last_move.movement.move_type == MoveType::KingSideCastling) {
     Player player = position.consult(last_move.movement.to).player;
     IndexType first_file_player_perpective = player == Player::White ? 0 : 7;
-    IndexType rook_index = piece_start_index(Square(Piece::Rook, player));
+    int rook_index = piece_start_index(Square(Piece::Rook, player));
     new_key ^= ZobristArray[rook_index +
                             placement_index(first_file_player_perpective, 7)];
     new_key ^= ZobristArray[rook_index +
@@ -103,7 +123,7 @@ HashType zobrist::rehash(const Position &position, const PastMove &last_move) {
   } else if (last_move.movement.move_type == MoveType::QueenSideCastling) {
     Player player = position.consult(last_move.movement.to).player;
     IndexType first_file_player_perpective = player == Player::White ? 0 : 7;
-    IndexType rook_index = piece_start_index(Square(Piece::Rook, player));
+    int rook_index = piece_start_index(Square(Piece::Rook, player));
     new_key ^= ZobristArray[rook_index +
                             placement_index(first_file_player_perpective, 0)];
     new_key ^= ZobristArray[rook_index +
@@ -140,11 +160,10 @@ int zobrist::piece_start_index(const Square &piece_square) {
           (piece_square.player == Player::White ? 0 : NumberOfPieces));
 }
 
-IndexType zobrist::placement_index(const PiecePlacement &piece_placement) {
-  return piece_placement.file() * BoardWidth + piece_placement.rank();
+int zobrist::placement_index(const PiecePlacement &piece_placement) {
+  return placement_index(piece_placement.file(), piece_placement.rank());
 }
 
-IndexType zobrist::placement_index(const IndexType &file,
-                                   const IndexType &rank) {
-  return file * BoardWidth + rank;
+int zobrist::placement_index(const IndexType &file, const IndexType &rank) {
+  return file * static_cast<int>(BoardWidth) + rank;
 }

@@ -16,8 +16,8 @@ namespace zobrist {
 HashType hash(const Position &position);
 HashType rehash(const Position &position, const PastMove &last_move);
 int piece_start_index(const Square &piece_square);
-IndexType placement_index(const PiecePlacement &piece_placement);
-IndexType placement_index(const IndexType &file, const IndexType &rank);
+int placement_index(const PiecePlacement &piece_placement);
+int placement_index(const IndexType &file, const IndexType &rank);
 
 constexpr static int WhiteKingSideCastlingRightsIndex = 768;
 constexpr static int WhiteQueenSideCastlingRightsIndex = 769;
