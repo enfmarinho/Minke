@@ -220,6 +220,8 @@ bool Position::move(const Move &movement) {
                                            past_white_castling_rights,
                                            past_black_castling_rights));
 
+  assert(m_hash == zobrist::hash(*this)); // Checks if rehash is correct
+
   // Required because of the pseudo-legal move generator
   return !under_attack(*this, m_side_to_move,
                        m_side_to_move == Player::Black ? m_white_king_position
