@@ -71,35 +71,21 @@ HashType zobrist::rehash(const Position &position, const PastMove &last_move) {
   int from_index = placement_index(last_move.movement.from.file(),
                                    last_move.movement.from.rank());
 
+  new_key ^= ZobristArray[piece_index + to_index];
+
   // Pawn promotion
-  if (last_move.movement.move_type == MoveType::PawnPromotionQueen) {
+  if (last_move.movement.move_type == MoveType::PawnPromotionQueen ||
+      last_move.movement.move_type == MoveType::PawnPromotionKnight ||
+      last_move.movement.move_type == MoveType::PawnPromotionRook ||
+      last_move.movement.move_type == MoveType::PawnPromotionBishop) {
     new_key ^=
         ZobristArray[piece_start_index(Square(
-                         Piece::Queen,
-                         (position.consult(last_move.movement.to).player))) +
-                     placement_index(last_move.movement.to)];
-  } else if (last_move.movement.move_type == MoveType::PawnPromotionKnight) {
-    new_key ^=
-        ZobristArray[piece_start_index(Square(
-                         Piece::Knight,
-                         (position.consult(last_move.movement.to).player))) +
-                     placement_index(last_move.movement.to)];
-  } else if (last_move.movement.move_type == MoveType::PawnPromotionRook) {
-    new_key ^=
-        ZobristArray[piece_start_index(Square(
-                         Piece::Rook,
-                         (position.consult(last_move.movement.to).player))) +
-                     placement_index(last_move.movement.to)];
-  } else if (last_move.movement.move_type == MoveType::PawnPromotionBishop) {
-    new_key ^=
-        ZobristArray[piece_start_index(Square(
-                         Piece::Bishop,
-                         (position.consult(last_move.movement.to).player))) +
-                     placement_index(last_move.movement.to)];
+                         Piece::Pawn,
+                         position.consult(last_move.movement.to).player)) +
+                     from_index];
   } else {
-    new_key ^= ZobristArray[piece_index + to_index];
+    new_key ^= ZobristArray[piece_index + from_index];
   }
-  new_key ^= ZobristArray[piece_index + from_index];
 
   if (last_move.captured.piece != Piece::None) {               // Capture
     if (last_move.movement.move_type == MoveType::EnPassant) { // En passant
