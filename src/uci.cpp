@@ -134,10 +134,7 @@ void UCI::position(std::istringstream &iss) {
 void UCI::set_position(const std::string &fen,
                        const std::vector<std::string> &move_list) {
   if (!m_game_state.reset(fen)) {
-    std::cerr << "Since the FEN string was invalid, the game state "
-                 "representation may have been be corrupted. To be safe, set "
-                 "the game board again!"
-              << std::endl;
+    std::cerr << "Invalid FEN!" << std::endl;
     return;
   }
   TranspositionTable::get().clear();
