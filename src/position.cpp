@@ -252,7 +252,7 @@ Move Position::get_movement(const std::string &algebraic_notation) const {
   } else if ((from.rank() == 4 && to.rank() == 2) &&
              consult(from).piece == Piece::King) {
     move_type = MoveType::QueenSideCastling;
-  } else if (to.rank() == en_passant_rank() && from.file() != to.file() &&
+  } else if (to.rank() == en_passant_rank() && from.rank() != to.rank() &&
              consult(from).piece == Piece::Pawn) { // En passant
     move_type = MoveType::EnPassant;
   }
