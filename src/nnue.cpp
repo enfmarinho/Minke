@@ -17,7 +17,7 @@
 
 INCBIN(NetParameters, "../src/minke.nnue");
 
-IndexType feature_index(const Square &sq, const PiecePlacement &pp) {
+static int feature_index(const Square &sq, const PiecePlacement &pp) {
   return (pp.rank() * 8 + pp.file()) +
          64 * (piece_index(sq.piece) +
                (sq.player == Player::Black ? NumberOfPieces : 0));
@@ -48,8 +48,8 @@ void Network::pop() { m_accumulators.pop_back(); }
 void Network::push() { m_accumulators.push_back(m_accumulators.back()); }
 
 void Network::add_feature(const Square &sq, const PiecePlacement &pp) {
-  IndexType white_index = feature_index(sq, pp);
-  IndexType black_index = feature_index(sq, pp.mirrored());
+  int white_index = feature_index(sq, pp);
+  int black_index = feature_index(sq, pp.mirrored());
 
   for (int column{0}; column < HiddenLayerSize; ++column) {
     m_accumulators.back().white_neurons[column] +=
@@ -60,8 +60,8 @@ void Network::add_feature(const Square &sq, const PiecePlacement &pp) {
 }
 
 void Network::remove_feature(const Square &sq, const PiecePlacement &pp) {
-  IndexType white_index = feature_index(sq, pp);
-  IndexType black_index = feature_index(sq, pp.mirrored());
+  int white_index = feature_index(sq, pp);
+  int black_index = feature_index(sq, pp.mirrored());
 
   for (int column{0}; column < HiddenLayerSize; ++column) {
     m_accumulators.back().white_neurons[column] -=
