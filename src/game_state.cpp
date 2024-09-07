@@ -26,7 +26,6 @@ bool GameState::make_move(const Move &move) {
   m_net.push();
   m_last_move = move;
 
-  Piece pawn_promoted_to = Piece::None;
   const Square &moved = top().consult(move.to);
   m_net.add_feature(moved, move.to);
   m_net.remove_feature(moved, move.from);
@@ -53,26 +52,21 @@ bool GameState::make_move(const Move &move) {
     const IndexType file = (moved.player == Player::White ? 0 : 7);
     m_net.add_feature({Piece::Rook, moved.player}, PiecePlacement(file, 3));
     m_net.remove_feature({Piece::Rook, moved.player}, PiecePlacement(file, 0));
-  } else if (move.move_type == MoveType::PawnPromotionQueen) {
-    pawn_promoted_to = Piece::Queen;
-  } else if (move.move_type == MoveType::PawnPromotionKnight) {
-    pawn_promoted_to = Piece::Knight;
-  } else if (move.move_type == MoveType::PawnPromotionRook) {
-    pawn_promoted_to = Piece::Rook;
-  } else if (move.move_type == MoveType::PawnPromotionBishop) {
-    pawn_promoted_to = Piece::Bishop;
-  }
+  } else if (move.move_type == MoveType::PawnPromotionQueen ||
+             move.move_type == MoveType::PawnPromotionKnight ||
+             move.move_type == MoveType::PawnPromotionRook ||
+             move.move_type == MoveType::PawnPromotionBishop) {
+    m_net.add_feature(moved, move.from); // Add just removed feature
+    m_net.remove_feature(Square(Piece::Pawn, moved.player), move.from);
 
-  if (pawn_promoted_to != Piece::None) {
-    m_net.remove_feature(moved, move.to); // Remove just added feature
-    m_net.add_feature({pawn_promoted_to, moved.player}, move.to);
-    const Square &to_before_move =
+    const Square &captured =
         m_position_stack[m_position_stack.size() - 2].consult(move.to);
-    if (to_before_move.piece != Piece::None) { // Capture happened
-      m_net.remove_feature(to_before_move, move.to);
+    if (captured.piece != Piece::None) { // Capture happened
+      m_net.remove_feature(captured, move.to);
     }
   }
 
+  assert(m_net.top() == m_net.debug_func(top()));
   return true;
 }
 
