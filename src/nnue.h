@@ -31,18 +31,24 @@ constexpr int QAB = QA * QB;
 
 // NOTE: Network must be initialized using reset().
 class Network {
+private:
+  struct Accumulator;
+
 public:
   Network();
   ~Network() = default;
 
   void pop();
   void push();
+  const Accumulator &top() const;
 
   void add_feature(const Square &sq, const PiecePlacement &pp);
   void remove_feature(const Square &sq, const PiecePlacement &pp);
 
   void reset(const Position &position);
   WeightType eval(const Player &stm) const;
+
+  Accumulator debug_func(const Position &position);
 
 private:
   struct Accumulator {
@@ -53,9 +59,11 @@ private:
     Accumulator() = delete;
     ~Accumulator() = default;
     void reset(std::span<int32_t, HiddenLayerSize> biasses);
-  };
 
-private:
+    friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
+  };
+  friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
+
   int32_t crelu(const int32_t &input) const;
   int32_t screlu(const int32_t &input) const;
   int32_t weight_sum_reduction(

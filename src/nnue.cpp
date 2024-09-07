@@ -12,7 +12,9 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <span>
 
 INCBIN(NetParameters, "../src/minke.nnue");
@@ -129,4 +131,42 @@ Network::Accumulator::Accumulator(std::span<int32_t, HiddenLayerSize> bias) {
 void Network::Accumulator::reset(std::span<int32_t, HiddenLayerSize> bias) {
   memcpy(white_neurons.data(), bias.data(), bias.size_bytes());
   memcpy(black_neurons.data(), bias.data(), bias.size_bytes());
+}
+
+bool operator==(const Network::Accumulator &lhs,
+                const Network::Accumulator &rhs) {
+  for (size_t index = 0; index < lhs.black_neurons.size(); ++index) {
+    if (lhs.black_neurons[index] != rhs.black_neurons[index] ||
+        lhs.white_neurons[index] != rhs.white_neurons[index]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+Network::Accumulator Network::debug_func(const Position &position) {
+  Accumulator accumulator(m_hidden_bias);
+  for (IndexType file = 0; file < BoardHeight; ++file) {
+    for (IndexType rank = 0; rank < BoardWidth; ++rank) {
+      PiecePlacement pp(file, rank);
+      const Square &sq = position.consult(pp);
+      if (sq.piece != Piece::None) {
+        int white_index = feature_index(sq, pp);
+        int black_index = feature_index(sq, pp.mirrored());
+
+        for (int column{0}; column < HiddenLayerSize; ++column) {
+          accumulator.white_neurons[column] +=
+              m_hidden_weights[column][white_index];
+          accumulator.black_neurons[column] +=
+              m_hidden_weights[column][black_index];
+        }
+      }
+    }
+  }
+
+  return accumulator;
+}
+
+const Network::Accumulator &Network::top() const {
+  return m_accumulators.back();
 }
