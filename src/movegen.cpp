@@ -186,7 +186,7 @@ void MoveList::pseudolegal_knight_moves(const Position &position,
       if (position.consult(to).piece == Piece::None) {
         m_move_list[m_end++] = Move(from, to, MoveType::Regular);
       } else if (position.consult(to).player != position.side_to_move()) {
-        m_move_list[m_end++] = Move(from, to, MoveType::Regular);
+        m_move_list[m_end++] = Move(from, to, MoveType::Capture);
       }
     }
   }
