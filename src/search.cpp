@@ -25,30 +25,41 @@ void search::search(GameState &game_state, Thread &thread) {
   iterative_deepening<true>(game_state, thread);
 }
 
+static void print_search_info(const CounterType &depth, const WeightType &eval,
+                              const PvList &pv_list, const Thread &thread) {
+  std::cout << "info depth " << depth << " score cp " << eval << " nodes "
+            << thread.nodes_searched() << " time " << thread.time_passed()
+            << " pv ";
+  pv_list.print();
+  std::cout << std::endl;
+}
+
 template <bool print_moves>
 void search::iterative_deepening(GameState &game_state, Thread &thread) {
-  Move best_move = MoveNone;
-  for (CounterType depth = 1; !thread.should_stop(depth); ++depth) {
-    PvList pv_list;
-    WeightType eval =
+  bool found;
+  PvList pv_list;
+  WeightType eval =
+      alpha_beta(ScoreNone, -ScoreNone, 1, game_state, thread, pv_list);
+  Move best_move =
+      TranspositionTable::get().probe(game_state.top(), found)->best_move();
+  if (best_move == MoveNone) {
+    if constexpr (print_moves)
+      std::cout << "bestmove none\n";
+    return;
+  }
+  print_search_info(1, eval, pv_list, thread);
+
+  for (CounterType depth = 2; !thread.should_stop(depth); ++depth) {
+    eval =
         alpha_beta(ScoreNone, -ScoreNone, depth, game_state, thread, pv_list);
 
     if (!thread.should_stop()) { // Search was successful
-      bool found;
       TTEntry *entry = TranspositionTable::get().probe(game_state.top(), found);
       assert(found && entry->depth_ply() >= depth);
 
       best_move = entry->best_move();
       if constexpr (print_moves) {
-        if (best_move == MoveNone) {
-          std::cout << "bestmove none\n";
-          return;
-        }
-        std::cout << "info depth " << depth << " score cp " << eval << " nodes "
-                  << thread.nodes_searched() << " time " << thread.time_passed()
-                  << " pv ";
-        pv_list.print();
-        std::cout << std::endl;
+        print_search_info(depth, eval, pv_list, thread);
       }
     }
   }
