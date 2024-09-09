@@ -205,7 +205,7 @@ struct PvList {
     m_size = list.m_size + 1;
   }
 
-  void print() {
+  void print() const {
     for (int i = 0; i < m_size; ++i) {
       std::cout << m_pv[i].get_algebraic_notation() << ' ';
     }

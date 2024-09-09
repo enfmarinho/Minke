@@ -54,7 +54,7 @@ void Thread::search(GameState &game_state) {
   }
 }
 
-CounterType Thread::max_depth_ply() { return m_max_depth; }
+CounterType Thread::max_depth_ply() const { return m_max_depth; }
 
 void Thread::max_depth_ply(CounterType new_max_depth) {
   m_max_depth = new_max_depth;
@@ -66,7 +66,7 @@ void Thread::node_limit(uint64_t new_node_limit) {
 
 void Thread::increase_nodes_searched_counter() { ++m_nodes_searched; }
 
-uint64_t Thread::nodes_searched() { return m_nodes_searched; }
+uint64_t Thread::nodes_searched() const { return m_nodes_searched; }
 
 TimeType Thread::time_passed() const { return now() - m_start_time; }
 

@@ -24,13 +24,13 @@ public:
   bool should_stop(CounterType depth) const;
   void wait();
   void search(GameState &game_state);
-  CounterType max_depth_ply();
+  CounterType max_depth_ply() const;
   void max_depth_ply(CounterType new_max_depth_ply);
   void node_limit(uint64_t new_node_limit);
   void increase_nodes_searched_counter();
   void infinite();
   TimeType time_passed() const;
-  uint64_t nodes_searched();
+  uint64_t nodes_searched() const;
   void set_search_time(TimeType search_time);
 
 private:
