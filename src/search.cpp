@@ -94,7 +94,6 @@ TTEntry *search::aspiration(const CounterType &depth, GameState &game_state,
 WeightType search::quiescence(WeightType alpha, WeightType beta,
                               GameState &game_state, Thread &thread) {
   thread.increase_nodes_searched_counter();
-  return game_state.eval();
   if (thread.should_stop()) {
     return ScoreNone;
   }
@@ -105,13 +104,14 @@ WeightType search::quiescence(WeightType alpha, WeightType beta,
   }
 
   // TODO Probably worth to turn off on end game
-  WeightType delta = weights::MidGameQueen + 200;
-  if (game_state.last_move().move_type == MoveType::PawnPromotionQueen) {
-    delta += weights::MidGameQueen;
-  }
-  if (stand_pat < alpha - delta) { // Delta pruning
-    return alpha;
-  } else if (alpha < stand_pat) {
+  // WeightType delta = weights::MidGameQueen + 200;
+  // if (game_state.last_move().move_type == MoveType::PawnPromotionQueen) {
+  //   delta += weights::MidGameQueen;
+  // }
+  // if (stand_pat < alpha - delta) { // Delta pruning
+  //   return alpha;
+  // }
+  if (alpha < stand_pat) {
     alpha = stand_pat;
   }
 
@@ -145,7 +145,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
   if (thread.should_stop()) { // Out of time
     return ScoreNone;
   } else if (depth_ply == 0) {
-    return quiescence(-beta, -alpha, game_state, thread);
+    return quiescence(alpha, beta, game_state, thread);
   }
 
   thread.increase_nodes_searched_counter();
