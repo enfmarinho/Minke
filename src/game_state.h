@@ -37,6 +37,7 @@ private:
   Move m_last_move;
   WeightType m_move_history[NumberOfPieces * 2][0x80];
   Network m_net;
+  std::vector<HashType> m_played_positions;
 };
 
 #endif // #ifndef GAME_STATE_H

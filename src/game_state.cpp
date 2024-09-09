@@ -23,6 +23,7 @@ bool GameState::make_move(const Move &move) {
     m_position_stack.pop_back();
     return false;
   }
+  m_played_positions.push_back(top().get_hash());
   m_net.push();
   m_last_move = move;
 
@@ -73,6 +74,7 @@ bool GameState::make_move(const Move &move) {
 void GameState::undo_move() {
   assert(!m_position_stack.empty());
   m_position_stack.pop_back();
+  m_played_positions.pop_back();
   m_net.pop();
 }
 
@@ -82,9 +84,15 @@ bool GameState::reset(const std::string &fen) {
     return false;
 
   std::memset(m_move_history, 0, sizeof(m_move_history));
+
   m_position_stack.clear();
   m_position_stack.push_back(position);
+
+  m_played_positions.clear();
+  m_played_positions.push_back(position.get_hash());
+
   m_net.reset(position);
+
   m_last_move = MoveNone;
 
   return true;
