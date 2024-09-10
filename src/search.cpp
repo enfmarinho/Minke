@@ -42,10 +42,11 @@ void search::iterative_deepening(GameState &game_state, Thread &thread) {
       alpha_beta(ScoreNone, -ScoreNone, 1, game_state, thread, pv_list);
   Move best_move =
       TranspositionTable::get().probe(game_state.top(), found)->best_move();
-  if (best_move == MoveNone) {
-    if constexpr (print_moves)
+  if constexpr (print_moves) {
+    if (best_move == MoveNone) {
       std::cout << "bestmove none\n";
-    return;
+      return;
+    }
   }
   print_search_info(1, eval, pv_list, thread);
 
@@ -63,6 +64,7 @@ void search::iterative_deepening(GameState &game_state, Thread &thread) {
       }
     }
   }
+
   if constexpr (print_moves) {
     std::cout << "bestmove " << best_move.get_algebraic_notation() << std::endl;
   }
@@ -179,8 +181,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta,
 
   Move best_move = MoveNone;
   WeightType best_score = ScoreNone;
-  // MoveList move_list(game_state, (found ? entry->best_move() : MoveNone));
-  MoveList move_list(game_state, (MoveNone));
+  MoveList move_list(game_state, (found ? entry->best_move() : MoveNone));
   while (!move_list.empty()) {
     PvList curr_pv;
     Move move = move_list.next_move();
