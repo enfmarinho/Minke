@@ -7,6 +7,7 @@
 
 #include "game_state.h"
 #include "game_elements.h"
+#include "movegen.h"
 #include "position.h"
 #include <cassert>
 #include <string>
@@ -15,6 +16,64 @@ GameState::GameState() {
   // TODO check if it's worth to reserve space on m_position_stack
   // m_position_stack.reserve(200);
   assert(reset(StartFEN));
+}
+
+bool GameState::repetition_draw() const {
+  // Check for draw by repetition or for a repetition within the search tree
+  int counter = 0;
+  int distance = top().get_fifty_move_counter();
+  int starting_index = m_played_positions.size();
+  for (int index = 4; index <= distance; index += 2) {
+    if (m_played_positions[starting_index - index] == top().get_hash()) {
+      // TODO
+      // if (index < depth_seaerched) {// 2-fold repetition within the search
+      // tree, this avoids cycles return true;
+      // }
+      ++counter;
+      if (counter >= 2) { // 3 fold repetition
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// Checks for a draw by the 50 move rule
+bool GameState::draw_50_move() const {
+  if (top().get_fifty_move_counter() >= 100) {
+    Player adversary;
+    PiecePlacement king_placement;
+    if (top().side_to_move() == Player::White) {
+      adversary = Player::Black;
+      king_placement = top().white_king_position();
+    } else {
+      assert(top().side_to_move() == Player::Black);
+      adversary = Player::White;
+      king_placement = top().black_king_position();
+    }
+
+    if (!under_attack(top(), adversary, king_placement)) {
+      return true; // King is safe
+    }
+
+    MoveList move_list(top());
+    while (!move_list.empty()) {
+      Move move = move_list.next_move();
+      Position cp_pos = top();
+      if (cp_pos.move(move)) {
+        return true; // Not on checkmate
+      }
+    }
+
+    return false; // Checkmate, since king is under attack and there is no legal
+                  // move
+  }
+
+  return false;
+}
+
+bool GameState::draw() const {
+  return repetition_draw() || draw_50_move() || top().insufficient_material();
 }
 
 bool GameState::make_move(const Move &move) {

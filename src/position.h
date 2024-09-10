@@ -31,8 +31,10 @@ public:
   const PiecePlacement &white_king_position() const;
   const HashType &get_hash() const;
   const CounterType &get_half_move_counter() const;
+  const CounterType &get_fifty_move_counter() const;
   std::string get_fen() const;
   void print() const;
+  bool insufficient_material() const;
 
 private:
   Square m_board[0x80];

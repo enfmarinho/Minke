@@ -21,6 +21,7 @@ public:
   GameState();
   ~GameState() = default;
 
+  bool draw() const;
   bool make_move(const Move &move);
   void undo_move();
   bool reset(const std::string &fen);
@@ -33,6 +34,9 @@ public:
   const Move &last_move() const;
 
 private:
+  bool repetition_draw() const;
+  bool draw_50_move() const;
+
   std::vector<Position> m_position_stack;
   Move m_last_move;
   WeightType m_move_history[NumberOfPieces * 2][0x80];

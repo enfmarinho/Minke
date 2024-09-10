@@ -361,6 +361,10 @@ const CounterType &Position::get_half_move_counter() const {
   return m_game_clock_ply;
 }
 
+const CounterType &Position::get_fifty_move_counter() const {
+  return m_fifty_move_counter_ply;
+}
+
 void Position::print() const {
   auto print_line = []() -> void {
     for (IndexType i = 0; i < 8; ++i) {
@@ -405,3 +409,11 @@ void Position::print() const {
   std::cout << "\n\nFEN: " << get_fen();
   std::cout << "\nHash: " << m_hash << "\n";
 };
+bool Position::insufficient_material() const {
+  // TODO: Check for insufficient material
+  // for 2 pieces: draw
+  // for 3 pieces: KN v K, KB v K
+  // for 4 pieces: KNN v K, KN v KN, KB v KB
+
+  return false;
+}
