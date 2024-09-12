@@ -17,7 +17,13 @@
 #include "position.h"
 #include "search.h"
 
+namespace EngineOptions {
 constexpr CounterType BenchDepth = 8;
+static constexpr CounterType hash_default = 16;
+static constexpr CounterType hash_min = 1;
+static constexpr CounterType hash_max = 131072;
+void print();
+} // namespace EngineOptions
 
 class UCI {
   public:
@@ -27,17 +33,6 @@ class UCI {
     void loop();
 
   private:
-    struct EngineOptions {
-        static constexpr CounterType hash_default = 16;
-        static constexpr CounterType hash_min = 1;
-        static constexpr CounterType hash_max = 131072;
-        friend std::ostream &operator<<(std::ostream &os, const EngineOptions &eo) {
-            os << "option name Hash type spin default " << hash_default << " min " << hash_min << " max " << hash_max
-               << "\n";
-            return os;
-        }
-    };
-
     void position(std::istringstream &);
     void set_position(const std::string &fen, const std::vector<std::string> &move_list);
 
@@ -53,7 +48,6 @@ class UCI {
     void eval();
 
     std::thread m_thread;
-    EngineOptions m_engine_options;
     SearchData m_search_data;
 };
 

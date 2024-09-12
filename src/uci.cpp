@@ -28,7 +28,7 @@ UCI::UCI(int argc, char *argv[]) {
         if (argc > 2)
             m_search_data.depth_limit = std::stoi(argv[2]);
         else
-            m_search_data.depth_limit = BenchDepth;
+            m_search_data.depth_limit = EngineOptions::BenchDepth;
 
         bench();
         exit(0);
@@ -74,9 +74,9 @@ void UCI::loop() {
             eval();
         } else if (token == "uci") {
             std::cout << "id name Minke 0.0.1 \n"
-                      << "id author Eduardo Marinho \n"
-                      << m_engine_options << "\n"
-                      << "uciok" << std::endl;
+                      << "id author Eduardo Marinho \n";
+            EngineOptions::print();
+            std::cout << "uciok" << std::endl;
         } else if (token == "isready") {
             std::cout << "readyok" << std::endl;
         } else if (token == "help" || token == "--help") {
@@ -89,7 +89,7 @@ void UCI::loop() {
             else if (m_thread.joinable())
                 m_thread.join();
             m_search_data.reset();
-            m_search_data.depth_limit = BenchDepth;
+            m_search_data.depth_limit = EngineOptions::BenchDepth;
             parse_go(iss, true);
             bench();
         } else if (!token.empty()) {
@@ -254,3 +254,8 @@ bool UCI::parse_go(std::istringstream &iss, bool bench) {
 }
 
 void UCI::go() { m_thread = std::thread(iterative_deepening, std::ref(m_search_data)); }
+
+void EngineOptions::print() {
+    std::cout << "option name Hash type spin default " << hash_default << " min " << hash_min << " max " << hash_max
+              << "\n";
+}
