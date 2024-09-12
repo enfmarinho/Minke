@@ -34,6 +34,7 @@ add_executable(
   "src/position.cpp"
   "src/search.cpp"
   "src/thread.cpp"
+  "src/time_manager.cpp"
   "src/tt.cpp"
   "src/uci.cpp")
 target_link_libraries(minke)
