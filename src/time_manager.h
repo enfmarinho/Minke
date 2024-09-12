@@ -14,19 +14,19 @@ class TimeManager {
     TimeManager();
     ~TimeManager() = default;
 
-    void init();
-    bool nodes_over(const CounterType &nodes);
-    bool stop_early();
-    bool time_over();
+    void init(CounterType inc, CounterType time, CounterType movestogo, CounterType movetime, bool infinite);
+    bool stop_early() const;
+    bool time_over() const;
+    TimeType time_passed() const;
+    void can_stop();
 
   private:
     TimeType m_start_time;
     TimeType m_optimum_time;
     TimeType m_maximum_time;
 
-    CounterType m_node_limit;
-    bool m_node_set;
     bool m_time_set;
+    bool m_can_stop;
 };
 
 #endif // #ifndef TIME_MANAGER_H

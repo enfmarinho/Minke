@@ -10,89 +10,88 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <limits>
 
 #include "game_elements.h"
 #include "game_state.h"
 #include "movegen.h"
 #include "position.h"
-#include "thread.h"
 #include "tt.h"
 #include "weights.h"
 
-void search::perft(GameState &game_state, Thread &thread) { iterative_deepening<false>(game_state, thread); }
-
-void search::search(GameState &game_state, Thread &thread) { iterative_deepening<true>(game_state, thread); }
-
 static void print_search_info(const CounterType &depth, const WeightType &eval, const PvList &pv_list,
-                              const Thread &thread) {
-    std::cout << "info depth " << depth << " score cp " << eval << " nodes " << thread.nodes_searched() << " time "
-              << thread.time_passed() << " pv ";
+                              const SearchData &search_data) {
+    std::cout << "info depth " << depth << " score cp " << eval << " nodes " << search_data.nodes_searched << " time "
+              << search_data.time_manager.time_passed() << " pv ";
     pv_list.print();
     std::cout << std::endl;
 }
 
-template <bool print_moves>
-void search::iterative_deepening(GameState &game_state, Thread &thread) {
-    bool found;
-    PvList pv_list;
-    WeightType eval = alpha_beta(ScoreNone, -ScoreNone, 1, game_state, thread, pv_list);
-    Move best_move = TranspositionTable::get().probe(game_state.top(), found)->best_move();
-    if constexpr (print_moves) {
-        if (best_move == MoveNone) {
-            std::cout << "bestmove none\n";
-            return;
-        }
-    }
-    print_search_info(1, eval, pv_list, thread);
+void SearchData::reset() {
+    stop = true;
+    nodes_searched = 0;
+    node_limit = std::numeric_limits<int>::max();
+    depth_limit = MaxSearchDepth;
+}
 
-    for (CounterType depth = 2; !thread.should_stop(depth); ++depth) {
-        eval = alpha_beta(ScoreNone, -ScoreNone, depth, game_state, thread, pv_list);
+void iterative_deepening(SearchData &search_data) {
+    search_data.stop = false;
 
-        if (!thread.should_stop()) { // Search was successful
-            TTEntry *entry = TranspositionTable::get().probe(game_state.top(), found);
+    Move best_move = MoveNone;
+    for (CounterType depth = 1; depth < search_data.depth_limit; ++depth) {
+        PvList pv_list;
+        WeightType eval = alpha_beta(ScoreNone, -ScoreNone, depth, pv_list, search_data);
+
+        if (!search_data.time_manager.time_over() && !search_data.stop) { // Search was successful
+            bool found;
+            TTEntry *entry = TranspositionTable::get().probe(search_data.game_state.top(), found);
             assert(found && entry->depth_ply() >= depth);
 
             best_move = entry->best_move();
-            if constexpr (print_moves) {
-                print_search_info(depth, eval, pv_list, thread);
+            if (best_move == MoveNone) {
+                assert(depth == 1);
+                break;
             }
+            print_search_info(depth, eval, pv_list, search_data);
         }
+        if (search_data.time_manager.stop_early()) {
+            break;
+        }
+        search_data.time_manager.can_stop(); // Avoids stopping before depth 1 has been searched through
     }
 
-    if constexpr (print_moves) {
-        std::cout << "bestmove " << best_move.get_algebraic_notation() << std::endl;
-    }
+    std::cout << "bestmove " << (best_move == MoveNone ? "none" : best_move.get_algebraic_notation()) << std::endl;
+    search_data.stop = true;
 }
 
-TTEntry *search::aspiration(const CounterType &depth, GameState &game_state, Thread &thread, PvList &pv_list) {
+TTEntry *aspiration(const CounterType &depth, PvList &pv_list, SearchData &search_data) {
     bool found;
-    TTEntry *ttentry = TranspositionTable::get().probe(game_state.top(), found);
+    TTEntry *ttentry = TranspositionTable::get().probe(search_data.game_state.top(), found);
     if (!found) {
-        // alpha_beta(ScoreNone, -ScoreNone, depth, game_state, thread, pv_list);
+        alpha_beta(ScoreNone, -ScoreNone, depth, pv_list, search_data);
         return ttentry;
     }
 
-    // WeightType alpha = ttentry->evaluation() - weights::EndGamePawn;
-    // WeightType beta = ttentry->evaluation() + weights::EndGamePawn;
-    // // TODO check alpha and beta arguments
-    // WeightType eval = alpha_beta(alpha, beta, depth, game_state, thread,
-    // pv_list); if (eval >= beta) {
-    //   alpha_beta(alpha, -ScoreNone, depth, game_state, thread, pv_list);
-    // } else if (eval <= alpha) {
-    //   alpha_beta(ScoreNone, beta, depth, game_state, thread, pv_list);
-    // }
-    // assert(eval >= alpha && eval <= beta);
+    WeightType alpha = ttentry->evaluation() - weights::EndGamePawn;
+    WeightType beta = ttentry->evaluation() + weights::EndGamePawn;
+    WeightType eval = alpha_beta(alpha, beta, depth, pv_list, search_data);
+    if (eval >= beta) {
+        alpha_beta(alpha, -ScoreNone, depth, pv_list, search_data);
+    } else if (eval <= alpha) {
+        alpha_beta(ScoreNone, beta, depth, pv_list, search_data);
+    }
+    assert(eval >= alpha && eval <= beta);
 
     return ttentry;
 }
 
-WeightType search::quiescence(WeightType alpha, WeightType beta, GameState &game_state, Thread &thread) {
-    thread.increase_nodes_searched_counter();
-    if (thread.should_stop()) {
+WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data) {
+    ++search_data.nodes_searched;
+    if (search_data.time_manager.time_over() || search_data.stop) {
         return ScoreNone;
     }
 
-    WeightType stand_pat = game_state.eval();
+    WeightType stand_pat = search_data.game_state.eval();
     if (stand_pat >= beta) {
         return beta;
     }
@@ -109,18 +108,18 @@ WeightType search::quiescence(WeightType alpha, WeightType beta, GameState &game
         alpha = stand_pat;
     }
 
-    MoveList move_list(game_state, MoveNone);
+    MoveList move_list(search_data.game_state, MoveNone);
     move_list.ignore_non_quiet_moves();
     while (!move_list.empty()) {
         Move curr_move = move_list.next_move();
         if (curr_move.move_type != MoveType::Capture) {
             break;
-        } else if (!game_state.make_move(curr_move)) {
+        } else if (!search_data.game_state.make_move(curr_move)) {
             continue;
         }
 
-        WeightType eval = -quiescence(-beta, -alpha, game_state, thread);
-        game_state.undo_move();
+        WeightType eval = -quiescence(-beta, -alpha, search_data);
+        search_data.game_state.undo_move();
         if (eval >= beta) {
             return beta;
         } else if (eval > alpha) {
@@ -131,19 +130,19 @@ WeightType search::quiescence(WeightType alpha, WeightType beta, GameState &game
     return alpha;
 }
 
-WeightType search::alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth_ply, GameState &game_state,
-                              Thread &thread, PvList &pv_list) {
-    if (thread.should_stop()) { // Out of time
+WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth_ply, PvList &pv_list,
+                      SearchData &search_data) {
+    if (search_data.time_manager.time_over() || search_data.stop) { // Out of time
         return ScoreNone;
     } else if (depth_ply == 0) {
-        return quiescence(alpha, beta, game_state, thread);
+        return quiescence(alpha, beta, search_data);
     }
 
-    thread.increase_nodes_searched_counter();
+    ++search_data.nodes_searched;
 
     // Transposition table probe
     bool found;
-    TTEntry *entry = TranspositionTable::get().probe(game_state.top(), found);
+    TTEntry *entry = TranspositionTable::get().probe(search_data.game_state.top(), found);
     if (found && entry->depth_ply() >= depth_ply) {
         switch (entry->bound()) {
             case TTEntry::BoundType::Exact:
@@ -170,16 +169,16 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta, const CounterTy
 
     Move best_move = MoveNone;
     WeightType best_score = ScoreNone;
-    MoveList move_list(game_state, (found ? entry->best_move() : MoveNone));
+    MoveList move_list(search_data.game_state, (found ? entry->best_move() : MoveNone));
     while (!move_list.empty()) {
         PvList curr_pv;
         Move move = move_list.next_move();
-        if (!game_state.make_move(move)) { // Avoid illegal moves
+        if (!search_data.game_state.make_move(move)) { // Avoid illegal moves
             continue;
         }
 
-        WeightType eval = alpha_beta(-beta, -alpha, depth_ply - 1, game_state, thread, curr_pv);
-        game_state.undo_move();
+        WeightType eval = alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, search_data);
+        search_data.game_state.undo_move();
         assert(eval >= ScoreNone);
 
         if (eval > best_score) {
@@ -189,7 +188,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta, const CounterTy
         }
 
         if (eval >= beta) {
-            game_state.increment_history(move, depth_ply);
+            search_data.game_state.increment_history(move, depth_ply);
             return alpha;
         } else if (eval > alpha) {
             alpha = eval;
@@ -198,7 +197,7 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta, const CounterTy
 
     if (best_move == MoveNone) { // handle positions under stalemate or checkmate,
                                  // i.e. positions with no legal moves to be made
-        Position &pos = game_state.top();
+        const Position &pos = search_data.game_state.top();
         Player adversary;
         PiecePlacement king_placement;
         if (pos.side_to_move() == Player::White) {
@@ -212,15 +211,15 @@ WeightType search::alpha_beta(WeightType alpha, WeightType beta, const CounterTy
         return under_attack(pos, adversary, king_placement) ? -MateScore + depth_ply : 0;
     }
 
-    if (!thread.should_stop()) { // Save on TT if search was completed
+    if (!search_data.time_manager.time_over()) { // Save on TT if search was completed
         TTEntry::BoundType bound = TTEntry::BoundType::Exact;
         if (best_score <= alpha) {
             bound = TTEntry::BoundType::LowerBound;
         } else if (best_score >= beta) {
             bound = TTEntry::BoundType::UpperBound;
         }
-        entry->save(game_state.top().get_hash(), depth_ply, best_move, best_score,
-                    game_state.top().get_half_move_counter(), bound);
+        entry->save(search_data.game_state.top().get_hash(), depth_ply, best_move, best_score,
+                    search_data.game_state.top().get_half_move_counter(), bound);
     }
 
     return alpha;

@@ -11,11 +11,11 @@
 #include <cstdint>
 #include <ostream>
 #include <sstream>
+#include <thread>
 
 #include "game_elements.h"
-#include "game_state.h"
 #include "position.h"
-#include "thread.h"
+#include "search.h"
 
 constexpr CounterType BenchDepth = 8;
 
@@ -52,9 +52,9 @@ class UCI {
     void bench();
     void eval();
 
+    std::thread m_thread;
     EngineOptions m_engine_options;
-    Thread m_thread;
-    GameState m_game_state;
+    SearchData m_search_data;
 };
 
 #endif // #ifndef UCI_H

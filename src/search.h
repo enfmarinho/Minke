@@ -7,21 +7,28 @@
 
 #include "game_elements.h"
 #include "game_state.h"
-#include "thread.h"
+#include "time_manager.h"
 #include "tt.h"
 
 #ifndef SEARCH_H
 #define SEARCH_H
 
-namespace search {
-void search(GameState &game_state, Thread &thread);
-void perft(GameState &game_state, Thread &thread);
-template <bool print_moves>
-void iterative_deepening(GameState &game_state, Thread &thread);
-TTEntry *aspiration(const CounterType &depth, GameState &game_state, Thread &thread, PvList &pv_list);
-WeightType quiescence(WeightType alpha, WeightType beta, GameState &game_state, Thread &thread);
-WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth, GameState &game_state,
-                      Thread &thread, PvList &pv_list);
-} // namespace search
+struct SearchData {
+    GameState game_state;
+    TimeManager time_manager;
+
+    int nodes_searched;
+    int node_limit;
+    int depth_limit;
+    bool stop;
+
+    void reset();
+};
+
+void iterative_deepening(SearchData &search_data);
+TTEntry *aspiration(const CounterType &depth, PvList &pv_list, SearchData &search_data);
+WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data);
+WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth, PvList &pv_list,
+                      SearchData &search_data);
 
 #endif // #ifndef SEARCH_H

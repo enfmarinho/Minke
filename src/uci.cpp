@@ -17,7 +17,6 @@
 
 #include "benchmark.h"
 #include "game_elements.h"
-#include "game_state.h"
 #include "movegen.h"
 #include "position.h"
 #include "search.h"
@@ -26,11 +25,11 @@
 UCI::UCI(int argc, char *argv[]) {
     TranspositionTable::get().resize(EngineOptions::hash_default);
     if (argc > 1 && std::string(argv[1]) == "bench") {
-        if (argc > 2) {
-            m_thread.max_depth_ply(std::stoi(argv[2]));
-        } else {
-            m_thread.max_depth_ply(BenchDepth);
-        }
+        if (argc > 2)
+            m_search_data.depth_limit = std::stoi(argv[2]);
+        else
+            m_search_data.depth_limit = BenchDepth;
+
         bench();
         exit(0);
     }
@@ -48,12 +47,15 @@ void UCI::loop() {
         token.clear();
         iss >> std::skipws >> token;
         if (token == "quit" || token == "stop") {
-            m_thread.stop_search();
+            m_search_data.stop = true;
         } else if (token == "go") {
-            m_thread.wait();
-            m_thread.reset();
+            if (!m_search_data.stop)
+                continue;
+            else if (m_thread.joinable())
+                m_thread.join();
+            m_search_data.reset();
             if (parse_go(iss))
-                perft(m_game_state.top(), m_thread.max_depth_ply());
+                perft(m_search_data.game_state.top(), m_search_data.depth_limit);
             else
                 go();
         } else if (token == "position") {
@@ -61,6 +63,12 @@ void UCI::loop() {
         } else if (token == "ucinewgame") {
             set_position(StartFEN, std::vector<std::string>());
         } else if (token == "setoption") {
+            if (!m_search_data.stop) {
+                std::cerr << "Can not set an option while searching" << std::endl;
+                return;
+            } else if (m_thread.joinable()) {
+                m_thread.join();
+            }
             set_option(iss);
         } else if (token == "eval") {
             eval();
@@ -76,9 +84,12 @@ void UCI::loop() {
         } else if (token == "d") {
             print_debug_info();
         } else if (token == "bench") {
-            m_thread.wait();
-            m_thread.reset();
-            m_thread.max_depth_ply(BenchDepth);
+            if (!m_search_data.stop)
+                continue;
+            else if (m_thread.joinable())
+                m_thread.join();
+            m_search_data.reset();
+            m_search_data.depth_limit = BenchDepth;
             parse_go(iss, true);
             bench();
         } else if (!token.empty()) {
@@ -88,27 +99,27 @@ void UCI::loop() {
 }
 
 void UCI::print_debug_info() {
-    m_game_state.top().print();
+    m_search_data.game_state.top().print();
     bool found;
-    auto entry = TranspositionTable::get().probe(m_game_state.top(), found);
+    auto entry = TranspositionTable::get().probe(m_search_data.game_state.top(), found);
     Move ttmove = MoveNone;
     if (found) {
         ttmove = entry->best_move();
         std::cout << "Best move: " << ttmove.get_algebraic_notation() << std::endl;
     }
-    MoveList move_list(m_game_state, ttmove);
-    int n_legal_moves = move_list.n_legal_moves(m_game_state.top());
+    MoveList move_list(m_search_data.game_state, ttmove);
+    int n_legal_moves = move_list.n_legal_moves(m_search_data.game_state.top());
     std::cout << "Move list (" << n_legal_moves << "|" << move_list.size() - n_legal_moves << "): ";
     while (!move_list.empty()) {
         Move move = move_list.next_move();
-        if (m_game_state.make_move(move)) {
-            std::cout << move.get_algebraic_notation() << '[' << m_game_state.eval() << "] ";
-            m_game_state.undo_move();
+        if (m_search_data.game_state.make_move(move)) {
+            std::cout << move.get_algebraic_notation() << '[' << m_search_data.game_state.eval() << "] ";
+            m_search_data.game_state.undo_move();
         } else {
             std::cout << "(" << move.get_algebraic_notation() << ") ";
         }
     }
-    std::cout << "\nEval: " << m_game_state.eval() << std::endl;
+    std::cout << "\nEval: " << m_search_data.game_state.eval() << std::endl;
 }
 
 void UCI::position(std::istringstream &iss) {
@@ -129,18 +140,17 @@ void UCI::position(std::istringstream &iss) {
 }
 
 void UCI::set_position(const std::string &fen, const std::vector<std::string> &move_list) {
-    if (!m_game_state.reset(fen)) {
+    if (!m_search_data.game_state.reset(fen)) {
         std::cerr << "Invalid FEN!" << std::endl;
         return;
     }
     TranspositionTable::get().clear();
     for (const std::string &algebraic_notation : move_list) {
-        assert(m_game_state.make_move(m_game_state.top().get_movement(algebraic_notation)));
+        assert(m_search_data.game_state.make_move(m_search_data.game_state.top().get_movement(algebraic_notation)));
     }
 }
 
 void UCI::set_option(std::istringstream &iss) {
-    m_thread.wait();
     std::string token, garbage;
     int value;
     iss >> garbage; // Consume the "name" token
@@ -156,18 +166,18 @@ void UCI::set_option(std::istringstream &iss) {
 void UCI::bench() {
     TimeType total_time = 0;
     for (const std::string &fen : benchmark_fen_list) {
-        m_game_state.reset(fen);
+        m_search_data.game_state.reset(fen);
         TranspositionTable::get().clear();
         TimeType start_time = now();
         go();
-        m_thread.wait();
+        m_thread.join();
         total_time += now() - start_time;
     }
 
     std::cout << "\n==========================\n";
     std::cout << "Total time: " << total_time << "ms\n";
-    std::cout << "Nodes searched: " << m_thread.nodes_searched() << "\n";
-    std::cout << "Nodes per second: " << m_thread.nodes_searched() * 1000 / total_time;
+    std::cout << "Nodes searched: " << m_search_data.nodes_searched << "\n";
+    std::cout << "Nodes per second: " << m_search_data.nodes_searched * 1000 / total_time;
     std::cout << "\n==========================";
     std::cout << std::endl;
 }
@@ -200,49 +210,47 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
     return nodes;
 }
 
-void UCI::eval() { std::cout << "The position evaluation is " << m_game_state.eval() << std::endl; }
+void UCI::eval() { std::cout << "The position evaluation is " << m_search_data.game_state.eval() << std::endl; }
 
 bool UCI::parse_go(std::istringstream &iss, bool bench) {
     std::string token;
-    CounterType time = 0;
-    CounterType movestogo = 0;
-    CounterType inc = 0;
+    CounterType time = -1;
+    CounterType movestogo = -1;
+    CounterType movetime = -1;
+    CounterType inc = -1;
+    bool infinite = false;
     while (iss >> token) {
         if (token == "infinite" && !bench) {
-            m_thread.infinite();
+            infinite = true;
             return false;
         }
 
         CounterType option;
         iss >> option;
         if (token == "perft" && !iss.fail()) { // Don't "perft" if depth hasn't been passed
-            m_thread.max_depth_ply(option);
+            m_search_data.depth_limit = option;
             return true;
         } else if (token == "depth") {
-            m_thread.max_depth_ply(option);
+            m_search_data.depth_limit = option;
         } else if (token == "nodes") {
-            m_thread.node_limit(option);
+            m_search_data.node_limit = option;
         } else if (token == "movetime") {
-            m_thread.set_search_time(option);
-        } else if (token == "wtime" && m_game_state.top().side_to_move() == Player::White) {
+            movetime = option;
+        } else if (token == "wtime" && m_search_data.game_state.top().side_to_move() == Player::White) {
             time = option;
-        } else if (token == "btime" && m_game_state.top().side_to_move() == Player::Black) {
+        } else if (token == "btime" && m_search_data.game_state.top().side_to_move() == Player::Black) {
             time = option;
-        } else if (token == "winc" && m_game_state.top().side_to_move() == Player::White) {
+        } else if (token == "winc" && m_search_data.game_state.top().side_to_move() == Player::White) {
             inc = option;
-        } else if (token == "binc" && m_game_state.top().side_to_move() == Player::Black) {
+        } else if (token == "binc" && m_search_data.game_state.top().side_to_move() == Player::Black) {
             inc = option;
         } else if (token == "movestogo") {
             movestogo = option;
         }
     }
 
-    if (movestogo != 0 && time != 0) {
-        m_thread.set_search_time(inc + time / movestogo);
-    } else if (inc != 0) {
-        m_thread.set_search_time(inc);
-    }
+    m_search_data.time_manager.init(inc, time, movestogo, movetime, infinite);
     return false;
 }
 
-void UCI::go() { m_thread.search(m_game_state); }
+void UCI::go() { m_thread = std::thread(iterative_deepening, std::ref(m_search_data)); }
