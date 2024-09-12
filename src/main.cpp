@@ -5,11 +5,12 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#include "uci.h"
 #include <cstdlib>
 
+#include "uci.h"
+
 int main(int argc, char *argv[]) {
-  UCI uci(argc, argv);
-  uci.loop();
-  return EXIT_SUCCESS;
+    UCI uci(argc, argv);
+    uci.loop();
+    return EXIT_SUCCESS;
 }

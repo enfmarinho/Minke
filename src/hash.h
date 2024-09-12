@@ -8,9 +8,10 @@
 #ifndef HASH_H
 #define HASH_H
 
+#include <cassert>
+
 #include "game_elements.h"
 #include "position.h"
-#include <cassert>
 
 namespace zobrist {
 HashType hash(const Position &position);
@@ -44,25 +45,27 @@ constexpr static int BlackTurnIndex = 780;
 //   <http://vigna.di.unimi.it/ftp/papers/xorshift.pdf>
 
 class PRNG {
+    HashType s;
 
-  HashType s;
+    HashType rand64() {
+        s ^= s >> 12, s ^= s << 25, s ^= s >> 27;
+        return s * 2685821657736338717LL;
+    }
 
-  HashType rand64() {
+  public:
+    PRNG(HashType seed) : s(seed) { assert(seed); }
 
-    s ^= s >> 12, s ^= s << 25, s ^= s >> 27;
-    return s * 2685821657736338717LL;
-  }
+    template <typename T>
+    T rand() {
+        return T(rand64());
+    }
 
-public:
-  PRNG(HashType seed) : s(seed) { assert(seed); }
-
-  template <typename T> T rand() { return T(rand64()); }
-
-  // Special generator used to fast init magic numbers.
-  // Output values only have 1/8th of their bits set on average.
-  template <typename T> T sparse_rand() {
-    return T(rand64() & rand64() & rand64());
-  }
+    // Special generator used to fast init magic numbers.
+    // Output values only have 1/8th of their bits set on average.
+    template <typename T>
+    T sparse_rand() {
+        return T(rand64() & rand64() & rand64());
+    }
 };
 
 #endif // #ifndef HASH_H

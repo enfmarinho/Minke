@@ -8,14 +8,15 @@
 #ifndef NNUE_H
 #define NNUE_H
 
-#include "game_elements.h"
-#include "position.h"
 #include <array>
 #include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <span>
 #include <vector>
+
+#include "game_elements.h"
+#include "position.h"
 
 constexpr int InputLayerSize = 64 * 12;
 constexpr int HiddenLayerSize = 64 * 12;
@@ -31,51 +32,49 @@ constexpr int QAB = QA * QB;
 
 // NOTE: Network must be initialized using reset().
 class Network {
-private:
-  struct Accumulator;
+  private:
+    struct Accumulator;
 
-public:
-  Network();
-  ~Network() = default;
+  public:
+    Network();
+    ~Network() = default;
 
-  void pop();
-  void push();
-  const Accumulator &top() const;
+    void pop();
+    void push();
+    const Accumulator &top() const;
 
-  void add_feature(const Square &sq, const PiecePlacement &pp);
-  void remove_feature(const Square &sq, const PiecePlacement &pp);
+    void add_feature(const Square &sq, const PiecePlacement &pp);
+    void remove_feature(const Square &sq, const PiecePlacement &pp);
 
-  void reset(const Position &position);
-  WeightType eval(const Player &stm) const;
+    void reset(const Position &position);
+    WeightType eval(const Player &stm) const;
 
-  Accumulator debug_func(const Position &position);
+    Accumulator debug_func(const Position &position);
 
-private:
-  struct Accumulator {
-    std::array<int32_t, HiddenLayerSize> white_neurons;
-    std::array<int32_t, HiddenLayerSize> black_neurons;
+  private:
+    struct Accumulator {
+        std::array<int32_t, HiddenLayerSize> white_neurons;
+        std::array<int32_t, HiddenLayerSize> black_neurons;
 
-    Accumulator(std::span<int32_t, HiddenLayerSize> biasses);
-    Accumulator() = delete;
-    ~Accumulator() = default;
-    void reset(std::span<int32_t, HiddenLayerSize> biasses);
+        Accumulator(std::span<int32_t, HiddenLayerSize> biasses);
+        Accumulator() = delete;
+        ~Accumulator() = default;
+        void reset(std::span<int32_t, HiddenLayerSize> biasses);
 
+        friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
+    };
     friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
-  };
-  friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
 
-  int32_t crelu(const int32_t &input) const;
-  int32_t screlu(const int32_t &input) const;
-  int32_t weight_sum_reduction(
-      const std::array<int32_t, HiddenLayerSize> &player,
-      const std::array<int32_t, HiddenLayerSize> &adversary) const;
+    int32_t crelu(const int32_t &input) const;
+    int32_t screlu(const int32_t &input) const;
+    int32_t weight_sum_reduction(const std::array<int32_t, HiddenLayerSize> &player,
+                                 const std::array<int32_t, HiddenLayerSize> &adversary) const;
 
-  std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
-  std::array<std::array<int32_t, InputLayerSize>, HiddenLayerSize>
-      m_hidden_weights;
-  std::array<int32_t, HiddenLayerSize> m_hidden_bias;
-  std::array<int32_t, HiddenLayerSize * 2> m_output_weights;
-  int32_t m_output_bias;
+    std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
+    std::array<std::array<int32_t, InputLayerSize>, HiddenLayerSize> m_hidden_weights;
+    std::array<int32_t, HiddenLayerSize> m_hidden_bias;
+    std::array<int32_t, HiddenLayerSize * 2> m_output_weights;
+    int32_t m_output_bias;
 };
 
 #endif // #ifndef NNUE_H

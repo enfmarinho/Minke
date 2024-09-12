@@ -19,11 +19,10 @@ constexpr WeightType BishopPhase = 1;
 constexpr WeightType RookPhase = 2;
 constexpr WeightType QueenPhase = 4;
 constexpr WeightType KingPhase = 0;
-constexpr WeightType MidGamePhaseMax = 16 * PawnPhase + 4 * KnightPhase +
-                                       4 * BishopPhase + 4 * RookPhase +
-                                       2 * QueenPhase + 2 * KingPhase;
-constexpr WeightType PhaseTable[NumberOfPieces] = {
-    PawnPhase, KnightPhase, BishopPhase, RookPhase, QueenPhase, KingPhase};
+constexpr WeightType MidGamePhaseMax =
+    16 * PawnPhase + 4 * KnightPhase + 4 * BishopPhase + 4 * RookPhase + 2 * QueenPhase + 2 * KingPhase;
+constexpr WeightType PhaseTable[NumberOfPieces] = {PawnPhase, KnightPhase, BishopPhase,
+                                                   RookPhase, QueenPhase,  KingPhase};
 
 /// Materials weights
 constexpr WeightType MidGamePawn = 82;
@@ -32,9 +31,8 @@ constexpr WeightType MidGameBishop = 365;
 constexpr WeightType MidGameRook = 477;
 constexpr WeightType MidGameQueen = 1025;
 constexpr WeightType MidGameKing = 10000;
-constexpr WeightType MidGameMaterialTable[NumberOfPieces] = {
-    MidGamePawn, MidGameKnight, MidGameBishop,
-    MidGameRook, MidGameQueen,  MidGameKing};
+constexpr WeightType MidGameMaterialTable[NumberOfPieces] = {MidGamePawn, MidGameKnight, MidGameBishop,
+                                                             MidGameRook, MidGameQueen,  MidGameKing};
 
 constexpr WeightType EndGamePawn = 94;
 constexpr WeightType EndGameKnight = 281;
@@ -42,15 +40,13 @@ constexpr WeightType EndGameBishop = 297;
 constexpr WeightType EndGameRook = 512;
 constexpr WeightType EndGameQueen = 936;
 constexpr WeightType EndGameKing = 10000;
-constexpr WeightType EndGameMaterialTable[NumberOfPieces] = {
-    EndGamePawn, EndGameKnight, EndGameBishop,
-    EndGameRook, EndGameQueen,  EndGameKing};
+constexpr WeightType EndGameMaterialTable[NumberOfPieces] = {EndGamePawn, EndGameKnight, EndGameBishop,
+                                                             EndGameRook, EndGameQueen,  EndGameKing};
 
 /// SEE weights
 constexpr WeightType SEE_table[NumberOfPieces] = {
-    (MidGamePawn + EndGamePawn) / 2,     (MidGameKnight + EndGameKnight) / 2,
-    (MidGameBishop + EndGameBishop) / 2, (MidGameRook + EndGameRook) / 2,
-    (MidGameQueen + EndGameQueen) / 2,   (MidGameKing + EndGameKing) / 2,
+    (MidGamePawn + EndGamePawn) / 2, (MidGameKnight + EndGameKnight) / 2, (MidGameBishop + EndGameBishop) / 2,
+    (MidGameRook + EndGameRook) / 2, (MidGameQueen + EndGameQueen) / 2,   (MidGameKing + EndGameKing) / 2,
 };
 
 /// Piece-squares tables.
@@ -185,13 +181,11 @@ constexpr PieceSquareTable EndGameKingTable = {
 };
 // clang-format on
 
-constexpr PieceSquareTablePointer MidGamePointerTable[6] = {
-    &MidGamePawnTable, &MidGameKnightTable, &MidGameBishopTable,
-    &MidGameRookTable, &MidGameQueenTable,  &MidGameKingTable};
+constexpr PieceSquareTablePointer MidGamePointerTable[6] = {&MidGamePawnTable, &MidGameKnightTable, &MidGameBishopTable,
+                                                            &MidGameRookTable, &MidGameQueenTable,  &MidGameKingTable};
 
-constexpr PieceSquareTablePointer EndGamePointerTable[6] = {
-    &EndGamePawnTable, &EndGameKnightTable, &EndGameBishopTable,
-    &EndGameRookTable, &EndGameQueenTable,  &EndGameKingTable};
+constexpr PieceSquareTablePointer EndGamePointerTable[6] = {&EndGamePawnTable, &EndGameKnightTable, &EndGameBishopTable,
+                                                            &EndGameRookTable, &EndGameQueenTable,  &EndGameKingTable};
 
 } // namespace weights
 
