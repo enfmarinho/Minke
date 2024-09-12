@@ -30,11 +30,14 @@ Network::Network() {
     const int16_t *pointer = reinterpret_cast<const int16_t *>(gNetParametersData);
 
     for (int j = 0; j < HiddenLayerSize; ++j)
-        for (int i = 0; i < InputLayerSize; ++i) m_hidden_weights[j][i] = *pointer++;
+        for (int i = 0; i < InputLayerSize; ++i)
+            m_hidden_weights[j][i] = *pointer++;
 
-    for (int i = 0; i < HiddenLayerSize; ++i) m_hidden_bias[i] = *pointer++;
+    for (int i = 0; i < HiddenLayerSize; ++i)
+        m_hidden_bias[i] = *pointer++;
 
-    for (int i = 0; i < HiddenLayerSize * 2; ++i) m_output_weights[i] = *pointer++;
+    for (int i = 0; i < HiddenLayerSize * 2; ++i)
+        m_output_weights[i] = *pointer++;
 
     m_output_bias = *pointer++;
 

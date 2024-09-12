@@ -129,13 +129,15 @@ void UCI::position(std::istringstream &iss) {
         fen = StartFEN;
         iss >> move; // consume the "moves" token, if there is one.
     } else if (token == "fen") {
-        while (iss >> token && token != "moves") fen += token + " ";
+        while (iss >> token && token != "moves")
+            fen += token + " ";
     } else {
         return;
     }
 
     std::vector<std::string> move_list;
-    while (iss >> move) move_list.push_back(move);
+    while (iss >> move)
+        move_list.push_back(move);
     set_position(fen, move_list);
 }
 

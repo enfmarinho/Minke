@@ -332,7 +332,8 @@ void Position::print() const {
     auto print_line = []() -> void {
         for (IndexType i = 0; i < 8; ++i) {
             std::cout << "+";
-            for (IndexType j = 0; j < 3; ++j) std::cout << "-";
+            for (IndexType j = 0; j < 3; ++j)
+                std::cout << "-";
         }
         std::cout << "+\n";
     };
