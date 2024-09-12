@@ -9,7 +9,6 @@
 #define UCI_H
 
 #include <cstdint>
-#include <ostream>
 #include <sstream>
 #include <thread>
 
