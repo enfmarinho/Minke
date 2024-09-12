@@ -33,7 +33,6 @@ add_executable(
   "src/nnue.cpp"
   "src/position.cpp"
   "src/search.cpp"
-  "src/thread.cpp"
   "src/time_manager.cpp"
   "src/tt.cpp"
   "src/uci.cpp")
