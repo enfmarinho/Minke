@@ -18,6 +18,7 @@
 #include <span>
 
 INCBIN(NetParameters, "../src/minke.nnue");
+INCBIN(NetParameters, "../src/minke.bin");
 
 static int feature_index(const Square &sq, const PiecePlacement &pp) {
   return (pp.rank() * 8 + pp.file()) +
