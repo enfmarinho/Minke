@@ -165,7 +165,9 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
         }
     }
 
-    // TODO check for draw
+    if (search_data.game_state.draw(search_data.depth_searched)) {
+        return 0;
+    }
 
     Move best_move = MoveNone;
     WeightType best_score = ScoreNone;
@@ -176,9 +178,10 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
         if (!search_data.game_state.make_move(move)) { // Avoid illegal moves
             continue;
         }
-
+        ++search_data.depth_searched;
         WeightType eval = alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, search_data);
         search_data.game_state.undo_move();
+        --search_data.depth_searched;
         assert(eval >= ScoreNone);
 
         if (eval > best_score) {

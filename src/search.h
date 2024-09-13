@@ -18,6 +18,7 @@ struct SearchData {
     TimeManager time_manager;
 
     int nodes_searched;
+    int depth_searched;
     int node_limit;
     int depth_limit;
     bool stop;

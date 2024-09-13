@@ -22,7 +22,7 @@ class GameState {
     GameState();
     ~GameState() = default;
 
-    bool draw() const;
+    bool draw(const CounterType &depth_searched) const;
     bool make_move(const Move &move);
     void undo_move();
     bool reset(const std::string &fen);
@@ -35,7 +35,7 @@ class GameState {
     const Move &last_move() const;
 
   private:
-    bool repetition_draw() const;
+    bool repetition_draw(const CounterType &depth_searched) const;
     bool draw_50_move() const;
 
     std::vector<Position> m_position_stack;

@@ -20,17 +20,16 @@ GameState::GameState() {
     assert(reset(StartFEN));
 }
 
-bool GameState::repetition_draw() const {
+bool GameState::repetition_draw(const CounterType &depth_searched) const {
     // Check for draw by repetition or for a repetition within the search tree
     int counter = 0;
     int distance = top().get_fifty_move_counter();
     int starting_index = m_played_positions.size();
     for (int index = 4; index <= distance; index += 2) {
         if (m_played_positions[starting_index - index] == top().get_hash()) {
-            // TODO
-            // if (index < depth_seaerched) {// 2-fold repetition within the search
-            // tree, this avoids cycles return true;
-            // }
+            if (index < depth_searched) { // 2-fold repetition within the search tree, this avoids cycles
+                return true;
+            }
             ++counter;
             if (counter >= 2) { // 3 fold repetition
                 return true;
@@ -74,7 +73,9 @@ bool GameState::draw_50_move() const {
     return false;
 }
 
-bool GameState::draw() const { return repetition_draw() || draw_50_move() || top().insufficient_material(); }
+bool GameState::draw(const CounterType &depth_searched) const {
+    return repetition_draw(depth_searched) || draw_50_move() || top().insufficient_material();
+}
 
 bool GameState::make_move(const Move &move) {
     m_position_stack.push_back(top());
