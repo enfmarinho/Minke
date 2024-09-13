@@ -24,6 +24,7 @@
 
 UCI::UCI(int argc, char *argv[]) {
     TranspositionTable::get().resize(EngineOptions::hash_default);
+    m_search_data.reset();
     if (argc > 1 && std::string(argv[1]) == "bench") {
         if (argc > 2)
             m_search_data.depth_limit = std::stoi(argv[2]);
