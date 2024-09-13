@@ -29,6 +29,7 @@ static void print_search_info(const CounterType &depth, const WeightType &eval, 
 
 void SearchData::reset() {
     stop = true;
+    searching_depth = 0;
     nodes_searched = 0;
     node_limit = std::numeric_limits<int>::max();
     depth_limit = MaxSearchDepth;
@@ -165,7 +166,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
         }
     }
 
-    if (search_data.game_state.draw(search_data.depth_searched)) {
+    if (search_data.game_state.draw(search_data.searching_depth)) {
         return 0;
     }
 
@@ -178,10 +179,10 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
         if (!search_data.game_state.make_move(move)) { // Avoid illegal moves
             continue;
         }
-        ++search_data.depth_searched;
+        ++search_data.searching_depth;
         WeightType eval = alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, search_data);
         search_data.game_state.undo_move();
-        --search_data.depth_searched;
+        --search_data.searching_depth;
         assert(eval >= ScoreNone);
 
         if (eval > best_score) {
