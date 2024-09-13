@@ -24,7 +24,7 @@ bool GameState::repetition_draw(const CounterType &depth_searched) const {
     // Check for draw by repetition or for a repetition within the search tree
     int counter = 0;
     int distance = top().get_fifty_move_counter();
-    int starting_index = m_played_positions.size();
+    int starting_index = m_played_positions.size() - 1;
     for (int index = 4; index <= distance; index += 2) {
         if (m_played_positions[starting_index - index] == top().get_hash()) {
             if (index < depth_searched) { // 2-fold repetition within the search tree, this avoids cycles
