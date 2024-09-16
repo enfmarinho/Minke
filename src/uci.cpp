@@ -114,7 +114,7 @@ void UCI::print_debug_info() {
     while (!move_list.empty()) {
         Move move = move_list.next_move();
         if (m_search_data.game_state.make_move(move)) {
-            std::cout << move.get_algebraic_notation() << '[' << m_search_data.game_state.eval() << "] ";
+            std::cout << move.get_algebraic_notation() << '[' << -m_search_data.game_state.eval() << "] ";
             m_search_data.game_state.undo_move();
         } else {
             std::cout << "(" << move.get_algebraic_notation() << ") ";
