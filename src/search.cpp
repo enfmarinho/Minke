@@ -166,23 +166,25 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
         }
     }
 
-    if (search_data.game_state.draw(search_data.searching_depth)) {
-        return 0;
-    }
-
     Move best_move = MoveNone;
     WeightType best_score = ScoreNone;
     MoveList move_list(search_data.game_state, (found ? entry->best_move() : MoveNone));
     while (!move_list.empty()) {
         PvList curr_pv;
         Move move = move_list.next_move();
-        if (!search_data.game_state.make_move(move)) { // Avoid illegal moves
+        if (!search_data.game_state.make_move(move)) // Avoid illegal moves
             continue;
-        }
+
         ++search_data.searching_depth;
-        WeightType eval = alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, search_data);
-        search_data.game_state.undo_move();
+
+        WeightType eval;
+        if (search_data.game_state.draw(search_data.searching_depth))
+            eval = 0;
+        else
+            eval = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, search_data);
+
         --search_data.searching_depth;
+        search_data.game_state.undo_move();
         assert(eval >= ScoreNone);
 
         if (eval > best_score) {
