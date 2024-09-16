@@ -88,14 +88,14 @@ TTEntry *aspiration(const CounterType &depth, PvList &pv_list, SearchData &searc
 
 WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data) {
     ++search_data.nodes_searched;
-    if (search_data.time_manager.time_over() || search_data.stop) {
+    if (search_data.time_manager.time_over() || search_data.stop)
         return ScoreNone;
-    }
+    else if (search_data.game_state.draw(search_data.searching_depth))
+        return 0;
 
     WeightType stand_pat = search_data.game_state.eval();
-    if (stand_pat >= beta) {
+    if (stand_pat >= beta)
         return beta;
-    }
 
     // TODO Probably worth to turn off on end game
     // WeightType delta = weights::MidGameQueen + 200;
@@ -133,11 +133,12 @@ WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data
 
 WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth_ply, PvList &pv_list,
                       SearchData &search_data) {
-    if (search_data.time_manager.time_over() || search_data.stop) { // Out of time
+    if (search_data.time_manager.time_over() || search_data.stop) // Out of time
         return ScoreNone;
-    } else if (depth_ply == 0) {
+    else if (depth_ply == 0)
         return quiescence(alpha, beta, search_data);
-    }
+    else if (search_data.game_state.draw(search_data.searching_depth))
+        return 0;
 
     ++search_data.nodes_searched;
 
@@ -176,13 +177,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
             continue;
 
         ++search_data.searching_depth;
-
-        WeightType eval;
-        if (search_data.game_state.draw(search_data.searching_depth))
-            eval = 0;
-        else
-            eval = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, search_data);
-
+        WeightType eval = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, search_data);
         --search_data.searching_depth;
         search_data.game_state.undo_move();
         assert(eval >= ScoreNone);
