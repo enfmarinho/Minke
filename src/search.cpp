@@ -189,13 +189,13 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
             best_score = eval;
             best_move = move;
             pv_list.update(best_move, curr_pv);
+            if (eval > alpha)
+                alpha = eval;
         }
 
         if (eval >= beta) {
             search_data.game_state.increment_history(move, depth_ply);
             return alpha;
-        } else if (eval > alpha) {
-            alpha = eval;
         }
     }
 
