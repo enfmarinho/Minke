@@ -189,7 +189,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
 
         if (eval >= beta) {
             search_data.game_state.increment_history(move, depth_ply);
-            return alpha;
+            return best_score;
         }
     }
 
