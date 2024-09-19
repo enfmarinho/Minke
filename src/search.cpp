@@ -86,48 +86,6 @@ TTEntry *aspiration(const CounterType &depth, PvList &pv_list, SearchData &searc
     return ttentry;
 }
 
-WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data) {
-    ++search_data.nodes_searched;
-    if (search_data.time_manager.time_over() || search_data.stop)
-        return ScoreNone;
-    else if (search_data.game_state.draw(search_data.searching_depth))
-        return 0;
-
-    WeightType stand_pat = search_data.game_state.eval();
-    if (stand_pat >= beta)
-        return beta;
-
-    // TODO Probably worth to turn off on end game
-    // WeightType delta = weights::MidGameQueen + 200;
-    // if (game_state.last_move().move_type == MoveType::PawnPromotionQueen)
-    //     delta += weights::MidGameQueen;
-    //
-    // if (stand_pat < alpha - delta) // Delta pruning
-    //     return alpha;
-
-    if (alpha < stand_pat)
-        alpha = stand_pat;
-
-    MoveList move_list(search_data.game_state, MoveNone);
-    move_list.ignore_non_quiet_moves();
-    while (!move_list.empty()) {
-        Move curr_move = move_list.next_move();
-        if (curr_move.move_type != MoveType::Capture)
-            break;
-        else if (!search_data.game_state.make_move(curr_move))
-            continue;
-
-        WeightType eval = -quiescence(-beta, -alpha, search_data);
-        search_data.game_state.undo_move();
-        if (eval >= beta)
-            return beta;
-        else if (eval > alpha)
-            alpha = eval;
-    }
-
-    return alpha;
-}
-
 WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth_ply, PvList &pv_list,
                       SearchData &search_data) {
     if (search_data.time_manager.time_over() || search_data.stop) // Out of time
@@ -166,6 +124,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
 
     Move best_move = MoveNone;
     WeightType best_score = ScoreNone;
+    WeightType old_alpha = alpha;
     MoveList move_list(search_data.game_state, (found ? entry->best_move() : MoveNone));
     while (!move_list.empty()) {
         PvList curr_pv;
@@ -174,22 +133,23 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
             continue;
 
         ++search_data.searching_depth;
-        WeightType eval = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, search_data);
+        WeightType score = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, search_data);
         --search_data.searching_depth;
         search_data.game_state.undo_move();
-        assert(eval >= ScoreNone);
+        assert(score >= ScoreNone);
 
-        if (eval > best_score) {
-            best_score = eval;
-            best_move = move;
-            pv_list.update(best_move, curr_pv);
-            if (eval > alpha)
-                alpha = eval;
-        }
+        if (score > best_score) {
+            best_score = score;
+            if (score > alpha) {
+                best_move = move;
+                pv_list.update(best_move, curr_pv);
 
-        if (eval >= beta) {
-            search_data.game_state.increment_history(move, depth_ply);
-            return best_score;
+                if (score >= beta) { // fails high
+                    search_data.game_state.increment_history(move, depth_ply);
+                    break;
+                }
+                alpha = score;
+            }
         }
     }
 
@@ -210,14 +170,53 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
     }
 
     if (!search_data.time_manager.time_over()) { // Save on TT if search was completed
-        TTEntry::BoundType bound = TTEntry::BoundType::Exact;
-        if (best_score <= alpha)
-            bound = TTEntry::BoundType::LowerBound;
-        else if (best_score >= beta)
-            bound = TTEntry::BoundType::UpperBound;
-
+        TTEntry::BoundType bound = best_score >= beta   ? TTEntry::BoundType::LowerBound
+                                   : alpha != old_alpha ? TTEntry::BoundType::Exact
+                                                        : TTEntry::BoundType::UpperBound;
         entry->save(search_data.game_state.top().get_hash(), depth_ply, best_move, best_score,
                     search_data.game_state.top().get_half_move_counter(), bound);
+    }
+
+    return best_score;
+}
+
+WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data) {
+    ++search_data.nodes_searched;
+    if (search_data.time_manager.time_over() || search_data.stop)
+        return ScoreNone;
+    else if (search_data.game_state.draw(search_data.searching_depth))
+        return 0;
+
+    WeightType stand_pat = search_data.game_state.eval();
+    if (stand_pat >= beta)
+        return beta;
+
+    // TODO Probably worth to turn off on end game
+    // WeightType delta = weights::MidGameQueen + 200;
+    // if (game_state.last_move().move_type == MoveType::PawnPromotionQueen)
+    //     delta += weights::MidGameQueen;
+    //
+    // if (stand_pat < alpha - delta) // Delta pruning
+    //     return alpha;
+
+    if (alpha < stand_pat)
+        alpha = stand_pat;
+
+    MoveList move_list(search_data.game_state, MoveNone);
+    move_list.ignore_non_quiet_moves();
+    while (!move_list.empty()) {
+        Move curr_move = move_list.next_move();
+        if (curr_move.move_type != MoveType::Capture)
+            break;
+        else if (!search_data.game_state.make_move(curr_move))
+            continue;
+
+        WeightType eval = -quiescence(-beta, -alpha, search_data);
+        search_data.game_state.undo_move();
+        if (eval >= beta)
+            return beta;
+        else if (eval > alpha)
+            alpha = eval;
     }
 
     return alpha;
