@@ -22,7 +22,7 @@ using TimeType = std::chrono::milliseconds::rep;
 using TimePoint = std::chrono::steady_clock::time_point;
 
 constexpr WeightType MateScore = 100'000;
-constexpr WeightType ScoreNone = -200'000;
+constexpr WeightType MaxScore = 200'000;
 constexpr CounterType NumberOfPieces = 6;
 constexpr IndexType BoardHeight = 8;
 constexpr IndexType BoardWidth = 8;

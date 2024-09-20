@@ -41,7 +41,7 @@ void iterative_deepening(SearchData &search_data) {
     Move best_move = MoveNone;
     for (CounterType depth = 1; depth < search_data.depth_limit; ++depth) {
         PvList pv_list;
-        WeightType eval = alpha_beta(ScoreNone, -ScoreNone, depth, pv_list, search_data);
+        WeightType eval = alpha_beta(-MaxScore, MaxScore, depth, pv_list, search_data);
 
         if (!search_data.time_manager.time_over() && !search_data.stop) { // Search was successful
             bool found;
@@ -69,7 +69,7 @@ TTEntry *aspiration(const CounterType &depth, PvList &pv_list, SearchData &searc
     bool found;
     TTEntry *ttentry = TranspositionTable::get().probe(search_data.game_state.top(), found);
     if (!found) {
-        alpha_beta(ScoreNone, -ScoreNone, depth, pv_list, search_data);
+        alpha_beta(-MaxScore, MaxScore, depth, pv_list, search_data);
         return ttentry;
     }
 
@@ -77,9 +77,9 @@ TTEntry *aspiration(const CounterType &depth, PvList &pv_list, SearchData &searc
     WeightType beta = ttentry->evaluation() + weights::EndGamePawn;
     WeightType eval = alpha_beta(alpha, beta, depth, pv_list, search_data);
     if (eval >= beta)
-        alpha_beta(alpha, -ScoreNone, depth, pv_list, search_data);
+        alpha_beta(alpha, MaxScore, depth, pv_list, search_data);
     else if (eval <= alpha)
-        alpha_beta(ScoreNone, beta, depth, pv_list, search_data);
+        alpha_beta(-MaxScore, beta, depth, pv_list, search_data);
 
     assert(eval >= alpha && eval <= beta);
 
@@ -89,7 +89,7 @@ TTEntry *aspiration(const CounterType &depth, PvList &pv_list, SearchData &searc
 WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth_ply, PvList &pv_list,
                       SearchData &search_data) {
     if (search_data.time_manager.time_over() || search_data.stop) // Out of time
-        return ScoreNone;
+        return -MaxScore;
     else if (depth_ply == 0)
         return quiescence(alpha, beta, search_data);
     else if (search_data.game_state.draw(search_data.searching_depth))
@@ -123,7 +123,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
     }
 
     Move best_move = MoveNone;
-    WeightType best_score = ScoreNone;
+    WeightType best_score = -MaxScore;
     WeightType old_alpha = alpha;
     MoveList move_list(search_data.game_state, (found ? entry->best_move() : MoveNone));
     while (!move_list.empty()) {
@@ -136,7 +136,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
         WeightType score = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, search_data);
         --search_data.searching_depth;
         search_data.game_state.undo_move();
-        assert(score >= ScoreNone);
+        assert(score >= -MaxScore);
 
         if (score > best_score) {
             best_score = score;
@@ -183,7 +183,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
 WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data) {
     ++search_data.nodes_searched;
     if (search_data.time_manager.time_over() || search_data.stop)
-        return ScoreNone;
+        return -MaxScore;
     else if (search_data.game_state.draw(search_data.searching_depth))
         return 0;
 
