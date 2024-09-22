@@ -140,15 +140,15 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
 
         if (score > best_score) {
             best_score = score;
-            if (score > alpha) {
-                best_move = move;
-                pv_list.update(best_move, curr_pv);
+            best_move = move;
+            pv_list.update(best_move, curr_pv);
 
+            if (score > alpha) {
+                alpha = score;
                 if (score >= beta) { // fails high
                     search_data.game_state.increment_history(move, depth_ply);
                     break;
                 }
-                alpha = score;
             }
         }
     }
