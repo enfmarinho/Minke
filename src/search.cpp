@@ -46,13 +46,13 @@ void iterative_deepening(SearchData &search_data) {
         if (!search_data.time_manager.time_over() && !search_data.stop) { // Search was successful
             bool found;
             TTEntry *entry = TranspositionTable::get().probe(search_data.game_state.top(), found);
-            assert(found && entry->depth_ply() >= depth);
 
             best_move = entry->best_move();
             if (best_move == MoveNone) {
-                assert(depth == 1);
+                assert(depth == 1 && !found);
                 break;
             }
+            assert(found && entry->depth_ply() >= depth);
             print_search_info(depth, eval, pv_list, search_data);
         }
         if (search_data.time_manager.stop_early())
