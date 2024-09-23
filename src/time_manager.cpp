@@ -25,6 +25,12 @@ void TimeManager::init(CounterType inc, CounterType time, CounterType movestogo,
     // TODO calculate optimum time and maximum time
 }
 
+void TimeManager::init() {
+    m_can_stop = false;
+    m_time_set = false;
+    m_start_time = now();
+}
+
 bool TimeManager::stop_early() const { return m_can_stop && m_time_set && time_passed() > m_optimum_time; }
 
 bool TimeManager::time_over() const { return m_can_stop && m_time_set && time_passed() > m_maximum_time; }
