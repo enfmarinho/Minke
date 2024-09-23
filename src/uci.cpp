@@ -170,6 +170,7 @@ void UCI::bench() {
     TimeType total_time = 0;
     for (const std::string &fen : benchmark_fen_list) {
         m_search_data.game_state.reset(fen);
+        m_search_data.time_manager.init();
         TranspositionTable::get().clear();
         TimeType start_time = now();
         go();
