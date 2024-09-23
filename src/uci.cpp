@@ -149,7 +149,7 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
     }
     TranspositionTable::get().clear();
     for (const std::string &algebraic_notation : move_list) {
-        assert(m_search_data.game_state.make_move(m_search_data.game_state.top().get_movement(algebraic_notation)));
+        m_search_data.game_state.make_move(m_search_data.game_state.top().get_movement(algebraic_notation));
     }
 }
 
