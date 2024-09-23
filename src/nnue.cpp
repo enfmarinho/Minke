@@ -51,7 +51,7 @@ void Network::push() { m_accumulators.push_back(m_accumulators.back()); }
 
 void Network::add_feature(const Square &sq, const PiecePlacement &pp) {
     int white_index = feature_index(sq, pp);
-    int black_index = feature_index(sq, pp.mirrored());
+    int black_index = feature_index(sq, pp);
 
     for (int column{0}; column < HiddenLayerSize; ++column) {
         m_accumulators.back().white_neurons[column] += m_hidden_weights[column][white_index];
@@ -61,7 +61,7 @@ void Network::add_feature(const Square &sq, const PiecePlacement &pp) {
 
 void Network::remove_feature(const Square &sq, const PiecePlacement &pp) {
     int white_index = feature_index(sq, pp);
-    int black_index = feature_index(sq, pp.mirrored());
+    int black_index = feature_index(sq, pp);
 
     for (int column{0}; column < HiddenLayerSize; ++column) {
         m_accumulators.back().white_neurons[column] -= m_hidden_weights[column][white_index];
@@ -139,7 +139,7 @@ Network::Accumulator Network::debug_func(const Position &position) {
             const Square &sq = position.consult(pp);
             if (sq.piece != Piece::None) {
                 int white_index = feature_index(sq, pp);
-                int black_index = feature_index(sq, pp.mirrored());
+                int black_index = feature_index(sq, pp);
 
                 for (int column{0}; column < HiddenLayerSize; ++column) {
                     accumulator.white_neurons[column] += m_hidden_weights[column][white_index];
