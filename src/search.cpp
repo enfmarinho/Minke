@@ -21,8 +21,9 @@
 
 static void print_search_info(const CounterType &depth, const WeightType &eval, const PvList &pv_list,
                               const SearchData &search_data) {
-    std::cout << "info depth " << depth << " score cp " << eval << " nodes " << search_data.nodes_searched << " time "
-              << search_data.time_manager.time_passed() << " pv ";
+    std::cout << "info depth " << depth << " score cp " << eval << " time " << search_data.time_manager.time_passed()
+              << " nodes " << search_data.nodes_searched << " nps "
+              << search_data.nodes_searched * 1000 / search_data.time_manager.time_passed() << " pv ";
     pv_list.print();
     std::cout << std::endl;
 }
