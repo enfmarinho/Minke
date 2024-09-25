@@ -29,9 +29,9 @@ static int feature_index(const Square &sq, const PiecePlacement &pp) {
 Network::Network() {
     const int16_t *pointer = reinterpret_cast<const int16_t *>(gNetParametersData);
 
-    for (int j = 0; j < HiddenLayerSize; ++j)
-        for (int i = 0; i < InputLayerSize; ++i)
-            m_hidden_weights[j][i] = *pointer++;
+    for (int i = 0; i < InputLayerSize; ++i)
+        for (int j = 0; j < HiddenLayerSize; ++j)
+            m_hidden_weights[i][j] = *pointer++;
 
     for (int i = 0; i < HiddenLayerSize; ++i)
         m_hidden_bias[i] = *pointer++;
@@ -41,8 +41,6 @@ Network::Network() {
 
     m_output_bias = *pointer++;
 
-    // assert(reinterpret_cast<const unsigned char *>(pointer) ==
-    //        gNetParametersData + gNetParametersSize);
 }
 
 void Network::pop() { m_accumulators.pop_back(); }
@@ -54,8 +52,8 @@ void Network::add_feature(const Square &sq, const PiecePlacement &pp) {
     int black_index = feature_index(sq, pp);
 
     for (int column{0}; column < HiddenLayerSize; ++column) {
-        m_accumulators.back().white_neurons[column] += m_hidden_weights[column][white_index];
-        m_accumulators.back().black_neurons[column] += m_hidden_weights[column][black_index];
+        m_accumulators.back().white_neurons[column] += m_hidden_weights[white_index][column];
+        m_accumulators.back().black_neurons[column] += m_hidden_weights[black_index][column];
     }
 }
 
@@ -64,8 +62,8 @@ void Network::remove_feature(const Square &sq, const PiecePlacement &pp) {
     int black_index = feature_index(sq, pp);
 
     for (int column{0}; column < HiddenLayerSize; ++column) {
-        m_accumulators.back().white_neurons[column] -= m_hidden_weights[column][white_index];
-        m_accumulators.back().black_neurons[column] -= m_hidden_weights[column][black_index];
+        m_accumulators.back().white_neurons[column] -= m_hidden_weights[white_index][column];
+        m_accumulators.back().black_neurons[column] -= m_hidden_weights[black_index][column];
     }
 }
 
@@ -142,8 +140,8 @@ Network::Accumulator Network::debug_func(const Position &position) {
                 int black_index = feature_index(sq, pp);
 
                 for (int column{0}; column < HiddenLayerSize; ++column) {
-                    accumulator.white_neurons[column] += m_hidden_weights[column][white_index];
-                    accumulator.black_neurons[column] += m_hidden_weights[column][black_index];
+                    accumulator.white_neurons[column] += m_hidden_weights[white_index][column];
+                    accumulator.black_neurons[column] += m_hidden_weights[black_index][column];
                 }
             }
         }
