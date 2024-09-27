@@ -40,7 +40,7 @@ void iterative_deepening(SearchData &search_data) {
     search_data.stop = false;
 
     Move best_move = MoveNone;
-    for (CounterType depth = 1; depth < search_data.depth_limit; ++depth) {
+    for (CounterType depth = 1; depth <= search_data.depth_limit; ++depth) {
         PvList pv_list;
         WeightType eval = alpha_beta(-MaxScore, MaxScore, depth, pv_list, search_data);
 
