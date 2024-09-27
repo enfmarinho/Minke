@@ -36,6 +36,13 @@ class Network {
     struct Accumulator;
 
   public:
+    struct alignas(64) Parameters {
+        std::array<int16_t, InputLayerSize * HiddenLayerSize> hidden_weights;
+        std::array<int16_t, HiddenLayerSize> hidden_bias;
+        std::array<int16_t, HiddenLayerSize * 2> output_weights;
+        int16_t output_bias;
+    };
+
     Network();
     ~Network() = default;
 
@@ -56,10 +63,10 @@ class Network {
         std::array<int32_t, HiddenLayerSize> white_neurons;
         std::array<int32_t, HiddenLayerSize> black_neurons;
 
-        Accumulator(std::span<int32_t, HiddenLayerSize> biasses);
+        Accumulator(std::span<const int32_t, HiddenLayerSize> biasses);
         Accumulator() = delete;
         ~Accumulator() = default;
-        void reset(std::span<int32_t, HiddenLayerSize> biasses);
+        inline void reset(std::span<const int32_t, HiddenLayerSize> biasses);
 
         friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
     };
@@ -71,10 +78,7 @@ class Network {
                                  const std::array<int32_t, HiddenLayerSize> &adversary) const;
 
     std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
-    std::array<std::array<int32_t, InputLayerSize>, HiddenLayerSize> m_hidden_weights;
-    std::array<int32_t, HiddenLayerSize> m_hidden_bias;
-    std::array<int32_t, HiddenLayerSize * 2> m_output_weights;
-    int32_t m_output_bias;
+    const Parameters &m_param;               //!< Network parameters
 };
 
 #endif // #ifndef NNUE_H

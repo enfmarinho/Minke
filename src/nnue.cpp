@@ -21,9 +21,6 @@
 
 INCBIN(NetParameters, "../src/minke.bin");
 
-Network::Network() {
-    const int16_t *pointer = reinterpret_cast<const int16_t *>(gNetParametersData);
-
 static const std::pair<size_t, size_t> feature_indices(const Square &sq, const PiecePlacement &pp) {
     constexpr size_t ColorStride = 64 * 6;
     constexpr size_t PieceStride = 64;
@@ -37,7 +34,7 @@ static const std::pair<size_t, size_t> feature_indices(const Square &sq, const P
     return {white_index, black_index};
 }
 
-}
+Network::Network() : m_param(*reinterpret_cast<const Network::Parameters *>(gNetParametersData)) {}
 
 void Network::pop() { m_accumulators.pop_back(); }
 
@@ -47,8 +44,8 @@ void Network::add_feature(const Square &sq, const PiecePlacement &pp) {
     const auto [white_index, black_index] = feature_indices(sq, pp);
 
     for (int column{0}; column < HiddenLayerSize; ++column) {
-        m_accumulators.back().white_neurons[column] += m_hidden_weights[white_index][column];
-        m_accumulators.back().black_neurons[column] += m_hidden_weights[black_index][column];
+        m_accumulators.back().white_neurons[column] += m_param.hidden_weights[white_index * HiddenLayerSize + column];
+        m_accumulators.back().black_neurons[column] += m_param.hidden_weights[black_index * HiddenLayerSize + column];
     }
 }
 
@@ -56,14 +53,14 @@ void Network::remove_feature(const Square &sq, const PiecePlacement &pp) {
     const auto [white_index, black_index] = feature_indices(sq, pp);
 
     for (int column{0}; column < HiddenLayerSize; ++column) {
-        m_accumulators.back().white_neurons[column] -= m_hidden_weights[white_index][column];
-        m_accumulators.back().black_neurons[column] -= m_hidden_weights[black_index][column];
+        m_accumulators.back().white_neurons[column] -= m_param.hidden_weights[white_index * HiddenLayerSize + column];
+        m_accumulators.back().black_neurons[column] -= m_param.hidden_weights[black_index * HiddenLayerSize + column];
     }
 }
 
 void Network::reset(const Position &position) {
     m_accumulators.clear();
-    m_accumulators.emplace_back(m_hidden_bias);
+    m_accumulators.emplace_back(m_param.hidden_bias);
 
     for (IndexType file = 0; file < BoardHeight; ++file) {
         for (IndexType rank = 0; rank < BoardWidth; ++rank) {
@@ -87,10 +84,10 @@ int32_t Network::weight_sum_reduction(const std::array<int32_t, HiddenLayerSize>
                                       const std::array<int32_t, HiddenLayerSize> &adversary) const {
     int32_t eval = 0;
     for (int neuron_index = 0; neuron_index < HiddenLayerSize; ++neuron_index) {
-        eval += screlu(player[neuron_index]) * m_output_weights[neuron_index];
-        eval += screlu(adversary[neuron_index]) * m_output_weights[neuron_index + HiddenLayerSize];
+        eval += screlu(player[neuron_index]) * m_param.output_weights[neuron_index];
+        eval += screlu(adversary[neuron_index]) * m_param.output_weights[neuron_index + HiddenLayerSize];
     }
-    return (eval / QA + m_output_bias) * Scale / QAB;
+    return (eval / QA + m_param.output_bias) * Scale / QAB;
 }
 
 WeightType Network::eval(const Player &stm) const {
@@ -124,7 +121,7 @@ bool operator==(const Network::Accumulator &lhs, const Network::Accumulator &rhs
 }
 
 Network::Accumulator Network::debug_func(const Position &position) {
-    Accumulator accumulator(m_hidden_bias);
+    Accumulator accumulator(m_param.hidden_bias);
     for (IndexType file = 0; file < BoardHeight; ++file) {
         for (IndexType rank = 0; rank < BoardWidth; ++rank) {
             PiecePlacement pp(file, rank);
@@ -133,8 +130,8 @@ Network::Accumulator Network::debug_func(const Position &position) {
                 const auto [white_index, black_index] = feature_indices(sq, pp);
 
                 for (int column{0}; column < HiddenLayerSize; ++column) {
-                    accumulator.white_neurons[column] += m_hidden_weights[white_index][column];
-                    accumulator.black_neurons[column] += m_hidden_weights[black_index][column];
+                    accumulator.white_neurons[column] += m_param.hidden_weights[white_index * HiddenLayerSize + column];
+                    accumulator.black_neurons[column] += m_param.hidden_weights[black_index * HiddenLayerSize + column];
                 }
             }
         }
