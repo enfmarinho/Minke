@@ -63,7 +63,7 @@ void MoveList::gen_pseudolegal_moves(const Position &position) {
 
 [[nodiscard]] MoveList::size_type MoveList::n_legal_moves(Position position) const {
     size_type counter = 0;
-    for (uint8_t index = m_begin; index < size(); ++index) {
+    for (uint8_t index = m_begin; index < m_end; ++index) {
         Position cp_position = position;
         if (cp_position.move(m_move_list[index])) {
             ++counter;
@@ -75,10 +75,10 @@ void MoveList::gen_pseudolegal_moves(const Position &position) {
 [[nodiscard]] Move MoveList::next_move() {
     size_type best_move_index = m_begin;
     WeightType best_score = m_move_scores[best_move_index];
-    for (size_type index = 0, remaining = size(); index < remaining; ++index) {
-        if (best_score < m_move_scores[m_begin + index]) {
-            best_move_index = m_begin + index;
-            best_score = m_move_scores[best_move_index];
+    for (size_type index = m_begin + 1; index < m_end; ++index) {
+        if (best_score < m_move_scores[index]) {
+            best_move_index = index;
+            best_score = m_move_scores[index];
         }
     }
     std::swap(m_move_list[m_begin], m_move_list[best_move_index]);
@@ -365,7 +365,7 @@ void MoveList::calculate_scores(const GameState &game_state, const Move &tt_move
     static constexpr WeightType QueenPromotionScore = 50000;
     static constexpr WeightType CaptureScore = 20000;
 
-    for (size_type index = 0, remaining = size(); index < remaining; ++index) {
+    for (size_type index = m_begin; index < m_end; ++index) {
         Move move = m_move_list[index];
         assert(move != MoveNone);
         if (move == tt_move) {
