@@ -60,22 +60,22 @@ class Network {
 
   private:
     struct Accumulator {
-        std::array<int32_t, HiddenLayerSize> white_neurons;
-        std::array<int32_t, HiddenLayerSize> black_neurons;
+        std::array<int16_t, HiddenLayerSize> white_neurons;
+        std::array<int16_t, HiddenLayerSize> black_neurons;
 
-        Accumulator(std::span<const int32_t, HiddenLayerSize> biasses);
+        Accumulator(std::span<const int16_t, HiddenLayerSize> biasses);
         Accumulator() = delete;
         ~Accumulator() = default;
-        inline void reset(std::span<const int32_t, HiddenLayerSize> biasses);
+        inline void reset(std::span<const int16_t, HiddenLayerSize> biasses);
 
         friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
     };
     friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
 
-    int32_t crelu(const int32_t &input) const;
-    int32_t screlu(const int32_t &input) const;
-    int32_t weight_sum_reduction(const std::array<int32_t, HiddenLayerSize> &player,
-                                 const std::array<int32_t, HiddenLayerSize> &adversary) const;
+    constexpr int32_t crelu(const int32_t &input) const;
+    constexpr int32_t screlu(const int32_t &input) const;
+    int32_t weight_sum_reduction(const std::array<int16_t, HiddenLayerSize> &player,
+                                 const std::array<int16_t, HiddenLayerSize> &adversary) const;
 
     std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
     const Parameters &m_param;               //!< Network parameters
