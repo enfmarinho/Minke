@@ -21,25 +21,21 @@
 
 INCBIN(NetParameters, "../src/minke.bin");
 
-static int feature_index(const Square &sq, const PiecePlacement &pp) {
-    return (pp.rank() * 8 + pp.file()) +
-           64 * (piece_index(sq.piece) + (sq.player == Player::Black ? NumberOfPieces : 0));
-}
-
 Network::Network() {
     const int16_t *pointer = reinterpret_cast<const int16_t *>(gNetParametersData);
 
-    for (int i = 0; i < InputLayerSize; ++i)
-        for (int j = 0; j < HiddenLayerSize; ++j)
-            m_hidden_weights[i][j] = *pointer++;
+static const std::pair<size_t, size_t> feature_indices(const Square &sq, const PiecePlacement &pp) {
+    constexpr size_t ColorStride = 64 * 6;
+    constexpr size_t PieceStride = 64;
 
-    for (int i = 0; i < HiddenLayerSize; ++i)
-        m_hidden_bias[i] = *pointer++;
+    int nnue_index = MailboxToStandardNNUE[pp.index()];
 
-    for (int i = 0; i < HiddenLayerSize * 2; ++i)
-        m_output_weights[i] = *pointer++;
-
-    m_output_bias = *pointer++;
+    size_t white_index = (sq.player == Player::Black ? ColorStride : 0) + piece_index(sq.piece) * PieceStride +
+                         static_cast<size_t>(nnue_index ^ 56);
+    size_t black_index = (sq.player == Player::White ? ColorStride : 0) + piece_index(sq.piece) * PieceStride +
+                         static_cast<size_t>(nnue_index);
+    return {white_index, black_index};
+}
 
 }
 
@@ -48,8 +44,7 @@ void Network::pop() { m_accumulators.pop_back(); }
 void Network::push() { m_accumulators.push_back(m_accumulators.back()); }
 
 void Network::add_feature(const Square &sq, const PiecePlacement &pp) {
-    int white_index = feature_index(sq, pp);
-    int black_index = feature_index(sq, pp);
+    const auto [white_index, black_index] = feature_indices(sq, pp);
 
     for (int column{0}; column < HiddenLayerSize; ++column) {
         m_accumulators.back().white_neurons[column] += m_hidden_weights[white_index][column];
@@ -58,8 +53,7 @@ void Network::add_feature(const Square &sq, const PiecePlacement &pp) {
 }
 
 void Network::remove_feature(const Square &sq, const PiecePlacement &pp) {
-    int white_index = feature_index(sq, pp);
-    int black_index = feature_index(sq, pp);
+    const auto [white_index, black_index] = feature_indices(sq, pp);
 
     for (int column{0}; column < HiddenLayerSize; ++column) {
         m_accumulators.back().white_neurons[column] -= m_hidden_weights[white_index][column];
@@ -136,8 +130,7 @@ Network::Accumulator Network::debug_func(const Position &position) {
             PiecePlacement pp(file, rank);
             const Square &sq = position.consult(pp);
             if (sq.piece != Piece::None) {
-                int white_index = feature_index(sq, pp);
-                int black_index = feature_index(sq, pp);
+                const auto [white_index, black_index] = feature_indices(sq, pp);
 
                 for (int column{0}; column < HiddenLayerSize; ++column) {
                     accumulator.white_neurons[column] += m_hidden_weights[white_index][column];
