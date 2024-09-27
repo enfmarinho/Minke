@@ -29,7 +29,6 @@ class MoveList {
     [[nodiscard]] size_type size() const;
     [[nodiscard]] size_type n_legal_moves(Position position) const;
     [[nodiscard]] Move next_move();
-    void ignore_non_quiet_moves();
 
   private:
     void gen_pseudolegal_moves(const Position &position);

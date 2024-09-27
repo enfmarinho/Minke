@@ -382,12 +382,3 @@ void MoveList::calculate_scores(const GameState &game_state, const Move &tt_move
         }
     }
 }
-
-void MoveList::ignore_non_quiet_moves() {
-    for (size_type index = 0, remaining = size(); index < remaining; ++index) {
-        Move curr_move = m_move_list[index];
-        if (curr_move.move_type == MoveType::Capture) {
-            break;
-        }
-    }
-}
