@@ -34,7 +34,21 @@ static const std::pair<size_t, size_t> feature_indices(const Square &sq, const P
     return {white_index, black_index};
 }
 
-Network::Network() : m_param(*reinterpret_cast<const Network::Parameters *>(gNetParametersData)) {}
+Network::Network() {
+    const int16_t *pointer = reinterpret_cast<const int16_t *>(gNetParametersData);
+
+    for (int i = 0; i < InputLayerSize; ++i)
+        for (int j = 0; j < HiddenLayerSize; ++j)
+            m_param.hidden_weights[i * HiddenLayerSize + j] = *(pointer++);
+
+    for (int i = 0; i < HiddenLayerSize; ++i)
+        m_param.hidden_bias[i] = *(pointer++);
+
+    for (int i = 0; i < HiddenLayerSize * 2; ++i)
+        m_param.output_weights[i] = *(pointer++);
+
+    m_param.output_bias = *(pointer++);
+}
 
 void Network::pop() { m_accumulators.pop_back(); }
 

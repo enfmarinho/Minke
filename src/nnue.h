@@ -36,13 +36,6 @@ class Network {
     struct Accumulator;
 
   public:
-    struct alignas(64) Parameters {
-        std::array<int16_t, InputLayerSize * HiddenLayerSize> hidden_weights;
-        std::array<int16_t, HiddenLayerSize> hidden_bias;
-        std::array<int16_t, HiddenLayerSize * 2> output_weights;
-        int16_t output_bias;
-    };
-
     Network();
     ~Network() = default;
 
@@ -59,6 +52,13 @@ class Network {
     Accumulator debug_func(const Position &position);
 
   private:
+    struct alignas(64) Parameters {
+        std::array<int16_t, InputLayerSize * HiddenLayerSize> hidden_weights;
+        std::array<int16_t, HiddenLayerSize> hidden_bias;
+        std::array<int16_t, HiddenLayerSize * 2> output_weights;
+        int16_t output_bias;
+    };
+
     struct Accumulator {
         std::array<int16_t, HiddenLayerSize> white_neurons;
         std::array<int16_t, HiddenLayerSize> black_neurons;
@@ -67,8 +67,6 @@ class Network {
         Accumulator() = delete;
         ~Accumulator() = default;
         inline void reset(std::span<const int16_t, HiddenLayerSize> biasses);
-
-        friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
     };
     friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
 
@@ -78,7 +76,7 @@ class Network {
                                  const std::array<int16_t, HiddenLayerSize> &adversary) const;
 
     std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
-    const Parameters &m_param;               //!< Network parameters
+    Parameters m_param;                      //!< Network parameters
 };
 
 #endif // #ifndef NNUE_H
