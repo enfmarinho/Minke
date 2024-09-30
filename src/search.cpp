@@ -207,8 +207,12 @@ WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data
     bool capture_found = false;
     while (!move_list.empty()) {
         Move curr_move = move_list.next_move();
-        if (curr_move.move_type != MoveType::Capture && capture_found)
-            break;
+        if (curr_move.move_type != MoveType::Capture) {
+            if (capture_found)
+                break;
+            else
+                continue;
+        }
 
         capture_found = true;
         if (!search_data.game_state.make_move(curr_move))
