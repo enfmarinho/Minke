@@ -31,7 +31,7 @@ static void print_search_info(const CounterType &depth, const WeightType &eval, 
 void SearchData::reset() {
     stop = true;
     searching_depth = 0;
-    nodes_searched = 0;
+    nodes_searched = -1; // Avoid counting the root
     node_limit = std::numeric_limits<int>::max();
     depth_limit = MaxSearchDepth;
 }
