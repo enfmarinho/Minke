@@ -167,7 +167,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
             king_placement = pos.black_king_position();
         }
 
-        return under_attack(pos, adversary, king_placement) ? -MateScore + depth_ply : 0;
+        return under_attack(pos, adversary, king_placement) ? -MateScore - depth_ply : 0;
     }
 
     if (!search_data.time_manager.time_over()) { // Save on TT if search was completed
