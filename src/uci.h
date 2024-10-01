@@ -20,7 +20,7 @@ namespace EngineOptions {
 constexpr CounterType BenchDepth = 8;
 static constexpr CounterType hash_default = 16;
 static constexpr CounterType hash_min = 1;
-static constexpr CounterType hash_max = 131072;
+static constexpr CounterType hash_max = 32768;
 void print();
 } // namespace EngineOptions
 
