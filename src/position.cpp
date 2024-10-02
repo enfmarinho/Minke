@@ -131,8 +131,15 @@ bool Position::move(const Move &movement) {
         m_fifty_move_counter_ply = 0;
     } else if (piece_being_moved == Piece::Pawn) {
         m_fifty_move_counter_ply = 0;
-        if (abs(movement.to.file() - movement.from.file()) == 2)
-            m_en_passant = movement.to.rank();
+        if (abs(movement.to.file() - movement.from.file()) == 2) {
+            PiecePlacement left = movement.to.index() + offsets::West;
+            PiecePlacement right = movement.to.index() + offsets::East;
+            Square enemy_pawn(Piece::Pawn, (m_side_to_move == Player::White ? Player::Black : Player::White));
+            if ((!left.out_of_bounds() && consult(left) == enemy_pawn) ||
+                (!right.out_of_bounds() && consult(right) == enemy_pawn)) {
+                m_en_passant = movement.to.rank();
+            }
+        }
     }
 
     CastlingRights &current_player_castling_rights =
