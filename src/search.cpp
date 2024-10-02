@@ -101,26 +101,12 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
     // Transposition table probe
     bool found;
     TTEntry *entry = TranspositionTable::get().probe(search_data.game_state.top(), found);
-    if (found && entry->depth_ply() >= depth_ply) {
-        switch (entry->bound()) {
-            case TTEntry::BoundType::Exact:
-                pv_list.update(entry->best_move(), PvList());
-                return entry->evaluation();
-            case TTEntry::BoundType::LowerBound:
-                alpha = std::max(entry->evaluation(), alpha);
-                break;
-            case TTEntry::BoundType::UpperBound:
-                beta = std::min(entry->evaluation(), beta);
-                break;
-            default:
-                std::cerr << "TT hit, but entry bound is empty." << std::endl;
-                assert(false);
-        }
-
-        if (alpha >= beta) {
-            pv_list.update(entry->best_move(), PvList());
-            return entry->evaluation();
-        }
+    if (found && entry->depth_ply() >= depth_ply &&
+        (entry->bound() == TTEntry::BoundType::Exact ||
+         (entry->bound() == TTEntry::BoundType::UpperBound && entry->evaluation() <= alpha) ||
+         (entry->bound() == TTEntry::BoundType::LowerBound && entry->evaluation() >= beta))) {
+        pv_list.update(entry->best_move(), PvList());
+        return entry->evaluation();
     }
 
     Move best_move = MoveNone;
