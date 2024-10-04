@@ -7,7 +7,6 @@
 
 #include "search.h"
 
-#include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <limits>
