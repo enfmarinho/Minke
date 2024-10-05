@@ -377,10 +377,25 @@ void Position::print() const {
     std::cout << "\nHash: " << m_hash << "\n";
 };
 bool Position::insufficient_material() const {
-    // TODO: Check for insufficient material
-    // for 2 pieces: draw
-    // for 3 pieces: KN v K, KB v K
-    // for 4 pieces: KNN v K, KN v KN, KB v KB
-
+    if (m_piece_counter <= 2) {
+        return true;
+    } else if (m_piece_counter == 3) {
+        if (m_material_count[0][piece_index(Piece::Knight)] == 1 ||
+            m_material_count[1][piece_index(Piece::Knight)] == 1) // KN v K
+            return false;
+        else if (m_material_count[0][piece_index(Piece::Bishop)] == 1 ||
+                 m_material_count[1][piece_index(Piece::Bishop)] == 1) // KB v K
+            return false;
+    } else if (m_piece_counter == 4) {
+        if (m_material_count[0][piece_index(Piece::Knight)] == 2 ||
+            m_material_count[1][piece_index(Piece::Knight)] == 2) // KNN v K
+            return false;
+        else if (m_material_count[0][piece_index(Piece::Knight)] == 1 &&
+                 m_material_count[1][piece_index(Piece::Knight)] == 1) // KN v KN
+            return false;
+        else if (m_material_count[0][piece_index(Piece::Bishop)] == 1 &&
+                 m_material_count[1][piece_index(Piece::Bishop)] == 1) // KB v KB
+            return false;
+    }
     return false;
 }
