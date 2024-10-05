@@ -41,8 +41,7 @@ void iterative_deepening(SearchData &search_data) {
     Move best_move = MoveNone;
     for (CounterType depth = 1; depth <= search_data.depth_limit; ++depth) {
         PvList pv_list;
-        WeightType eval = alpha_beta(-MaxScore, MaxScore, depth, pv_list, search_data);
-
+        WeightType eval = aspiration(depth, pv_list, search_data);
         if (!search_data.time_manager.time_over() && !search_data.stop) { // Search was successful
             bool found;
             TTEntry *entry = TranspositionTable::get().probe(search_data.game_state.top(), found);
@@ -65,25 +64,22 @@ void iterative_deepening(SearchData &search_data) {
     search_data.stop = true;
 }
 
-TTEntry *aspiration(const CounterType &depth, PvList &pv_list, SearchData &search_data) {
+WeightType aspiration(const CounterType &depth, PvList &pv_list, SearchData &search_data) {
     bool found;
     TTEntry *ttentry = TranspositionTable::get().probe(search_data.game_state.top(), found);
-    if (!found) {
-        alpha_beta(-MaxScore, MaxScore, depth, pv_list, search_data);
-        return ttentry;
-    }
+    if (!found)
+        return alpha_beta(-MaxScore, MaxScore, depth, pv_list, search_data);
 
     WeightType alpha = ttentry->evaluation() - weights::EndGamePawn;
     WeightType beta = ttentry->evaluation() + weights::EndGamePawn;
     WeightType eval = alpha_beta(alpha, beta, depth, pv_list, search_data);
     if (eval >= beta)
-        alpha_beta(alpha, MaxScore, depth, pv_list, search_data);
+        eval = alpha_beta(alpha, MaxScore, depth, pv_list, search_data);
     else if (eval <= alpha)
-        alpha_beta(-MaxScore, beta, depth, pv_list, search_data);
+        eval = alpha_beta(-MaxScore, beta, depth, pv_list, search_data);
 
     assert(eval >= alpha && eval <= beta);
-
-    return ttentry;
+    return eval;
 }
 
 WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth_ply, PvList &pv_list,

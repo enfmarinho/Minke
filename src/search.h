@@ -27,7 +27,7 @@ struct SearchData {
 };
 
 void iterative_deepening(SearchData &search_data);
-TTEntry *aspiration(const CounterType &depth, PvList &pv_list, SearchData &search_data);
+WeightType aspiration(const CounterType &depth, PvList &pv_list, SearchData &search_data);
 WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data);
 WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth, PvList &pv_list,
                       SearchData &search_data);
