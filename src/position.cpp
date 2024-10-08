@@ -11,6 +11,7 @@
 #include <cassert>
 #include <cctype>
 #include <cstdlib>
+#include <cstring>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -32,6 +33,8 @@ bool Position::reset(const std::string &fen) {
     }
 
     IndexType file = 7, rank = 0;
+    m_total_material_count = 0;
+    memset(m_material_count, 0, 2 * 5 * 4);
     for (char c : fen_arguments[0]) {
         if (c == '/') {
             --file;
@@ -41,23 +44,32 @@ bool Position::reset(const std::string &fen) {
         if (!std::isdigit(c)) {
             char piece = std::tolower(c);
             Player player = std::isupper(c) ? Player::White : Player::Black;
-            if (piece == 'p')
+            IndexType player_index = std::isupper(c) ? 0 : 1;
+            if (piece == 'p') {
                 consult(file, rank) = Square(Piece::Pawn, player);
-            else if (piece == 'n')
+                ++m_material_count[player_index][0];
+            } else if (piece == 'n') {
                 consult(file, rank) = Square(Piece::Knight, player);
-            else if (piece == 'b')
+                ++m_material_count[player_index][1];
+            } else if (piece == 'b') {
                 consult(file, rank) = Square(Piece::Bishop, player);
-            else if (piece == 'r')
+                ++m_material_count[player_index][2];
+            } else if (piece == 'r') {
                 consult(file, rank) = Square(Piece::Rook, player);
-            else if (piece == 'q')
+                ++m_material_count[player_index][3];
+            } else if (piece == 'q') {
                 consult(file, rank) = Square(Piece::Queen, player);
-            else if (piece == 'k') {
+                ++m_material_count[player_index][4];
+            } else if (piece == 'k') {
                 consult(file, rank) = Square(Piece::King, player);
                 if (player == Player::White)
                     m_white_king_position = PiecePlacement(file, rank);
                 else
                     m_black_king_position = PiecePlacement(file, rank);
+            } else {
+                assert(false);
             }
+            ++m_total_material_count;
             ++rank;
         } else {
             for (IndexType n_of_empty_squares = c - '0'; n_of_empty_squares > 0; --n_of_empty_squares, ++rank) {
@@ -201,6 +213,12 @@ bool Position::move(const Move &movement) {
         consult(file, 4) = EmptySquare;
         consult(file, 0) = EmptySquare;
     }
+
+    if (captured.piece != Piece::None) {
+        --m_material_count[(captured.player == Player::White ? 0 : 1)][piece_index(captured.piece)];
+        --m_total_material_count;
+    }
+
     m_side_to_move = (m_side_to_move == Player::White) ? Player::Black : Player::White;
     m_hash = zobrist::rehash(*this, PastMove(movement, captured, past_en_passant, past_fifty_move_counter,
                                              past_white_castling_rights, past_black_castling_rights));
@@ -253,6 +271,10 @@ const IndexType &Position::en_passant_rank() const { return m_en_passant; }
 const PiecePlacement &Position::black_king_position() const { return m_black_king_position; }
 
 const PiecePlacement &Position::white_king_position() const { return m_white_king_position; }
+
+const CounterType &Position::material_count(const Piece &piece, const Player &player) const {
+    return m_material_count[(player == Player::White ? 0 : 1)][piece_index(piece)];
+}
 
 const HashType &Position::get_hash() const { return m_hash; }
 
@@ -376,17 +398,18 @@ void Position::print() const {
     std::cout << "\n\nFEN: " << get_fen();
     std::cout << "\nHash: " << m_hash << "\n";
 };
+
 bool Position::insufficient_material() const {
-    if (m_piece_counter <= 2) {
+    if (m_total_material_count <= 2) {
         return true;
-    } else if (m_piece_counter == 3) {
+    } else if (m_total_material_count == 3) {
         if (m_material_count[0][piece_index(Piece::Knight)] == 1 ||
             m_material_count[1][piece_index(Piece::Knight)] == 1) // KN v K
             return false;
         else if (m_material_count[0][piece_index(Piece::Bishop)] == 1 ||
                  m_material_count[1][piece_index(Piece::Bishop)] == 1) // KB v K
             return false;
-    } else if (m_piece_counter == 4) {
+    } else if (m_total_material_count == 4) {
         if (m_material_count[0][piece_index(Piece::Knight)] == 2 ||
             m_material_count[1][piece_index(Piece::Knight)] == 2) // KNN v K
             return false;

@@ -30,6 +30,7 @@ class Position {
     const IndexType &en_passant_rank() const;
     const PiecePlacement &black_king_position() const;
     const PiecePlacement &white_king_position() const;
+    const CounterType &material_count(const Piece &piece, const Player &player) const;
     const HashType &get_hash() const;
     const CounterType &get_half_move_counter() const;
     const CounterType &get_fifty_move_counter() const;
@@ -46,6 +47,8 @@ class Position {
     IndexType m_en_passant;               //!< Rank of possible en passant move
     CounterType m_fifty_move_counter_ply; //!< Move counter since last irreversible move
     Player m_side_to_move;
+    CounterType m_material_count[2][5];
+    CounterType m_total_material_count;
     HashType m_hash;              //!< Zobrist hash of this position.
     CounterType m_game_clock_ply; //!< Count all the half moves made in the match
 };
