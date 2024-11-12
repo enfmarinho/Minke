@@ -253,7 +253,7 @@ bool UCI::parse_go(std::istringstream &iss, bool bench) {
         }
     }
 
-    m_search_data.time_manager.init(inc, time, movestogo, movetime, infinite);
+    m_search_data.time_manager.init(m_search_data.game_state.top(), inc, time, movestogo, movetime, infinite);
     return false;
 }
 

@@ -9,12 +9,15 @@
 #define TIME_MANAGER_H
 
 #include "game_elements.h"
+#include "position.h"
+
 class TimeManager {
   public:
     TimeManager();
     ~TimeManager() = default;
 
-    void init(CounterType inc, CounterType time, CounterType movestogo, CounterType movetime, bool infinite);
+    void init(const Position &position, CounterType inc, CounterType time, CounterType movestogo, CounterType movetime,
+              bool infinite);
     void init();
     bool stop_early() const;
     bool time_over() const;
