@@ -13,7 +13,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_compile_options(
     "-Wall"
     "-Wpedantic"
-    "-Wshadow"
     "-Wsign-compare"
     "-Wold-style-cast"
     "-Wcast-align"
