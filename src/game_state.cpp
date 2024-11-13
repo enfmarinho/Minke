@@ -151,7 +151,8 @@ bool GameState::reset(const std::string &fen) {
 }
 
 WeightType GameState::consult_history(const Move &move) const {
-    return m_move_history[piece_index(top().consult(move.to).piece) + (top().side_to_move() == Player::White ? 0 : 6)]
+    assert(top().consult(move.from).piece != Piece::None);
+    return m_move_history[piece_index(top().consult(move.from).piece) + (top().side_to_move() == Player::White ? 0 : 6)]
                          [move.to.index()];
 }
 
