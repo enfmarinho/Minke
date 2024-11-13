@@ -12,6 +12,8 @@
 TimeManager::TimeManager() : m_time_set{false}, m_can_stop{false} {}
 
 void TimeManager::init(CounterType inc, CounterType time, CounterType movestogo, CounterType movetime, bool infinite) {
+void TimeManager::init(const Position &position, CounterType inc, CounterType time, CounterType movestogo,
+                       CounterType movetime, bool infinite) {
     m_can_stop = false;
     m_time_set = false;
     m_start_time = now();

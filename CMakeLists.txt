@@ -13,11 +13,12 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_compile_options(
     "-Wall"
     "-Wpedantic"
-    "-Wshadow"
     "-Wsign-compare"
     "-Wold-style-cast"
     "-Wcast-align"
     "-Wcast-qual"
+    "-fsanitize=undefined"
+    "-fsanitize=address"
     "-g")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   add_compile_options("-O3" "-march=native" "-DNDEBUG")

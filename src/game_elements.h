@@ -107,8 +107,8 @@ struct PiecePlacement {
     PiecePlacement mirrored() const {
         return PiecePlacement(m_index ^ 119); // 119 is (7 << 4) + 7
     }
-    PiecePlacement(){};
-    PiecePlacement(IndexType index) : m_index(index){};
+    PiecePlacement() {};
+    PiecePlacement(IndexType index) : m_index(index) {};
     PiecePlacement(const IndexType &file, const IndexType &rank) { m_index = file + (rank << padding); }
     friend bool operator==(const PiecePlacement &lhs, const PiecePlacement &rhs) { return lhs.m_index == rhs.m_index; }
 
