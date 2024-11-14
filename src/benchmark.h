@@ -5,6 +5,9 @@
  *  See the LICENSE file in the project root for more information.
  */
 
+#ifndef BENCHMARK_H
+#define BENCHMARK_H
+
 #include <string>
 #include <vector>
 
@@ -67,3 +70,5 @@ const std::vector<std::string> benchmark_fen_list = {
   "7k/7P/6K1/8/3B4/8/8/8 b - - 0 1",
 };
 // clang-format on
+
+#endif // #ifndef BENCHMARK_H

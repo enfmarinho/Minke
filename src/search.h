@@ -5,13 +5,12 @@
  *  See the LICENSE file in the project root for more information.
  */
 
+#ifndef SEARCH_H
+#define SEARCH_H
+
 #include "game_elements.h"
 #include "game_state.h"
 #include "time_manager.h"
-#include "tt.h"
-
-#ifndef SEARCH_H
-#define SEARCH_H
 
 struct SearchData {
     GameState game_state;
