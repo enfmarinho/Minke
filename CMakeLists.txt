@@ -21,6 +21,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     "-fsanitize=address"
     "-g")
   add_link_options(-fsanitize=address)
+  add_link_options(-fsanitize=undefined)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   add_compile_options("-O3" "-march=native" "-DNDEBUG")
 endif()
