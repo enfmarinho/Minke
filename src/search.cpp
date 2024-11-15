@@ -20,9 +20,10 @@
 
 static void print_search_info(const CounterType &depth, const WeightType &eval, const PvList &pv_list,
                               const SearchData &search_data) {
+    // Add 1 to time_passed() to avoid division by 0
     std::cout << "info depth " << depth << " score cp " << eval << " time " << search_data.time_manager.time_passed()
               << " nodes " << search_data.nodes_searched << " nps "
-              << search_data.nodes_searched * 1000 / search_data.time_manager.time_passed() << " pv ";
+              << search_data.nodes_searched * 1000 / (search_data.time_manager.time_passed() + 1) << " pv ";
     pv_list.print();
     std::cout << std::endl;
 }
