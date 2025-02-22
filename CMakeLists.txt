@@ -35,6 +35,7 @@ add_executable(
   "src/movegen.cpp"
   "src/nnue.cpp"
   "src/position.cpp"
+  "src/pv_list.cpp"
   "src/search.cpp"
   "src/time_manager.cpp"
   "src/tt.cpp"

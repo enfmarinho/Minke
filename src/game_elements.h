@@ -181,31 +181,6 @@ struct PastMove {
     PastMove() = default;
 };
 
-struct PvList {
-    std::array<Move, MaxSearchDepth> m_pv;
-    CounterType m_size{0};
-
-    void update(Move new_move, const PvList &list) {
-        m_pv[0] = new_move;
-        std::copy(list.m_pv.begin(), list.m_pv.begin() + list.m_size, m_pv.begin() + 1);
-
-        m_size = list.m_size + 1;
-    }
-
-    void print() const {
-        for (int i = 0; i < m_size; ++i) {
-            std::cout << m_pv[i].get_algebraic_notation() << ' ';
-        }
-    }
-
-    PvList &operator=(const PvList &other) {
-        std::copy(other.m_pv.begin(), other.m_pv.begin() + other.m_size, m_pv.begin());
-        m_size = other.m_size;
-
-        return *this;
-    }
-};
-
 // clang-format off
 // Needed for index conversion, NNUE trainers uses 0 = a8, while my board uses 0 = a1
 constexpr IndexType MailboxToStandardNNUE[0x80] = {
