@@ -32,6 +32,7 @@ add_executable(
   "src/game_state.cpp"
   "src/hash.cpp"
   "src/main.cpp"
+  "src/move.cpp"
   "src/movegen.cpp"
   "src/nnue.cpp"
   "src/position.cpp"

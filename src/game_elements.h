@@ -133,36 +133,6 @@ struct Square {
 const Square EmptySquare = Square(Piece::None, Player::None);
 static_assert(sizeof(Square) == 2);
 
-struct Move {
-    PiecePlacement from;
-    PiecePlacement to;
-    MoveType move_type;
-    Move() = default;
-    Move(PiecePlacement from, PiecePlacement to, MoveType move_type) : from(from), to(to), move_type(move_type) {}
-    std::string get_algebraic_notation() const {
-        std::string algebraic_notation;
-        algebraic_notation.push_back('a' + from.rank());
-        algebraic_notation.push_back('1' + from.file());
-        algebraic_notation.push_back('a' + to.rank());
-        algebraic_notation.push_back('1' + to.file());
-        if (move_type == MoveType::PawnPromotionQueen) {
-            algebraic_notation.push_back('q');
-        } else if (move_type == MoveType::PawnPromotionKnight) {
-            algebraic_notation.push_back('n');
-        } else if (move_type == MoveType::PawnPromotionRook) {
-            algebraic_notation.push_back('r');
-        } else if (move_type == MoveType::PawnPromotionBishop) {
-            algebraic_notation.push_back('b');
-        }
-        return algebraic_notation;
-    }
-    friend bool operator==(const Move &lhs, const Move &rhs) {
-        return lhs.move_type == rhs.move_type && lhs.from == rhs.from && lhs.to == rhs.to;
-    }
-};
-const Move MoveNone = Move();
-static_assert(sizeof(Move) == 3);
-
 struct PastMove {
     Move movement;
     Square captured;
