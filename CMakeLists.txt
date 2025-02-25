@@ -29,6 +29,7 @@ endif()
 # Add and link executable.
 add_executable(
   minke
+  "src/attacks.cpp"
   "src/hash.cpp"
   "src/main.cpp"
   "src/move.cpp"
