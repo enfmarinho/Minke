@@ -11,6 +11,7 @@
 
 #include <array>
 
+#include "move.h"
 #include "types.h"
 
 class PvList {

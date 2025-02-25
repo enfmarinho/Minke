@@ -13,8 +13,8 @@
 #include <cstdint>
 #include <memory>
 
-#include "game_elements.h"
 #include "position.h"
+#include "types.h"
 
 class TTEntry {
   public:

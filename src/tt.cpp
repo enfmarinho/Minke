@@ -14,8 +14,8 @@
 #include <iostream>
 #include <memory>
 
-#include "game_elements.h"
 #include "position.h"
+#include "types.h"
 
 CounterType TTEntry::relative_age(const CounterType &half_move_counter) const {
     return half_move_counter - m_half_move_count;

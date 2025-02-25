@@ -12,9 +12,9 @@
 #include <sstream>
 #include <thread>
 
-#include "game_elements.h"
 #include "position.h"
 #include "search.h"
+#include "types.h"
 
 namespace EngineOptions {
 constexpr CounterType BenchDepth = 8;

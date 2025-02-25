@@ -8,7 +8,7 @@
 #ifndef WEIGHTS_H
 #define WEIGHTS_H
 
-#include "game_elements.h"
+#include "types.h"
 
 namespace weights {
 

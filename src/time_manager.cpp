@@ -7,7 +7,7 @@
 
 #include "time_manager.h"
 
-#include "game_elements.h"
+#include "types.h"
 
 TimeManager::TimeManager() : m_time_set{false}, m_can_stop{false} {}
 

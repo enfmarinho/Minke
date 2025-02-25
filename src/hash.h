@@ -10,8 +10,7 @@
 
 #include <cassert>
 
-#include "game_elements.h"
-#include "position.h"
+#include "types.h"
 
 namespace zobrist {
 HashType hash(const Position &position);

@@ -8,8 +8,8 @@
 #ifndef TIME_MANAGER_H
 #define TIME_MANAGER_H
 
-#include "game_elements.h"
 #include "position.h"
+#include "types.h"
 
 class TimeManager {
   public:

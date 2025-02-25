@@ -11,11 +11,10 @@
 #include <iostream>
 #include <limits>
 
-#include "game_elements.h"
-#include "game_state.h"
 #include "movegen.h"
 #include "position.h"
 #include "tt.h"
+#include "types.h"
 #include "weights.h"
 
 static void print_search_info(const CounterType &depth, const WeightType &eval, const PvList &pv_list,

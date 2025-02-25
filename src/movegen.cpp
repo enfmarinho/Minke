@@ -13,7 +13,7 @@
 #include <cstring>
 #include <utility>
 
-#include "game_elements.h"
+#include "types.h"
 #include "game_state.h"
 #include "position.h"
 #include "weights.h"

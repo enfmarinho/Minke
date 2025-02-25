@@ -8,11 +8,14 @@
 #ifndef POSITION_H
 #define POSITION_H
 
+#include <cstdint>
 #include <string>
+#include <vector>
 
-#include "game_elements.h"
+#include "move.h"
+#include "nnue.h"
+#include "types.h"
 
-// NOTE: Position must be initialized using reset().
 class Position {
   public:
     Position() = default;

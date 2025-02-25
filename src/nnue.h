@@ -15,8 +15,9 @@
 #include <span>
 #include <vector>
 
-#include "game_elements.h"
-#include "position.h"
+#include "types.h"
+
+class Position;
 
 constexpr int InputLayerSize = 64 * 12;
 constexpr int HiddenLayerSize = 64 * 12;

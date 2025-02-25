@@ -9,27 +9,8 @@
 
 #include <array>
 
-#include "game_elements.h"
+#include "types.h"
 #include "position.h"
-
-// Random array of unsigned 64 bit integers for performing Zobrist Hashing.
-//
-// The indexing for the pieces is as follows: file * BoardWidth + rank +
-// piece_index * BoardWidth * BoardHeight. The piece_index is the value of the
-// enum Piece for the respective piece, but adding "NumberOfPieces" (which is
-// 6) if the piece is black. With that, the 768 first values are used for the
-// pieces, the other 13 are used for position characteristics, like
-// castling rights, a possible en passant and the side to move.
-const static std::array<HashType, 781> ZobristArray = [] {
-    PRNG prng(1070372);
-
-    std::array<HashType, 781> table;
-    for (HashType &value : table) {
-        value = prng.rand<HashType>();
-    }
-
-    return table;
-}();
 
 HashType zobrist::hash(const Position &position) {
     HashType key = 0;

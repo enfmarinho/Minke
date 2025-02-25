@@ -16,11 +16,11 @@
 #include <vector>
 
 #include "benchmark.h"
-#include "game_elements.h"
 #include "movegen.h"
 #include "position.h"
 #include "search.h"
 #include "tt.h"
+#include "types.h"
 
 UCI::UCI(int argc, char *argv[]) {
     TranspositionTable::get().resize(EngineOptions::hash_default);

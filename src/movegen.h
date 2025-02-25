@@ -10,9 +10,9 @@
 
 #include <cstdint>
 
-#include "game_elements.h"
-#include "game_state.h"
 #include "position.h"
+#include "search.h"
+#include "types.h"
 
 bool under_attack(const Position &position, const Player &attacker_player, const PiecePlacement &pp_defender);
 Piece cheapest_attacker(const Position &position, const Player &attacker_player, const PiecePlacement &pp_defender,

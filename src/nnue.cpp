@@ -13,11 +13,13 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <iostream>
 #include <span>
 
-#include "game_elements.h"
 #include "incbin.h"
 #include "position.h"
+#include "types.h"
+#include "utils.h"
 
 INCBIN(NetParameters, "../src/minke.bin");
 

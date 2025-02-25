@@ -1,5 +1,7 @@
 #include "move.h"
 
+#include "utils.h"
+
 Move::Move(Square origin, Square target, MoveType move_type) { m_bytes = (move_type << 12) | (target << 6) | (origin); }
 
 Square Move::from() const { return Square(m_bytes & 0x3F); }

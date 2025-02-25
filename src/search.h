@@ -8,9 +8,9 @@
 #ifndef SEARCH_H
 #define SEARCH_H
 
-#include "game_elements.h"
-#include "game_state.h"
+#include "pv_list.h"
 #include "time_manager.h"
+#include "types.h"
 
 struct SearchData {
     GameState game_state;

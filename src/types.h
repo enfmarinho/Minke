@@ -8,11 +8,8 @@
 #ifndef GAME_ELEMENTS_H
 #define GAME_ELEMENTS_H
 
-#include <algorithm>
 #include <chrono>
 #include <cstdint>
-#include <iostream>
-#include <string>
 
 using IndexType = int8_t;
 using CounterType = int;

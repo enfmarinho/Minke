@@ -20,6 +20,8 @@
 #include "game_elements.h"
 #include "hash.h"
 #include "movegen.h"
+#include "types.h"
+#include "utils.h"
 
 bool Position::reset(const std::string &fen) {
     std::stringstream iss(fen);
