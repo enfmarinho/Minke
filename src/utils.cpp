@@ -4,6 +4,24 @@
 
 #include "types.h"
 
+inline void set_bit(Bitboard &bitboard, const Square &sq) { bitboard |= (1ULL << sq); }
+
+inline void set_bit(Bitboard &bitboard, const int &sq) { bitboard |= (1ULL << sq); }
+
+Bitboard shift(const Bitboard &bitboard, const int &direction) {
+    if (direction < 0) {
+        assert(lsb(bitboard) + direction >= a1); // Checks for overflow
+        return bitboard >> std::abs(direction);
+    } else {
+        assert(msb(bitboard) + direction <= h8); // Checks for overflow
+        return bitboard << direction;
+    }
+}
+
+inline Bitboard shift(const Bitboard &bitboard, const Direction &direction) {
+    return shift(bitboard, static_cast<int>(direction));
+}
+
 inline int count_bits(const Bitboard &bitboard) { return std::popcount(bitboard); }
 
 inline Square poplsb(Bitboard &bitboard) {
@@ -75,3 +93,9 @@ inline Square msb(Bitboard b) {
 inline int rank(Square sq) { return sq >> 3; }
 
 inline int file(Square sq) { return sq & 0b111; }
+
+inline PieceType get_piece_type(const Piece &piece, const Color &color) {
+    return static_cast<PieceType>(piece - color * ColorOffset);
+}
+
+inline Color get_color(const Piece &piece) { return static_cast<Color>(piece / ColorOffset); }

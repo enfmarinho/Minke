@@ -10,6 +10,12 @@
 
 #include "types.h"
 
+inline void set_bit(Bitboard &bitboard, const Square &sq);
+inline void set_bit(Bitboard &bitboard, const int &sq);
+
+Bitboard shift(const Bitboard &bitboard, const int &direction);
+inline Bitboard shift(const Bitboard &bitboard, const Direction &direction);
+
 // Returns the number of '1' bit in bitboard, just like popcount
 inline int count_bits(const Bitboard &bitboard);
 
@@ -27,5 +33,9 @@ inline int rank(Square sq);
 
 // Returns the file of "sq"
 inline int file(Square sq);
+
+inline PieceType get_piece_type(const Piece &piece, const Color &color);
+
+inline Color get_color(const Piece &piece);
 
 #endif // #ifndef UTILS_H
