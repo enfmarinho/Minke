@@ -101,6 +101,11 @@ constexpr int HalfMovesPerMatch = 2048;
 constexpr int MaxSearchDepth = 128;
 constexpr int MoveNone = 0;
 
+// clang-format off
+constexpr WeightType SEE_values[12] = {100, 300, 300, 500, 1000, 0,
+                                       100, 300, 300, 500, 1000, 0};
+// clang-format on
+
 inline TimeType now() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
         .count();
