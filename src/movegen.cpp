@@ -13,10 +13,8 @@
 #include <cstring>
 #include <utility>
 
-#include "types.h"
-#include "game_state.h"
 #include "position.h"
-#include "weights.h"
+#include "types.h"
 
 bool under_attack(const Position &position, const Player &attacker_player, const PiecePlacement &pp_defender) {
     PiecePlacement trash;

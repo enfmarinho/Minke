@@ -15,7 +15,6 @@
 #include "position.h"
 #include "tt.h"
 #include "types.h"
-#include "weights.h"
 
 static void print_search_info(const CounterType &depth, const WeightType &eval, const PvList &pv_list,
                               const SearchData &search_data) {
@@ -70,8 +69,10 @@ WeightType aspiration(const CounterType &depth, PvList &pv_list, SearchData &sea
     if (!found)
         return alpha_beta(-MaxScore, MaxScore, depth, pv_list, search_data);
 
-    WeightType alpha = ttentry->evaluation() - weights::EndGamePawn;
-    WeightType beta = ttentry->evaluation() + weights::EndGamePawn;
+    int delta = 100; // TODO
+
+    WeightType alpha = ttentry->evaluation() - delta;
+    WeightType beta = ttentry->evaluation() + delta;
     WeightType eval = alpha_beta(alpha, beta, depth, pv_list, search_data);
     if (eval >= beta)
         eval = alpha_beta(alpha, MaxScore, depth, pv_list, search_data);
