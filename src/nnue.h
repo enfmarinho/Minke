@@ -31,35 +31,36 @@ constexpr int QA = 255;
 constexpr int QB = 64;
 constexpr int QAB = QA * QB;
 
-// NOTE: Network must be initialized using reset().
-class Network {
+struct alignas(64) Network {
+    std::array<int16_t, InputLayerSize * HiddenLayerSize> hidden_weights;
+    std::array<int16_t, HiddenLayerSize> hidden_bias;
+    std::array<int16_t, HiddenLayerSize * 2> output_weights;
+    int16_t output_bias;
+};
+extern Network network;
+
+// NOTE: NNUE must be initialized using reset().
+class NNUE {
   private:
     struct Accumulator;
 
   public:
-    Network();
-    ~Network() = default;
+    NNUE() = default;
+    ~NNUE() = default;
 
     void pop();
     void push();
     const Accumulator &top() const;
 
-    void add_feature(const Square &sq, const PiecePlacement &pp);
-    void remove_feature(const Square &sq, const PiecePlacement &pp);
+    void add_feature(const Piece &piece, const Square &sq);
+    void remove_feature(const Piece &piece, const Square &sq);
 
     void reset(const Position &position);
-    WeightType eval(const Player &stm) const;
+    WeightType eval(const Color &stm) const;
 
     Accumulator debug_func(const Position &position);
 
   private:
-    struct alignas(64) Parameters {
-        std::array<int16_t, InputLayerSize * HiddenLayerSize> hidden_weights;
-        std::array<int16_t, HiddenLayerSize> hidden_bias;
-        std::array<int16_t, HiddenLayerSize * 2> output_weights;
-        int16_t output_bias;
-    };
-
     struct Accumulator {
         std::array<int16_t, HiddenLayerSize> white_neurons;
         std::array<int16_t, HiddenLayerSize> black_neurons;
@@ -77,7 +78,6 @@ class Network {
                                  const std::array<int16_t, HiddenLayerSize> &adversary) const;
 
     std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
-    Parameters m_param;                      //!< Network parameters
 };
 
 #endif // #ifndef NNUE_H
