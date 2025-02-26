@@ -42,7 +42,7 @@ class Position {
     inline Square get_king_placement(const Color &color) const;
     inline uint8_t get_castling_rights() const;
     inline Color get_stm() const;
-    inline Square get_ep_rank() const;
+    inline Square get_en_passant() const;
     inline HashType get_hash() const;
     inline int get_game_ply() const;
     inline int get_fifty_move_ply() const;

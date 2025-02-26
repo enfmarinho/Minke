@@ -475,26 +475,73 @@ void Position::print() const {
     std::cout << "\nHash: " << m_hash << "\n";
 };
 
+bool Position::draw() { return insufficient_material() || repetition() || fifty_move_draw(); }
+
 bool Position::insufficient_material() const {
-    if (m_total_material_count <= 2) {
+    int piece_amount = get_material_count();
+    if (piece_amount == 2) {
         return true;
-    } else if (m_total_material_count == 3) {
-        if (m_material_count[0][piece_index(Piece::Knight)] == 1 ||
-            m_material_count[1][piece_index(Piece::Knight)] == 1) // KN v K
-            return false;
-        else if (m_material_count[0][piece_index(Piece::Bishop)] == 1 ||
-                 m_material_count[1][piece_index(Piece::Bishop)] == 1) // KB v K
-            return false;
-    } else if (m_total_material_count == 4) {
-        if (m_material_count[0][piece_index(Piece::Knight)] == 2 ||
-            m_material_count[1][piece_index(Piece::Knight)] == 2) // KNN v K
-            return false;
-        else if (m_material_count[0][piece_index(Piece::Knight)] == 1 &&
-                 m_material_count[1][piece_index(Piece::Knight)] == 1) // KN v KN
-            return false;
-        else if (m_material_count[0][piece_index(Piece::Bishop)] == 1 &&
-                 m_material_count[1][piece_index(Piece::Bishop)] == 1) // KB v KB
-            return false;
+    } else if (piece_amount == 3 && (get_material_count(Knight) == 1 || get_material_count(Bishop) == 1)) {
+        return true;
+    } else if (piece_amount == 4 && (get_material_count(Knight) == 2 ||
+                                     (get_material_count(WhiteBishop) == 1 && get_material_count(BlackBishop) == 1))) {
+        return true;
     }
+
     return false;
 }
+
+bool Position::repetition() const {
+    assert(game_clock_ply >= curr_state.fifty_move_ply);
+
+    int counter = 0;
+    int distance = std::min(curr_state.fifty_move_ply, curr_state.ply_from_null);
+    int starting_index = played_positions.size();
+
+    for (int index = 4; index <= distance; index += 2)
+        if (played_positions[starting_index - index] == hash_key) {
+            if (index < history_stack_head) // 2-fold repetition within the search tree, this avoids cycles
+                return true;
+
+            counter++;
+
+            if (counter >= 2) // 3-fold repetition
+                return true;
+        }
+    return false;
+}
+
+// TODO it would be a little more efficient to do a specific legality check for the move
+bool Position::fifty_move_draw() {
+    if (curr_state.fifty_move_ply >= 100) {
+        MoveList move_list(*this);
+        while (!move_list.empty()) {
+            Move move = move_list.next_move();
+            bool legal = make_move<false>(move);
+            unmake_move<false>(move);
+            if (legal) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+void Position::hash_piece_key(const Piece &piece, const Square &sq) {
+    assert(piece >= WhitePawn && piece <= BlackKing);
+    assert(sq >= a1 && sq <= h8);
+    hash_key ^= hash_keys.pieces[piece][sq];
+}
+
+void Position::hash_castle_key() {
+    assert(curr_state.castling_rights >= 0 && curr_state.castling_rights <= EveryRight);
+    hash_key ^= hash_keys.castle[curr_state.castling_rights];
+}
+
+void Position::hash_ep_key() {
+    assert(get_rank(curr_state.en_passant) >= 0 && get_rank(curr_state.en_passant) < 8);
+    hash_key ^= hash_keys.en_passant[get_rank(curr_state.en_passant)];
+}
+
+void Position::hash_side_key() { hash_key ^= hash_keys.side; }
