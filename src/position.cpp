@@ -7,18 +7,15 @@
 
 #include "position.h"
 
-#include <array>
+#include <algorithm>
 #include <cassert>
 #include <cctype>
-#include <cstdlib>
-#include <cstring>
-#include <ios>
 #include <iostream>
-#include <sstream>
-#include <string>
+#include <vector>
 
-#include "game_elements.h"
+#include "attacks.h"
 #include "hash.h"
+#include "move.h"
 #include "movegen.h"
 #include "types.h"
 #include "utils.h"
@@ -360,8 +357,302 @@ std::string Position::get_fen() const {
 }
 
 const CounterType &Position::get_half_move_counter() const { return m_game_clock_ply; }
+template <bool UPDATE>
+void Position::add_piece(const Piece &piece, const Square &sq) {
+    assert(piece >= WhitePawn && piece <= BlackKing);
+    assert(sq >= a1 && sq <= h8);
 
-const CounterType &Position::get_fifty_move_counter() const { return m_fifty_move_counter_ply; }
+    Color color = get_color(piece);
+    set_bit(occupancies[color], sq);
+    set_bit(pieces[piece], sq);
+    board[sq] = piece;
+
+    hash_piece_key(piece, sq);
+
+    if constexpr (UPDATE) {
+        nnue.add_feature(piece, sq);
+    }
+}
+
+template <bool UPDATE>
+void Position::remove_piece(const Piece &piece, const Square &sq) {
+    assert(piece >= WhitePawn && piece <= BlackKing);
+    assert(sq >= a1 && sq <= h8);
+
+    Color color = get_color(piece);
+    unset_bit(occupancies[color], sq);
+    unset_bit(pieces[piece], sq);
+    board[sq] = Empty;
+
+    hash_piece_key(piece, sq);
+
+    if constexpr (UPDATE) {
+        nnue.remove_feature(piece, sq);
+    }
+}
+
+template <bool UPDATE>
+void Position::move_piece(const Piece &piece, const Square &from, const Square &to) {
+    remove_piece<UPDATE>(piece, from);
+    add_piece<UPDATE>(piece, to);
+}
+
+template <bool UPDATE>
+bool Position::make_move(const Move &move) {
+    if constexpr (UPDATE) {
+        nnue.push();
+    }
+    history_stack[history_stack_head++] = curr_state;
+    ++game_clock_ply;
+    ++curr_state.fifty_move_ply;
+    ++curr_state.ply_from_null;
+    played_positions.emplace_back(hash_key);
+
+    if (curr_state.en_passant != NoSquare) {
+        hash_ep_key();
+        curr_state.en_passant = NoSquare;
+    }
+
+    curr_state.captured = consult(move.to());
+
+    bool legal = true;
+    if (move.is_regular()) {
+        make_regular<UPDATE>(move);
+    } else if (move.is_capture()) {
+        make_capture<UPDATE>(move);
+    } else if (move.is_castle()) {
+        legal = make_castle<UPDATE>(move);
+    } else if (move.is_promotion()) {
+        make_promotion<UPDATE>(move);
+    } else if (move.is_ep()) {
+        make_en_passant<UPDATE>(move);
+    }
+
+    hash_castle_key();
+    update_castling_rights(move);
+    hash_castle_key();
+
+    hash_side_key();
+    stm = static_cast<Color>(~stm);
+
+    if (move.is_castle()) { // If move is a castle, the legality has already been checked by make_castle()
+        return legal;
+    }
+    return !in_check();
+}
+
+template <bool UPDATE>
+void Position::make_regular(const Move &move) {
+    Square from = move.from();
+    Square to = move.to();
+    Piece piece = consult(from);
+
+    move_piece<UPDATE>(piece, from, to);
+    if (get_piece_type(piece, stm) == Pawn) {
+        curr_state.fifty_move_ply = 0;
+        int pawn_offset = stm == White ? North : South;
+        if (to - from == 2 * pawn_offset) { // Double push
+            curr_state.en_passant = static_cast<Square>(to - pawn_offset);
+            hash_ep_key();
+        }
+    }
+}
+
+template <bool UPDATE>
+void Position::make_capture(const Move &move) {
+    Square from = move.from();
+    Square to = move.to();
+    Piece piece = consult(from);
+
+    curr_state.fifty_move_ply = 0;
+    curr_state.captured = consult(to);
+
+    remove_piece<UPDATE>(curr_state.captured, to);
+    remove_piece<UPDATE>(piece, from);
+
+    if (move.is_promotion()) {
+        switch (move.type()) {
+            case PawnPromotionQueenCapture:
+                piece = get_piece(Queen, stm);
+                break;
+            case PawnPromotionRookCapture:
+                piece = get_piece(Rook, stm);
+                break;
+            case PawnPromotionKnightCapture:
+                piece = get_piece(Knight, stm);
+                break;
+            case PawnPromotionBishopCapture:
+                piece = get_piece(Bishop, stm);
+                break;
+            default:
+                __builtin_unreachable();
+        }
+    }
+    add_piece<UPDATE>(piece, to);
+}
+
+template <bool UPDATE>
+bool Position::make_castle(const Move &move) {
+    Square from = move.from();
+    Square to = move.to();
+    Piece piece = consult(from);
+    move_piece<UPDATE>(piece, from, to);
+    switch (to) {
+        case g1: // White castle short
+            move_piece<UPDATE>(BlackRook, h1, f1);
+            return !(is_attacked(e1) || is_attacked(f1) || is_attacked(g1));
+        case c1: // White castle long
+            move_piece<UPDATE>(BlackRook, a1, d1);
+            return !(is_attacked(e1) || is_attacked(d1) || is_attacked(c1));
+        case g8: // Black castle short
+            move_piece<UPDATE>(BlackRook, h8, f8);
+            return !(is_attacked(e8) || is_attacked(f8) || is_attacked(g8));
+        case c8: // Black castle long
+            move_piece<UPDATE>(BlackRook, a8, d8);
+            return !(is_attacked(e8) || is_attacked(d8) || is_attacked(c8));
+        default:
+            __builtin_unreachable();
+    }
+}
+
+template <bool UPDATE>
+void Position::make_promotion(const Move &move) {
+    Square from = move.from();
+    Square to = move.to();
+    Piece piece = consult(from);
+    remove_piece<UPDATE>(piece, from);
+    switch (move.type()) {
+        case PawnPromotionQueen:
+            piece = get_piece(Queen, stm);
+            break;
+        case PawnPromotionRook:
+            piece = get_piece(Rook, stm);
+            break;
+        case PawnPromotionKnight:
+            piece = get_piece(Knight, stm);
+            break;
+        case PawnPromotionBishop:
+            piece = get_piece(Bishop, stm);
+            break;
+        default:
+            __builtin_unreachable();
+    }
+    add_piece<UPDATE>(piece, to);
+}
+
+template <bool UPDATE>
+void Position::make_en_passant(const Move &move) {
+    curr_state.fifty_move_ply = 0;
+    Square from = move.from();
+    Square to = move.from();
+    Piece piece = consult(from);
+    Piece captured = consult(to);
+    Square captured_square = static_cast<Square>(to - static_cast<int>(stm == White ? North : South));
+    remove_piece<UPDATE>(captured, captured_square);
+    move_piece<UPDATE>(piece, from, to);
+}
+
+void Position::update_castling_rights(const Move &move) {
+    Square from = move.from();
+    PieceType piece_type = get_piece_type(consult(from), stm);
+
+    if (piece_type == King) {
+        switch (stm) {
+            case White:
+                unset_mask(curr_state.castling_rights, WhiteShortCastleRight & WhiteLongCastleRight);
+                break;
+            case Black:
+                unset_mask(curr_state.castling_rights, BlackShortCastleRight & BlackLongCastleRight);
+                break;
+            default:
+                __builtin_unreachable();
+        }
+    } else if (piece_type == Rook) {
+        switch (from) {
+            case a1:
+                unset_mask(curr_state.castling_rights, WhiteLongCastleRight);
+                break;
+            case h1:
+                unset_mask(curr_state.castling_rights, WhiteShortCastleRight);
+                break;
+            case a8:
+                unset_mask(curr_state.castling_rights, BlackLongCastleRight);
+                break;
+            case h8:
+                unset_mask(curr_state.castling_rights, BlackShortCastleRight);
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+template <bool UPDATE>
+void Position::unmake_move(const Move &move) {
+    assert(history_stack_head > 0); // check if there is a move to unmake
+    if constexpr (UPDATE) {
+        nnue.pop();
+    }
+
+    --game_clock_ply;
+    played_positions.pop_back();
+    stm = static_cast<Color>(~stm);
+
+    Square from = move.from();
+    Square to = move.to();
+    Piece piece = consult(to);
+
+    if (move.is_regular()) {
+        move_piece<false>(piece, to, from);
+    } else if (move.is_capture()) {
+        remove_piece<false>(piece, to);
+        add_piece<false>(curr_state.captured, to);
+        if (move.is_promotion()) {
+            piece = static_cast<Piece>(Pawn + ColorOffset * stm);
+        }
+        add_piece<false>(piece, from);
+    } else if (move.is_castle()) {
+        move_piece<false>(piece, to, from);
+        switch (to) {
+            case g1: // White castle short
+                move_piece<false>(WhiteRook, f1, h1);
+                break;
+            case c1: // White castle long
+                move_piece<false>(WhiteRook, d1, a1);
+                break;
+            case g8: // Black castle short
+                move_piece<false>(BlackRook, f8, h8);
+                break;
+            case c8: // Black castle long
+                move_piece<false>(BlackRook, d8, a8);
+                break;
+            default:
+                __builtin_unreachable();
+        }
+    } else if (move.is_promotion()) {
+        remove_piece<false>(piece, to);
+        piece = static_cast<Piece>(Pawn + ColorOffset * stm);
+        add_piece<false>(piece, from);
+    } else if (move.is_ep()) {
+        move_piece<false>(piece, to, from);
+        Square captured_square = static_cast<Square>(to - static_cast<int>(stm == White ? North : South));
+        add_piece<false>(curr_state.captured, captured_square);
+    }
+
+    if (curr_state.en_passant != NoSquare) {
+        hash_ep_key();
+    }
+    hash_castle_key();
+
+    curr_state = history_stack[--history_stack_head];
+
+    if (curr_state.en_passant != NoSquare) {
+        hash_ep_key();
+    }
+    hash_castle_key();
+    hash_side_key();
+}
+
 Move Position::get_movement(const std::string &algebraic_notation) const {
     Square from = get_square(algebraic_notation[1] - '1', algebraic_notation[0] - 'a');
     Square to = get_square(algebraic_notation[3] - '1', algebraic_notation[2] - 'a');
