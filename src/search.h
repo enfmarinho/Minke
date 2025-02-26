@@ -13,7 +13,7 @@
 #include "types.h"
 
 struct SearchData {
-    GameState game_state;
+    Position position;
     TimeManager time_manager;
 
     int nodes_searched;

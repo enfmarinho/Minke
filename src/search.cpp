@@ -44,7 +44,7 @@ void iterative_deepening(SearchData &search_data) {
         WeightType eval = aspiration(depth, pv_list, search_data);
         if (!search_data.time_manager.time_over() && !search_data.stop) { // Search was successful
             bool found;
-            TTEntry *entry = TranspositionTable::get().probe(search_data.game_state.top(), found);
+            TTEntry *entry = TranspositionTable::get().probe(search_data.position, found);
 
             best_move = entry->best_move();
             if (best_move == MoveNone) {
@@ -66,7 +66,7 @@ void iterative_deepening(SearchData &search_data) {
 
 WeightType aspiration(const CounterType &depth, PvList &pv_list, SearchData &search_data) {
     bool found;
-    TTEntry *ttentry = TranspositionTable::get().probe(search_data.game_state.top(), found);
+    TTEntry *ttentry = TranspositionTable::get().probe(search_data.position, found);
     if (!found)
         return alpha_beta(-MaxScore, MaxScore, depth, pv_list, search_data);
 
@@ -88,14 +88,14 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
         return -MaxScore;
     else if (depth_ply == 0)
         return quiescence(alpha, beta, search_data);
-    else if (search_data.game_state.draw(search_data.searching_depth))
+    else if (search_data.position.draw())
         return 0;
 
     ++search_data.nodes_searched;
 
     // Transposition table probe
     bool found;
-    TTEntry *entry = TranspositionTable::get().probe(search_data.game_state.top(), found);
+    TTEntry *entry = TranspositionTable::get().probe(search_data.position, found);
     if (found && entry->depth_ply() >= depth_ply &&
         (entry->bound() == TTEntry::BoundType::Exact ||
          (entry->bound() == TTEntry::BoundType::UpperBound && entry->evaluation() <= alpha) ||
@@ -107,17 +107,18 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
     Move best_move = MoveNone;
     WeightType best_score = -MaxScore;
     WeightType old_alpha = alpha;
-    MoveList move_list(search_data.game_state, (found ? entry->best_move() : MoveNone));
+    MoveList move_list(search_data.position);
+    move_list.calculate_scores(search_data);
     while (!move_list.empty()) {
         PvList curr_pv;
         Move move = move_list.next_move();
-        if (!search_data.game_state.make_move(move)) // Avoid illegal moves
+        if (!search_data.position.make_move(move)) // Avoid illegal moves
             continue;
 
         ++search_data.searching_depth;
         WeightType score = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, search_data);
         --search_data.searching_depth;
-        search_data.game_state.undo_move();
+        search_data.position.unmake_move();
         assert(score >= -MaxScore);
 
         if (score > best_score) {
@@ -128,7 +129,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
             if (score > alpha) {
                 alpha = score;
                 if (score >= beta) { // fails high
-                    search_data.game_state.increment_history(move, depth_ply);
+                    // search_data.position.increment_history(move, depth_ply); // TODO
                     break;
                 }
             }
@@ -137,26 +138,16 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
 
     if (best_move == MoveNone) { // handle positions under stalemate or checkmate,
                                  // i.e. positions with no legal moves to be made
-        const Position &pos = search_data.game_state.top();
-        Player adversary;
-        PiecePlacement king_placement;
-        if (pos.side_to_move() == Player::White) {
-            adversary = Player::Black;
-            king_placement = pos.white_king_position();
-        } else {
-            adversary = Player::White;
-            king_placement = pos.black_king_position();
-        }
-
-        return under_attack(pos, adversary, king_placement) ? -MateScore - depth_ply : 0;
+        const Position &pos = search_data.position;
+        return pos.is_attacked(pos.get_king_placement(pos.get_stm())) ? -MateScore - depth_ply : 0;
     }
 
     if (!search_data.time_manager.time_over()) { // Save on TT if search was completed
         TTEntry::BoundType bound = best_score >= beta   ? TTEntry::BoundType::LowerBound
                                    : alpha != old_alpha ? TTEntry::BoundType::Exact
                                                         : TTEntry::BoundType::UpperBound;
-        entry->save(search_data.game_state.top().get_hash(), depth_ply, best_move, best_score,
-                    search_data.game_state.top().get_half_move_counter(), bound);
+        entry->save(search_data.position.get_hash(), depth_ply, best_move, best_score,
+                    search_data.position.get_game_clock(), bound);
     }
 
     return best_score;
@@ -166,10 +157,10 @@ WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data
     ++search_data.nodes_searched;
     if (search_data.time_manager.time_over() || search_data.stop)
         return -MaxScore;
-    else if (search_data.game_state.draw(search_data.searching_depth))
+    else if (search_data.position.draw())
         return 0;
 
-    WeightType stand_pat = search_data.game_state.eval();
+    WeightType stand_pat = search_data.position.eval();
     if (stand_pat >= beta)
         return beta;
 
@@ -184,11 +175,12 @@ WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data
     if (alpha < stand_pat)
         alpha = stand_pat;
 
-    MoveList move_list(search_data.game_state, MoveNone);
+    MoveList move_list(search_data.position);
+    move_list.calculate_scores(search_data);
     bool capture_found = false;
     while (!move_list.empty()) {
         Move curr_move = move_list.next_move();
-        if (curr_move.move_type != MoveType::Capture) {
+        if (curr_move.type() != MoveType::Capture) {
             if (capture_found)
                 break;
             else
@@ -196,11 +188,11 @@ WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data
         }
 
         capture_found = true;
-        if (!search_data.game_state.make_move(curr_move))
+        if (!search_data.position.make_move(curr_move))
             continue;
 
         WeightType eval = -quiescence(-beta, -alpha, search_data);
-        search_data.game_state.undo_move();
+        search_data.position.unmake_move();
         if (eval >= beta)
             return beta;
         else if (eval > alpha)
