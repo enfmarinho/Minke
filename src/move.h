@@ -17,8 +17,8 @@ enum MoveType : char {
     Regular = 0b0000,
     Capture = 0b0001,
     EnPassant = 0b0011,
-    KingSideCastling = 0b0100,
-    QueenSideCastling = 0b0110,
+    ShortCastling = 0b0100,
+    LongCastling = 0b0110,
 
     PawnPromotionMask = 0b1000,
     PawnPromotionKnight = PawnPromotionMask | 0b0000,
