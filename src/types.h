@@ -99,6 +99,7 @@ constexpr inline auto StartFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 
 constexpr int MaxMoves = 256;
 constexpr int HalfMovesPerMatch = 2048;
 constexpr int MaxSearchDepth = 128;
+constexpr int MoveNone = 0;
 
 inline TimeType now() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
