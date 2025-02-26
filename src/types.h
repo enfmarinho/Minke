@@ -61,10 +61,10 @@ enum Piece : int {
 };
 
 enum CastlingRights : int {
-    WhiteShortCastle = 1,
-    WhiteLongCastle = 2,
-    BlackShortCastle = 4,
-    BlackLongCastle = 8
+    WhiteShortCastleRight = 1,
+    WhiteLongCastleRight = 2,
+    BlackShortCastleRight = 4,
+    BlackLongCastleRight = 8
 };
 
 enum Direction : int {
@@ -96,7 +96,7 @@ constexpr IndexType BoardHeight = 8;
 constexpr IndexType BoardWidth = 8;
 
 constexpr inline auto StartFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-constexpr int MaxMoves = 256;
+constexpr int MaxPly = 256;
 constexpr int HalfMovesPerMatch = 2048;
 constexpr int MaxSearchDepth = 128;
 constexpr int MoveNone = 0;
@@ -108,7 +108,7 @@ inline TimeType now() {
 
 struct BoardState {
     PieceType captured;
-    int fifty_move_clock;
+    int fifty_move_ply;
     int ply_after_reset;
     uint8_t castle_rights;
     Square en_passant;
