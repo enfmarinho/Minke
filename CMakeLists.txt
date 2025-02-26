@@ -30,7 +30,6 @@ endif()
 add_executable(
   minke
   "src/attacks.cpp"
-  "src/hash.cpp"
   "src/init.cpp"
   "src/main.cpp"
   "src/move.cpp"
