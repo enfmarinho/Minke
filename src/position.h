@@ -52,11 +52,11 @@ class Position {
     inline int get_material_count() const;
 
     inline Piece consult(const Square &sq) const;
+
+    inline bool in_check();
     bool is_attacked(const Square &sq) const;
-    bool in_check();
 
     inline WeightType eval() const;
-
     bool draw();
 
     void print() const;
@@ -68,7 +68,6 @@ class Position {
     void remove_piece(const Piece &piece, const Square &sq);
     template <bool UPDATE>
     void move_piece(const Piece &piece, const Square &from, const Square &to);
-    void update_castling_rights(const Move &move);
 
     template <bool UPDATE>
     void make_regular(const Move &move);
@@ -80,6 +79,7 @@ class Position {
     void make_promotion(const Move &move);
     template <bool UPDATE>
     void make_en_passant(const Move &move);
+    void update_castling_rights(const Move &move);
 
     bool insufficient_material() const;
     bool repetition() const;
