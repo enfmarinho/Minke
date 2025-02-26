@@ -44,7 +44,7 @@ void iterative_deepening(SearchData &search_data) {
         WeightType eval = aspiration(depth, pv_list, search_data);
         if (!search_data.time_manager.time_over() && !search_data.stop) { // Search was successful
             bool found;
-            TTEntry *entry = TranspositionTable::get().probe(search_data.position, found);
+            TTEntry *entry = TT.probe(search_data.position, found);
 
             best_move = entry->best_move();
             if (best_move == MoveNone) {
@@ -66,7 +66,7 @@ void iterative_deepening(SearchData &search_data) {
 
 WeightType aspiration(const CounterType &depth, PvList &pv_list, SearchData &search_data) {
     bool found;
-    TTEntry *ttentry = TranspositionTable::get().probe(search_data.position, found);
+    TTEntry *ttentry = TT.probe(search_data.position, found);
     if (!found)
         return alpha_beta(-MaxScore, MaxScore, depth, pv_list, search_data);
 
@@ -95,7 +95,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
 
     // Transposition table probe
     bool found;
-    TTEntry *entry = TranspositionTable::get().probe(search_data.position, found);
+    TTEntry *entry = TT.probe(search_data.position, found);
     if (found && entry->depth_ply() >= depth_ply &&
         (entry->bound() == TTEntry::BoundType::Exact ||
          (entry->bound() == TTEntry::BoundType::UpperBound && entry->evaluation() <= alpha) ||

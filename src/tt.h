@@ -60,10 +60,8 @@ class TranspositionTable {
     static_assert(sizeof(TTBucket) == 64, "TTBucket is not 64 bytes");
 
   public:
-    static TranspositionTable &get() {
-        static TranspositionTable instance;
-        return instance;
-    }
+    TranspositionTable() = default;
+    ~TranspositionTable() = default;
     TranspositionTable(const TranspositionTable &) = delete;
     TranspositionTable &operator=(const TranspositionTable &) = delete;
 
@@ -78,12 +76,11 @@ class TranspositionTable {
     void clear();
 
   private:
-    TranspositionTable() = default;
-    ~TranspositionTable() = default;
-
     size_t m_table_size{0};
     size_t m_table_mask{0};
     std::unique_ptr<TTBucket[]> m_table;
 };
+
+extern TranspositionTable TT;
 
 #endif // #ifndef TT_H

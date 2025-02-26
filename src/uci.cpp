@@ -101,7 +101,7 @@ void UCI::loop() {
 void UCI::print_debug_info() {
     m_search_data.position.print();
     bool found;
-    auto entry = TranspositionTable::get().probe(m_search_data.position, found);
+    auto entry = TT.probe(m_search_data.position, found);
     Move ttmove = MoveNone;
     if (found) {
         ttmove = entry->best_move();
@@ -147,7 +147,7 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
         std::cerr << "Invalid FEN!" << std::endl;
         return;
     }
-    TranspositionTable::get().clear();
+    TT.clear();
     for (const std::string &algebraic_notation : move_list) {
         m_search_data.position.make_move<false>(m_search_data.position.get_movement(algebraic_notation));
     }
@@ -163,7 +163,7 @@ void UCI::set_option(std::istringstream &iss) {
     iss >> value;
     // TODO check if values are valid
     if (token == "Hash") {
-        TranspositionTable::get().resize(value);
+        TT.resize(value);
     }
 }
 
@@ -172,7 +172,7 @@ void UCI::bench() {
     for (const std::string &fen : benchmark_fen_list) {
         m_search_data.position.set_fen(fen);
         m_search_data.time_manager.init();
-        TranspositionTable::get().clear();
+        TT.clear();
         TimeType start_time = now();
         go();
         m_thread.join();
