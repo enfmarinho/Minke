@@ -12,20 +12,14 @@
 
 #include "types.h"
 
-namespace zobrist {
-HashType hash(const Position &position);
-HashType rehash(const Position &position, const PastMove &last_move);
-int piece_start_index(const Square &piece_square);
-int placement_index(const PiecePlacement &piece_placement);
-int placement_index(const IndexType &file, const IndexType &rank);
-
-constexpr static int WhiteKingSideCastlingRightsIndex = 768;
-constexpr static int WhiteQueenSideCastlingRightsIndex = 769;
-constexpr static int BlackKingSideCastlingRightsIndex = 770;
-constexpr static int BlackQueenSideCastlingRightsIndex = 771;
-constexpr static int EnPassantStarterIndex = 772;
-constexpr static int BlackTurnIndex = 780;
-}; // namespace zobrist
+// Randoms uint64_t for performing Zobrist Hashing.
+struct HashKeys {
+    HashType pieces[12][64];
+    HashType castle[16];
+    HashType en_passant[8];
+    HashType side;
+};
+extern HashKeys hash_keys;
 
 //==== Taken from stockfish
 // xorshift64star Pseudo-Random Number Generator
@@ -66,5 +60,6 @@ class PRNG {
         return T(rand64() & rand64() & rand64());
     }
 };
+extern PRNG prng;
 
 #endif // #ifndef HASH_H
