@@ -282,11 +282,13 @@ const HashType &Position::get_hash() const { return m_hash; }
 
 std::string Position::get_fen() const {
     std::string fen;
-    for (IndexType file = 7; file >= 0; --file) {
-        IndexType counter = 0;
-        for (IndexType rank = 0; rank < BoardWidth; ++rank) {
-            const Square &curr_square = consult(file, rank);
-            if (curr_square.piece == Piece::None) {
+    for (int file = 7; file >= 0; --file) {
+        int counter = 0;
+        for (int rank = 0; rank < 8; ++rank) {
+            const Piece &piece = consult(get_square(file, rank));
+            const Color color = get_color(piece);
+            const PieceType piece_type = get_piece_type(piece, color);
+            if (piece == Empty) {
                 ++counter;
                 continue;
             } else if (counter > 0) {
@@ -294,45 +296,47 @@ std::string Position::get_fen() const {
                 counter = 0;
             }
 
-            char piece;
-            if (curr_square.piece == Piece::King)
-                piece = 'k';
-            else if (curr_square.piece == Piece::Queen)
-                piece = 'q';
-            else if (curr_square.piece == Piece::Bishop)
-                piece = 'b';
-            else if (curr_square.piece == Piece::Rook)
-                piece = 'r';
-            else if (curr_square.piece == Piece::Pawn)
-                piece = 'p';
-            else if (curr_square.piece == Piece::Knight)
-                piece = 'n';
-
-            if (curr_square.player == Player::White)
-                fen += toupper(piece);
+            char piece_char;
+            if (piece_type == Pawn)
+                piece_char = 'p';
+            else if (piece_type == Knight)
+                piece_char = 'n';
+            else if (piece_type == Bishop)
+                piece_char = 'b';
+            else if (piece_type == Rook)
+                piece_char = 'r';
+            else if (piece_type == Queen)
+                piece_char = 'q';
+            else if (piece_type == King)
+                piece_char = 'k';
             else
-                fen += piece;
+                __builtin_unreachable();
+
+            if (color == White)
+                fen += toupper(piece_char);
+            else
+                fen += piece_char;
         }
         if (counter > 0)
             fen += ('0' + counter);
         if (file != 0)
             fen += '/';
     }
-    fen += (m_side_to_move == Player::White ? " w " : " b ");
+    fen += (stm == White ? " w " : " b ");
     bool none = true;
-    if (m_white_castling_rights.king_side) {
+    if (curr_state.castling_rights & WhiteShortCastleRight) {
         none = false;
         fen += "K";
     }
-    if (m_white_castling_rights.queen_side) {
+    if (curr_state.castling_rights & WhiteLongCastleRight) {
         none = false;
         fen += "Q";
     }
-    if (m_black_castling_rights.king_side) {
+    if (curr_state.castling_rights & BlackShortCastleRight) {
         none = false;
         fen += "k";
     }
-    if (m_black_castling_rights.queen_side) {
+    if (curr_state.castling_rights & BlackLongCastleRight) {
         none = false;
         fen += "q";
     }
@@ -340,17 +344,17 @@ std::string Position::get_fen() const {
         fen += "-";
 
     fen += ' ';
-    if (m_en_passant == -1)
+    if (get_en_passant() == NoSquare)
         fen += "-";
     else {
-        fen += static_cast<char>(m_en_passant + 'a');
-        fen += (m_side_to_move == Player::White ? '6' : '3');
+        fen += (get_rank(get_en_passant()) + 'a');
+        fen += (stm == White ? '6' : '3');
     }
     fen += ' ';
 
-    fen += std::to_string(m_fifty_move_counter_ply);
+    fen += std::to_string(get_fifty_move_ply());
     fen += ' ';
-    fen += std::to_string((m_game_clock_ply + 1) / 2);
+    fen += std::to_string((game_clock_ply + 1) / 2); // TODO check this, should i really add 1 ?
 
     return fen;
 }
@@ -358,7 +362,77 @@ std::string Position::get_fen() const {
 const CounterType &Position::get_half_move_counter() const { return m_game_clock_ply; }
 
 const CounterType &Position::get_fifty_move_counter() const { return m_fifty_move_counter_ply; }
+Move Position::get_movement(const std::string &algebraic_notation) const {
+    Square from = get_square(algebraic_notation[1] - '1', algebraic_notation[0] - 'a');
+    Square to = get_square(algebraic_notation[3] - '1', algebraic_notation[2] - 'a');
+    MoveType move_type = MoveType::Regular;
 
+    if (algebraic_notation.size() == 5) { // Pawn promotion
+        if (tolower(algebraic_notation[4]) == 'q')
+            move_type = PawnPromotionQueen;
+        else if (tolower(algebraic_notation[4]) == 'n')
+            move_type = PawnPromotionKnight;
+        else if (tolower(algebraic_notation[4]) == 'r')
+            move_type = PawnPromotionRook;
+        else if (tolower(algebraic_notation[4]) == 'b')
+            move_type = PawnPromotionBishop;
+    }
+    if (consult(to) != Empty) { // Capture
+        move_type = static_cast<MoveType>(move_type | Capture);
+    } else if (get_piece_type(consult(from)) == King && get_rank(from) == 4 &&
+               (get_rank(to) == 2 || get_rank(to) == 6)) { // Castle
+        move_type = Castling;
+    } else if (get_piece_type(consult(from)) == Pawn && get_rank(to) == get_rank(get_en_passant()) &&
+               (get_file(to) == 2 || get_file(to) == 5)) { // En passant
+        move_type = EnPassant;
+    }
+
+    return Move(from, to, move_type);
+}
+
+inline Bitboard Position::get_occupancy() const { return occupancies[White] | occupancies[Black]; }
+
+inline Bitboard Position::get_occupancy(const Color &color) const {
+    assert(color == White || color == Black);
+    return occupancies[color];
+}
+
+inline Bitboard Position::get_piece_bb(const Piece &piece) const {
+    assert(piece >= WhitePawn && piece <= BlackKing);
+    return pieces[piece];
+}
+
+inline Bitboard Position::get_piece_bb(const PieceType &piece_type, const Color &color) const {
+    return get_piece_bb(static_cast<Piece>(piece_type + color * ColorOffset));
+}
+
+inline Square Position::get_king_placement(const Color &color) const { return lsb(pieces[King + color * ColorOffset]); }
+
+inline uint8_t Position::get_castling_rights() const { return curr_state.castling_rights; }
+
+inline Color Position::get_stm() const { return stm; }
+
+inline Square Position::get_en_passant() const { return curr_state.en_passant; }
+
+inline HashType Position::get_hash() const { return hash_key; }
+
+inline int Position::get_game_ply() const { return game_clock_ply; }
+
+inline int Position::get_fifty_move_ply() const { return curr_state.fifty_move_ply; }
+
+inline int Position::get_material_count(const Piece &piece) const { return count_bits(get_piece_bb(piece)); }
+
+inline int Position::get_material_count(const PieceType &piece_type, const Color &color) const {
+    return get_material_count(static_cast<Piece>(piece_type + color * ColorOffset));
+}
+
+inline int Position::get_material_count(const PieceType &piece_type) const {
+    return count_bits(pieces[piece_type] | pieces[piece_type + ColorOffset]);
+}
+
+inline int Position::get_material_count() const { return count_bits(get_occupancy()); }
+
+inline Piece Position::consult(const Square &sq) const { return board[sq]; }
 void Position::print() const {
     auto print_line = []() -> void {
         for (IndexType i = 0; i < 8; ++i) {
