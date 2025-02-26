@@ -113,13 +113,13 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
     while (!move_list.empty()) {
         PvList curr_pv;
         Move move = move_list.next_move();
-        if (!search_data.position.make_move(move)) // Avoid illegal moves
+        if (!search_data.position.make_move<true>(move)) // Avoid illegal moves
             continue;
 
         ++search_data.searching_depth;
         WeightType score = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, search_data);
         --search_data.searching_depth;
-        search_data.position.unmake_move();
+        search_data.position.unmake_move<true>(move);
         assert(score >= -MaxScore);
 
         if (score > best_score) {
@@ -139,8 +139,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
 
     if (best_move == MoveNone) { // handle positions under stalemate or checkmate,
                                  // i.e. positions with no legal moves to be made
-        const Position &pos = search_data.position;
-        return pos.is_attacked(pos.get_king_placement(pos.get_stm())) ? -MateScore - depth_ply : 0;
+        return search_data.position.in_check() ? -MateScore - depth_ply : 0;
     }
 
     if (!search_data.time_manager.time_over()) { // Save on TT if search was completed
@@ -189,11 +188,11 @@ WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data
         }
 
         capture_found = true;
-        if (!search_data.position.make_move(curr_move))
+        if (!search_data.position.make_move<true>(curr_move))
             continue;
 
         WeightType eval = -quiescence(-beta, -alpha, search_data);
-        search_data.position.unmake_move();
+        search_data.position.unmake_move<true>(curr_move);
         if (eval >= beta)
             return beta;
         else if (eval > alpha)

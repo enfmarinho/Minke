@@ -18,42 +18,93 @@
 
 class Position {
   public:
-    Position() = default;
+    Position();
     ~Position() = default;
-    bool reset(const std::string &fen);
-    Square consult(const PiecePlacement &placement) const;
-    Square consult(const IndexType &file, const IndexType &rank) const;
-    Square &consult(const PiecePlacement &placement);
-    Square &consult(const IndexType &file, const IndexType &rank);
-    bool move(const Move &move);
-    Move get_movement(const std::string &algebraic_notation) const;
-    const Player &side_to_move() const;
-    const CastlingRights &white_castling_rights() const;
-    const CastlingRights &black_castling_rights() const;
-    const IndexType &en_passant_rank() const;
-    const PiecePlacement &black_king_position() const;
-    const PiecePlacement &white_king_position() const;
-    const CounterType &material_count(const Piece &piece, const Player &player) const;
-    const HashType &get_hash() const;
-    const CounterType &get_half_move_counter() const;
-    const CounterType &get_fifty_move_counter() const;
+
+    template <bool UPDATE>
+    bool set_fen(const std::string &fen);
     std::string get_fen() const;
+    void reset_nnue();
+
+    template <bool UPDATE>
+    bool make_move(const Move &move);
+    template <bool UPDATE>
+    void unmake_move(const Move &move);
+
+    Move get_movement(const std::string &algebraic_notation) const;
+    inline Bitboard get_occupancy() const;
+    inline Bitboard get_occupancy(const Color &color) const;
+    inline Bitboard get_piece_bb(const Piece &piece) const;
+    inline Bitboard get_piece_bb(const PieceType &piece_type, const Color &color) const;
+    inline Square get_king_placement(const Color &color) const;
+    inline uint8_t get_castling_rights() const;
+    inline Color get_stm() const;
+    inline Square get_ep_rank() const;
+    inline HashType get_hash() const;
+    inline int get_game_ply() const;
+    inline int get_fifty_move_ply() const;
+    inline int get_material_count(const Piece &piece) const;
+    inline int get_material_count(const PieceType &piece_type, const Color &color) const;
+    inline int get_material_count(const PieceType &piece_type) const;
+    inline int get_material_count() const;
+
+    inline Piece consult(const Square &sq) const;
+    bool is_attacked(const Square &sq) const;
+    bool in_check();
+
+    inline WeightType eval() const;
+
+    bool draw();
+
     void print() const;
-    bool insufficient_material() const;
 
   private:
-    Square m_board[0x80];
-    CastlingRights m_white_castling_rights;
-    CastlingRights m_black_castling_rights;
-    PiecePlacement m_white_king_position;
-    PiecePlacement m_black_king_position;
-    IndexType m_en_passant;               //!< Rank of possible en passant move
-    CounterType m_fifty_move_counter_ply; //!< Move counter since last irreversible move
-    Player m_side_to_move;
-    CounterType m_material_count[2][5];
-    CounterType m_total_material_count;
-    HashType m_hash;              //!< Zobrist hash of this position.
-    CounterType m_game_clock_ply; //!< Count all the half moves made in the match
+    template <bool UPDATE>
+    void add_piece(const Piece &piece, const Square &sq);
+    template <bool UPDATE>
+    void remove_piece(const Piece &piece, const Square &sq);
+    template <bool UPDATE>
+    void move_piece(const Piece &piece, const Square &from, const Square &to);
+    void update_castling_rights(const Move &move);
+
+    template <bool UPDATE>
+    void make_regular(const Move &move);
+    template <bool UPDATE>
+    void make_capture(const Move &move);
+    template <bool UPDATE>
+    void make_castle(const Move &move);
+    template <bool UPDATE>
+    void make_promotion(const Move &move);
+    template <bool UPDATE>
+    void make_en_passant(const Move &move);
+
+    void unmake_capture(const Move &move);
+    void unmake_castle(const Move &move);
+    void unmake_promotion(const Move &move);
+
+    bool insufficient_material() const;
+    bool repetition() const;
+    bool fifty_move_draw();
+
+    void hash_piece_key(const Piece &piece, const Square &sq);
+    void hash_castle_key();
+    void hash_ep_key();
+    void hash_side_key();
+
+    Piece board[64];
+    Bitboard occupancies[2];
+    Bitboard pieces[12];
+
+    Color stm;
+    HashType hash_key;
+    int game_clock_ply;
+
+    int history_stack_head;
+    BoardState curr_state;
+    BoardState history_stack[MaxPly];
+    std::vector<HashType> played_positions; // TODO this could be an static array
+
+    NNUE nnue;
 };
 
 #endif // #ifndef POSITION_H
