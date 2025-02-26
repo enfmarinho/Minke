@@ -44,10 +44,16 @@ class Move {
     int16_t internal() const;
     std::string get_algebraic_notation() const;
 
+    friend bool operator==(const Move& lhs, const Move& rhs);
+    friend bool operator==(const Move& lhs, const int& rhs);
+
   private:
     // Bits are arranged in the following way:
     // 4 bits for move type | 6 bits for target square | 6 bits for origin square
     int16_t m_bytes;
 };
+
+bool operator==(const Move& lhs, const Move& rhs);
+bool operator==(const Move& lhs, const int& rhs);
 
 #endif // #ifndef MOVE_H

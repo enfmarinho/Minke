@@ -34,3 +34,6 @@ std::string Move::get_algebraic_notation() const {
     }
     return algebraic_notation;
 }
+
+bool operator==(const Move& lhs, const Move& rhs) { return lhs.internal() == rhs.internal(); }
+bool operator==(const Move& lhs, const int& rhs) { return lhs.internal() == rhs; }
