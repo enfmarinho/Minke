@@ -147,7 +147,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
                                    : alpha != old_alpha ? TTEntry::BoundType::Exact
                                                         : TTEntry::BoundType::UpperBound;
         entry->save(search_data.position.get_hash(), depth_ply, best_move, best_score,
-                    search_data.position.get_game_clock(), bound);
+                    search_data.position.get_game_ply(), bound);
     }
 
     return best_score;

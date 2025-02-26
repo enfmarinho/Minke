@@ -29,13 +29,18 @@ inline Square lsb(Bitboard bitboard);
 inline Square msb(Bitboard bitboard);
 
 // Returns the rank of "sq"
-inline int rank(Square sq);
+inline int get_rank(Square sq);
 
 // Returns the file of "sq"
-inline int file(Square sq);
+inline int get_file(Square sq);
+
+inline Piece get_piece(const PieceType piece_type, const Color color);
 
 inline PieceType get_piece_type(const Piece &piece, const Color &color);
+inline PieceType get_piece_type(const Piece &piece);
 
 inline Color get_color(const Piece &piece);
+
+inline Square get_square(const int &file, const int &rank);
 
 #endif // #ifndef UTILS_H

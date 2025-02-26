@@ -90,12 +90,26 @@ inline Square msb(Bitboard b) {
 #error "Compiler not suported."
 #endif
 
-inline int rank(Square sq) { return sq >> 3; }
+inline int get_rank(Square sq) { return sq >> 3; }
 
-inline int file(Square sq) { return sq & 0b111; }
+inline int get_file(Square sq) { return sq & 0b111; }
+
+inline Piece get_piece(const PieceType &piece_type, const Color &color) {
+    return static_cast<Piece>(piece_type + color * ColorOffset);
+}
 
 inline PieceType get_piece_type(const Piece &piece, const Color &color) {
     return static_cast<PieceType>(piece - color * ColorOffset);
 }
 
+inline PieceType get_piece_type(const Piece &piece) {
+    assert(piece >= WhitePawn && piece <= BlackKing);
+    if (piece > 6) {
+        return static_cast<PieceType>(piece - 6);
+    }
+    return static_cast<PieceType>(piece);
+}
+
 inline Color get_color(const Piece &piece) { return static_cast<Color>(piece / ColorOffset); }
+
+inline Square get_square(const int file, const int rank) { return static_cast<Square>(file * 8 + rank); }
