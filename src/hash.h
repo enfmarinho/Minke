@@ -36,7 +36,6 @@ extern HashKeys hash_keys;
 //
 // For further analysis see
 //   <http://vigna.di.unimi.it/ftp/papers/xorshift.pdf>
-
 class PRNG {
     HashType s;
 
@@ -60,6 +59,5 @@ class PRNG {
         return T(rand64() & rand64() & rand64());
     }
 };
-extern PRNG prng;
 
 #endif // #ifndef HASH_H
