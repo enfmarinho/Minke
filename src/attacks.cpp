@@ -10,6 +10,21 @@
 #include "types.h"
 #include "utils.h"
 
+Bitboard BishopMasks[64];
+Bitboard RookMasks[64];
+
+Bitboard BishopRelevantBits[64];
+Bitboard RookRelevantBits[64];
+
+Bitboard BishopMagicNumbers[64];
+Bitboard RookMagicNumbers[64];
+
+Bitboard PawnAttacks[2][64];
+Bitboard KnightAttacks[64];
+Bitboard KingAttacks[64];
+Bitboard BishopAttacks[64][512];
+Bitboard RookAttacks[64][4096];
+
 Bitboard generate_bishop_mask(Square sq) {
     Bitboard mask = 0ULL;
     Bitboard board = 0ULL;
@@ -72,7 +87,7 @@ Bitboard generate_rook_mask(Square sq) {
     return mask;
 }
 
-Bitboard generate_pawn_attack(Square sq, Color color) {
+Bitboard generate_pawn_attacks(Square sq, Color color) {
     Bitboard attacks = 0ULL;
     Bitboard board = 0ULL;
     set_bit(board, sq);
@@ -91,7 +106,7 @@ Bitboard generate_pawn_attack(Square sq, Color color) {
     return attacks;
 }
 
-Bitboard generate_knight_attack(Square sq) {
+Bitboard generate_knight_attacks(Square sq) {
     Bitboard attacks = 0ULL;
     Bitboard board = 0ULL;
     set_bit(board, sq);
@@ -116,7 +131,7 @@ Bitboard generate_knight_attack(Square sq) {
     return attacks;
 }
 
-Bitboard generate_bishop_attack(Square sq, const Bitboard& blockers) {
+Bitboard generate_bishop_attacks(Square sq, const Bitboard& blockers) {
     Bitboard attacks = 0ULL;
     Bitboard board = 0ULL;
     set_bit(board, sq);
@@ -149,7 +164,7 @@ Bitboard generate_bishop_attack(Square sq, const Bitboard& blockers) {
     return attacks;
 }
 
-Bitboard generate_rook_attack(Square sq, const Bitboard& blockers) {
+Bitboard generate_rook_attacks(Square sq, const Bitboard& blockers) {
     Bitboard attacks = 0ULL;
     Bitboard board = 0ULL;
     set_bit(board, sq);
@@ -182,7 +197,7 @@ Bitboard generate_rook_attack(Square sq, const Bitboard& blockers) {
     return attacks;
 }
 
-Bitboard generate_king_attack(Square sq) {
+Bitboard generate_king_attacks(Square sq) {
     Bitboard attacks = 0ULL;
     Bitboard board = 0ULL;
     set_bit(board, sq);
