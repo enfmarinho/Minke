@@ -23,8 +23,8 @@ const Bitboard not_7_8_rank = 281474976710655ULL;
 extern Bitboard BishopMasks[64];
 extern Bitboard RookMasks[64];
 
-extern Bitboard BishopRelevantBits[64];
-extern Bitboard RookRelevantBits[64];
+extern Bitboard BishopShifts[64];
+extern Bitboard RookShifts[64];
 
 extern Bitboard BishopMagicNumbers[64];
 extern Bitboard RookMagicNumbers[64];
@@ -35,11 +35,10 @@ extern Bitboard KingAttacks[64];
 extern Bitboard BishopAttacks[64][512];
 extern Bitboard RookAttacks[64][4096];
 
+void init_magic_table(PieceType piece_type);
+
 Bitboard generate_bishop_mask(Square sq);
 Bitboard generate_rook_mask(Square sq);
-
-Bitboard generate_pawn_attack(Square sq, Color color);
-Bitboard generate_knight_attack(Square sq);
 
 Bitboard generate_pawn_attacks(Square sq, Color color);
 Bitboard generate_knight_attacks(Square sq);
@@ -47,12 +46,14 @@ Bitboard generate_bishop_attacks(Square sq, const Bitboard& blockers);
 Bitboard generate_rook_attacks(Square sq, const Bitboard& blockers);
 Bitboard generate_king_attacks(Square sq);
 
+inline int get_attack_index(Bitboard blockers, Bitboard magic, int shift) { return (blockers * magic) >> shift; }
+
 inline Bitboard get_bishop_attacks(const Square& sq, const Bitboard& occupancy) {
-    return BishopAttacks[sq][((occupancy & BishopMasks[sq]) * BishopMagicNumbers[sq]) >> (64 - BishopRelevantBits[sq])];
+    return BishopAttacks[sq][get_attack_index(occupancy & BishopMasks[sq], BishopMagicNumbers[sq], BishopShifts[sq])];
 }
 
 inline Bitboard get_rook_attacks(const Square& sq, const Bitboard& occupancy) {
-    return RookAttacks[sq][((occupancy & RookMasks[sq]) * RookMagicNumbers[sq]) >> (64 - RookRelevantBits[sq])];
+    return RookAttacks[sq][get_attack_index(occupancy & RookMasks[sq], RookMagicNumbers[sq], RookShifts[sq])];
 }
 
 inline Bitboard get_queen_attacks(const Square& sq, const Bitboard& occupancy) {
