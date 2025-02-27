@@ -14,6 +14,6 @@ void init_network_parameters();
 
 void init_hash_keys();
 
-void init_attack_tables();
+void init_magic_attack_tables();
 
 #endif // #ifndef INIT_H
