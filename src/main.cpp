@@ -7,9 +7,11 @@
 
 #include <cstdlib>
 
+#include "init.h"
 #include "uci.h"
 
 int main(int argc, char *argv[]) {
+    init_all();
     UCI uci(argc, argv);
     uci.loop();
     return EXIT_SUCCESS;
