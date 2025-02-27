@@ -17,8 +17,7 @@ enum MoveType : char {
     Regular = 0b0000,
     Capture = 0b0001,
     EnPassant = 0b0011,
-    ShortCastling = 0b0100,
-    LongCastling = 0b0110,
+    Castling = 0b0110,
 
     PawnPromotionMask = 0b1000,
     PawnPromotionKnight = PawnPromotionMask | 0b0000,
@@ -43,6 +42,12 @@ class Move {
     MoveType type() const;
     int16_t internal() const;
     std::string get_algebraic_notation() const;
+
+    inline bool is_regular() const;
+    inline bool is_capture() const;
+    inline bool is_castle() const;
+    inline bool is_promotion() const;
+    inline bool is_ep() const;
 
     friend bool operator==(const Move& lhs, const Move& rhs);
     friend bool operator==(const Move& lhs, const int& rhs);
