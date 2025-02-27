@@ -20,10 +20,18 @@
 #include "types.h"
 #include "utils.h"
 
-bool Position::reset(const std::string &fen) {
+Position::Position() {
+    played_positions.reserve(MaxPly);
+    set_fen<true>(StartFEN);
+}
+
+template <bool UPDATE>
+bool Position::set_fen(const std::string &fen) {
+    reset<UPDATE>();
+
     std::stringstream iss(fen);
     std::array<std::string, 6> fen_arguments;
-    for (IndexType index = 0; index < 6; ++index) {
+    for (int index = 0; index < 6; ++index) {
         iss >> std::skipws >> fen_arguments[index];
         if (iss.fail()) {
             std::cerr << "INVALID FEN: wrong format." << std::endl;
@@ -31,9 +39,7 @@ bool Position::reset(const std::string &fen) {
         }
     }
 
-    IndexType file = 7, rank = 0;
-    m_total_material_count = 0;
-    memset(m_material_count, 0, 2 * 5 * 4);
+    int file = 7, rank = 0;
     for (char c : fen_arguments[0]) {
         if (c == '/') {
             --file;
@@ -41,46 +47,33 @@ bool Position::reset(const std::string &fen) {
             continue;
         }
         if (!std::isdigit(c)) {
-            char piece = std::tolower(c);
-            Player player = std::isupper(c) ? Player::White : Player::Black;
-            IndexType player_index = std::isupper(c) ? 0 : 1;
-            if (piece == 'p') {
-                consult(file, rank) = Square(Piece::Pawn, player);
-                ++m_material_count[player_index][0];
-            } else if (piece == 'n') {
-                consult(file, rank) = Square(Piece::Knight, player);
-                ++m_material_count[player_index][1];
-            } else if (piece == 'b') {
-                consult(file, rank) = Square(Piece::Bishop, player);
-                ++m_material_count[player_index][2];
-            } else if (piece == 'r') {
-                consult(file, rank) = Square(Piece::Rook, player);
-                ++m_material_count[player_index][3];
-            } else if (piece == 'q') {
-                consult(file, rank) = Square(Piece::Queen, player);
-                ++m_material_count[player_index][4];
-            } else if (piece == 'k') {
-                consult(file, rank) = Square(Piece::King, player);
-                if (player == Player::White)
-                    m_white_king_position = PiecePlacement(file, rank);
-                else
-                    m_black_king_position = PiecePlacement(file, rank);
-            } else {
+            char piece_char = std::tolower(c);
+            Color player = std::isupper(c) ? White : Black;
+            Square sq = get_square(file, rank);
+            if (piece_char == 'p')
+                add_piece<UPDATE>(get_piece(Pawn, player), sq);
+            else if (piece_char == 'n')
+                add_piece<UPDATE>(get_piece(Knight, player), sq);
+            else if (piece_char == 'b')
+                add_piece<UPDATE>(get_piece(Bishop, player), sq);
+            else if (piece_char == 'r')
+                add_piece<UPDATE>(get_piece(Rook, player), sq);
+            else if (piece_char == 'q')
+                add_piece<UPDATE>(get_piece(Queen, player), sq);
+            else if (piece_char == 'k')
+                add_piece<UPDATE>(get_piece(King, player), sq);
+            else
                 assert(false);
-            }
-            ++m_total_material_count;
+
             ++rank;
-        } else {
-            for (IndexType n_of_empty_squares = c - '0'; n_of_empty_squares > 0; --n_of_empty_squares, ++rank) {
-                consult(file, rank) = Square(Piece::None, Player::None);
-            }
         }
     }
 
     if (fen_arguments[1] == "w") {
-        m_side_to_move = Player::White;
+        stm = White;
     } else if (fen_arguments[1] == "b") {
-        m_side_to_move = Player::Black;
+        stm = Black;
+        hash_side_key();
     } else {
         std::cerr << "INVALID FEN: invalid player, it should be 'w' or 'b'." << std::endl;
         return false;
@@ -88,194 +81,38 @@ bool Position::reset(const std::string &fen) {
 
     for (char castling : fen_arguments[2]) {
         if (castling == 'K')
-            m_white_castling_rights.king_side = true;
+            set_bits(curr_state.castling_rights, WhiteShortCastleRight);
         else if (castling == 'Q')
-            m_white_castling_rights.queen_side = true;
+            set_bits(curr_state.castling_rights, WhiteLongCastleRight);
         else if (castling == 'k')
-            m_black_castling_rights.king_side = true;
+            set_bits(curr_state.castling_rights, BlackShortCastleRight);
         else if (castling == 'q')
-            m_black_castling_rights.queen_side = true;
+            set_bits(curr_state.castling_rights, BlackLongCastleRight);
+    }
+    hash_castle_key();
+
+    if (fen_arguments[3] == "-") {
+        curr_state.en_passant = NoSquare;
+    } else {
+        curr_state.en_passant = get_square(fen_arguments[3][1] - '1', fen_arguments[3][0] - 'a');
+        hash_ep_key();
     }
 
-    if (fen_arguments[3] == "-")
-        m_en_passant = -1;
-    else
-        m_en_passant = fen_arguments[3][0] - 'a';
-
     try {
-        m_fifty_move_counter_ply = std::stoi(fen_arguments[4]);
+        curr_state.fifty_move_ply = std::stoi(fen_arguments[4]);
     } catch (const std::exception &) {
         std::cerr << "INVALID FEN: halfmove clock is not a number." << std::endl;
         return false;
     }
     try {
-        m_game_clock_ply = std::stoi(fen_arguments[5]);
+        game_clock_ply = std::stoi(fen_arguments[5]);
     } catch (const std::exception &) {
         std::cerr << "INVALID FEN: game clock is not a number." << std::endl;
         return false;
     }
 
-    m_hash = zobrist::hash(*this);
     return true;
 }
-
-Square Position::consult(const IndexType &file, const IndexType &rank) const { return m_board[file + (rank << 4)]; }
-
-Square Position::consult(const PiecePlacement &placement) const { return m_board[placement.index()]; }
-
-Square &Position::consult(const IndexType &file, const IndexType &rank) { return m_board[file + (rank << 4)]; }
-
-Square &Position::consult(const PiecePlacement &placement) { return m_board[placement.index()]; }
-
-bool Position::move(const Move &movement) {
-    CastlingRights past_white_castling_rights = m_white_castling_rights;
-    CastlingRights past_black_castling_rights = m_black_castling_rights;
-    CounterType past_fifty_move_counter = m_fifty_move_counter_ply;
-    IndexType past_en_passant = m_en_passant;
-    m_en_passant = -1;
-    Square captured = consult(movement.to);
-
-    ++m_fifty_move_counter_ply;
-    ++m_game_clock_ply;
-    Piece piece_being_moved = consult(movement.from).piece;
-    if (consult(movement.to).piece != Piece::None) { // Capture
-        m_fifty_move_counter_ply = 0;
-    } else if (piece_being_moved == Piece::Pawn) {
-        m_fifty_move_counter_ply = 0;
-        if (abs(movement.to.file() - movement.from.file()) == 2) {
-            PiecePlacement left = movement.to.index() + offsets::West;
-            PiecePlacement right = movement.to.index() + offsets::East;
-            Square enemy_pawn(Piece::Pawn, (m_side_to_move == Player::White ? Player::Black : Player::White));
-            if ((!left.out_of_bounds() && consult(left) == enemy_pawn) ||
-                (!right.out_of_bounds() && consult(right) == enemy_pawn)) {
-                m_en_passant = movement.to.rank();
-            }
-        }
-    }
-
-    CastlingRights &current_player_castling_rights =
-        m_side_to_move == Player::White ? m_white_castling_rights : m_black_castling_rights;
-    if (piece_being_moved == Piece::King) {
-        current_player_castling_rights.king_side = false;
-        current_player_castling_rights.queen_side = false;
-        (m_side_to_move == Player::White ? m_white_king_position : m_black_king_position) = movement.to;
-    } else if (piece_being_moved == Piece::Rook) {
-        IndexType player_perspective_first_file = m_side_to_move == Player::White ? 0 : 7;
-        if (movement.from.rank() == 7 && movement.from.file() == player_perspective_first_file) {
-            current_player_castling_rights.king_side = false;
-        } else if (movement.from.rank() == 0 && movement.from.file() == player_perspective_first_file) {
-            current_player_castling_rights.queen_side = false;
-        }
-    }
-    CastlingRights &adversary_player_castling_rights =
-        m_side_to_move == Player::White ? m_black_castling_rights : m_white_castling_rights;
-    if (captured.piece == Piece::Rook) {
-        IndexType adversary_perspective_first_file = m_side_to_move == Player::White ? 7 : 0;
-        if (movement.to.rank() == 7 && movement.to.file() == adversary_perspective_first_file) {
-            adversary_player_castling_rights.king_side = false;
-        } else if (movement.to.rank() == 0 && movement.to.file() == adversary_perspective_first_file) {
-            adversary_player_castling_rights.queen_side = false;
-        }
-    }
-
-    if (movement.move_type == MoveType::Regular || movement.move_type == MoveType::Capture) {
-        consult(movement.to) = consult(movement.from);
-        consult(movement.from) = EmptySquare;
-    } else if (movement.move_type == MoveType::EnPassant) {
-        IndexType offset = side_to_move() == Player::White ? offsets::South : offsets::North;
-        consult(movement.to) = consult(movement.from);
-        consult(movement.from) = EmptySquare;
-        captured = consult(movement.to.index() + offset);
-        consult(movement.to.index() + offset) = EmptySquare;
-    } else if (movement.move_type == MoveType::PawnPromotionQueen) {
-        consult(movement.from) = EmptySquare;
-        consult(movement.to) = Square(Piece::Queen, m_side_to_move);
-    } else if (movement.move_type == MoveType::PawnPromotionKnight) {
-        consult(movement.from) = EmptySquare;
-        consult(movement.to) = Square(Piece::Knight, m_side_to_move);
-    } else if (movement.move_type == MoveType::PawnPromotionRook) {
-        consult(movement.from) = EmptySquare;
-        consult(movement.to) = Square(Piece::Rook, m_side_to_move);
-    } else if (movement.move_type == MoveType::PawnPromotionBishop) {
-        consult(movement.from) = EmptySquare;
-        consult(movement.to) = Square(Piece::Bishop, m_side_to_move);
-    } else if (movement.move_type == MoveType::KingSideCastling) {
-        IndexType file = m_side_to_move == Player::White ? 0 : 7;
-        consult(file, 6) = consult(file, 4);
-        consult(file, 5) = consult(file, 7);
-        consult(file, 4) = EmptySquare;
-        consult(file, 7) = EmptySquare;
-    } else if (movement.move_type == MoveType::QueenSideCastling) {
-        IndexType file = m_side_to_move == Player::White ? 0 : 7;
-        consult(file, 2) = consult(file, 4);
-        consult(file, 3) = consult(file, 0);
-        consult(file, 4) = EmptySquare;
-        consult(file, 0) = EmptySquare;
-    }
-
-    if (captured.piece != Piece::None) {
-        --m_material_count[(captured.player == Player::White ? 0 : 1)][piece_index(captured.piece)];
-        --m_total_material_count;
-    }
-
-    m_side_to_move = (m_side_to_move == Player::White) ? Player::Black : Player::White;
-    m_hash = zobrist::rehash(*this, PastMove(movement, captured, past_en_passant, past_fifty_move_counter,
-                                             past_white_castling_rights, past_black_castling_rights));
-
-    assert(m_hash == zobrist::hash(*this)); // Checks if rehash is correct
-
-    // Required because of the pseudo-legal move generator
-    return !under_attack(*this, m_side_to_move,
-                         m_side_to_move == Player::Black ? m_white_king_position : m_black_king_position);
-}
-
-Move Position::get_movement(const std::string &algebraic_notation) const {
-    PiecePlacement from(static_cast<IndexType>(algebraic_notation[1] - '1'),
-                        static_cast<IndexType>(algebraic_notation[0] - 'a'));
-    PiecePlacement to(static_cast<IndexType>(algebraic_notation[3] - '1'),
-                      static_cast<IndexType>(algebraic_notation[2] - 'a'));
-    MoveType move_type = MoveType::Regular;
-
-    if (algebraic_notation.size() == 5) { // Pawn promotion
-        if (tolower(algebraic_notation[4]) == 'q')
-            move_type = MoveType::PawnPromotionQueen;
-        else if (tolower(algebraic_notation[4]) == 'n')
-            move_type = MoveType::PawnPromotionKnight;
-        else if (tolower(algebraic_notation[4]) == 'r')
-            move_type = MoveType::PawnPromotionRook;
-        else if (tolower(algebraic_notation[4]) == 'b')
-            move_type = MoveType::PawnPromotionBishop;
-    } else if (consult(to).piece != Piece::None) { // Capture
-        move_type = MoveType::Capture;
-    } else if ((from.rank() == 4 && to.rank() == 6) && consult(from).piece == Piece::King) { // Castling
-        move_type = MoveType::KingSideCastling;
-    } else if ((from.rank() == 4 && to.rank() == 2) && consult(from).piece == Piece::King) {
-        move_type = MoveType::QueenSideCastling;
-    } else if (to.rank() == en_passant_rank() && from.rank() != to.rank() &&
-               consult(from).piece == Piece::Pawn) { // En passant
-        move_type = MoveType::EnPassant;
-    }
-
-    return Move(from, to, move_type);
-}
-
-const Player &Position::side_to_move() const { return m_side_to_move; }
-
-const CastlingRights &Position::white_castling_rights() const { return m_white_castling_rights; }
-
-const CastlingRights &Position::black_castling_rights() const { return m_black_castling_rights; }
-
-const IndexType &Position::en_passant_rank() const { return m_en_passant; }
-
-const PiecePlacement &Position::black_king_position() const { return m_black_king_position; }
-
-const PiecePlacement &Position::white_king_position() const { return m_white_king_position; }
-
-const CounterType &Position::material_count(const Piece &piece, const Player &player) const {
-    return m_material_count[(player == Player::White ? 0 : 1)][piece_index(piece)];
-}
-
-const HashType &Position::get_hash() const { return m_hash; }
 
 std::string Position::get_fen() const {
     std::string fen;
@@ -356,7 +193,26 @@ std::string Position::get_fen() const {
     return fen;
 }
 
-const CounterType &Position::get_half_move_counter() const { return m_game_clock_ply; }
+void Position::reset_nnue() { nnue.reset(*this); }
+
+template <bool UPDATE>
+void Position::reset() {
+    for (int sqi = a1; sqi <= h8; ++sqi) {
+        board[sqi] = Empty;
+    }
+    std::memset(occupancies, 0ULL, sizeof(occupancies));
+    std::memset(pieces, 0ULL, sizeof(pieces));
+
+    hash_key = 0ULL;
+    history_stack_head = 0;
+    curr_state.reset();
+    played_positions.clear();
+
+    if constexpr (UPDATE) {
+        reset_nnue();
+    }
+}
+
 template <bool UPDATE>
 void Position::add_piece(const Piece &piece, const Square &sq) {
     assert(piece >= WhitePawn && piece <= BlackKing);
@@ -724,6 +580,39 @@ inline int Position::get_material_count(const PieceType &piece_type) const {
 inline int Position::get_material_count() const { return count_bits(get_occupancy()); }
 
 inline Piece Position::consult(const Square &sq) const { return board[sq]; }
+
+bool Position::is_attacked(const Square &sq) const {
+    Color opponent = static_cast<Color>(~stm);
+    Bitboard occupancy = get_occupancy();
+    unset_bit(occupancy, sq); // square to be checked has to be unset on occupancy bitboard
+
+    // Check if sq is attacked by opponent pawns. Note: pawn attack mask has to be "stm" because the logic is reversed
+    if (get_piece_bb(Pawn, opponent) & PawnAttacks[stm][sq])
+        return true;
+
+    // Check if sq is attacked by opponent knights
+    if (get_piece_bb(Knight, opponent) & KnightAttacks[sq])
+        return true;
+
+    // Check if sq is attacked by opponent bishops or queens
+    if ((get_piece_bb(Bishop, opponent) | get_piece_bb(Queen, opponent)) & get_bishop_attack(sq, occupancy))
+        return true;
+
+    // Check if sq is attacked by opponent rooks or queens
+    if ((get_piece_bb(Rook, opponent) | get_piece_bb(Queen, opponent)) & get_rook_attack(sq, occupancy))
+        return true;
+
+    // Check if sq is attacked by opponent king. Unnecessary when checking for checks
+    if (get_piece_bb(King, opponent) & KingAttacks[sq])
+        return true;
+
+    return false;
+}
+
+inline bool Position::in_check() { return is_attacked(get_king_placement(stm)); }
+
+inline WeightType Position::eval() const { return nnue.eval(stm); }
+
 void Position::print() const {
     auto print_line = []() -> void {
         for (IndexType i = 0; i < 8; ++i) {
@@ -734,37 +623,42 @@ void Position::print() const {
         std::cout << "+\n";
     };
 
-    for (IndexType file = 7; file >= 0; --file) {
-        print_line();
-        for (IndexType rank = 0; rank < BoardWidth; ++rank) {
-            std::cout << "| ";
-            const Square &curr_square = consult(file, rank);
-            char piece;
-            if (curr_square.piece == Piece::King)
-                piece = 'k';
-            else if (curr_square.piece == Piece::Queen)
-                piece = 'q';
-            else if (curr_square.piece == Piece::Bishop)
-                piece = 'b';
-            else if (curr_square.piece == Piece::Rook)
-                piece = 'r';
-            else if (curr_square.piece == Piece::Pawn)
-                piece = 'p';
-            else if (curr_square.piece == Piece::Knight)
-                piece = 'n';
-            else
-                piece = ' ';
-            std::cout << (curr_square.player == Player::White ? static_cast<char>(toupper(piece)) : piece) << " ";
-        }
-        std::cout << "| " << file + 1 << "\n";
+    for (int sqi = a1; sqi <= h8; ++sqi) {
+        if (sqi % 8 == 0) // First column
+            print_line();
+
+        Piece piece = board[sqi];
+        PieceType piece_type = get_piece_type(piece);
+        char piece_char = ' ';
+        if (piece_type == Pawn)
+            piece_char = 'p';
+        else if (piece_type == Knight)
+            piece_char = 'n';
+        else if (piece_type == Bishop)
+            piece_char = 'b';
+        else if (piece_type == Rook)
+            piece_char = 'r';
+        else if (piece_type == Queen)
+            piece_char = 'q';
+        else if (piece_type == King)
+            piece_char = 'k';
+
+        if (piece <= WhiteKing) // Piece is white
+            piece_char = toupper(piece_char);
+
+        std::cout << "| " << piece_char << " ";
+        if (sqi % 8 == 0) // First column
+            std::cout << "| " << get_file(static_cast<Square>(sqi)) + 1 << "\n";
     }
+
     print_line();
-    for (char rank_simbol = 'a'; rank_simbol <= 'h'; ++rank_simbol) {
+    for (char rank_simbol = 'a'; rank_simbol <= 'h'; ++rank_simbol)
         std::cout << "  " << rank_simbol << " ";
-    }
+
     std::cout << "\n\nFEN: " << get_fen();
-    std::cout << "\nHash: " << m_hash << "\n";
-};
+    std::cout << "\nHash: " << hash_key;
+    std::cout << "\nEval: " << eval() << "\n";
+}
 
 bool Position::draw() { return insufficient_material() || repetition() || fifty_move_draw(); }
 
