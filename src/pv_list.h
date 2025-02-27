@@ -1,4 +1,3 @@
-
 /*
  *  Copyright (c) 2024 Eduardo Marinho <eduardo.nestor.marinho@proton.me>
  *
