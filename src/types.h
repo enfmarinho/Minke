@@ -120,11 +120,18 @@ inline TimeType now() {
 }
 
 struct BoardState {
-    PieceType captured;
+    Piece captured;
     int fifty_move_ply;
-    int ply_after_reset;
-    uint8_t castle_rights;
+    int ply_from_null;
+    uint8_t castling_rights;
     Square en_passant;
+    void reset() {
+        captured = Empty;
+        fifty_move_ply = 0;
+        ply_from_null = 0;
+        castling_rights = NoCastling;
+        en_passant = NoSquare;
+    }
 };
 
 #endif // #ifndef GAME_ELEMENTS_H
