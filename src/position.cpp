@@ -81,13 +81,13 @@ bool Position::set_fen(const std::string &fen) {
 
     for (char castling : fen_arguments[2]) {
         if (castling == 'K')
-            set_bits(curr_state.castling_rights, WhiteShortCastleRight);
+            set_bits(curr_state.castling_rights, WhiteShortCastling);
         else if (castling == 'Q')
-            set_bits(curr_state.castling_rights, WhiteLongCastleRight);
+            set_bits(curr_state.castling_rights, WhiteLongCastling);
         else if (castling == 'k')
-            set_bits(curr_state.castling_rights, BlackShortCastleRight);
+            set_bits(curr_state.castling_rights, BlackShortCastling);
         else if (castling == 'q')
-            set_bits(curr_state.castling_rights, BlackLongCastleRight);
+            set_bits(curr_state.castling_rights, BlackLongCastling);
     }
     hash_castle_key();
 
@@ -158,19 +158,19 @@ std::string Position::get_fen() const {
     }
     fen += (stm == White ? " w " : " b ");
     bool none = true;
-    if (curr_state.castling_rights & WhiteShortCastleRight) {
+    if (curr_state.castling_rights & WhiteShortCastling) {
         none = false;
         fen += "K";
     }
-    if (curr_state.castling_rights & WhiteLongCastleRight) {
+    if (curr_state.castling_rights & WhiteLongCastling) {
         none = false;
         fen += "Q";
     }
-    if (curr_state.castling_rights & BlackShortCastleRight) {
+    if (curr_state.castling_rights & BlackShortCastling) {
         none = false;
         fen += "k";
     }
-    if (curr_state.castling_rights & BlackLongCastleRight) {
+    if (curr_state.castling_rights & BlackLongCastling) {
         none = false;
         fen += "q";
     }
@@ -415,10 +415,10 @@ void Position::update_castling_rights(const Move &move) {
     if (piece_type == King) {
         switch (stm) {
             case White:
-                unset_mask(curr_state.castling_rights, WhiteShortCastleRight & WhiteLongCastleRight);
+                unset_mask(curr_state.castling_rights, WhiteCastling);
                 break;
             case Black:
-                unset_mask(curr_state.castling_rights, BlackShortCastleRight & BlackLongCastleRight);
+                unset_mask(curr_state.castling_rights, BlackCastling);
                 break;
             default:
                 __builtin_unreachable();
@@ -426,16 +426,16 @@ void Position::update_castling_rights(const Move &move) {
     } else if (piece_type == Rook) {
         switch (from) {
             case a1:
-                unset_mask(curr_state.castling_rights, WhiteLongCastleRight);
+                unset_mask(curr_state.castling_rights, WhiteLongCastling);
                 break;
             case h1:
-                unset_mask(curr_state.castling_rights, WhiteShortCastleRight);
+                unset_mask(curr_state.castling_rights, WhiteShortCastling);
                 break;
             case a8:
-                unset_mask(curr_state.castling_rights, BlackLongCastleRight);
+                unset_mask(curr_state.castling_rights, BlackLongCastling);
                 break;
             case h8:
-                unset_mask(curr_state.castling_rights, BlackShortCastleRight);
+                unset_mask(curr_state.castling_rights, BlackShortCastling);
                 break;
             default:
                 break;
@@ -595,11 +595,11 @@ bool Position::is_attacked(const Square &sq) const {
         return true;
 
     // Check if sq is attacked by opponent bishops or queens
-    if ((get_piece_bb(Bishop, opponent) | get_piece_bb(Queen, opponent)) & get_bishop_attack(sq, occupancy))
+    if ((get_piece_bb(Bishop, opponent) | get_piece_bb(Queen, opponent)) & get_bishop_attacks(sq, occupancy))
         return true;
 
     // Check if sq is attacked by opponent rooks or queens
-    if ((get_piece_bb(Rook, opponent) | get_piece_bb(Queen, opponent)) & get_rook_attack(sq, occupancy))
+    if ((get_piece_bb(Rook, opponent) | get_piece_bb(Queen, opponent)) & get_rook_attacks(sq, occupancy))
         return true;
 
     // Check if sq is attacked by opponent king. Unnecessary when checking for checks
@@ -720,7 +720,7 @@ void Position::hash_piece_key(const Piece &piece, const Square &sq) {
 }
 
 void Position::hash_castle_key() {
-    assert(curr_state.castling_rights >= 0 && curr_state.castling_rights <= EveryRight);
+    assert(curr_state.castling_rights >= 0 && curr_state.castling_rights <= AnyCastling);
     hash_key ^= hash_keys.castle[curr_state.castling_rights];
 }
 

@@ -60,11 +60,19 @@ enum Piece : int {
     Empty
 };
 
-enum CastlingRights : int {
-    WhiteShortCastleRight = 1,
-    WhiteLongCastleRight = 2,
-    BlackShortCastleRight = 4,
-    BlackLongCastleRight = 8
+enum CastlingRights : uint8_t {
+    NoCastling,
+    WhiteShortCastling,
+    WhiteLongCastling = WhiteShortCastling << 1,
+    BlackShortCastling = WhiteShortCastling << 2,
+    BlackLongCastling = WhiteShortCastling << 3,
+
+    KingSideCastling = WhiteShortCastling | BlackShortCastling,
+    QueenSideCastling = WhiteLongCastling | BlackLongCastling,
+    WhiteCastling = WhiteShortCastling | WhiteLongCastling,
+    BlackCastling = BlackShortCastling | BlackLongCastling,
+
+    AnyCastling = WhiteCastling | BlackCastling
 };
 
 enum Direction : int {
