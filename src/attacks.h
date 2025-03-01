@@ -10,15 +10,15 @@
 
 #include "types.h"
 
-const Bitboard not_a_file = 18374403900871474942ULL;
-const Bitboard not_ab_file = 18229723555195321596ULL;
-const Bitboard not_h_file = 9187201950435737471ULL;
-const Bitboard not_hg_file = 4557430888798830399ULL;
+const Bitboard not_a_file = ~FileMasks[0];
+const Bitboard not_ab_file = ~(FileMasks[0] | FileMasks[1]);
+const Bitboard not_h_file = ~FileMasks[7];
+const Bitboard not_hg_file = ~(FileMasks[6] | FileMasks[7]);
 
-const Bitboard not_1_rank = 18446744073709551360ULL;
-const Bitboard not_1_2_rank = 18446744073709486080ULL;
-const Bitboard not_8_rank = 72057594037927935ULL;
-const Bitboard not_7_8_rank = 281474976710655ULL;
+const Bitboard not_1_rank = ~RankMasks[0];
+const Bitboard not_1_2_rank = ~(RankMasks[0] | RankMasks[1]);
+const Bitboard not_8_rank = ~RankMasks[7];
+const Bitboard not_7_8_rank = ~(RankMasks[7] | RankMasks[6]);
 
 extern Bitboard BishopMasks[64];
 extern Bitboard RookMasks[64];
