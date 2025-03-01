@@ -33,8 +33,8 @@ enum MoveType : char {
 
 class Move {
   public:
-    Move() : m_bytes() {};
-    Move(int16_t bytes) : m_bytes(bytes) {};
+    Move() : m_bytes(){};
+    Move(int16_t bytes) : m_bytes(bytes){};
     Move(Square from, Square to, MoveType move_type);
 
     Square from() const;
@@ -56,6 +56,11 @@ class Move {
     // Bits are arranged in the following way:
     // 4 bits for move type | 6 bits for target square | 6 bits for origin square
     int16_t m_bytes;
+};
+
+struct ScoredMove {
+    Move move;
+    int score;
 };
 
 bool operator==(const Move& lhs, const Move& rhs);
