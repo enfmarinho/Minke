@@ -141,4 +141,10 @@ inline Color get_color(const Piece &piece) { return static_cast<Color>(piece / C
 
 inline Square get_square(const int file, const int rank) { return static_cast<Square>(rank * 8 + file); }
 
+inline int get_pawn_start_rank(const Color &color) { return color == White ? 1 : 6; }
+
+inline int get_pawn_promotion_rank(const Color &color) { return color == White ? 7 : 0; }
+
+inline Direction get_pawn_offset(const Color &color) { return color == White ? North : South; }
+
 #endif // #ifndef UTILS_H
