@@ -139,6 +139,6 @@ inline PieceType get_piece_type(const Piece &piece) {
 
 inline Color get_color(const Piece &piece) { return static_cast<Color>(piece / ColorOffset); }
 
-inline Square get_square(const int file, const int rank) { return static_cast<Square>(file * 8 + rank); }
+inline Square get_square(const int file, const int rank) { return static_cast<Square>(rank * 8 + file); }
 
 #endif // #ifndef UTILS_H
