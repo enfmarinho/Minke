@@ -537,50 +537,6 @@ Move Position::get_movement(const std::string &algebraic_notation) const {
     return Move(from, to, move_type);
 }
 
-inline Bitboard Position::get_occupancy() const { return occupancies[White] | occupancies[Black]; }
-
-inline Bitboard Position::get_occupancy(const Color &color) const {
-    assert(color == White || color == Black);
-    return occupancies[color];
-}
-
-inline Bitboard Position::get_piece_bb(const Piece &piece) const {
-    assert(piece >= WhitePawn && piece <= BlackKing);
-    return pieces[piece];
-}
-
-inline Bitboard Position::get_piece_bb(const PieceType &piece_type, const Color &color) const {
-    return get_piece_bb(static_cast<Piece>(piece_type + color * ColorOffset));
-}
-
-inline Square Position::get_king_placement(const Color &color) const { return lsb(pieces[King + color * ColorOffset]); }
-
-inline uint8_t Position::get_castling_rights() const { return curr_state.castling_rights; }
-
-inline Color Position::get_stm() const { return stm; }
-
-inline Square Position::get_en_passant() const { return curr_state.en_passant; }
-
-inline HashType Position::get_hash() const { return hash_key; }
-
-inline int Position::get_game_ply() const { return game_clock_ply; }
-
-inline int Position::get_fifty_move_ply() const { return curr_state.fifty_move_ply; }
-
-inline int Position::get_material_count(const Piece &piece) const { return count_bits(get_piece_bb(piece)); }
-
-inline int Position::get_material_count(const PieceType &piece_type, const Color &color) const {
-    return get_material_count(static_cast<Piece>(piece_type + color * ColorOffset));
-}
-
-inline int Position::get_material_count(const PieceType &piece_type) const {
-    return count_bits(pieces[piece_type] | pieces[piece_type + ColorOffset]);
-}
-
-inline int Position::get_material_count() const { return count_bits(get_occupancy()); }
-
-inline Piece Position::consult(const Square &sq) const { return board[sq]; }
-
 bool Position::is_attacked(const Square &sq) const {
     Color opponent = static_cast<Color>(~stm);
     Bitboard occupancy = get_occupancy();
@@ -609,9 +565,7 @@ bool Position::is_attacked(const Square &sq) const {
     return false;
 }
 
-inline bool Position::in_check() { return is_attacked(get_king_placement(stm)); }
-
-inline WeightType Position::eval() const { return nnue.eval(stm); }
+bool Position::in_check() const { return is_attacked(get_king_placement(stm)); }
 
 void Position::print() const {
     auto print_line = []() -> void {

@@ -15,6 +15,7 @@
 #include "move.h"
 #include "nnue.h"
 #include "types.h"
+#include "utils.h"
 
 class Position {
   public:
@@ -34,32 +35,44 @@ class Position {
     template <bool UPDATE>
     void unmake_move(const Move &move);
 
-    Move get_movement(const std::string &algebraic_notation) const;
-    inline Bitboard get_occupancy() const;
-    inline Bitboard get_occupancy(const Color &color) const;
-    inline Bitboard get_piece_bb(const Piece &piece) const;
-    inline Bitboard get_piece_bb(const PieceType &piece_type, const Color &color) const;
-    inline Square get_king_placement(const Color &color) const;
-    inline uint8_t get_castling_rights() const;
-    inline Color get_stm() const;
-    inline Square get_en_passant() const;
-    inline HashType get_hash() const;
-    inline int get_game_ply() const;
-    inline int get_fifty_move_ply() const;
-    inline int get_material_count(const Piece &piece) const;
-    inline int get_material_count(const PieceType &piece_type, const Color &color) const;
-    inline int get_material_count(const PieceType &piece_type) const;
-    inline int get_material_count() const;
-
-    inline Piece consult(const Square &sq) const;
-
-    inline bool in_check();
+    bool in_check() const;
     bool is_attacked(const Square &sq) const;
 
-    inline WeightType eval() const;
     bool draw();
+    inline WeightType eval() const { return nnue.eval(stm); }
 
     void print() const;
+
+    Move get_movement(const std::string &algebraic_notation) const;
+    inline Bitboard get_occupancy() const { return occupancies[White] | occupancies[Black]; }
+    inline Bitboard get_occupancy(const Color &color) const {
+        assert(color == White || color == Black);
+        return occupancies[color];
+    }
+    inline Bitboard get_piece_bb(const Piece &piece) const {
+        assert(piece >= WhitePawn && piece <= BlackKing);
+        return pieces[piece];
+    }
+    inline Bitboard get_piece_bb(const PieceType &piece_type, const Color &color) const {
+        return get_piece_bb(static_cast<Piece>(piece_type + color * ColorOffset));
+    }
+    inline Square get_king_placement(const Color &color) const { return lsb(pieces[King + color * ColorOffset]); }
+    inline uint8_t get_castling_rights() const { return curr_state.castling_rights; }
+    inline Color get_stm() const { return stm; }
+    inline Color get_adversary() const { return static_cast<Color>(~stm); }
+    inline Square get_en_passant() const { return curr_state.en_passant; }
+    inline HashType get_hash() const { return hash_key; }
+    inline int get_game_ply() const { return game_clock_ply; }
+    inline int get_fifty_move_ply() const { return curr_state.fifty_move_ply; }
+    inline int get_material_count(const Piece &piece) const { return count_bits(get_piece_bb(piece)); }
+    inline int get_material_count(const PieceType &piece_type, const Color &color) const {
+        return get_material_count(static_cast<Piece>(piece_type + color * ColorOffset));
+    }
+    inline int get_material_count(const PieceType &piece_type) const {
+        return count_bits(pieces[piece_type] | pieces[piece_type + ColorOffset]);
+    }
+    inline int get_material_count() const { return count_bits(get_occupancy()); }
+    inline Piece consult(const Square &sq) const { return board[sq]; }
 
   private:
     template <bool UPDATE>
