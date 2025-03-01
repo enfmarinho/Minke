@@ -120,6 +120,10 @@ constexpr Bitboard FileMasks[8] = {0x101010101010101,  0x202020202020202,  0x404
 constexpr Bitboard RankMasks[8] = {0xff,         0xff00,         0xff0000,         0xff000000,
                                    0xff00000000, 0xff0000000000, 0xff000000000000, 0xff00000000000000};
 
+constexpr Bitboard WhiteShortCastlingCrossingMask = 0x60;
+constexpr Bitboard WhiteLongCastlingCrossingMask = 0xe;
+constexpr Bitboard BlackShortCastlingCrossingMask = 0x6000000000000000;
+constexpr Bitboard BlackLongCastlingCrossingMask = 0xe00000000000000;
 
 inline TimeType now() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
