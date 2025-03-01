@@ -114,6 +114,12 @@ constexpr int MoveNone = 0;
 constexpr WeightType SEE_values[12] = {100, 300, 300, 500, 1000, 0,
                                        100, 300, 300, 500, 1000, 0};
 // clang-format on
+constexpr Bitboard FileMasks[8] = {0x101010101010101,  0x202020202020202,  0x404040404040404,  0x808080808080808,
+                                   0x1010101010101010, 0x2020202020202020, 0x4040404040404040, 0x8080808080808080};
+
+constexpr Bitboard RankMasks[8] = {0xff,         0xff00,         0xff0000,         0xff000000,
+                                   0xff00000000, 0xff0000000000, 0xff000000000000, 0xff00000000000000};
+
 
 inline TimeType now() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
