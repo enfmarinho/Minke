@@ -2,8 +2,8 @@
 Copyright (c) 2024 Eduardo Marinho <eduardo.nestor.marinho@proton.me>
 
 Licensed under the MIT License.
-See the LICENSE file in the project root for more information. """
-'''
+See the LICENSE file in the project root for more information."""
+"""
 The idea of this script is to run your chess engine and check its perft output 
 against the perft output of a chess engine that is believed to be correct, such 
 as stockfish, which would be the source of truth. Any differences between yours 
@@ -15,7 +15,7 @@ You can run it like:
     python3.11 compare_perft.py stockfish path_to_your_engine fen_list.txt 5
 If the command-line arguments are not provided you'll be asked via stdin. 
 If the path to the file with the list of FENs (fen_list.txt) is "-" the fen will
-be read via stdin. That is to make it easier to use'''
+be read via stdin. That is to make it easier to use"""
 import subprocess
 import sys
 import time
@@ -26,7 +26,11 @@ def read_paths():
     if len(argv) > 3:
         return argv[1], argv[2], argv[3]
 
-    return input("Path to reference: "), input("Path to yours: "), input("Path to fen dataset: ")
+    return (
+        input("Path to reference: "),
+        input("Path to yours: "),
+        input("Path to fen dataset: "),
+    )
 
 
 def read_perft_depth():
@@ -39,7 +43,7 @@ def read_perft_depth():
 
 def read_dataset(dataset_path):
     try:
-        with open(dataset_path, 'r') as file:
+        with open(dataset_path, "r") as file:
             lines = file.readlines()
         return [line.strip() for line in lines]
     except Exception as e:
@@ -53,7 +57,7 @@ def open_pipe(pipe_path):
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        text=True
+        text=True,
     )
 
 
@@ -104,7 +108,9 @@ def compare(ref_data, yours_data):
 
     for key in yours_data:
         if key in ref_data and ref_data[key] != yours_data[key]:
-            print(f"for {key} ref searched {ref_data[key]} nodes, but yours searched {yours_data[key]}")
+            print(
+                f"for {key} ref searched {ref_data[key]} nodes, but yours searched {yours_data[key]}"
+            )
             equal = False
 
     return equal
@@ -117,7 +123,7 @@ def main():
     ref_pipe = open_pipe(ref_path)
     yours_pipe = open_pipe(yours_path)
     if dataset_path == "-":
-        print("Test on FEN: ", end='', flush=True)
+        print("Test on FEN: ", end="", flush=True)
         fen_dataset = [sys.stdin.readline().strip()]
     else:
         fen_dataset = read_dataset(dataset_path)
@@ -133,7 +139,9 @@ def main():
         yours_data, yours_nodes_searched = feed_pipe(yours_pipe, fen, perft_depth)
         equal = compare(ref_data, yours_data)
         if ref_nodes_searched != yours_nodes_searched:
-            print("reference searched {ref_nodes_searched} nodes, but yours searched")
+            print(
+                f"reference searched {ref_nodes_searched} nodes, but yours searched {yours_nodes_searched}"
+            )
             equal = False
         if not equal:
             print("Finishing test earlier due to perft failure")
