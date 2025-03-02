@@ -689,14 +689,13 @@ bool Position::repetition() const {
 // TODO it would be a little more efficient to do a specific legality check for the move
 bool Position::fifty_move_draw() {
     if (curr_state.fifty_move_ply >= 100) {
-        MoveList move_list(*this);
-        while (!move_list.empty()) {
-            Move move = move_list.next_move();
-            bool legal = make_move<false>(move);
-            unmake_move<false>(move);
-            if (legal) {
+        ScoredMove moves[MaxMoves];
+        ScoredMove *end = gen_moves(moves, *this, GenAll);
+        for (ScoredMove *begin = moves; begin != end; ++end) {
+            bool legal = make_move<false>(begin->move);
+            unmake_move<false>(begin->move);
+            if (legal)
                 return true;
-            }
         }
     }
 

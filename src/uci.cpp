@@ -16,7 +16,9 @@
 #include <vector>
 
 #include "benchmark.h"
+#include "move.h"
 #include "movegen.h"
+#include "movepicker.h"
 #include "position.h"
 #include "search.h"
 #include "tt.h"
@@ -107,20 +109,16 @@ void UCI::print_debug_info() {
         ttmove = entry->best_move();
         std::cout << "Best move: " << ttmove.get_algebraic_notation() << std::endl;
     }
-    MoveList move_list(m_search_data.position);
-    move_list.calculate_scores(m_search_data);
-    int n_legal_moves = move_list.n_legal_moves(m_search_data.position);
-    std::cout << "Move list (" << n_legal_moves << "|" << move_list.size() - n_legal_moves << "): ";
-    while (!move_list.empty()) {
-        Move move = move_list.next_move();
-        if (m_search_data.position.make_move(move)) {
-            std::cout << move.get_algebraic_notation() << '[' << -m_search_data.position.eval() << "] ";
-            m_search_data.position.unmake_move();
-        } else {
-            std::cout << "(" << move.get_algebraic_notation() << ") ";
-        }
+    MovePicker move_picker(ttmove, &m_search_data);
+    std::cout << "Move list: ";
+    while (!move_picker.finished()) {
+        ScoredMove scored_move = move_picker.next_move_scored(false);
+        if (!m_search_data.position.make_move<false>(scored_move.move))
+            std::cout << "*";
+        std::cout << scored_move.move.get_algebraic_notation() << ' ' << "[" << scored_move.score << "] ";
+        m_search_data.position.unmake_move<false>(scored_move.move);
     }
-    std::cout << "\nEval: " << m_search_data.position.eval() << std::endl;
+    std::cout << "\nNNUE eval: " << m_search_data.position.eval() << std::endl;
 }
 
 void UCI::position(std::istringstream &iss) {
@@ -143,7 +141,7 @@ void UCI::position(std::istringstream &iss) {
 }
 
 void UCI::set_position(const std::string &fen, const std::vector<std::string> &move_list) {
-    if (!m_search_data.position.set_fen(fen)) {
+    if (!m_search_data.position.set_fen<true>(fen)) {
         std::cerr << "Invalid FEN!" << std::endl;
         return;
     }
@@ -170,7 +168,7 @@ void UCI::set_option(std::istringstream &iss) {
 void UCI::bench() {
     TimeType total_time = 0;
     for (const std::string &fen : benchmark_fen_list) {
-        m_search_data.position.set_fen(fen);
+        m_search_data.position.set_fen<true>(fen);
         m_search_data.time_manager.init();
         TT.clear();
         TimeType start_time = now();
@@ -191,21 +189,22 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
     bool is_leaf = (depth == 2);
     int64_t count = 0, nodes = 0;
 
-    MoveList move_list(position);
-    while (!move_list.empty()) {
-        Move move = move_list.next_move();
+    ScoredMove moves[MaxMoves];
+    ScoredMove *end = gen_moves(moves, m_search_data.position, GenAll);
+    for (ScoredMove *begin = moves; begin != end; ++begin) {
+        Move move = begin->move;
         if (!position.make_move<false>(move)) {
-            position.unmake_move();
+            position.unmake_move<false>(move);
             continue;
         }
 
         if (root && depth <= 1)
             count = 1, ++nodes;
         else {
-            count = is_leaf ? MoveList(position).n_legal_moves(position) : perft(position, depth - 1, false);
+            count = is_leaf ? position.legal_move_amount() : perft(position, depth - 1, false);
             nodes += count;
         }
-        position.unmake_move();
+        position.unmake_move<false>(move);
 
         if (root)
             std::cout << move.get_algebraic_notation() << ": " << count << std::endl;

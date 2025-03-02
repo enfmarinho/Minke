@@ -11,7 +11,7 @@
 #include <iostream>
 #include <limits>
 
-#include "movegen.h"
+#include "movepicker.h"
 #include "position.h"
 #include "tt.h"
 #include "types.h"
@@ -105,14 +105,14 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
         return entry->evaluation();
     }
 
+    Move ttmove = (found ? entry->best_move() : MoveNone);
     Move best_move = MoveNone;
     WeightType best_score = -MaxScore;
     WeightType old_alpha = alpha;
-    MoveList move_list(search_data.position);
-    move_list.calculate_scores(search_data);
-    while (!move_list.empty()) {
+    MovePicker move_picker(ttmove, &search_data);
+    while (!move_picker.finished()) {
         PvList curr_pv;
-        Move move = move_list.next_move();
+        Move move = move_picker.next_move(false);
         if (!search_data.position.make_move<true>(move)) // Avoid illegal moves
             continue;
 
@@ -160,6 +160,10 @@ WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data
     else if (search_data.position.draw())
         return 0;
 
+    bool found;
+    TTEntry *ttentry = TT.probe(search_data.position, found);
+    Move ttmove = (found ? ttentry->best_move() : MoveNone);
+
     WeightType stand_pat = search_data.position.eval();
     if (stand_pat >= beta)
         return beta;
@@ -175,11 +179,10 @@ WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data
     if (alpha < stand_pat)
         alpha = stand_pat;
 
-    MoveList move_list(search_data.position);
-    move_list.calculate_scores(search_data);
+    MovePicker move_picker(ttmove, &search_data);
     bool capture_found = false;
-    while (!move_list.empty()) {
-        Move curr_move = move_list.next_move();
+    while (!move_picker.finished()) {
+        Move curr_move = move_picker.next_move(true);
         if (curr_move.type() != MoveType::Capture) {
             if (capture_found)
                 break;
