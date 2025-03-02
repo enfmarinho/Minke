@@ -257,9 +257,9 @@ void Position::move_piece(const Piece &piece, const Square &from, const Square &
 
 template <bool UPDATE>
 bool Position::make_move(const Move &move) {
-    if constexpr (UPDATE) {
+    if constexpr (UPDATE)
         nnue.push();
-    }
+
     history_stack[history_stack_head++] = curr_state;
     ++game_clock_ply;
     ++curr_state.fifty_move_ply;
@@ -323,6 +323,7 @@ void Position::make_capture(const Move &move) {
 
     curr_state.fifty_move_ply = 0;
     curr_state.captured = consult(to);
+    assert(curr_state.captured != Empty);
 
     remove_piece<UPDATE>(curr_state.captured, to);
     remove_piece<UPDATE>(piece, from);
@@ -443,15 +444,31 @@ void Position::update_castling_rights(const Move &move) {
             default:
                 break;
         }
+    } else if (get_piece_type(curr_state.captured) == Rook) {
+        switch (to) {
+            case a1:
+                unset_mask(curr_state.castling_rights, WhiteLongCastling);
+                break;
+            case h1:
+                unset_mask(curr_state.castling_rights, WhiteShortCastling);
+                break;
+            case a8:
+                unset_mask(curr_state.castling_rights, BlackLongCastling);
+                break;
+            case h8:
+                unset_mask(curr_state.castling_rights, BlackShortCastling);
+                break;
+            default:
+                break;
+        }
     }
 }
 
 template <bool UPDATE>
 void Position::unmake_move(const Move &move) {
     assert(history_stack_head > 0); // check if there is a move to unmake
-    if constexpr (UPDATE) {
+    if constexpr (UPDATE)
         nnue.pop();
-    }
 
     --game_clock_ply;
     played_positions.pop_back();
@@ -467,7 +484,7 @@ void Position::unmake_move(const Move &move) {
         remove_piece<false>(piece, to);
         add_piece<false>(curr_state.captured, to);
         if (move.is_promotion()) {
-            piece = static_cast<Piece>(Pawn + ColorOffset * stm);
+            piece = get_piece(Pawn, stm);
         }
         add_piece<false>(piece, from);
     } else if (move.is_castle()) {
@@ -490,7 +507,7 @@ void Position::unmake_move(const Move &move) {
         }
     } else if (move.is_promotion()) {
         remove_piece<false>(piece, to);
-        piece = static_cast<Piece>(Pawn + ColorOffset * stm);
+        piece = get_piece(Pawn, stm);
         add_piece<false>(piece, from);
     } else if (move.is_ep()) {
         move_piece<false>(piece, to, from);
@@ -498,16 +515,14 @@ void Position::unmake_move(const Move &move) {
         add_piece<false>(curr_state.captured, captured_square);
     }
 
-    if (curr_state.en_passant != NoSquare) {
+    if (curr_state.en_passant != NoSquare)
         hash_ep_key();
-    }
     hash_castle_key();
 
     curr_state = history_stack[--history_stack_head];
 
-    if (curr_state.en_passant != NoSquare) {
+    if (curr_state.en_passant != NoSquare)
         hash_ep_key();
-    }
     hash_castle_key();
     hash_side_key();
 }
