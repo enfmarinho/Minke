@@ -158,15 +158,16 @@ Bitboard generate_pawn_attacks(Square sq, Color color) {
     Bitboard board = 0ULL;
     set_bit(board, sq);
 
-    int forward_offset;
-    if (color == White)
-        forward_offset = North;
-    else
+    int forward_offset = North;
+    Bitboard not_last_rank = ~RankMasks[7];
+    if (color == Black) {
         forward_offset = South;
+        not_last_rank = ~RankMasks[0];
+    }
 
-    if (board & not_a_file)
+    if (board & not_a_file & not_last_rank)
         attacks |= shift(board, forward_offset + West);
-    if (board & not_h_file)
+    if (board & not_h_file & not_last_rank)
         attacks |= shift(board, forward_offset + East);
 
     return attacks;
