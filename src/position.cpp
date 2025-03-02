@@ -71,9 +71,9 @@ bool Position::set_fen(const std::string &fen) {
         }
     }
 
-    if (fen_arguments[1] == "w") {
+    if (fen_arguments[1] == "w" || fen_arguments[1] == "W") {
         stm = White;
-    } else if (fen_arguments[1] == "b") {
+    } else if (fen_arguments[1] == "b" || fen_arguments[1] == "B") {
         stm = Black;
         hash_side_key();
     } else {
@@ -107,7 +107,7 @@ bool Position::set_fen(const std::string &fen) {
         return false;
     }
     try {
-        game_clock_ply = std::stoi(fen_arguments[5]);
+        game_clock_ply = (std::stoi(fen_arguments[5]) - 1) * 2 + stm;
     } catch (const std::exception &) {
         std::cerr << "INVALID FEN: game clock is not a number." << std::endl;
         return false;
@@ -190,7 +190,7 @@ std::string Position::get_fen() const {
 
     fen += std::to_string(get_fifty_move_ply());
     fen += ' ';
-    fen += std::to_string((game_clock_ply + 1) / 2); // TODO check this, should i really add 1 ?
+    fen += std::to_string(1 + (game_clock_ply - stm) / 2);
 
     return fen;
 }
@@ -276,7 +276,7 @@ bool Position::make_move(const Move &move) {
     bool legal = true;
     if (move.is_regular()) {
         make_regular<UPDATE>(move);
-    } else if (move.is_capture()) {
+    } else if (move.is_capture() && !move.is_ep()) {
         make_capture<UPDATE>(move);
     } else if (move.is_castle()) {
         legal = make_castle<UPDATE>(move);
@@ -289,14 +289,13 @@ bool Position::make_move(const Move &move) {
     hash_castle_key();
     update_castling_rights(move);
     hash_castle_key();
-
     hash_side_key();
-    change_side();
 
-    if (move.is_castle()) { // If move is a castle, the legality has already been checked by make_castle()
-        return legal;
-    }
-    return !in_check();
+    if (!move.is_castle()) // If move is a castle, the legality has already been checked by make_castle()
+        legal = !in_check();
+
+    change_side();
+    return legal;
 }
 
 template <bool UPDATE>
@@ -308,7 +307,7 @@ void Position::make_regular(const Move &move) {
     move_piece<UPDATE>(piece, from, to);
     if (get_piece_type(piece, stm) == Pawn) {
         curr_state.fifty_move_ply = 0;
-        int pawn_offset = stm == White ? North : South;
+        int pawn_offset = get_pawn_offset(stm);
         if (to - from == 2 * pawn_offset) { // Double push
             curr_state.en_passant = static_cast<Square>(to - pawn_offset);
             hash_ep_key();
@@ -357,10 +356,10 @@ bool Position::make_castle(const Move &move) {
     move_piece<UPDATE>(piece, from, to);
     switch (to) {
         case g1: // White castle short
-            move_piece<UPDATE>(BlackRook, h1, f1);
+            move_piece<UPDATE>(WhiteRook, h1, f1);
             return !(is_attacked(e1) || is_attacked(f1) || is_attacked(g1));
         case c1: // White castle long
-            move_piece<UPDATE>(BlackRook, a1, d1);
+            move_piece<UPDATE>(WhiteRook, a1, d1);
             return !(is_attacked(e1) || is_attacked(d1) || is_attacked(c1));
         case g8: // Black castle short
             move_piece<UPDATE>(BlackRook, h8, f8);
@@ -402,17 +401,19 @@ template <bool UPDATE>
 void Position::make_en_passant(const Move &move) {
     curr_state.fifty_move_ply = 0;
     Square from = move.from();
-    Square to = move.from();
+    Square to = move.to();
     Piece piece = consult(from);
-    Piece captured = consult(to);
-    Square captured_square = static_cast<Square>(to - static_cast<int>(stm == White ? North : South));
+    Square captured_square = static_cast<Square>(to - static_cast<int>(get_pawn_offset(stm)));
+    Piece captured = consult(captured_square);
+    curr_state.captured = captured;
     remove_piece<UPDATE>(captured, captured_square);
     move_piece<UPDATE>(piece, from, to);
 }
 
 void Position::update_castling_rights(const Move &move) {
     Square from = move.from();
-    PieceType piece_type = get_piece_type(consult(from), stm);
+    Square to = move.to();
+    PieceType piece_type = get_piece_type(consult(to), stm); // Piece has already been moved
 
     if (piece_type == King) {
         switch (stm) {
@@ -462,7 +463,7 @@ void Position::unmake_move(const Move &move) {
 
     if (move.is_regular()) {
         move_piece<false>(piece, to, from);
-    } else if (move.is_capture()) {
+    } else if (move.is_capture() && !move.is_ep()) {
         remove_piece<false>(piece, to);
         add_piece<false>(curr_state.captured, to);
         if (move.is_promotion()) {
@@ -493,7 +494,7 @@ void Position::unmake_move(const Move &move) {
         add_piece<false>(piece, from);
     } else if (move.is_ep()) {
         move_piece<false>(piece, to, from);
-        Square captured_square = static_cast<Square>(to - static_cast<int>(stm == White ? North : South));
+        Square captured_square = static_cast<Square>(to - static_cast<int>(get_pawn_offset(stm)));
         add_piece<false>(curr_state.captured, captured_square);
     }
 

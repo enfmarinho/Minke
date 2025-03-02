@@ -102,6 +102,9 @@ inline Square poplsb(Bitboard &bitboard) {
 }
 
 inline Bitboard shift(const Bitboard &bitboard, const int &direction) {
+    if (bitboard == 0)
+        return 0;
+
     if (direction < 0) {
         assert(lsb(bitboard) + direction >= a1); // Checks for overflow
         return bitboard >> std::abs(direction);
