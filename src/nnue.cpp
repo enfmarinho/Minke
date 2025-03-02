@@ -29,7 +29,7 @@ static const std::pair<size_t, size_t> feature_indices(const Piece &piece, const
     PieceType piece_type = get_piece_type(piece, color);
 
     size_t white_index = color * ColorStride + piece_type * PieceStride + sq;
-    size_t black_index = (~color) * ColorStride + piece_type * PieceStride + (sq ^ 56);
+    size_t black_index = !color * ColorStride + piece_type * PieceStride + (sq ^ 56);
     return {white_index, black_index};
 }
 
