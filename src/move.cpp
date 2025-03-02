@@ -42,15 +42,6 @@ std::string Move::get_algebraic_notation() const {
     return algebraic_notation;
 }
 
-inline bool Move::is_regular() const { return type() == Regular; }
-
-inline bool Move::is_capture() const { return type() & Capture; }
-
-inline bool Move::is_castle() const { return type() == Castling; }
-
-inline bool Move::is_promotion() const { return type() & PawnPromotionMask; }
-
-inline bool Move::is_ep() const { return type() == EnPassant; }
-
 bool operator==(const Move& lhs, const Move& rhs) { return lhs.internal() == rhs.internal(); }
+
 bool operator==(const Move& lhs, const int& rhs) { return lhs.internal() == rhs; }

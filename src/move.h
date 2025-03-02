@@ -43,11 +43,11 @@ class Move {
     int16_t internal() const;
     std::string get_algebraic_notation() const;
 
-    inline bool is_regular() const;
-    inline bool is_capture() const;
-    inline bool is_castle() const;
-    inline bool is_promotion() const;
-    inline bool is_ep() const;
+    inline bool is_regular() const { return type() == Regular; }
+    inline bool is_capture() const { return type() & Capture; }
+    inline bool is_castle() const { return type() == Castling; }
+    inline bool is_promotion() const { return type() & PawnPromotionMask; }
+    inline bool is_ep() const { return type() == EnPassant; }
 
     friend bool operator==(const Move& lhs, const Move& rhs);
     friend bool operator==(const Move& lhs, const int& rhs);
