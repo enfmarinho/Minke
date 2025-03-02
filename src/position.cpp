@@ -417,9 +417,9 @@ void Position::make_en_passant(const Move &move) {
 void Position::update_castling_rights(const Move &move) {
     Square from = move.from();
     Square to = move.to();
-    PieceType piece_type = get_piece_type(consult(to), stm); // Piece has already been moved
+    PieceType moved_piece_type = get_piece_type(consult(to), stm); // Piece has already been moved
 
-    if (piece_type == King) {
+    if (moved_piece_type == King) { // Moved king
         switch (stm) {
             case White:
                 unset_mask(curr_state.castling_rights, WhiteCastling);
@@ -430,7 +430,7 @@ void Position::update_castling_rights(const Move &move) {
             default:
                 __builtin_unreachable();
         }
-    } else if (piece_type == Rook) {
+    } else if (moved_piece_type == Rook) { // Moved rook
         switch (from) {
             case a1:
                 unset_mask(curr_state.castling_rights, WhiteLongCastling);
@@ -447,7 +447,8 @@ void Position::update_castling_rights(const Move &move) {
             default:
                 break;
         }
-    } else if (get_piece_type(curr_state.captured) == Rook) {
+    }
+    if (get_piece_type(curr_state.captured) == Rook) { // Captured rook
         switch (to) {
             case a1:
                 unset_mask(curr_state.castling_rights, WhiteLongCastling);
