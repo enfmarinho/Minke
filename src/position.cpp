@@ -66,6 +66,8 @@ bool Position::set_fen(const std::string &fen) {
                 assert(false);
 
             ++file;
+        } else {
+            file += c - '0';
         }
     }
 
