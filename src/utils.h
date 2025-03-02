@@ -131,9 +131,8 @@ inline PieceType get_piece_type(const Piece &piece, const Color &color) {
 
 inline PieceType get_piece_type(const Piece &piece) {
     assert(piece >= WhitePawn && piece <= Empty);
-    if (piece > 6) {
+    if (piece >= 6)
         return static_cast<PieceType>(piece - 6);
-    }
     return static_cast<PieceType>(piece);
 }
 

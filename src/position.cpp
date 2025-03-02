@@ -39,11 +39,11 @@ bool Position::set_fen(const std::string &fen) {
         }
     }
 
-    int file = 7, rank = 0;
+    int rank = 7, file = 0;
     for (char c : fen_arguments[0]) {
         if (c == '/') {
-            --file;
-            rank = 0;
+            --rank;
+            file = 0;
             continue;
         }
         if (!std::isdigit(c)) {
@@ -65,7 +65,7 @@ bool Position::set_fen(const std::string &fen) {
             else
                 assert(false);
 
-            ++rank;
+            ++file;
         }
     }
 
@@ -94,7 +94,7 @@ bool Position::set_fen(const std::string &fen) {
     if (fen_arguments[3] == "-") {
         curr_state.en_passant = NoSquare;
     } else {
-        curr_state.en_passant = get_square(fen_arguments[3][1] - '1', fen_arguments[3][0] - 'a');
+        curr_state.en_passant = get_square(fen_arguments[3][0] - 'a', fen_arguments[3][1] - '1');
         hash_ep_key();
     }
 
@@ -116,9 +116,9 @@ bool Position::set_fen(const std::string &fen) {
 
 std::string Position::get_fen() const {
     std::string fen;
-    for (int file = 7; file >= 0; --file) {
+    for (int rank = 7; rank >= 0; --rank) {
         int counter = 0;
-        for (int rank = 0; rank < 8; ++rank) {
+        for (int file = 0; file < 8; ++file) {
             const Piece &piece = consult(get_square(file, rank));
             const Color color = get_color(piece);
             const PieceType piece_type = get_piece_type(piece, color);
@@ -153,7 +153,7 @@ std::string Position::get_fen() const {
         }
         if (counter > 0)
             fen += ('0' + counter);
-        if (file != 0)
+        if (rank != 0)
             fen += '/';
     }
     fen += (stm == White ? " w " : " b ");
@@ -510,8 +510,8 @@ void Position::unmake_move(const Move &move) {
 }
 
 Move Position::get_movement(const std::string &algebraic_notation) const {
-    Square from = get_square(algebraic_notation[1] - '1', algebraic_notation[0] - 'a');
-    Square to = get_square(algebraic_notation[3] - '1', algebraic_notation[2] - 'a');
+    Square from = get_square(algebraic_notation[0] - 'a', algebraic_notation[1] - '1');
+    Square to = get_square(algebraic_notation[2] - 'a', algebraic_notation[3] - '1');
     MoveType move_type = MoveType::Regular;
 
     if (algebraic_notation.size() == 5) { // Pawn promotion
@@ -577,32 +577,32 @@ void Position::print() const {
         std::cout << "+\n";
     };
 
-    for (int sqi = a1; sqi <= h8; ++sqi) {
-        if (sqi % 8 == 0) // First column
-            print_line();
+    for (int rank = 7; rank >= 0; --rank) {
+        print_line();
+        for (int file = 0; file < 8; ++file) {
+            Square sq = get_square(file, rank);
+            Piece piece = board[sq];
+            PieceType piece_type = get_piece_type(piece);
+            char piece_char = ' ';
+            if (piece_type == Pawn)
+                piece_char = 'p';
+            else if (piece_type == Knight)
+                piece_char = 'n';
+            else if (piece_type == Bishop)
+                piece_char = 'b';
+            else if (piece_type == Rook)
+                piece_char = 'r';
+            else if (piece_type == Queen)
+                piece_char = 'q';
+            else if (piece_type == King)
+                piece_char = 'k';
 
-        Piece piece = board[sqi];
-        PieceType piece_type = get_piece_type(piece);
-        char piece_char = ' ';
-        if (piece_type == Pawn)
-            piece_char = 'p';
-        else if (piece_type == Knight)
-            piece_char = 'n';
-        else if (piece_type == Bishop)
-            piece_char = 'b';
-        else if (piece_type == Rook)
-            piece_char = 'r';
-        else if (piece_type == Queen)
-            piece_char = 'q';
-        else if (piece_type == King)
-            piece_char = 'k';
+            if (piece <= WhiteKing) // Piece is white
+                piece_char = toupper(piece_char);
 
-        if (piece <= WhiteKing) // Piece is white
-            piece_char = toupper(piece_char);
-
-        std::cout << "| " << piece_char << " ";
-        if (sqi % 8 == 0) // First column
-            std::cout << "| " << get_file(static_cast<Square>(sqi)) + 1 << "\n";
+            std::cout << "| " << piece_char << " ";
+        }
+        std::cout << "| " << rank + 1 << "\n";
     }
 
     print_line();
