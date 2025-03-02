@@ -24,10 +24,10 @@ std::string Move::get_algebraic_notation() const {
     Square source = from();
     Square target = to();
 
-    algebraic_notation.push_back('a' + get_rank(source));
-    algebraic_notation.push_back('1' + get_file(source));
-    algebraic_notation.push_back('a' + get_rank(target));
-    algebraic_notation.push_back('1' + get_file(target));
+    algebraic_notation.push_back('a' + get_file(source));
+    algebraic_notation.push_back('1' + get_rank(source));
+    algebraic_notation.push_back('a' + get_file(target));
+    algebraic_notation.push_back('1' + get_rank(target));
 
     int move_type = type() & (!Capture);
     if (move_type == MoveType::PawnPromotionQueen) {
