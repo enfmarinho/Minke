@@ -34,6 +34,7 @@ add_executable(
   "src/main.cpp"
   "src/move.cpp"
   "src/movegen.cpp"
+  "src/movepicker.cpp"
   "src/nnue.cpp"
   "src/position.cpp"
   "src/pv_list.cpp"
