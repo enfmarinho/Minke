@@ -289,7 +289,7 @@ bool Position::make_move(const Move &move) {
     hash_castle_key();
 
     hash_side_key();
-    stm = static_cast<Color>(~stm);
+    change_side();
 
     if (move.is_castle()) { // If move is a castle, the legality has already been checked by make_castle()
         return legal;
@@ -452,7 +452,7 @@ void Position::unmake_move(const Move &move) {
 
     --game_clock_ply;
     played_positions.pop_back();
-    stm = static_cast<Color>(~stm);
+    change_side();
 
     Square from = move.from();
     Square to = move.to();
@@ -538,7 +538,7 @@ Move Position::get_movement(const std::string &algebraic_notation) const {
 }
 
 bool Position::is_attacked(const Square &sq) const {
-    Color opponent = static_cast<Color>(~stm);
+    Color opponent = get_adversary();
     Bitboard occupancy = get_occupancy();
     unset_bit(occupancy, sq); // square to be checked has to be unset on occupancy bitboard
 

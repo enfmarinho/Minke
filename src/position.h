@@ -59,7 +59,7 @@ class Position {
     inline Square get_king_placement(const Color &color) const { return lsb(pieces[King + color * ColorOffset]); }
     inline uint8_t get_castling_rights() const { return curr_state.castling_rights; }
     inline Color get_stm() const { return stm; }
-    inline Color get_adversary() const { return static_cast<Color>(~stm); }
+    inline Color get_adversary() const { return static_cast<Color>(stm ^ 1); }
     inline Square get_en_passant() const { return curr_state.en_passant; }
     inline HashType get_hash() const { return hash_key; }
     inline int get_game_ply() const { return game_clock_ply; }
@@ -102,6 +102,8 @@ class Position {
     void hash_castle_key();
     void hash_ep_key();
     void hash_side_key();
+
+    inline void change_side() { stm = static_cast<Color>(stm ^ 1); }
 
     Piece board[64];
     Bitboard occupancies[2];
