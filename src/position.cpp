@@ -591,6 +591,18 @@ bool Position::is_attacked(const Square &sq) const {
 
 bool Position::in_check() const { return is_attacked(get_king_placement(stm)); }
 
+int Position::legal_move_amount() {
+    ScoredMove moves[MaxMoves];
+    ScoredMove *end = gen_moves(moves, *this, GenAll);
+    int legal_amount = 0;
+    for (ScoredMove *begin = moves; begin != end; ++begin) {
+        if (make_move<false>(begin->move))
+            ++legal_amount;
+        unmake_move<false>(begin->move);
+    }
+    return legal_amount;
+}
+
 void Position::print() const {
     auto print_line = []() -> void {
         for (IndexType i = 0; i < 8; ++i) {

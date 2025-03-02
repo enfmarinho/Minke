@@ -41,6 +41,7 @@ class Position {
     bool draw();
     inline WeightType eval() const { return nnue.eval(stm); }
 
+    int legal_move_amount();
     void print() const;
 
     Move get_movement(const std::string &algebraic_notation) const;
