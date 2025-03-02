@@ -63,6 +63,9 @@ struct ScoredMove {
     int score;
 };
 
+constexpr int MoveNone = 0;
+const ScoredMove ScoredMoveNone = {MoveNone, 0};
+
 bool operator==(const Move& lhs, const Move& rhs);
 bool operator==(const Move& lhs, const int& rhs);
 

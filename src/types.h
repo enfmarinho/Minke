@@ -108,7 +108,6 @@ constexpr int MaxMoves = 256;
 constexpr int MaxPly = 256;
 constexpr int HalfMovesPerMatch = 2048;
 constexpr int MaxSearchDepth = 128;
-constexpr int MoveNone = 0;
 
 // clang-format off
 constexpr WeightType SEE_values[12] = {100, 300, 300, 500, 1000, 0,
