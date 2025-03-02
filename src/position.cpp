@@ -298,6 +298,9 @@ bool Position::make_move(const Move &move) {
     return legal;
 }
 
+template bool Position::make_move<true>(const Move &move);
+template bool Position::make_move<false>(const Move &move);
+
 template <bool UPDATE>
 void Position::make_regular(const Move &move) {
     Square from = move.from();
@@ -526,6 +529,9 @@ void Position::unmake_move(const Move &move) {
     hash_castle_key();
     hash_side_key();
 }
+
+template void Position::unmake_move<true>(const Move &move);
+template void Position::unmake_move<false>(const Move &move);
 
 Move Position::get_movement(const std::string &algebraic_notation) const {
     Square from = get_square(algebraic_notation[0] - 'a', algebraic_notation[1] - '1');
