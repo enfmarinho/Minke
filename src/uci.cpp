@@ -109,13 +109,13 @@ void UCI::print_debug_info() {
         ttmove = entry->best_move();
         std::cout << "Best move: " << ttmove.get_algebraic_notation() << std::endl;
     }
-    MovePicker move_picker(ttmove, &m_search_data);
+    MovePicker move_picker(ttmove, &m_search_data, false);
     std::cout << "Move list: ";
-    while (!move_picker.finished()) {
-        ScoredMove scored_move = move_picker.next_move_scored(false);
+    ScoredMove scored_move;
+    while ((scored_move = move_picker.next_move_scored()) != ScoredMoveNone) {
         if (!m_search_data.position.make_move<false>(scored_move.move))
             std::cout << "*";
-        std::cout << scored_move.move.get_algebraic_notation() << ' ' << "[" << scored_move.score << "] ";
+        std::cout << scored_move.move.get_algebraic_notation() << "(" << scored_move.score << ") ";
         m_search_data.position.unmake_move<false>(scored_move.move);
     }
     std::cout << "\nNNUE eval: " << m_search_data.position.eval() << std::endl;

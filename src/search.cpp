@@ -11,6 +11,7 @@
 #include <iostream>
 #include <limits>
 
+#include "move.h"
 #include "movepicker.h"
 #include "position.h"
 #include "tt.h"
@@ -106,15 +107,18 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
     }
 
     Move ttmove = (found ? entry->best_move() : MoveNone);
+    Move move = MoveNone;
     Move best_move = MoveNone;
     WeightType best_score = -MaxScore;
     WeightType old_alpha = alpha;
-    MovePicker move_picker(ttmove, &search_data);
-    while (!move_picker.finished()) {
+
+    MovePicker move_picker(ttmove, &search_data, false);
+    while ((move = move_picker.next_move()) != MoveNone) {
         PvList curr_pv;
-        Move move = move_picker.next_move(false);
-        if (!search_data.position.make_move<true>(move)) // Avoid illegal moves
+        if (!search_data.position.make_move<true>(move)) { // Avoid illegal moves
+            search_data.position.unmake_move<true>(move);
             continue;
+        }
 
         ++search_data.searching_depth;
         WeightType score = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, search_data);
@@ -179,23 +183,17 @@ WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data
     if (alpha < stand_pat)
         alpha = stand_pat;
 
-    MovePicker move_picker(ttmove, &search_data);
-    bool capture_found = false;
-    while (!move_picker.finished()) {
-        Move curr_move = move_picker.next_move(true);
-        if (curr_move.type() != MoveType::Capture) {
-            if (capture_found)
-                break;
-            else
-                continue;
+    Move move = MoveNone;
+    MovePicker move_picker(ttmove, &search_data, true);
+    while ((move = move_picker.next_move()) != MoveNone) {
+        assert(move.is_capture() || move.is_promotion());
+        if (!search_data.position.make_move<true>(move)) { // Avoid illegal moves
+            search_data.position.unmake_move<true>(move);
+            continue;
         }
 
-        capture_found = true;
-        if (!search_data.position.make_move<true>(curr_move))
-            continue;
-
         WeightType eval = -quiescence(-beta, -alpha, search_data);
-        search_data.position.unmake_move<true>(curr_move);
+        search_data.position.unmake_move<true>(move);
         if (eval >= beta)
             return beta;
         else if (eval > alpha)
