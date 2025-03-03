@@ -110,8 +110,8 @@ constexpr int HalfMovesPerMatch = 2048;
 constexpr int MaxSearchDepth = 128;
 
 // clang-format off
-constexpr WeightType SEE_values[12] = {100, 300, 300, 500, 1000, 0,
-                                       100, 300, 300, 500, 1000, 0};
+constexpr WeightType SEE_values[12] = {100, 300, 300, 500, 1000, 5000,
+                                       100, 300, 300, 500, 1000, 5000};
 // clang-format on
 constexpr Bitboard FileMasks[8] = {0x101010101010101,  0x202020202020202,  0x404040404040404,  0x808080808080808,
                                    0x1010101010101010, 0x2020202020202020, 0x4040404040404040, 0x8080808080808080};
