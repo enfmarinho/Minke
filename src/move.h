@@ -62,6 +62,9 @@ struct ScoredMove {
     Move move;
     int score;
 };
+inline bool operator==(const ScoredMove& lhs, const ScoredMove& rhs) {
+    return lhs.move == rhs.move && lhs.score == rhs.score;
+}
 
 constexpr int MoveNone = 0;
 const ScoredMove ScoredMoveNone = {MoveNone, 0};
