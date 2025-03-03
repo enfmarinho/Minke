@@ -11,6 +11,13 @@
 #include "search.h"
 #include "types.h"
 
+enum BaseScore {
+    TT_Score = 100'000,
+    QueenPromotionScore = 90'000,
+    NonQueenPromotionScore = -90'000,
+    CaptureScore = 20'000
+};
+
 enum MoveGenStage {
     PickTT,
     GenNoisy,
@@ -18,26 +25,29 @@ enum MoveGenStage {
     GenQuiet,
     PickQuiet,
     PickBadNoisy,
-    Finished,
+    Finished
 };
 
 class MovePicker {
   public:
     MovePicker() = default;
-    MovePicker(Move ttmove, const SearchData *search_data);
+    MovePicker(Move ttmove, SearchData *search_data, bool qsearch);
     ~MovePicker() = default;
 
-    void init(Move ttmove, const SearchData *search_data);
-    Move next_move(bool skip_quiet);
-    ScoredMove next_move_scored(bool skip_quiet);
-    inline bool finished() const { return stage == Finished; }
+    void init(Move ttmove, SearchData *search_data, bool qsearch);
+    Move next_move();
+    ScoredMove next_move_scored();
 
   private:
+    void sort_next_move();
+    void score_moves();
+
+    bool qsearch;
     MoveGenStage stage;
     ScoredMove moves[MaxMoves];
     ScoredMove *curr, *end, *end_bad;
     Move ttmove;
-    const SearchData *search_data;
+    SearchData *search_data;
 };
 
 #endif // #ifndef MOVEPICKER_H
