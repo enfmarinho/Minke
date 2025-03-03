@@ -30,5 +30,6 @@ WeightType aspiration(const CounterType &depth, PvList &pv_list, SearchData &sea
 WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data);
 WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth, PvList &pv_list,
                       SearchData &search_data);
+bool SEE(Position &position, const Move &move);
 
 #endif // #ifndef SEARCH_H

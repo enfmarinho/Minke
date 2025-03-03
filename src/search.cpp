@@ -204,3 +204,8 @@ WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data
 
     return alpha;
 }
+
+bool SEE(Position &position, const Move &move) {
+    // TODO implement this
+    return true;
+}
