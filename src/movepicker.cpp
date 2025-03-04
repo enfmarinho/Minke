@@ -49,6 +49,8 @@ ScoredMove MovePicker::next_move_scored() {
                     *end_bad++ = *curr++;
                 else if (curr->move != ttmove)
                     return *curr++;
+                else
+                    ++curr;
             }
             curr = end_bad;
             if (qsearch) {
@@ -67,6 +69,8 @@ ScoredMove MovePicker::next_move_scored() {
                 sort_next_move();
                 if (curr->move != ttmove)
                     return *curr++;
+                else
+                    ++curr;
             }
             curr = moves;
             stage = PickBadNoisy;
@@ -74,9 +78,10 @@ ScoredMove MovePicker::next_move_scored() {
         case PickBadNoisy:
             while (curr != end_bad) {
                 // No need to call sort_next_move(), since bad noisy moves are already sorted in PickGoodNoisy
-                if (curr->move != ttmove) {
+                if (curr->move != ttmove)
                     return *curr++;
-                }
+                else
+                    ++curr;
             }
             stage = Finished;
             // Fall-through
