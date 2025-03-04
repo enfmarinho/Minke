@@ -80,7 +80,6 @@ WeightType aspiration(const CounterType &depth, PvList &pv_list, SearchData &sea
     else if (eval <= alpha)
         eval = alpha_beta(-MaxScore, beta, depth, pv_list, search_data);
 
-    assert(eval >= alpha && eval <= beta);
     return eval;
 }
 
