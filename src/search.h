@@ -8,6 +8,8 @@
 #ifndef SEARCH_H
 #define SEARCH_H
 
+#include <cstdint>
+
 #include "pv_list.h"
 #include "time_manager.h"
 #include "types.h"
@@ -16,9 +18,9 @@ struct SearchData {
     Position position;
     TimeManager time_manager;
 
-    int nodes_searched;
+    int64_t nodes_searched;
+    int64_t node_limit;
     int searching_depth;
-    int node_limit;
     int depth_limit;
     bool stop;
 
