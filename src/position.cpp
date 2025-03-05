@@ -116,6 +116,9 @@ bool Position::set_fen(const std::string &fen) {
     return true;
 }
 
+template bool Position::set_fen<true>(const std::string &fen);
+template bool Position::set_fen<false>(const std::string &fen);
+
 std::string Position::get_fen() const {
     std::string fen;
     for (int rank = 7; rank >= 0; --rank) {
