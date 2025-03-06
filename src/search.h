@@ -32,6 +32,6 @@ WeightType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &thr
 WeightType quiescence(WeightType alpha, WeightType beta, ThreadData &thread_data);
 WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth, PvList &pv_list,
                       ThreadData &thread_data);
-bool SEE(Position &position, const Move &move);
+bool SEE(Position &position, const Move &move, int threshold);
 
 #endif // #ifndef SEARCH_H

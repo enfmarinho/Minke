@@ -8,9 +8,11 @@
 #include "search.h"
 
 #include <cassert>
+#include <cstdlib>
 #include <iostream>
 #include <limits>
 
+#include "attacks.h"
 #include "move.h"
 #include "movepicker.h"
 #include "position.h"
@@ -202,7 +204,75 @@ WeightType quiescence(WeightType alpha, WeightType beta, ThreadData &thread_data
     return alpha;
 }
 
-bool SEE(Position &position, const Move &move) {
-    // TODO implement this
-    return true;
+bool SEE(Position &position, const Move &move, int threshold) {
+    if (move.is_castle()) // Cannot win or lose material by castling
+        return threshold <= 0;
+
+    Square from = move.from();
+    Square to = move.to();
+    Piece target = position.consult(to);
+    Piece attacker = position.consult(from);
+
+    int score = SEE_values[target] - threshold;
+    if (move.is_promotion())
+        score += SEE_values[move.promotee()] - SEE_values[Pawn];
+    if (score < 0) // Cannot beat threshold
+        return false;
+
+    score -= (move.is_promotion() ? SEE_values[move.promotee()] : SEE_values[attacker]);
+    if (score >= 0) // Already surpassed threshold
+        return true;
+
+    Bitboard attackers = position.attackers(to);
+    Bitboard occupancy = position.get_occupancy() ^ (1ULL << from); // Removed already used attacker
+    Bitboard diagonal_attackers = position.get_piece_bb(Bishop) | position.get_piece_bb(Queen);
+    Bitboard line_attackers = position.get_piece_bb(Rook) | position.get_piece_bb(Queen);
+    Color stm = static_cast<Color>(!position.get_stm());
+
+    while (true) {
+        attackers &= occupancy; // Remove used piece from attackers bitboard
+
+        Bitboard my_attackers = attackers & position.get_occupancy(static_cast<Color>(stm));
+        if (!my_attackers) // There is no attacker from stm
+            break;
+
+        // Get cheapest attacker
+        int cheapest_attacker;
+        for (cheapest_attacker = Pawn; cheapest_attacker <= King; ++cheapest_attacker) {
+            if ((my_attackers = attackers & position.get_piece_bb(static_cast<PieceType>(cheapest_attacker), stm)))
+                break;
+        }
+        stm = static_cast<Color>(!stm);
+
+        score = -score - SEE_values[cheapest_attacker] - 1; // Updating negamaxed score
+
+        if (score >= 0) { // Score beats threshold
+            if (cheapest_attacker == King && (attackers & position.get_occupancy(static_cast<Color>(!stm))))
+                // King is the only attacker and square is still attacked by opponent, so we don't have a valid attacker
+                stm = static_cast<Color>(!stm);
+            break;
+        }
+
+        occupancy ^= (my_attackers & -my_attackers); // Remove used piece, i.e. unset lsb
+
+        // Add x-ray attackers, if there is any
+        switch (cheapest_attacker) {
+            case Pawn:
+                // Fall-through
+            case Bishop:
+                attackers |= get_piece_attacks(to, occupancy, Bishop) & diagonal_attackers;
+                break;
+            case Rook:
+                attackers |= get_piece_attacks(to, occupancy, Rook) & line_attackers;
+                break;
+            case Queen:
+                attackers |= (get_piece_attacks(to, occupancy, Bishop) & diagonal_attackers) |
+                             (get_piece_attacks(to, occupancy, Rook) & line_attackers);
+                break;
+            default:
+                break;
+        }
+    }
+
+    return stm != position.get_stm();
 }
