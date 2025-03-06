@@ -14,10 +14,10 @@
 #include "search.h"
 #include "types.h"
 
-MovePicker::MovePicker(Move ttmove, SearchData *search_data, bool qsearch) { init(ttmove, search_data, qsearch); }
+MovePicker::MovePicker(Move ttmove, ThreadData *thread_data, bool qsearch) { init(ttmove, thread_data, qsearch); }
 
-void MovePicker::init(Move ttmove, SearchData *search_data, bool qsearch) {
-    this->search_data = search_data;
+void MovePicker::init(Move ttmove, ThreadData *thread_data, bool qsearch) {
+    this->thread_data = thread_data;
     this->ttmove = ttmove;
     this->qsearch = qsearch;
 
@@ -38,7 +38,7 @@ ScoredMove MovePicker::next_move_scored() {
             stage = GenNoisy;
             return {ttmove, TT_Score};
         case GenNoisy:
-            end = gen_moves(curr, search_data->position, Noisy);
+            end = gen_moves(curr, thread_data->position, Noisy);
             score_moves();
             stage = PickGoodNoisy;
             // Fall-through
@@ -60,7 +60,7 @@ ScoredMove MovePicker::next_move_scored() {
             stage = GenQuiet;
             // Fall-through
         case GenQuiet:
-            end = gen_moves(curr, search_data->position, Quiet);
+            end = gen_moves(curr, thread_data->position, Quiet);
             score_moves();
             stage = PickQuiet;
             // Fall-through
@@ -110,8 +110,8 @@ void MovePicker::score_moves() {
                 runner->score = 1; // TODO implement this, just a STUB
                 break;
             case Capture:
-                runner->score = CaptureScore + 10 * SEE_values[search_data->position.consult(runner->move.to())] -
-                                SEE_values[search_data->position.consult(runner->move.from())] / 10;
+                runner->score = CaptureScore + 10 * SEE_values[thread_data->position.consult(runner->move.to())] -
+                                SEE_values[thread_data->position.consult(runner->move.from())] / 10;
                 assert(runner->score > CaptureScore && runner->score < CaptureScore + 10'000);
                 break;
             case EnPassant:

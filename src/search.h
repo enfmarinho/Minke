@@ -14,7 +14,7 @@
 #include "time_manager.h"
 #include "types.h"
 
-struct SearchData {
+struct ThreadData {
     Position position;
     TimeManager time_manager;
 
@@ -27,11 +27,11 @@ struct SearchData {
     void reset();
 };
 
-void iterative_deepening(SearchData &search_data);
-WeightType aspiration(const CounterType &depth, PvList &pv_list, SearchData &search_data);
-WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data);
+void iterative_deepening(ThreadData &thread_data);
+WeightType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &thread_data);
+WeightType quiescence(WeightType alpha, WeightType beta, ThreadData &thread_data);
 WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth, PvList &pv_list,
-                      SearchData &search_data);
+                      ThreadData &thread_data);
 bool SEE(Position &position, const Move &move);
 
 #endif // #ifndef SEARCH_H

@@ -31,10 +31,10 @@ enum MoveGenStage {
 class MovePicker {
   public:
     MovePicker() = default;
-    MovePicker(Move ttmove, SearchData *search_data, bool qsearch);
+    MovePicker(Move ttmove, ThreadData *thread_data, bool qsearch);
     ~MovePicker() = default;
 
-    void init(Move ttmove, SearchData *search_data, bool qsearch);
+    void init(Move ttmove, ThreadData *thread_data, bool qsearch);
     Move next_move();
     ScoredMove next_move_scored();
 
@@ -47,7 +47,7 @@ class MovePicker {
     ScoredMove moves[MaxMoves];
     ScoredMove *curr, *end, *end_bad;
     Move ttmove;
-    SearchData *search_data;
+    ThreadData *thread_data;
 };
 
 #endif // #ifndef MOVEPICKER_H

@@ -18,16 +18,16 @@
 #include "types.h"
 
 static void print_search_info(const CounterType &depth, const WeightType &eval, const PvList &pv_list,
-                              const SearchData &search_data) {
+                              const ThreadData &thread_data) {
     // Add 1 to time_passed() to avoid division by 0
-    std::cout << "info depth " << depth << " score cp " << eval << " time " << search_data.time_manager.time_passed()
-              << " nodes " << search_data.nodes_searched << " nps "
-              << search_data.nodes_searched * 1000 / (search_data.time_manager.time_passed() + 1) << " pv ";
+    std::cout << "info depth " << depth << " score cp " << eval << " time " << thread_data.time_manager.time_passed()
+              << " nodes " << thread_data.nodes_searched << " nps "
+              << thread_data.nodes_searched * 1000 / (thread_data.time_manager.time_passed() + 1) << " pv ";
     pv_list.print();
     std::cout << std::endl;
 }
 
-void SearchData::reset() {
+void ThreadData::reset() {
     stop = true;
     searching_depth = 0;
     nodes_searched = -1; // Avoid counting the root
@@ -35,16 +35,16 @@ void SearchData::reset() {
     depth_limit = MaxSearchDepth;
 }
 
-void iterative_deepening(SearchData &search_data) {
-    search_data.stop = false;
+void iterative_deepening(ThreadData &thread_data) {
+    thread_data.stop = false;
 
     Move best_move = MoveNone;
-    for (CounterType depth = 1; depth <= search_data.depth_limit; ++depth) {
+    for (CounterType depth = 1; depth <= thread_data.depth_limit; ++depth) {
         PvList pv_list;
-        WeightType eval = aspiration(depth, pv_list, search_data);
-        if (!search_data.time_manager.time_over() && !search_data.stop) { // Search was successful
+        WeightType eval = aspiration(depth, pv_list, thread_data);
+        if (!thread_data.time_manager.time_over() && !thread_data.stop) { // Search was successful
             bool found;
-            TTEntry *entry = TT.probe(search_data.position, found);
+            TTEntry *entry = TT.probe(thread_data.position, found);
 
             best_move = entry->best_move();
             if (best_move == MoveNone) {
@@ -52,51 +52,51 @@ void iterative_deepening(SearchData &search_data) {
                 break;
             }
             assert(found && entry->depth_ply() >= depth);
-            print_search_info(depth, eval, pv_list, search_data);
+            print_search_info(depth, eval, pv_list, thread_data);
         }
-        if (search_data.time_manager.stop_early())
+        if (thread_data.time_manager.stop_early())
             break;
 
-        search_data.time_manager.can_stop(); // Avoids stopping before depth 1 has been searched through
+        thread_data.time_manager.can_stop(); // Avoids stopping before depth 1 has been searched through
     }
 
     std::cout << "bestmove " << (best_move == MoveNone ? "none" : best_move.get_algebraic_notation()) << std::endl;
-    search_data.stop = true;
+    thread_data.stop = true;
 }
 
-WeightType aspiration(const CounterType &depth, PvList &pv_list, SearchData &search_data) {
+WeightType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &thread_data) {
     bool found;
-    TTEntry *ttentry = TT.probe(search_data.position, found);
+    TTEntry *ttentry = TT.probe(thread_data.position, found);
     if (!found)
-        return alpha_beta(-MaxScore, MaxScore, depth, pv_list, search_data);
+        return alpha_beta(-MaxScore, MaxScore, depth, pv_list, thread_data);
 
     int delta = 100; // TODO
 
     WeightType alpha = ttentry->evaluation() - delta;
     WeightType beta = ttentry->evaluation() + delta;
-    WeightType eval = alpha_beta(alpha, beta, depth, pv_list, search_data);
+    WeightType eval = alpha_beta(alpha, beta, depth, pv_list, thread_data);
     if (eval >= beta)
-        eval = alpha_beta(alpha, MaxScore, depth, pv_list, search_data);
+        eval = alpha_beta(alpha, MaxScore, depth, pv_list, thread_data);
     else if (eval <= alpha)
-        eval = alpha_beta(-MaxScore, beta, depth, pv_list, search_data);
+        eval = alpha_beta(-MaxScore, beta, depth, pv_list, thread_data);
 
     return eval;
 }
 
 WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth_ply, PvList &pv_list,
-                      SearchData &search_data) {
-    if (search_data.time_manager.time_over() || search_data.stop) // Out of time
+                      ThreadData &thread_data) {
+    if (thread_data.time_manager.time_over() || thread_data.stop) // Out of time
         return -MaxScore;
     else if (depth_ply == 0)
-        return quiescence(alpha, beta, search_data);
-    else if (search_data.position.draw())
+        return quiescence(alpha, beta, thread_data);
+    else if (thread_data.position.draw())
         return 0;
 
-    ++search_data.nodes_searched;
+    ++thread_data.nodes_searched;
 
     // Transposition table probe
     bool found;
-    TTEntry *entry = TT.probe(search_data.position, found);
+    TTEntry *entry = TT.probe(thread_data.position, found);
     if (found && entry->depth_ply() >= depth_ply &&
         (entry->bound() == TTEntry::BoundType::Exact ||
          (entry->bound() == TTEntry::BoundType::UpperBound && entry->evaluation() <= alpha) ||
@@ -111,18 +111,18 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
     WeightType best_score = -MaxScore;
     WeightType old_alpha = alpha;
 
-    MovePicker move_picker(ttmove, &search_data, false);
+    MovePicker move_picker(ttmove, &thread_data, false);
     while ((move = move_picker.next_move()) != MoveNone) {
         PvList curr_pv;
-        if (!search_data.position.make_move<true>(move)) { // Avoid illegal moves
-            search_data.position.unmake_move<true>(move);
+        if (!thread_data.position.make_move<true>(move)) { // Avoid illegal moves
+            thread_data.position.unmake_move<true>(move);
             continue;
         }
 
-        ++search_data.searching_depth;
-        WeightType score = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, search_data);
-        --search_data.searching_depth;
-        search_data.position.unmake_move<true>(move);
+        ++thread_data.searching_depth;
+        WeightType score = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, thread_data);
+        --thread_data.searching_depth;
+        thread_data.position.unmake_move<true>(move);
         assert(score >= -MaxScore);
 
         if (score > best_score) {
@@ -133,7 +133,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
             if (score > alpha) {
                 alpha = score;
                 if (score >= beta) { // fails high
-                    // search_data.position.increment_history(move, depth_ply); // TODO
+                    // thread_data.position.increment_history(move, depth_ply); // TODO
                     break;
                 }
             }
@@ -142,32 +142,32 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
 
     if (best_move == MoveNone) { // handle positions under stalemate or checkmate,
                                  // i.e. positions with no legal moves to be made
-        return search_data.position.in_check() ? -MateScore - depth_ply : 0;
+        return thread_data.position.in_check() ? -MateScore - depth_ply : 0;
     }
 
-    if (!search_data.time_manager.time_over()) { // Save on TT if search was completed
+    if (!thread_data.time_manager.time_over()) { // Save on TT if search was completed
         TTEntry::BoundType bound = best_score >= beta   ? TTEntry::BoundType::LowerBound
                                    : alpha != old_alpha ? TTEntry::BoundType::Exact
                                                         : TTEntry::BoundType::UpperBound;
-        entry->save(search_data.position.get_hash(), depth_ply, best_move, best_score,
-                    search_data.position.get_game_ply(), bound);
+        entry->save(thread_data.position.get_hash(), depth_ply, best_move, best_score,
+                    thread_data.position.get_game_ply(), bound);
     }
 
     return best_score;
 }
 
-WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data) {
-    ++search_data.nodes_searched;
-    if (search_data.time_manager.time_over() || search_data.stop)
+WeightType quiescence(WeightType alpha, WeightType beta, ThreadData &thread_data) {
+    ++thread_data.nodes_searched;
+    if (thread_data.time_manager.time_over() || thread_data.stop)
         return -MaxScore;
-    else if (search_data.position.draw())
+    else if (thread_data.position.draw())
         return 0;
 
     bool found;
-    TTEntry *ttentry = TT.probe(search_data.position, found);
+    TTEntry *ttentry = TT.probe(thread_data.position, found);
     Move ttmove = (found ? ttentry->best_move() : MoveNone);
 
-    WeightType stand_pat = search_data.position.eval();
+    WeightType stand_pat = thread_data.position.eval();
     if (stand_pat >= beta)
         return beta;
 
@@ -183,16 +183,16 @@ WeightType quiescence(WeightType alpha, WeightType beta, SearchData &search_data
         alpha = stand_pat;
 
     Move move = MoveNone;
-    MovePicker move_picker(ttmove, &search_data, true);
+    MovePicker move_picker(ttmove, &thread_data, true);
     while ((move = move_picker.next_move()) != MoveNone) {
         assert(move.is_capture() || move.is_promotion());
-        if (!search_data.position.make_move<true>(move)) { // Avoid illegal moves
-            search_data.position.unmake_move<true>(move);
+        if (!thread_data.position.make_move<true>(move)) { // Avoid illegal moves
+            thread_data.position.unmake_move<true>(move);
             continue;
         }
 
-        WeightType eval = -quiescence(-beta, -alpha, search_data);
-        search_data.position.unmake_move<true>(move);
+        WeightType eval = -quiescence(-beta, -alpha, thread_data);
+        thread_data.position.unmake_move<true>(move);
         if (eval >= beta)
             return beta;
         else if (eval > alpha)
