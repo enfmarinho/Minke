@@ -9,6 +9,7 @@
 #define UTILS_H
 
 #include <cassert>
+#include <cstdint>
 
 #include "types.h"
 
@@ -22,11 +23,15 @@ template <typename TYPE>
 inline void set_bits(TYPE &bits, const TYPE &mask) {
     bits |= mask;
 }
+template void set_bits<uint8_t>(uint8_t &bits, const uint8_t &mask);
+template void set_bits<Bitboard>(Bitboard &bits, const Bitboard &mask);
 
 template <typename TYPE>
 inline void unset_mask(TYPE &bits, const TYPE &mask) {
     bits &= (~mask);
 }
+template void unset_mask<uint8_t>(uint8_t &bits, const uint8_t &mask);
+template void unset_mask<Bitboard>(Bitboard &bits, const Bitboard &mask);
 
 // Returns the number of '1' bit in bitboard, just like popcount
 inline int count_bits(const Bitboard &bitboard) { return std::popcount(bitboard); }
