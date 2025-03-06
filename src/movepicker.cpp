@@ -45,7 +45,7 @@ ScoredMove MovePicker::next_move_scored() {
         case PickGoodNoisy:
             while (curr != end) {
                 sort_next_move();
-                if (!SEE(search_data->position, curr->move)) // bad noisy
+                if (!SEE(thread_data->position, curr->move) || curr->score == NonQueenPromotionScore) // Bad noisy
                     *end_bad++ = *curr++;
                 else if (curr->move != ttmove)
                     return *curr++;
