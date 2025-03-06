@@ -9,25 +9,24 @@
 #define UTILS_H
 
 #include <cassert>
-#include <cstdint>
 
 #include "types.h"
 
 inline void set_bit(Bitboard &bitboard, const Square &sq) { bitboard |= (1ULL << sq); }
-
 inline void set_bit(Bitboard &bitboard, const int &sq) { bitboard |= (1ULL << sq); }
 
-inline void set_bits(Bitboard &bitboard, const Bitboard &mask) { bitboard |= mask; }
-
-inline void set_bits(uint8_t &bits, const uint8_t &mask) { bits |= mask; }
-
 inline void unset_bit(Bitboard &bitboard, const Square &sq) { bitboard &= ~(1ULL << sq); }
-
 inline void unset_bit(Bitboard &bitboard, const int &sq) { bitboard &= ~(1ULL << sq); }
 
-inline void unset_mask(Bitboard &bitboard, const Bitboard &mask) { bitboard &= (~mask); }
+template <typename TYPE>
+inline void set_bits(TYPE &bits, const TYPE &mask) {
+    bits |= mask;
+}
 
-inline void unset_mask(uint8_t &bits, const uint8_t &mask) { bits &= (~mask); }
+template <typename TYPE>
+inline void unset_mask(TYPE &bits, const TYPE &mask) {
+    bits &= (~mask);
+}
 
 // Returns the number of '1' bit in bitboard, just like popcount
 inline int count_bits(const Bitboard &bitboard) { return std::popcount(bitboard); }
@@ -113,7 +112,6 @@ inline Bitboard shift(const Bitboard &bitboard, const int &direction) {
         return bitboard << direction;
     }
 }
-
 inline Bitboard shift(const Bitboard &bitboard, const Direction &direction) {
     return shift(bitboard, static_cast<int>(direction));
 }
