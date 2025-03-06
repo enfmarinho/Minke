@@ -334,24 +334,9 @@ void Position::make_capture(const Move &move) {
     remove_piece<UPDATE>(curr_state.captured, to);
     remove_piece<UPDATE>(piece, from);
 
-    if (move.is_promotion()) {
-        switch (move.type()) {
-            case PawnPromotionQueenCapture:
-                piece = get_piece(Queen, stm);
-                break;
-            case PawnPromotionRookCapture:
-                piece = get_piece(Rook, stm);
-                break;
-            case PawnPromotionKnightCapture:
-                piece = get_piece(Knight, stm);
-                break;
-            case PawnPromotionBishopCapture:
-                piece = get_piece(Bishop, stm);
-                break;
-            default:
-                __builtin_unreachable();
-        }
-    }
+    if (move.is_promotion())
+        piece = get_piece(move.promotee(), stm);
+
     add_piece<UPDATE>(piece, to);
 }
 
@@ -385,22 +370,7 @@ void Position::make_promotion(const Move &move) {
     Square to = move.to();
     Piece piece = consult(from);
     remove_piece<UPDATE>(piece, from);
-    switch (move.type()) {
-        case PawnPromotionQueen:
-            piece = get_piece(Queen, stm);
-            break;
-        case PawnPromotionRook:
-            piece = get_piece(Rook, stm);
-            break;
-        case PawnPromotionKnight:
-            piece = get_piece(Knight, stm);
-            break;
-        case PawnPromotionBishop:
-            piece = get_piece(Bishop, stm);
-            break;
-        default:
-            __builtin_unreachable();
-    }
+    piece = get_piece(move.promotee(), stm);
     add_piece<UPDATE>(piece, to);
 }
 
@@ -565,6 +535,8 @@ Move Position::get_movement(const std::string &algebraic_notation) const {
     return Move(from, to, move_type);
 }
 
+bool Position::in_check() const { return is_attacked(get_king_placement(stm)); }
+
 bool Position::is_attacked(const Square &sq) const {
     Color opponent = get_adversary();
     Bitboard occupancy = get_occupancy();
@@ -593,7 +565,19 @@ bool Position::is_attacked(const Square &sq) const {
     return false;
 }
 
-bool Position::in_check() const { return is_attacked(get_king_placement(stm)); }
+Bitboard Position::attackers(const Square &sq) const {
+    Bitboard attackers = 0ULL;
+    Bitboard occupancy = get_occupancy();
+
+    attackers |= PawnAttacks[White][sq] & get_piece_bb(Pawn, Black);
+    attackers |= PawnAttacks[Black][sq] & get_piece_bb(Pawn, White);
+    attackers |= get_piece_attacks(sq, occupancy, Knight) & get_piece_bb(Knight);
+    attackers |= get_piece_attacks(sq, occupancy, Bishop) & (get_piece_bb(Bishop) | get_piece_bb(Queen));
+    attackers |= get_piece_attacks(sq, occupancy, Rook) & (get_piece_bb(Rook) | get_piece_bb(Queen));
+    attackers |= get_piece_attacks(sq, occupancy, King) & get_piece_bb(King);
+
+    return attackers;
+}
 
 int Position::legal_move_amount() {
     ScoredMove moves[MaxMoves];

@@ -37,6 +37,7 @@ class Position {
 
     bool in_check() const;
     bool is_attacked(const Square &sq) const;
+    Bitboard attackers(const Square &sq) const;
 
     bool draw();
     inline WeightType eval() const { return nnue.eval(stm); }
@@ -56,6 +57,9 @@ class Position {
     }
     inline Bitboard get_piece_bb(const PieceType &piece_type, const Color &color) const {
         return get_piece_bb(static_cast<Piece>(piece_type + color * ColorOffset));
+    }
+    inline Bitboard get_piece_bb(const PieceType &piece_type) const {
+        return pieces[piece_type] | pieces[piece_type + ColorOffset];
     }
     inline Square get_king_placement(const Color &color) const { return lsb(pieces[King + color * ColorOffset]); }
     inline uint8_t get_castling_rights() const { return curr_state.castling_rights; }
