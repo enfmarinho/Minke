@@ -7,6 +7,7 @@
 
 #include "move.h"
 
+#include "types.h"
 #include "utils.h"
 
 Move::Move(Square origin, Square target, MoveType move_type) { m_bytes = (move_type << 12) | (target << 6) | (origin); }
@@ -16,6 +17,11 @@ Square Move::from() const { return Square(m_bytes & 0x3F); }
 Square Move::to() const { return Square((m_bytes >> 6) & 0x3F); }
 
 MoveType Move::type() const { return MoveType((m_bytes >> 12) & 0xF); }
+
+PieceType Move::promotee() const {
+    assert(is_promotion());
+    return static_cast<PieceType>((type() & 0b0011) + 1);
+}
 
 int16_t Move::internal() const { return m_bytes; }
 

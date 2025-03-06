@@ -15,15 +15,15 @@
 
 enum MoveType : char {
     Regular = 0b0000,
-    Capture = 0b0001,
-    EnPassant = 0b0011,
-    Castling = 0b0110,
+    Capture = 0b0100,
+    EnPassant = 0b010 | Capture,
+    Castling = 0b0011,
 
     PawnPromotionMask = 0b1000,
     PawnPromotionKnight = PawnPromotionMask | 0b0000,
-    PawnPromotionBishop = PawnPromotionMask | 0b0100,
+    PawnPromotionBishop = PawnPromotionMask | 0b0001,
     PawnPromotionRook = PawnPromotionMask | 0b0010,
-    PawnPromotionQueen = PawnPromotionMask | 0b0110,
+    PawnPromotionQueen = PawnPromotionMask | 0b011,
 
     PawnPromotionKnightCapture = PawnPromotionKnight | Capture,
     PawnPromotionBishopCapture = PawnPromotionBishop | Capture,
@@ -33,13 +33,14 @@ enum MoveType : char {
 
 class Move {
   public:
-    Move() : m_bytes(){};
-    Move(int16_t bytes) : m_bytes(bytes){};
+    Move() : m_bytes() {};
+    Move(int16_t bytes) : m_bytes(bytes) {};
     Move(Square from, Square to, MoveType move_type);
 
     Square from() const;
     Square to() const;
     MoveType type() const;
+    PieceType promotee() const;
     int16_t internal() const;
     std::string get_algebraic_notation() const;
 
