@@ -12,6 +12,7 @@
 #include <cstring>
 
 #include "move.h"
+#include "position.h"
 #include "types.h"
 
 class History {
@@ -21,12 +22,12 @@ class History {
 
     inline void init() { std::memset(search_history_table, 0, sizeof(search_history_table)); };
 
-    inline void update(const Color &stm, const Move &move, int depth) {
-        search_history_table[stm][move.from_and_to()] = depth * depth;
+    inline void update(const Position &position, const Move &move, int depth) {
+        search_history_table[position.get_stm()][move.from_and_to()] += depth * depth;
     }
 
-    inline int consult(const Color stm, const Move &move) const {
-        return search_history_table[stm][move.from_and_to()];
+    inline int consult(const Position &position, const Move &move) const {
+        return search_history_table[position.get_stm()][move.from_and_to()];
     }
 
   private:
