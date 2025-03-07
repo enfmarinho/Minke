@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <cstdint>
 #include <iostream>
 #include <vector>
 
@@ -83,13 +84,13 @@ bool Position::set_fen(const std::string &fen) {
 
     for (char castling : fen_arguments[2]) {
         if (castling == 'K')
-            set_bits(curr_state.castling_rights, WhiteShortCastling);
+            set_bits(curr_state.castling_rights, static_cast<uint8_t>(WhiteShortCastling));
         else if (castling == 'Q')
-            set_bits(curr_state.castling_rights, WhiteLongCastling);
+            set_bits(curr_state.castling_rights, static_cast<uint8_t>(WhiteLongCastling));
         else if (castling == 'k')
-            set_bits(curr_state.castling_rights, BlackShortCastling);
+            set_bits(curr_state.castling_rights, static_cast<uint8_t>(BlackShortCastling));
         else if (castling == 'q')
-            set_bits(curr_state.castling_rights, BlackLongCastling);
+            set_bits(curr_state.castling_rights, static_cast<uint8_t>(BlackLongCastling));
     }
     hash_castle_key();
 
@@ -395,10 +396,10 @@ void Position::update_castling_rights(const Move &move) {
     if (moved_piece_type == King) { // Moved king
         switch (stm) {
             case White:
-                unset_mask(curr_state.castling_rights, WhiteCastling);
+                unset_mask(curr_state.castling_rights, static_cast<uint8_t>(WhiteCastling));
                 break;
             case Black:
-                unset_mask(curr_state.castling_rights, BlackCastling);
+                unset_mask(curr_state.castling_rights, static_cast<uint8_t>(BlackCastling));
                 break;
             default:
                 __builtin_unreachable();
@@ -406,16 +407,16 @@ void Position::update_castling_rights(const Move &move) {
     } else if (moved_piece_type == Rook) { // Moved rook
         switch (from) {
             case a1:
-                unset_mask(curr_state.castling_rights, WhiteLongCastling);
+                unset_mask(curr_state.castling_rights, static_cast<uint8_t>(WhiteLongCastling));
                 break;
             case h1:
-                unset_mask(curr_state.castling_rights, WhiteShortCastling);
+                unset_mask(curr_state.castling_rights, static_cast<uint8_t>(WhiteShortCastling));
                 break;
             case a8:
-                unset_mask(curr_state.castling_rights, BlackLongCastling);
+                unset_mask(curr_state.castling_rights, static_cast<uint8_t>(BlackLongCastling));
                 break;
             case h8:
-                unset_mask(curr_state.castling_rights, BlackShortCastling);
+                unset_mask(curr_state.castling_rights, static_cast<uint8_t>(BlackShortCastling));
                 break;
             default:
                 break;
@@ -424,16 +425,16 @@ void Position::update_castling_rights(const Move &move) {
     if (get_piece_type(curr_state.captured) == Rook) { // Captured rook
         switch (to) {
             case a1:
-                unset_mask(curr_state.castling_rights, WhiteLongCastling);
+                unset_mask(curr_state.castling_rights, static_cast<uint8_t>(WhiteLongCastling));
                 break;
             case h1:
-                unset_mask(curr_state.castling_rights, WhiteShortCastling);
+                unset_mask(curr_state.castling_rights, static_cast<uint8_t>(WhiteShortCastling));
                 break;
             case a8:
-                unset_mask(curr_state.castling_rights, BlackLongCastling);
+                unset_mask(curr_state.castling_rights, static_cast<uint8_t>(BlackLongCastling));
                 break;
             case h8:
-                unset_mask(curr_state.castling_rights, BlackShortCastling);
+                unset_mask(curr_state.castling_rights, static_cast<uint8_t>(BlackShortCastling));
                 break;
             default:
                 break;
