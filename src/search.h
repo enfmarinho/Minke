@@ -10,6 +10,7 @@
 
 #include <cstdint>
 
+#include "history.h"
 #include "pv_list.h"
 #include "time_manager.h"
 #include "types.h"
@@ -17,6 +18,7 @@
 struct ThreadData {
     Position position;
     TimeManager time_manager;
+    History search_history;
 
     int64_t nodes_searched;
     int64_t node_limit;

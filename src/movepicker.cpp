@@ -107,7 +107,7 @@ void MovePicker::score_moves() {
             case Castling:
                 // Fall-through
             case Regular:
-                runner->score = 1; // TODO implement this, just a STUB
+                runner->score = thread_data->search_history.consult(thread_data->position.get_stm(), runner->move);
                 break;
             case Capture:
                 runner->score = CaptureScore + 10 * SEE_values[thread_data->position.consult(runner->move.to())] -

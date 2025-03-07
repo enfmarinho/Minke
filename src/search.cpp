@@ -135,7 +135,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
             if (score > alpha) {
                 alpha = score;
                 if (score >= beta) { // fails high
-                    // thread_data.position.increment_history(move, depth_ply); // TODO
+                    thread_data.search_history.update(thread_data.position.get_stm(), move, depth_ply);
                     break;
                 }
             }
