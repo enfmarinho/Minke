@@ -536,8 +536,6 @@ Move Position::get_movement(const std::string &algebraic_notation) const {
     return Move(from, to, move_type);
 }
 
-bool Position::in_check() const { return is_attacked(get_king_placement(stm)); }
-
 bool Position::is_attacked(const Square &sq) const {
     Color opponent = get_adversary();
     Bitboard occupancy = get_occupancy();
@@ -638,8 +636,6 @@ void Position::print() const {
     std::cout << "\nHash: " << hash_key;
     std::cout << "\nEval: " << eval() << "\n";
 }
-
-bool Position::draw() { return insufficient_material() || repetition() || fifty_move_draw(); }
 
 bool Position::insufficient_material() const {
     int piece_amount = get_material_count();

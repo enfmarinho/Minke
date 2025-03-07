@@ -35,11 +35,11 @@ class Position {
     template <bool UPDATE>
     void unmake_move(const Move &move);
 
-    bool in_check() const;
+    inline bool in_check() const { return is_attacked(get_king_placement(stm)); }
     bool is_attacked(const Square &sq) const;
     Bitboard attackers(const Square &sq) const;
 
-    bool draw();
+    inline bool draw() { return insufficient_material() || repetition() || fifty_move_draw(); }
     inline WeightType eval() const { return nnue.eval(stm); }
 
     int legal_move_amount();

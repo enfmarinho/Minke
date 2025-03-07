@@ -8,6 +8,7 @@
 #ifndef MOVE_H
 #define MOVE_H
 
+#include <cassert>
 #include <cstdint>
 #include <string>
 
@@ -33,15 +34,18 @@ enum MoveType : char {
 
 class Move {
   public:
-    Move() : m_bytes() {};
-    Move(int16_t bytes) : m_bytes(bytes) {};
-    Move(Square from, Square to, MoveType move_type);
+    inline Move() : m_bytes() {};
+    inline Move(int16_t bytes) : m_bytes(bytes) {};
+    inline Move(Square from, Square to, MoveType move_type) { m_bytes = (move_type << 12) | (to << 6) | (from); }
 
-    Square from() const;
-    Square to() const;
-    MoveType type() const;
-    PieceType promotee() const;
-    int16_t internal() const;
+    inline Square from() const { return Square(m_bytes & 0x3F); }
+    inline Square to() const { return Square((m_bytes >> 6) & 0x3F); }
+    inline MoveType type() const { return MoveType((m_bytes >> 12) & 0xF); }
+    inline PieceType promotee() const {
+        assert(is_promotion());
+        return static_cast<PieceType>((type() & 0b0011) + 1);
+    }
+    inline int16_t internal() const { return m_bytes; }
     std::string get_algebraic_notation() const;
 
     inline bool is_regular() const { return type() == Regular; }
@@ -70,7 +74,7 @@ inline bool operator==(const ScoredMove& lhs, const ScoredMove& rhs) {
 constexpr int MoveNone = 0;
 const ScoredMove ScoredMoveNone = {MoveNone, 0};
 
-bool operator==(const Move& lhs, const Move& rhs);
-bool operator==(const Move& lhs, const int& rhs);
+inline bool operator==(const Move& lhs, const Move& rhs) { return lhs.internal() == rhs.internal(); }
+inline bool operator==(const Move& lhs, const int& rhs) { return lhs.internal() == rhs; }
 
 #endif // #ifndef MOVE_H
