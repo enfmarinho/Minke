@@ -38,6 +38,7 @@ class Move {
     inline Move(int16_t bytes) : m_bytes(bytes) {};
     inline Move(Square from, Square to, MoveType move_type) { m_bytes = (move_type << 12) | (to << 6) | (from); }
 
+    inline int from_and_to() const { return m_bytes & 0xFFF; }
     inline Square from() const { return Square(m_bytes & 0x3F); }
     inline Square to() const { return Square((m_bytes >> 6) & 0x3F); }
     inline MoveType type() const { return MoveType((m_bytes >> 12) & 0xF); }
