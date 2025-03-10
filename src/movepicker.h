@@ -15,7 +15,9 @@ enum BaseScore {
     TT_Score = 100'000,
     QueenPromotionScore = 90'000,
     NonQueenPromotionScore = -90'000,
-    CaptureScore = 20'000
+    CaptureScore = 20'000,
+    Killer1Score = 19'000,
+    Killer2Score = 18'000,
 };
 
 enum MovePickerStage {
@@ -46,7 +48,7 @@ class MovePicker {
     MovePickerStage stage;
     ScoredMove moves[MaxMoves];
     ScoredMove *curr, *end, *end_bad;
-    Move ttmove;
+    Move ttmove, killer1, killer2;
     ThreadData *thread_data;
 };
 

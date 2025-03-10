@@ -27,6 +27,8 @@ void MovePicker::init(Move ttmove, ThreadData *thread_data, bool qsearch) {
     else
         stage = GenNoisy;
 
+    killer1 = thread_data->search_history.consult_killer1(thread_data->searching_ply);
+    killer2 = thread_data->search_history.consult_killer2(thread_data->searching_ply);
     curr = end = end_bad = moves;
 }
 
@@ -107,7 +109,12 @@ void MovePicker::score_moves() {
             case Castling:
                 // Fall-through
             case Regular:
-                runner->score = thread_data->search_history.consult(thread_data->position, runner->move);
+                if (runner->move == killer1)
+                    runner->score = Killer1Score;
+                else if (runner->move == killer2)
+                    runner->score = Killer2Score;
+                else
+                    runner->score = thread_data->search_history.consult(thread_data->position, runner->move);
                 break;
             case Capture:
                 runner->score = CaptureScore + 10 * SEE_values[thread_data->position.consult(runner->move.to())] -
