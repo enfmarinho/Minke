@@ -62,9 +62,8 @@ void NNUE::reset(const Position &position) {
     for (int sqi = a1; sqi <= h8; ++sqi) {
         Square sq = static_cast<Square>(sqi);
         Piece piece = position.consult(sq);
-        if (piece != Empty) {
+        if (piece != Empty)
             add_feature(piece, sq);
-        }
     }
 }
 
@@ -85,17 +84,16 @@ int32_t NNUE::weight_sum_reduction(const std::array<int16_t, HiddenLayerSize> &p
     return (eval / QA + network.output_bias) * Scale / QAB;
 }
 
-WeightType NNUE::eval(const Color &stm) const {
+ScoreType NNUE::eval(const Color &stm) const {
     switch (stm) {
         case White:
             return weight_sum_reduction(m_accumulators.back().white_neurons, m_accumulators.back().black_neurons);
         case Black:
             return weight_sum_reduction(m_accumulators.back().black_neurons, m_accumulators.back().white_neurons);
         default:
-            std::cerr << "Tried to use eval function with player none\n";
-            assert(false); // Must not reach this
+            assert(false && "Tried to use eval function with player none\n"); // Must not reach this
     }
-    return WeightType(); // Can't reach this, just to avoid compiler warnings
+    __builtin_unreachable();
 }
 
 NNUE::Accumulator::Accumulator(std::span<const int16_t, HiddenLayerSize> bias) { reset(bias); }

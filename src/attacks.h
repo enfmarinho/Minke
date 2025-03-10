@@ -62,22 +62,6 @@ inline Bitboard get_queen_attacks(const Square& sq, const Bitboard& occupancy) {
     return get_rook_attacks(sq, occupancy) | get_bishop_attacks(sq, occupancy);
 }
 
-template <PieceType piece_type>
-inline Bitboard get_piece_attacks(const Square& sq, const Bitboard& occupancy) {
-    assert(piece_type >= Knight && piece_type <= King);
-
-    if constexpr (piece_type == Knight)
-        return KnightAttacks[sq];
-    else if constexpr (piece_type == Bishop)
-        return get_bishop_attacks(sq, occupancy);
-    else if constexpr (piece_type == Rook)
-        return get_rook_attacks(sq, occupancy);
-    else if constexpr (piece_type == Queen)
-        return get_queen_attacks(sq, occupancy);
-    else if constexpr (piece_type == King)
-        return KingAttacks[sq];
-}
-
 inline Bitboard get_piece_attacks(const Square& sq, const Bitboard& occupancy, PieceType piece_type) {
     assert(piece_type >= Knight && piece_type <= King);
 

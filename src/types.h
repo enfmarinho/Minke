@@ -95,13 +95,13 @@ enum Direction : int {
 using HashType = uint64_t;
 using IndexType = int8_t;
 using CounterType = int;
-using WeightType = int32_t; // TODO change to int16_t
+using ScoreType = int32_t; // TODO change to int16_t
 using TimeType = std::chrono::milliseconds::rep;
 using TimePoint = std::chrono::steady_clock::time_point;
 using Bitboard = uint64_t;
 
-constexpr WeightType MateScore = 100'000;
-constexpr WeightType MaxScore = 200'000;
+constexpr ScoreType MateScore = 100'000;
+constexpr ScoreType MaxScore = 200'000;
 constexpr CounterType NumberOfPieces = 6;
 constexpr IndexType BoardHeight = 8;
 constexpr IndexType BoardWidth = 8;
@@ -113,7 +113,7 @@ constexpr int HalfMovesPerMatch = 2048;
 constexpr int MaxSearchDepth = 128;
 
 // clang-format off
-constexpr WeightType SEE_values[PieceNB] = {100, 300, 300, 500, 1000, 5000,
+constexpr ScoreType SEE_values[PieceNB] = {100, 300, 300, 500, 1000, 5000,
                                             100, 300, 300, 500, 1000, 5000, 0};
 // clang-format on
 constexpr Bitboard FileMasks[8] = {0x101010101010101,  0x202020202020202,  0x404040404040404,  0x808080808080808,

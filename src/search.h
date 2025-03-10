@@ -22,7 +22,7 @@ struct ThreadData {
 
     int64_t nodes_searched;
     int64_t node_limit;
-    int searching_depth;
+    int searching_ply;
     int depth_limit;
     bool stop;
 
@@ -30,10 +30,9 @@ struct ThreadData {
 };
 
 void iterative_deepening(ThreadData &thread_data);
-WeightType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &thread_data);
-WeightType quiescence(WeightType alpha, WeightType beta, ThreadData &thread_data);
-WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth, PvList &pv_list,
-                      ThreadData &thread_data);
+ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &thread_data);
+ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvList &pv_list, ThreadData &thread_data);
+ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &thread_data);
 bool SEE(Position &position, const Move &move, int threshold);
 
 #endif // #ifndef SEARCH_H

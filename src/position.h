@@ -40,7 +40,7 @@ class Position {
     Bitboard attackers(const Square &sq) const;
 
     inline bool draw() { return insufficient_material() || repetition() || fifty_move_draw(); }
-    inline WeightType eval() const { return nnue.eval(stm); }
+    inline ScoreType eval() const { return nnue.eval(stm); }
 
     int legal_move_amount();
     void print() const;

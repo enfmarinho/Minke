@@ -22,7 +22,7 @@ void MovePicker::init(Move ttmove, ThreadData *thread_data, bool qsearch) {
     this->qsearch = qsearch;
 
     // Don't pick ttmove if in qsearch unless ttmove is noisy
-    if (ttmove != MoveNone && (!qsearch || ttmove.is_capture() || ttmove.is_promotion()))
+    if (ttmove != MoveNone && (!qsearch || ttmove.is_noisy()))
         stage = PickTT;
     else
         stage = GenNoisy;

@@ -19,7 +19,7 @@
 #include "tt.h"
 #include "types.h"
 
-static void print_search_info(const CounterType &depth, const WeightType &eval, const PvList &pv_list,
+static void print_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
                               const ThreadData &thread_data) {
     // Add 1 to time_passed() to avoid division by 0
     std::cout << "info depth " << depth << " score cp " << eval << " time " << thread_data.time_manager.time_passed()
@@ -31,7 +31,7 @@ static void print_search_info(const CounterType &depth, const WeightType &eval, 
 
 void ThreadData::reset() {
     stop = true;
-    searching_depth = 0;
+    searching_ply = 0;
     nodes_searched = -1; // Avoid counting the root
     node_limit = std::numeric_limits<int>::max();
     depth_limit = MaxSearchDepth;
@@ -43,7 +43,7 @@ void iterative_deepening(ThreadData &thread_data) {
     Move best_move = MoveNone;
     for (CounterType depth = 1; depth <= thread_data.depth_limit; ++depth) {
         PvList pv_list;
-        WeightType eval = aspiration(depth, pv_list, thread_data);
+        ScoreType eval = aspiration(depth, pv_list, thread_data);
         if (!thread_data.time_manager.time_over() && !thread_data.stop) { // Search was successful
             bool found;
             TTEntry *entry = TT.probe(thread_data.position, found);
@@ -53,7 +53,7 @@ void iterative_deepening(ThreadData &thread_data) {
                 assert(depth == 1 && !found);
                 break;
             }
-            assert(found && entry->depth_ply() >= depth);
+            assert(found && entry->depth() >= depth);
             print_search_info(depth, eval, pv_list, thread_data);
         }
         if (thread_data.time_manager.stop_early())
@@ -66,30 +66,29 @@ void iterative_deepening(ThreadData &thread_data) {
     thread_data.stop = true;
 }
 
-WeightType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &thread_data) {
+ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &thread_data) {
     bool found;
     TTEntry *ttentry = TT.probe(thread_data.position, found);
     if (!found)
-        return alpha_beta(-MaxScore, MaxScore, depth, pv_list, thread_data);
+        return negamax(-MaxScore, MaxScore, depth, pv_list, thread_data);
 
     int delta = 100; // TODO
 
-    WeightType alpha = ttentry->evaluation() - delta;
-    WeightType beta = ttentry->evaluation() + delta;
-    WeightType eval = alpha_beta(alpha, beta, depth, pv_list, thread_data);
+    ScoreType alpha = ttentry->evaluation() - delta;
+    ScoreType beta = ttentry->evaluation() + delta;
+    ScoreType eval = negamax(alpha, beta, depth, pv_list, thread_data);
     if (eval >= beta)
-        eval = alpha_beta(alpha, MaxScore, depth, pv_list, thread_data);
+        eval = negamax(alpha, MaxScore, depth, pv_list, thread_data);
     else if (eval <= alpha)
-        eval = alpha_beta(-MaxScore, beta, depth, pv_list, thread_data);
+        eval = negamax(-MaxScore, beta, depth, pv_list, thread_data);
 
     return eval;
 }
 
-WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &depth_ply, PvList &pv_list,
-                      ThreadData &thread_data) {
+ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvList &pv_list, ThreadData &thread_data) {
     if (thread_data.time_manager.time_over() || thread_data.stop) // Out of time
         return -MaxScore;
-    else if (depth_ply == 0)
+    else if (depth == 0)
         return quiescence(alpha, beta, thread_data);
     else if (thread_data.position.draw())
         return 0;
@@ -99,7 +98,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
     // Transposition table probe
     bool found;
     TTEntry *entry = TT.probe(thread_data.position, found);
-    if (found && entry->depth_ply() >= depth_ply &&
+    if (found && entry->depth() >= depth &&
         (entry->bound() == TTEntry::BoundType::Exact ||
          (entry->bound() == TTEntry::BoundType::UpperBound && entry->evaluation() <= alpha) ||
          (entry->bound() == TTEntry::BoundType::LowerBound && entry->evaluation() >= beta))) {
@@ -110,8 +109,8 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
     Move ttmove = (found ? entry->best_move() : MoveNone);
     Move move = MoveNone;
     Move best_move = MoveNone;
-    WeightType best_score = -MaxScore;
-    WeightType old_alpha = alpha;
+    ScoreType best_score = -MaxScore;
+    ScoreType old_alpha = alpha;
 
     MovePicker move_picker(ttmove, &thread_data, false);
     while ((move = move_picker.next_move()) != MoveNone) {
@@ -121,9 +120,9 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
             continue;
         }
 
-        ++thread_data.searching_depth;
-        WeightType score = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, thread_data);
-        --thread_data.searching_depth;
+        ++thread_data.searching_ply;
+        ScoreType score = -negamax(-beta, -alpha, depth - 1, curr_pv, thread_data);
+        --thread_data.searching_ply;
         thread_data.position.unmake_move<true>(move);
         assert(score >= -MaxScore);
 
@@ -135,7 +134,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
             if (score > alpha) {
                 alpha = score;
                 if (score >= beta) { // fails high
-                    thread_data.search_history.update(thread_data.position, move, depth_ply);
+                    thread_data.search_history.update(thread_data.position, move, depth);
                     break;
                 }
             }
@@ -144,21 +143,21 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
 
     if (best_move == MoveNone) { // handle positions under stalemate or checkmate,
                                  // i.e. positions with no legal moves to be made
-        return thread_data.position.in_check() ? -MateScore - depth_ply : 0;
+        return thread_data.position.in_check() ? -MateScore - depth : 0;
     }
 
     if (!thread_data.time_manager.time_over()) { // Save on TT if search was completed
         TTEntry::BoundType bound = best_score >= beta   ? TTEntry::BoundType::LowerBound
                                    : alpha != old_alpha ? TTEntry::BoundType::Exact
                                                         : TTEntry::BoundType::UpperBound;
-        entry->save(thread_data.position.get_hash(), depth_ply, best_move, best_score,
-                    thread_data.position.get_game_ply(), bound);
+        entry->save(thread_data.position.get_hash(), depth, best_move, best_score, thread_data.position.get_game_ply(),
+                    bound);
     }
 
     return best_score;
 }
 
-WeightType quiescence(WeightType alpha, WeightType beta, ThreadData &thread_data) {
+ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &thread_data) {
     ++thread_data.nodes_searched;
     if (thread_data.time_manager.time_over() || thread_data.stop)
         return -MaxScore;
@@ -169,17 +168,9 @@ WeightType quiescence(WeightType alpha, WeightType beta, ThreadData &thread_data
     TTEntry *ttentry = TT.probe(thread_data.position, found);
     Move ttmove = (found ? ttentry->best_move() : MoveNone);
 
-    WeightType stand_pat = thread_data.position.eval();
+    ScoreType stand_pat = thread_data.position.eval();
     if (stand_pat >= beta)
         return beta;
-
-    // TODO Probably worth to turn off on end game
-    // WeightType delta = weights::MidGameQueen + 200;
-    // if (game_state.last_move().move_type == MoveType::PawnPromotionQueen)
-    //     delta += weights::MidGameQueen;
-    //
-    // if (stand_pat < alpha - delta) // Delta pruning
-    //     return alpha;
 
     if (alpha < stand_pat)
         alpha = stand_pat;
@@ -193,7 +184,7 @@ WeightType quiescence(WeightType alpha, WeightType beta, ThreadData &thread_data
             continue;
         }
 
-        WeightType eval = -quiescence(-beta, -alpha, thread_data);
+        ScoreType eval = -quiescence(-beta, -alpha, thread_data);
         thread_data.position.unmake_move<true>(move);
         if (eval >= beta)
             return beta;
