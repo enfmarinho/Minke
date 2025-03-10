@@ -34,8 +34,8 @@ enum MoveType : char {
 
 class Move {
   public:
-    inline Move() : m_bytes() {};
-    inline Move(int16_t bytes) : m_bytes(bytes) {};
+    inline Move() : m_bytes(){};
+    inline Move(int16_t bytes) : m_bytes(bytes){};
     inline Move(Square from, Square to, MoveType move_type) { m_bytes = (move_type << 12) | (to << 6) | (from); }
 
     inline int from_and_to() const { return m_bytes & 0xFFF; }
@@ -54,6 +54,7 @@ class Move {
     inline bool is_castle() const { return type() == Castling; }
     inline bool is_promotion() const { return type() & PawnPromotionMask; }
     inline bool is_ep() const { return type() == EnPassant; }
+    inline bool is_noisy() const { return is_capture() || is_promotion(); }
 
     friend bool operator==(const Move& lhs, const Move& rhs);
     friend bool operator==(const Move& lhs, const int& rhs);

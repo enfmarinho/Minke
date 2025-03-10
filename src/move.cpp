@@ -21,14 +21,14 @@ std::string Move::get_algebraic_notation() const {
     algebraic_notation.push_back('1' + get_rank(target));
 
     int move_type = type() & (~Capture);
-    if (move_type == MoveType::PawnPromotionQueen) {
+    if (move_type == MoveType::PawnPromotionQueen)
         algebraic_notation.push_back('q');
-    } else if (move_type == MoveType::PawnPromotionKnight) {
+    else if (move_type == MoveType::PawnPromotionKnight)
         algebraic_notation.push_back('n');
-    } else if (move_type == MoveType::PawnPromotionRook) {
+    else if (move_type == MoveType::PawnPromotionRook)
         algebraic_notation.push_back('r');
-    } else if (move_type == MoveType::PawnPromotionBishop) {
+    else if (move_type == MoveType::PawnPromotionBishop)
         algebraic_notation.push_back('b');
-    }
+
     return algebraic_notation;
 }

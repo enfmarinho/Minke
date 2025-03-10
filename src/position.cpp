@@ -184,9 +184,9 @@ std::string Position::get_fen() const {
         fen += "-";
 
     fen += ' ';
-    if (get_en_passant() == NoSquare)
+    if (get_en_passant() == NoSquare) {
         fen += "-";
-    else {
+    } else {
         fen += (get_rank(get_en_passant()) + 'a');
         fen += (stm == White ? '6' : '3');
     }
@@ -203,9 +203,8 @@ void Position::reset_nnue() { nnue.reset(*this); }
 
 template <bool UPDATE>
 void Position::reset() {
-    for (int sqi = a1; sqi <= h8; ++sqi) {
+    for (int sqi = a1; sqi <= h8; ++sqi)
         board[sqi] = Empty;
-    }
     std::memset(occupancies, 0ULL, sizeof(occupancies));
     std::memset(pieces, 0ULL, sizeof(pieces));
 
@@ -214,9 +213,8 @@ void Position::reset() {
     curr_state.reset();
     played_positions.clear();
 
-    if constexpr (UPDATE) {
+    if constexpr (UPDATE)
         reset_nnue();
-    }
 }
 
 template <bool UPDATE>
@@ -231,9 +229,8 @@ void Position::add_piece(const Piece &piece, const Square &sq) {
 
     hash_piece_key(piece, sq);
 
-    if constexpr (UPDATE) {
+    if constexpr (UPDATE)
         nnue.add_feature(piece, sq);
-    }
 }
 
 template <bool UPDATE>
@@ -248,9 +245,8 @@ void Position::remove_piece(const Piece &piece, const Square &sq) {
 
     hash_piece_key(piece, sq);
 
-    if constexpr (UPDATE) {
+    if constexpr (UPDATE)
         nnue.remove_feature(piece, sq);
-    }
 }
 
 template <bool UPDATE>
@@ -278,17 +274,16 @@ bool Position::make_move(const Move &move) {
     curr_state.captured = consult(move.to());
 
     bool legal = true;
-    if (move.is_regular()) {
+    if (move.is_regular())
         make_regular<UPDATE>(move);
-    } else if (move.is_capture() && !move.is_ep()) {
+    else if (move.is_capture() && !move.is_ep())
         make_capture<UPDATE>(move);
-    } else if (move.is_castle()) {
+    else if (move.is_castle())
         legal = make_castle<UPDATE>(move);
-    } else if (move.is_promotion()) {
+    else if (move.is_promotion())
         make_promotion<UPDATE>(move);
-    } else if (move.is_ep()) {
+    else if (move.is_ep())
         make_en_passant<UPDATE>(move);
-    }
 
     hash_castle_key();
     update_castling_rights(move);

@@ -62,9 +62,8 @@ void NNUE::reset(const Position &position) {
     for (int sqi = a1; sqi <= h8; ++sqi) {
         Square sq = static_cast<Square>(sqi);
         Piece piece = position.consult(sq);
-        if (piece != Empty) {
+        if (piece != Empty)
             add_feature(piece, sq);
-        }
     }
 }
 

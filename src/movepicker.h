@@ -18,7 +18,7 @@ enum BaseScore {
     CaptureScore = 20'000
 };
 
-enum MoveGenStage {
+enum MovePickerStage {
     PickTT,
     GenNoisy,
     PickGoodNoisy,
@@ -43,7 +43,7 @@ class MovePicker {
     void score_moves();
 
     bool qsearch;
-    MoveGenStage stage;
+    MovePickerStage stage;
     ScoredMove moves[MaxMoves];
     ScoredMove *curr, *end, *end_bad;
     Move ttmove;
