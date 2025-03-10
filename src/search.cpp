@@ -35,6 +35,7 @@ void ThreadData::reset() {
     nodes_searched = -1; // Avoid counting the root
     node_limit = std::numeric_limits<int>::max();
     depth_limit = MaxSearchDepth;
+    search_history.reset();
 }
 
 void iterative_deepening(ThreadData &thread_data) {
