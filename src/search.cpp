@@ -43,7 +43,8 @@ void iterative_deepening(ThreadData &thread_data) {
     Move best_move = MoveNone;
     for (CounterType depth = 1; depth <= thread_data.depth_limit; ++depth) {
         PvList pv_list;
-        WeightType eval = aspiration(depth, pv_list, thread_data);
+        // WeightType eval = aspiration(depth, pv_list, thread_data);
+        WeightType eval = alpha_beta(-MaxScore, MaxScore, depth, pv_list, thread_data);
         if (!thread_data.time_manager.time_over() && !thread_data.stop) { // Search was successful
             bool found;
             TTEntry *entry = TT.probe(thread_data.position, found);
@@ -93,8 +94,9 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
         return quiescence(alpha, beta, thread_data);
     else if (thread_data.position.draw())
         return 0;
-
     ++thread_data.nodes_searched;
+
+    bool pv_node = beta - alpha > 1;
 
     // Transposition table probe
     bool found;
@@ -112,6 +114,7 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
     Move best_move = MoveNone;
     WeightType best_score = -MaxScore;
     WeightType old_alpha = alpha;
+    int moves_searched = 0;
 
     MovePicker move_picker(ttmove, &thread_data, false);
     while ((move = move_picker.next_move()) != MoveNone) {
@@ -120,30 +123,41 @@ WeightType alpha_beta(WeightType alpha, WeightType beta, const CounterType &dept
             thread_data.position.unmake_move<true>(move);
             continue;
         }
-
         ++thread_data.searching_depth;
-        WeightType score = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, thread_data);
+        ++moves_searched;
+
+        WeightType score = alpha - 1;
+        if (!pv_node || moves_searched > 1) {
+            score = -alpha_beta(-alpha - 1, -alpha, depth_ply - 1, curr_pv, thread_data);
+            if (score >= alpha && score <= beta)
+                score = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, thread_data);
+        } else if (pv_node && (moves_searched == 1 || score >= alpha)) {
+            score = -alpha_beta(-beta, -alpha, depth_ply - 1, curr_pv, thread_data);
+        }
+
         --thread_data.searching_depth;
         thread_data.position.unmake_move<true>(move);
         assert(score >= -MaxScore);
 
         if (score > best_score) {
             best_score = score;
-            best_move = move;
-            pv_list.update(best_move, curr_pv);
 
             if (score > alpha) {
-                alpha = score;
-                if (score >= beta) { // fails high
+                best_move = move;
+                if (pv_node)
+                    pv_list.update(best_move, curr_pv);
+
+                if (score >= beta) { // Fails high
                     thread_data.search_history.update(thread_data.position, move, depth_ply);
                     break;
                 }
+                alpha = score; // Only update alpha if don't  failed high
             }
         }
     }
 
-    if (best_move == MoveNone) { // handle positions under stalemate or checkmate,
-                                 // i.e. positions with no legal moves to be made
+    if (moves_searched == 0) { // handle positions under stalemate or checkmate,
+                               // i.e. positions with no legal moves to be made
         return thread_data.position.in_check() ? -MateScore - depth_ply : 0;
     }
 
