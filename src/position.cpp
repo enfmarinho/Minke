@@ -187,7 +187,7 @@ std::string Position::get_fen() const {
     if (get_en_passant() == NoSquare) {
         fen += "-";
     } else {
-        fen += (get_rank(get_en_passant()) + 'a');
+        fen += (get_file(get_en_passant()) + 'a');
         fen += (stm == White ? '6' : '3');
     }
     fen += ' ';
@@ -310,7 +310,9 @@ void Position::make_regular(const Move &move) {
     if (get_piece_type(piece, stm) == Pawn) {
         curr_state.fifty_move_ply = 0;
         int pawn_offset = get_pawn_offset(stm);
-        if (to - from == 2 * pawn_offset) { // Double push
+        if (to - from == 2 * pawn_offset &&
+            (PawnAttacks[stm][to - pawn_offset] &
+             get_piece_bb(Pawn, get_adversary()))) { // Double push and there is a enemy pawn to en passant
             curr_state.en_passant = static_cast<Square>(to - pawn_offset);
             hash_ep_key();
         }
@@ -518,13 +520,16 @@ Move Position::get_movement(const std::string &algebraic_notation) const {
         else if (tolower(algebraic_notation[4]) == 'b')
             move_type = PawnPromotionBishop;
     }
+
     if (consult(to) != Empty) { // Capture
         move_type = static_cast<MoveType>(move_type | Capture);
-    } else if (get_piece_type(consult(from)) == King && get_rank(from) == 4 &&
-               (get_rank(to) == 2 || get_rank(to) == 6)) { // Castle
+    } else if (get_piece_type(consult(from)) == King && get_file(from) == 4 &&
+               (get_file(to) == 2 || get_file(to) == 6)) { // Castle
         move_type = Castling;
-    } else if (get_piece_type(consult(from)) == Pawn && get_rank(to) == get_rank(get_en_passant()) &&
-               (get_file(to) == 2 || get_file(to) == 5)) { // En passant
+    } else if (get_piece_type(consult(from)) == Pawn && get_file(to) != get_file(from)) { // En passant
+        // Note that if this point is reached, consult(to) == empty, which is why this simple clause suffices, i.e. if
+        // it's not a simple capture and the pawn is not on its original file, it must be an en passant
+        assert(get_file(to) == get_file(get_en_passant()));
         move_type = EnPassant;
     }
 
@@ -694,8 +699,8 @@ void Position::hash_castle_key() {
 }
 
 void Position::hash_ep_key() {
-    assert(get_rank(curr_state.en_passant) >= 0 && get_rank(curr_state.en_passant) < 8);
-    hash_key ^= hash_keys.en_passant[get_rank(curr_state.en_passant)];
+    assert(get_file(curr_state.en_passant) >= 0 && get_file(curr_state.en_passant) < 8);
+    hash_key ^= hash_keys.en_passant[get_file(curr_state.en_passant)];
 }
 
 void Position::hash_side_key() { hash_key ^= hash_keys.side; }
