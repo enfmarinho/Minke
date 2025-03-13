@@ -44,7 +44,7 @@ void iterative_deepening(ThreadData &thread_data) {
     Move best_move = MoveNone;
     for (CounterType depth = 1; depth <= thread_data.depth_limit; ++depth) {
         PvList pv_list;
-        ScoreType eval = aspiration(depth, pv_list, thread_data);
+        ScoreType eval = negamax(-MaxScore, MaxScore, depth, pv_list, thread_data);
         if (!thread_data.time_manager.time_over() && !thread_data.stop) { // Search was successful
             bool found;
             TTEntry *entry = TT.probe(thread_data.position, found);
