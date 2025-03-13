@@ -184,10 +184,10 @@ std::string Position::get_fen() const {
         fen += "-";
 
     fen += ' ';
-    if (get_en_passant() == NoSquare)
+    if (get_en_passant() == NoSquare) {
         fen += "-";
-    else {
-        fen += (get_rank(get_en_passant()) + 'a');
+    } else {
+        fen += (get_file(get_en_passant()) + 'a');
         fen += (stm == White ? '6' : '3');
     }
     fen += ' ';
@@ -203,9 +203,8 @@ void Position::reset_nnue() { nnue.reset(*this); }
 
 template <bool UPDATE>
 void Position::reset() {
-    for (int sqi = a1; sqi <= h8; ++sqi) {
+    for (int sqi = a1; sqi <= h8; ++sqi)
         board[sqi] = Empty;
-    }
     std::memset(occupancies, 0ULL, sizeof(occupancies));
     std::memset(pieces, 0ULL, sizeof(pieces));
 
@@ -214,9 +213,8 @@ void Position::reset() {
     curr_state.reset();
     played_positions.clear();
 
-    if constexpr (UPDATE) {
+    if constexpr (UPDATE)
         reset_nnue();
-    }
 }
 
 template <bool UPDATE>
@@ -231,9 +229,8 @@ void Position::add_piece(const Piece &piece, const Square &sq) {
 
     hash_piece_key(piece, sq);
 
-    if constexpr (UPDATE) {
+    if constexpr (UPDATE)
         nnue.add_feature(piece, sq);
-    }
 }
 
 template <bool UPDATE>
@@ -248,9 +245,8 @@ void Position::remove_piece(const Piece &piece, const Square &sq) {
 
     hash_piece_key(piece, sq);
 
-    if constexpr (UPDATE) {
+    if constexpr (UPDATE)
         nnue.remove_feature(piece, sq);
-    }
 }
 
 template <bool UPDATE>
@@ -278,17 +274,16 @@ bool Position::make_move(const Move &move) {
     curr_state.captured = consult(move.to());
 
     bool legal = true;
-    if (move.is_regular()) {
+    if (move.is_regular())
         make_regular<UPDATE>(move);
-    } else if (move.is_capture() && !move.is_ep()) {
+    else if (move.is_capture() && !move.is_ep())
         make_capture<UPDATE>(move);
-    } else if (move.is_castle()) {
+    else if (move.is_castle())
         legal = make_castle<UPDATE>(move);
-    } else if (move.is_promotion()) {
+    else if (move.is_promotion())
         make_promotion<UPDATE>(move);
-    } else if (move.is_ep()) {
+    else if (move.is_ep())
         make_en_passant<UPDATE>(move);
-    }
 
     hash_castle_key();
     update_castling_rights(move);
@@ -315,7 +310,9 @@ void Position::make_regular(const Move &move) {
     if (get_piece_type(piece, stm) == Pawn) {
         curr_state.fifty_move_ply = 0;
         int pawn_offset = get_pawn_offset(stm);
-        if (to - from == 2 * pawn_offset) { // Double push
+        if (to - from == 2 * pawn_offset &&
+            (PawnAttacks[stm][to - pawn_offset] &
+             get_piece_bb(Pawn, get_adversary()))) { // Double push and there is a enemy pawn to en passant
             curr_state.en_passant = static_cast<Square>(to - pawn_offset);
             hash_ep_key();
         }
@@ -523,13 +520,16 @@ Move Position::get_movement(const std::string &algebraic_notation) const {
         else if (tolower(algebraic_notation[4]) == 'b')
             move_type = PawnPromotionBishop;
     }
+
     if (consult(to) != Empty) { // Capture
         move_type = static_cast<MoveType>(move_type | Capture);
-    } else if (get_piece_type(consult(from)) == King && get_rank(from) == 4 &&
-               (get_rank(to) == 2 || get_rank(to) == 6)) { // Castle
+    } else if (get_piece_type(consult(from)) == King && get_file(from) == 4 &&
+               (get_file(to) == 2 || get_file(to) == 6)) { // Castle
         move_type = Castling;
-    } else if (get_piece_type(consult(from)) == Pawn && get_rank(to) == get_rank(get_en_passant()) &&
-               (get_file(to) == 2 || get_file(to) == 5)) { // En passant
+    } else if (get_piece_type(consult(from)) == Pawn && get_file(to) != get_file(from)) { // En passant
+        // Note that if this point is reached, consult(to) == empty, which is why this simple clause suffices, i.e. if
+        // it's not a simple capture and the pawn is not on its original file, it must be an en passant
+        assert(get_file(to) == get_file(get_en_passant()));
         move_type = EnPassant;
     }
 
@@ -699,8 +699,8 @@ void Position::hash_castle_key() {
 }
 
 void Position::hash_ep_key() {
-    assert(get_rank(curr_state.en_passant) >= 0 && get_rank(curr_state.en_passant) < 8);
-    hash_key ^= hash_keys.en_passant[get_rank(curr_state.en_passant)];
+    assert(get_file(curr_state.en_passant) >= 0 && get_file(curr_state.en_passant) < 8);
+    hash_key ^= hash_keys.en_passant[get_file(curr_state.en_passant)];
 }
 
 void Position::hash_side_key() { hash_key ^= hash_keys.side; }

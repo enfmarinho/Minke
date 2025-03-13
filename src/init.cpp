@@ -68,6 +68,7 @@ void init_magic_attack_tables() {
     init_magic_table(Bishop);
     init_magic_table(Rook);
 
+    // Initialize non-slider attack tables
     for (int sqi = a1; sqi <= h8; ++sqi) {
         Square sq = static_cast<Square>(sqi);
 

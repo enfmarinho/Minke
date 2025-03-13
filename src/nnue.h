@@ -56,7 +56,7 @@ class NNUE {
     void remove_feature(const Piece &piece, const Square &sq);
 
     void reset(const Position &position);
-    WeightType eval(const Color &stm) const;
+    ScoreType eval(const Color &stm) const;
 
     Accumulator debug_func(const Position &position);
 
