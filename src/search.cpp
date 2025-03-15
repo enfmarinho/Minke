@@ -50,13 +50,15 @@ void iterative_deepening(ThreadData &thread_data) {
             TTEntry *entry = TT.probe(thread_data.position, found);
 
             best_move = entry->best_move();
-            if (best_move == MoveNone) {
+            if (best_move == MoveNone) { // No legal moves
                 assert(depth == 1 && !found);
                 break;
             }
             assert(found && entry->depth() >= depth);
             print_search_info(depth, eval, pv_list, thread_data);
         }
+        if (depth > 5)
+            thread_data.time_manager.update();
         if (thread_data.time_manager.stop_early())
             break;
 
