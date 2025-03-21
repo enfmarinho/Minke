@@ -95,8 +95,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         return quiescence(alpha, beta, thread_data);
     else if (thread_data.position.draw())
         return 0;
-
     ++thread_data.nodes_searched;
+
+    bool pv_node = beta - alpha > 1;
 
     // Transposition table probe
     bool found;
@@ -114,6 +115,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
     Move best_move = MoveNone;
     ScoreType best_score = -MaxScore;
     ScoreType old_alpha = alpha;
+    int moves_searched = 0;
 
     MovePicker move_picker(ttmove, &thread_data, false);
     while ((move = move_picker.next_move()) != MoveNone) {
@@ -122,30 +124,41 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
             thread_data.position.unmake_move<true>(move);
             continue;
         }
-
         ++thread_data.searching_ply;
-        ScoreType score = -negamax(-beta, -alpha, depth - 1, curr_pv, thread_data);
+        ++moves_searched;
+
+        ScoreType score;
+        if (alpha > old_alpha) {
+            score = -negamax(-alpha - 1, -alpha, depth - 1, curr_pv, thread_data);
+            if (score > alpha && score < beta)
+                score = -negamax(-beta, -alpha, depth - 1, curr_pv, thread_data);
+        } else {
+            score = -negamax(-beta, -alpha, depth - 1, curr_pv, thread_data);
+        }
+
         --thread_data.searching_ply;
         thread_data.position.unmake_move<true>(move);
         assert(score >= -MaxScore);
 
         if (score > best_score) {
             best_score = score;
-            best_move = move;
-            pv_list.update(best_move, curr_pv);
 
             if (score > alpha) {
-                alpha = score;
-                if (score >= beta) { // fails high
+                best_move = move;
+                if (pv_node)
+                    pv_list.update(best_move, curr_pv);
+
+                if (score >= beta) { // Fails high
                     thread_data.search_history.update(thread_data.position, move, depth);
                     break;
                 }
+                alpha = score; // Only update alpha if don't  failed high
             }
         }
     }
 
-    if (best_move == MoveNone) { // handle positions under stalemate or checkmate,
-                                 // i.e. positions with no legal moves to be made
+    if (moves_searched == 0) { // handle positions under stalemate or checkmate,
+                               // i.e. positions with no legal moves to be made
         return thread_data.position.in_check() ? -MateScore - depth : 0;
     }
 
