@@ -115,8 +115,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
     ScoreType old_alpha = alpha;
     int moves_searched = 0;
 
-    bool pv_found = false;
-
     MovePicker move_picker(ttmove, &thread_data, false);
     while ((move = move_picker.next_move()) != MoveNone) {
         PvList curr_pv;
@@ -128,7 +126,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         ++moves_searched;
 
         ScoreType score;
-        if (pv_found) {
+        if (alpha > old_alpha) {
             score = -negamax(-alpha - 1, -alpha, depth - 1, curr_pv, thread_data);
             if (score > alpha && score < beta)
                 score = -negamax(-beta, -alpha, depth - 1, curr_pv, thread_data);
@@ -144,7 +142,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
             best_score = score;
 
             if (score > alpha) {
-                pv_found = true;
                 best_move = move;
                 if (pv_node)
                     pv_list.update(best_move, curr_pv);
