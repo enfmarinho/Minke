@@ -505,6 +505,30 @@ void Position::unmake_move(const Move &move) {
 template void Position::unmake_move<true>(const Move &move);
 template void Position::unmake_move<false>(const Move &move);
 
+void Position::make_null_move() {
+    history_stack[history_stack_head++] = curr_state;
+    played_positions.emplace_back(hash_key);
+
+    curr_state.ply_from_null = 0;
+    curr_state.captured = Empty;
+    ++curr_state.fifty_move_ply;
+    ++game_clock_ply;
+    if (curr_state.en_passant != NoSquare) {
+        hash_ep_key();
+        curr_state.en_passant = NoSquare;
+    }
+    hash_side_key();
+    change_side();
+}
+
+void Position::unmake_null_move() {
+    curr_state = history_stack[--history_stack_head];
+    --game_clock_ply;
+    hash_key = played_positions.back();
+    played_positions.pop_back();
+    change_side();
+}
+
 Move Position::get_movement(const std::string &algebraic_notation) const {
     Square from = get_square(algebraic_notation[0] - 'a', algebraic_notation[1] - '1');
     Square to = get_square(algebraic_notation[2] - 'a', algebraic_notation[3] - '1');

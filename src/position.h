@@ -35,10 +35,17 @@ class Position {
     template <bool UPDATE>
     void unmake_move(const Move &move);
 
+    void make_null_move();
+    void unmake_null_move();
+
     inline bool in_check() const { return is_attacked(get_king_placement(stm)); }
     bool is_attacked(const Square &sq) const;
     Bitboard attackers(const Square &sq) const;
 
+    inline bool last_was_null() const { return curr_state.ply_from_null == 0; }
+    inline bool has_non_pawns() const {
+        return get_piece_bb(Knight) || get_piece_bb(Bishop) || get_piece_bb(Rook) || get_piece_bb(Queen);
+    }
     inline bool draw() { return insufficient_material() || repetition() || fifty_move_draw(); }
     inline ScoreType eval() const { return nnue.eval(stm); }
 
