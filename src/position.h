@@ -10,7 +10,6 @@
 
 #include <cstdint>
 #include <string>
-#include <vector>
 
 #include "move.h"
 #include "nnue.h"
@@ -128,7 +127,8 @@ class Position {
     int history_stack_head;
     BoardState curr_state;
     BoardState history_stack[MaxPly];
-    std::vector<HashType> played_positions; // TODO this could be an static array
+    int played_positions_head;
+    HashType played_positions[MaxPly];
 
     NNUE nnue;
 };

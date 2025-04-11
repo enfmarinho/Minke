@@ -12,7 +12,6 @@
 #include <cctype>
 #include <cstdint>
 #include <iostream>
-#include <vector>
 
 #include "attacks.h"
 #include "hash.h"
@@ -21,10 +20,7 @@
 #include "types.h"
 #include "utils.h"
 
-Position::Position() {
-    played_positions.reserve(MaxPly);
-    set_fen<true>(StartFEN);
-}
+Position::Position() { set_fen<true>(StartFEN); }
 
 template <bool UPDATE>
 bool Position::set_fen(const std::string &fen) {
@@ -211,7 +207,7 @@ void Position::reset() {
     hash_key = 0ULL;
     history_stack_head = 0;
     curr_state.reset();
-    played_positions.clear();
+    played_positions_head = 0;
 
     if constexpr (UPDATE)
         reset_nnue();
@@ -264,7 +260,7 @@ bool Position::make_move(const Move &move) {
     ++game_clock_ply;
     ++curr_state.fifty_move_ply;
     ++curr_state.ply_from_null;
-    played_positions.emplace_back(hash_key);
+    played_positions[played_positions_head++] = hash_key;
 
     if (curr_state.en_passant != NoSquare) {
         hash_ep_key();
@@ -446,7 +442,7 @@ void Position::unmake_move(const Move &move) {
         nnue.pop();
 
     --game_clock_ply;
-    played_positions.pop_back();
+    --played_positions_head;
     change_side();
 
     Square from = move.from();
@@ -507,7 +503,7 @@ template void Position::unmake_move<false>(const Move &move);
 
 void Position::make_null_move() {
     history_stack[history_stack_head++] = curr_state;
-    played_positions.emplace_back(hash_key);
+    played_positions[played_positions_head++] = hash_key;
 
     curr_state.ply_from_null = 0;
     curr_state.captured = Empty;
@@ -524,8 +520,7 @@ void Position::make_null_move() {
 void Position::unmake_null_move() {
     curr_state = history_stack[--history_stack_head];
     --game_clock_ply;
-    hash_key = played_positions.back();
-    played_positions.pop_back();
+    hash_key = played_positions[--played_positions_head];
     change_side();
 }
 
@@ -680,7 +675,7 @@ bool Position::repetition() const {
 
     int counter = 0;
     int distance = std::min(curr_state.fifty_move_ply, curr_state.ply_from_null);
-    int starting_index = played_positions.size();
+    int starting_index = played_positions_head;
 
     for (int index = 4; index <= distance; index += 2)
         if (played_positions[starting_index - index] == hash_key) {
