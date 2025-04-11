@@ -94,7 +94,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         return -MaxScore;
     else if (depth <= 0)
         return quiescence(alpha, beta, thread_data);
-    else if (thread_data.position.draw())
+    else if (thread_data.position.draw() && thread_data.searching_ply > 0)
         return 0;
     ++thread_data.nodes_searched;
 
