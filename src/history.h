@@ -36,8 +36,11 @@ class History {
         return search_history_table[position.get_stm()][move.from_and_to()];
     }
 
-    inline Move consult_killer1(const int depth) { return killer_moves[0][depth]; }
-    inline Move consult_killer2(const int depth) { return killer_moves[1][depth]; }
+    inline Move consult_killer1(const int &depth) const { return killer_moves[0][depth]; }
+    inline Move consult_killer2(const int &depth) const { return killer_moves[1][depth]; }
+    inline bool is_killer(const Move &move, const int &depth) const {
+        return move == consult_killer1(depth) || move == consult_killer2(depth);
+    }
 
   private:
     inline void save_killer(const Move &move, const int depth) {
