@@ -7,6 +7,7 @@
 
 #include "search.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
@@ -128,12 +129,20 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         ++moves_searched;
 
         ScoreType score;
-        if (alpha > old_alpha) {
-            score = -negamax(-alpha - 1, -alpha, depth - 1, curr_pv, thread_data);
+        if (moves_searched == 0) {
+            score = -negamax(-beta, -alpha, depth - 1, curr_pv, thread_data);
+        } else {
+            int reduction = 1;
+            // Perform LMR in case a minimum amount of moves were searched, the depth is greater than 3, the move is
+            // quiet but not killer or the move is a bad noisy
+            if (moves_searched > 1 + pv_node && depth > 3 &&
+                ((move.is_quiet() && !thread_data.search_history.is_killer(move, depth)) ||
+                 move_picker.picker_stage() == PickBadNoisy)) {
+                reduction = LMRTable[std::min(depth, 63)][std::min(moves_searched, 63)];
+            }
+            score = -negamax(-alpha - 1, -alpha, depth - reduction, curr_pv, thread_data);
             if (score > alpha && score < beta)
                 score = -negamax(-beta, -alpha, depth - 1, curr_pv, thread_data);
-        } else {
-            score = -negamax(-beta, -alpha, depth - 1, curr_pv, thread_data);
         }
 
         --thread_data.searching_ply;
