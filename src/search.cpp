@@ -127,6 +127,22 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         if (depth < RFP_depth && eval - RFP_margin * (depth - improving) >= beta) {
             return eval;
         }
+
+        // Null move pruning
+        if (!thread_data.position.last_was_null() && depth >= NMP_depth && eval >= beta &&
+            thread_data.position.has_non_pawns()) {
+            const int reduction = NMP_base + depth / NMP_divisor + std::clamp((eval - beta) / 300, -1, 3);
+
+            thread_data.position.make_null_move();
+            ++thread_data.searching_ply;
+            ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, pv_list, thread_data);
+            thread_data.position.unmake_null_move();
+            --thread_data.searching_ply;
+
+            if (null_score >= beta) {
+                return null_score;
+            }
+        }
     }
 
     Move ttmove = (tthit ? ttentry->best_move() : MoveNone);
