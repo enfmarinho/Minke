@@ -40,6 +40,8 @@ class MovePicker {
     Move next_move();
     ScoredMove next_move_scored();
 
+    MovePickerStage picker_stage() const { return stage; }
+
   private:
     void sort_next_move();
     void score_moves();
