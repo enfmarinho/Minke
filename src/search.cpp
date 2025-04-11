@@ -92,7 +92,7 @@ ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &thre
 ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvList &pv_list, ThreadData &thread_data) {
     if (thread_data.time_manager.time_over() || thread_data.stop) // Out of time
         return -MaxScore;
-    else if (depth == 0)
+    else if (depth <= 0)
         return quiescence(alpha, beta, thread_data);
     else if (thread_data.position.draw())
         return 0;
@@ -154,9 +154,16 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
             // Perform LMR in case a minimum amount of moves were searched, the depth is greater than 3, the move is
             // quiet but not killer or the move is a bad noisy
             if (moves_searched > 1 + pv_node && depth > 3 &&
-                ((move.is_quiet() && !thread_data.search_history.is_killer(move, depth)) ||
-                 move_picker.picker_stage() == PickBadNoisy)) {
+                (move.is_quiet() || move_picker.picker_stage() == PickBadNoisy)) {
                 reduction = LMRTable[std::min(depth, 63)][std::min(moves_searched, 63)];
+                // Reduce more when move is a bad capture and less if move is quiet
+                reduction -= !move.is_quiet();
+                // Reduce less when in check
+                reduction -= in_check;
+                // Reduce less if move is killer
+                reduction -= thread_data.search_history.is_killer(move, depth);
+
+                reduction = std::clamp(reduction, 1, depth - 1);
             }
             score = -negamax(-alpha - 1, -alpha, depth - reduction, curr_pv, thread_data);
             if (score > alpha && score < beta)
