@@ -108,7 +108,7 @@ constexpr IndexType BoardWidth = 8;
 
 constexpr inline auto StartFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 constexpr int MaxMoves = 256;
-constexpr int MaxPly = 256;
+constexpr int MaxPly = 512;
 constexpr int HalfMovesPerMatch = 2048;
 constexpr int MaxSearchDepth = 128;
 
