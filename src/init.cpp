@@ -7,6 +7,9 @@
 
 #include "init.h"
 
+#include <algorithm>
+#include <cmath>
+
 #include "attacks.h"
 #include "hash.h"
 #include "incbin.h"
@@ -17,18 +20,32 @@
 
 INCBIN(NetParameters, "../src/minke.bin");
 
+int LMRTable[64][64];
 HashKeys hash_keys;
 Network network;
 TranspositionTable TT;
 
 void init_all() {
     TT.resize(EngineOptions::hash_default);
-    init_network_parameters();
+    init_search_params();
+    init_network_params();
     init_hash_keys();
     init_magic_attack_tables();
 }
 
-void init_network_parameters() {
+void init_search_params() {
+    constexpr double lmr_base = 1;
+    constexpr double lmr_divisor = 2.2;
+    for (int depth = 1; depth < 64; ++depth) {
+        for (int move_counter = 1; move_counter < 64; ++move_counter) {
+            LMRTable[depth][move_counter] =
+                std::max(0., lmr_base + std::log(depth) * std::log(move_counter) / lmr_divisor);
+        }
+    }
+    LMRTable[0][0] = 0;
+}
+
+void init_network_params() {
     const int16_t *pointer = reinterpret_cast<const int16_t *>(gNetParametersData);
 
     for (int i = 0; i < InputLayerSize; ++i)

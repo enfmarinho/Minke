@@ -15,6 +15,8 @@
 #include "time_manager.h"
 #include "types.h"
 
+extern int LMRTable[64][64];
+
 struct ThreadData {
     Position position;
     TimeManager time_manager;

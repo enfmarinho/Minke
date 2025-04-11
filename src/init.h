@@ -10,7 +10,9 @@
 
 void init_all();
 
-void init_network_parameters();
+void init_search_params();
+
+void init_network_params();
 
 void init_hash_keys();
 
