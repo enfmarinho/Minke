@@ -47,15 +47,15 @@ void iterative_deepening(ThreadData &thread_data) {
         PvList pv_list;
         ScoreType eval = negamax(-MaxScore, MaxScore, depth, pv_list, thread_data);
         if (!thread_data.time_manager.time_over() && !thread_data.stop) { // Search was successful
-            bool found;
-            TTEntry *entry = TT.probe(thread_data.position, found);
+            bool tthit;
+            TTEntry *entry = TT.probe(thread_data.position, tthit);
 
             best_move = entry->best_move();
             if (best_move == MoveNone) { // No legal moves
-                assert(depth == 1 && !found);
+                assert(depth == 1 && !tthit);
                 break;
             }
-            assert(found && entry->depth() >= depth);
+            assert(tthit && entry->depth() >= depth);
             print_search_info(depth, eval, pv_list, thread_data);
         }
         if (depth > 5)
@@ -71,9 +71,9 @@ void iterative_deepening(ThreadData &thread_data) {
 }
 
 ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &thread_data) {
-    bool found;
-    TTEntry *ttentry = TT.probe(thread_data.position, found);
-    if (!found)
+    bool tthit;
+    TTEntry *ttentry = TT.probe(thread_data.position, tthit);
+    if (!tthit)
         return negamax(-MaxScore, MaxScore, depth, pv_list, thread_data);
 
     int delta = 100; // TODO
@@ -98,20 +98,38 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         return 0;
     ++thread_data.nodes_searched;
 
-    bool pv_node = beta - alpha > 1;
-
     // Transposition table probe
-    bool found;
-    TTEntry *entry = TT.probe(thread_data.position, found);
-    if (found && entry->depth() >= depth &&
-        (entry->bound() == TTEntry::BoundType::Exact ||
-         (entry->bound() == TTEntry::BoundType::UpperBound && entry->evaluation() <= alpha) ||
-         (entry->bound() == TTEntry::BoundType::LowerBound && entry->evaluation() >= beta))) {
-        pv_list.update(entry->best_move(), PvList());
-        return entry->evaluation();
+    bool tthit;
+    TTEntry *ttentry = TT.probe(thread_data.position, tthit);
+    if (tthit && ttentry->depth() >= depth &&
+        (ttentry->bound() == TTEntry::BoundType::Exact ||
+         (ttentry->bound() == TTEntry::BoundType::UpperBound && ttentry->evaluation() <= alpha) ||
+         (ttentry->bound() == TTEntry::BoundType::LowerBound && ttentry->evaluation() >= beta))) {
+        pv_list.update(ttentry->best_move(), PvList());
+        return ttentry->evaluation();
     }
 
-    Move ttmove = (found ? entry->best_move() : MoveNone);
+    bool pv_node = beta - alpha > 1;
+    bool improving = false; // TODO
+    bool in_check = thread_data.position.in_check();
+    ScoreType eval = 0;
+    if (!in_check) {
+        if (tthit) {
+            eval = ttentry->evaluation();
+        } else {
+            eval = thread_data.position.eval();
+        }
+    }
+
+    // Forward pruning methods
+    if (!in_check && !pv_node) {
+        // Reverse futility pruning
+        if (depth < RFP_depth && eval - RFP_margin * (depth - improving) >= beta) {
+            return eval;
+        }
+    }
+
+    Move ttmove = (tthit ? ttentry->best_move() : MoveNone);
     Move move = MoveNone;
     Move best_move = MoveNone;
     ScoreType best_score = -MaxScore;
@@ -175,8 +193,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         TTEntry::BoundType bound = best_score >= beta   ? TTEntry::BoundType::LowerBound
                                    : alpha != old_alpha ? TTEntry::BoundType::Exact
                                                         : TTEntry::BoundType::UpperBound;
-        entry->save(thread_data.position.get_hash(), depth, best_move, best_score, thread_data.position.get_game_ply(),
-                    bound);
+        ttentry->save(thread_data.position.get_hash(), depth, best_move, best_score,
+                      thread_data.position.get_game_ply(), bound);
     }
 
     return best_score;
@@ -189,9 +207,9 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &thread_data) {
     else if (thread_data.position.draw())
         return 0;
 
-    bool found;
-    TTEntry *ttentry = TT.probe(thread_data.position, found);
-    Move ttmove = (found ? ttentry->best_move() : MoveNone);
+    bool tthit;
+    TTEntry *ttentry = TT.probe(thread_data.position, tthit);
+    Move ttmove = (tthit ? ttentry->best_move() : MoveNone);
 
     ScoreType stand_pat = thread_data.position.eval();
     if (stand_pat >= beta)

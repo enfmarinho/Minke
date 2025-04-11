@@ -16,6 +16,8 @@
 #include "types.h"
 
 extern int LMRTable[64][64];
+constexpr int RFP_depth = 10;
+constexpr int RFP_margin = 100;
 
 struct ThreadData {
     Position position;
