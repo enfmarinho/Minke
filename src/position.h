@@ -126,9 +126,9 @@ class Position {
 
     int history_stack_head;
     BoardState curr_state;
-    BoardState history_stack[MaxPly];
+    BoardState history_stack[MaxGameClock];
     int played_positions_head;
-    HashType played_positions[MaxPly];
+    HashType played_positions[MaxGameClock];
 
     NNUE nnue;
 };

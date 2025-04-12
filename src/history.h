@@ -49,6 +49,6 @@ class History {
     }
 
     int search_history_table[ColorNB][64 * 64];
-    Move killer_moves[2][MaxPly];
+    Move killer_moves[2][MaxSearchDepth];
 };
 #endif // #ifndef HISTORY_H

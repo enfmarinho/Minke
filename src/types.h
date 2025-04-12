@@ -100,17 +100,18 @@ using TimeType = std::chrono::milliseconds::rep;
 using TimePoint = std::chrono::steady_clock::time_point;
 using Bitboard = uint64_t;
 
+constexpr int MaxMoves = 256;
+constexpr int MaxSearchDepth = 256;
+constexpr int MaxGameClock = 512;
+
 constexpr ScoreType MateScore = 100'000;
+constexpr ScoreType MateFound = MateScore - MaxSearchDepth;
 constexpr ScoreType MaxScore = 200'000;
 constexpr CounterType NumberOfPieces = 6;
 constexpr IndexType BoardHeight = 8;
 constexpr IndexType BoardWidth = 8;
 
 constexpr inline auto StartFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-constexpr int MaxMoves = 256;
-constexpr int MaxPly = 512;
-constexpr int HalfMovesPerMatch = 2048;
-constexpr int MaxSearchDepth = 128;
 
 // clang-format off
 constexpr ScoreType SEE_values[PieceNB] = {100, 300, 300, 500, 1000, 5000,
