@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <limits>
@@ -22,10 +23,15 @@
 
 static void print_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
                               const ThreadData &thread_data) {
+    std::cout << "info depth " << depth;
+    if (std::abs(eval) > MateFound) {
+        std::cout << " score mate " << (MateScore - std::abs(eval) + 1) / 2;
+    } else {
+        std::cout << " score cp " << eval;
+    }
     // Add 1 to time_passed() to avoid division by 0
-    std::cout << "info depth " << depth << " score cp " << eval << " time " << thread_data.time_manager.time_passed()
-              << " nodes " << thread_data.nodes_searched << " nps "
-              << thread_data.nodes_searched * 1000 / (thread_data.time_manager.time_passed() + 1) << " pv ";
+    std::cout << " time " << thread_data.time_manager.time_passed() << " nodes " << thread_data.nodes_searched
+              << " nps " << thread_data.nodes_searched * 1000 / (thread_data.time_manager.time_passed() + 1) << " pv ";
     pv_list.print();
     std::cout << std::endl;
 }
@@ -94,8 +100,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         return -MaxScore;
     else if (depth <= 0)
         return quiescence(alpha, beta, thread_data);
-    else if (thread_data.position.draw() && thread_data.searching_ply > 0)
-        return 0;
     ++thread_data.nodes_searched;
 
     // Transposition table probe
@@ -107,6 +111,22 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
          (ttentry->bound() == TTEntry::BoundType::LowerBound && ttentry->evaluation() >= beta))) {
         pv_list.update(ttentry->best_move(), PvList());
         return ttentry->evaluation();
+    }
+
+    // Early return conditions
+    bool root = thread_data.searching_ply == 0;
+    if (!root) {
+        if (thread_data.position.draw())
+            return 0;
+
+        if (thread_data.searching_ply > MaxSearchDepth - 1)
+            return thread_data.position.eval();
+
+        // Mate distance pruning
+        alpha = std::max(alpha, -MateScore + thread_data.searching_ply);
+        beta = std::min(beta, MateScore - thread_data.searching_ply);
+        if (alpha >= beta)
+            return alpha;
     }
 
     bool pv_node = beta - alpha > 1;
@@ -209,7 +229,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
 
     if (moves_searched == 0) { // handle positions under stalemate or checkmate,
                                // i.e. positions with no legal moves to be made
-        return thread_data.position.in_check() ? -MateScore - depth : 0;
+        return thread_data.position.in_check() ? -MateScore + thread_data.searching_ply : 0;
     }
 
     if (!thread_data.time_manager.time_over()) { // Save on TT if search was completed
