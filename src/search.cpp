@@ -111,7 +111,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         (ttentry->bound() == TTEntry::BoundType::Exact ||
          (ttentry->bound() == TTEntry::BoundType::UpperBound && ttentry->evaluation() <= alpha) ||
          (ttentry->bound() == TTEntry::BoundType::LowerBound && ttentry->evaluation() >= beta))) {
-        pv_list.update(ttentry->best_move(), PvList());
+        if (ttentry->best_move() != MoveNone)
+            pv_list.update(ttentry->best_move(), PvList());
         return ttentry->evaluation();
     }
 
