@@ -25,7 +25,7 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
                               const ThreadData &thread_data) {
     std::cout << "info depth " << depth;
     if (std::abs(eval) > MateFound) {
-        std::cout << " score mate " << (MateScore - std::abs(eval) + 1) / 2;
+        std::cout << " score mate " << (eval < 0 ? "-" : "") << (MateScore - std::abs(eval) + 1) / 2;
     } else {
         std::cout << " score cp " << eval;
     }
