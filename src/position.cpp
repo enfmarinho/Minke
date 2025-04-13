@@ -695,7 +695,7 @@ bool Position::fifty_move_draw() {
     if (curr_state.fifty_move_ply >= 100) {
         ScoredMove moves[MaxMoves];
         ScoredMove *end = gen_moves(moves, *this, GenAll);
-        for (ScoredMove *begin = moves; begin != end; ++end) {
+        for (ScoredMove *begin = moves; begin != end; ++begin) {
             bool legal = make_move<false>(begin->move);
             unmake_move<false>(begin->move);
             if (legal)
