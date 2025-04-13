@@ -188,7 +188,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         } else {
             int reduction = 1;
             // Perform LMR in case a minimum amount of moves were searched, the depth is greater than 3, the move is
-            // quiet but not killer or the move is a bad noisy
+            // quiet or the move is a bad noisy
             if (moves_searched > 1 + pv_node && depth > 3 &&
                 (move.is_quiet() || move_picker.picker_stage() == PickBadNoisy)) {
                 reduction = LMRTable[std::min(depth, 63)][std::min(moves_searched, 63)];
