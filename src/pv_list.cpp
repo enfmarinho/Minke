@@ -10,8 +10,8 @@
 #include <iostream>
 
 void PvList::update(Move new_move, const PvList &list) {
-    m_pv[0] = new_move;
     std::copy(list.m_pv.begin(), list.m_pv.begin() + list.m_size, m_pv.begin() + 1);
+    m_pv[0] = new_move;
 
     m_size = list.m_size + 1;
 }
