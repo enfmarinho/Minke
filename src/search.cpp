@@ -102,10 +102,12 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         return quiescence(alpha, beta, thread_data);
     ++thread_data.nodes_searched;
 
+    bool pv_node = beta - alpha > 1;
+
     // Transposition table probe
     bool tthit;
     TTEntry *ttentry = TT.probe(thread_data.position, tthit);
-    if (tthit && ttentry->depth() >= depth &&
+    if (!pv_node && tthit && ttentry->depth() >= depth &&
         (ttentry->bound() == TTEntry::BoundType::Exact ||
          (ttentry->bound() == TTEntry::BoundType::UpperBound && ttentry->evaluation() <= alpha) ||
          (ttentry->bound() == TTEntry::BoundType::LowerBound && ttentry->evaluation() >= beta))) {
@@ -129,7 +131,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
             return alpha;
     }
 
-    bool pv_node = beta - alpha > 1;
     bool improving = false; // TODO
     bool in_check = thread_data.position.in_check();
     ScoreType eval = 0;
