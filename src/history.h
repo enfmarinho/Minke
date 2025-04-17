@@ -22,7 +22,7 @@ class History {
 
     inline void reset() {
         std::memset(search_history_table, 0, sizeof(search_history_table));
-        std::memset(killer_moves, MoveNone, sizeof(killer_moves));
+        std::memset(killer_moves, MoveNone.internal(), sizeof(killer_moves));
     };
 
     inline void update(const Position &position, const Move &move, int depth) {

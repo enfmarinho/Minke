@@ -14,6 +14,7 @@
 #include <iostream>
 #include <memory>
 
+#include "move.h"
 #include "position.h"
 #include "types.h"
 
@@ -38,7 +39,7 @@ void TTEntry::save(const HashType &hash, const IndexType &depth, const Move &bes
 void TTEntry::reset() {
     m_hash = 0;
     m_depth = 0;
-    m_best_move = Move();
+    m_best_move = MoveNone;
     m_evaluation = 0;
     m_half_move_count = 0;
     m_bound = BoundType::Empty;

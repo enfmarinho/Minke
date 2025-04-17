@@ -34,7 +34,7 @@ enum MoveType : char {
 
 class Move {
   public:
-    inline Move() : m_bytes(){};
+    inline Move() : m_bytes(0){};
     inline Move(int16_t bytes) : m_bytes(bytes){};
     inline Move(Square from, Square to, MoveType move_type) { m_bytes = (move_type << 12) | (to << 6) | (from); }
 
@@ -74,7 +74,7 @@ inline bool operator==(const ScoredMove& lhs, const ScoredMove& rhs) {
     return lhs.move == rhs.move && lhs.score == rhs.score;
 }
 
-constexpr int MoveNone = 0;
+const Move MoveNone = Move();
 const ScoredMove ScoredMoveNone = {MoveNone, 0};
 
 inline bool operator==(const Move& lhs, const Move& rhs) { return lhs.internal() == rhs.internal(); }
