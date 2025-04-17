@@ -115,6 +115,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
             pv_list.update(ttentry->best_move(), PvList());
         return ttentry->evaluation();
     }
+    Move ttmove = (tthit ? ttentry->best_move() : MoveNone);
+    ScoreType tteval = (tthit ? ttentry->evaluation() : -MaxScore);
 
     // Early return conditions
     bool root = thread_data.searching_ply == 0;
@@ -137,7 +139,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
     ScoreType eval = 0;
     if (!in_check) {
         if (tthit) {
-            eval = ttentry->evaluation();
+            eval = tteval;
         } else {
             eval = thread_data.position.eval();
         }
@@ -167,7 +169,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         }
     }
 
-    Move ttmove = (tthit ? ttentry->best_move() : MoveNone);
     Move move = MoveNone;
     Move best_move = MoveNone;
     ScoreType best_score = -MaxScore;
