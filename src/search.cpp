@@ -61,7 +61,7 @@ void iterative_deepening(ThreadData &thread_data) {
                 assert(depth == 1 && !tthit);
                 break;
             }
-            assert(tthit && entry->depth() >= depth);
+            assert(tthit);
             print_search_info(depth, eval, pv_list, thread_data);
         }
         if (depth > 5)
@@ -184,7 +184,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
 
             if (!skip_quiets) {
                 // Late Move Pruning or Move Count Pruning
-                if (lmr_depth <= LMP_DEPTH && moves_searched >= LMP_TABLE[improving][depth])
+                if (lmr_depth < LMP_DEPTH && moves_searched >= LMP_TABLE[improving][lmr_depth])
                     skip_quiets = true;
 
                 // Futility Pruning
