@@ -16,6 +16,8 @@
 #include "types.h"
 
 extern int LMRTable[64][64];
+constexpr int LMPDepth = 11;
+extern int LMPTable[2][LMPDepth];
 constexpr int RFP_depth = 10;
 constexpr int RFP_margin = 100;
 constexpr int NMP_depth = 3;

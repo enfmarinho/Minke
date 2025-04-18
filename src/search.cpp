@@ -178,7 +178,15 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
     bool skip_quiets = false;
     MovePicker move_picker(ttmove, &thread_data, false);
     while ((move = move_picker.next_move(skip_quiets)) != MoveNone) {
-        PvList curr_pv;
+        if (!root && best_score > -MateFound) {
+            int lmr_depth = LMRTable[std::min(depth, 63)][std::min(moves_searched, 63)];
+
+            if (!skip_quiets) {
+                // Late Move Pruning or Move Count Pruning
+                if (lmr_depth <= LMPDepth && moves_searched >= LMPTable[improving][depth])
+                    skip_quiets = true;
+            }
+        }
         if (!thread_data.position.make_move<true>(move)) { // Avoid illegal moves
             thread_data.position.unmake_move<true>(move);
             continue;
@@ -186,6 +194,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         ++thread_data.searching_ply;
         ++moves_searched;
 
+        PvList curr_pv;
         ScoreType score;
         if (moves_searched == 0) {
             score = -negamax(-beta, -alpha, depth - 1, curr_pv, thread_data);

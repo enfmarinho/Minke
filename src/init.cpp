@@ -7,13 +7,13 @@
 
 #include "init.h"
 
-#include <algorithm>
 #include <cmath>
 
 #include "attacks.h"
 #include "hash.h"
 #include "incbin.h"
 #include "nnue.h"
+#include "search.h"
 #include "tt.h"
 #include "types.h"
 #include "uci.h"
@@ -21,6 +21,7 @@
 INCBIN(NetParameters, "../src/minke.bin");
 
 int LMRTable[64][64];
+int LMPTable[2][LMPDepth];
 HashKeys hash_keys;
 Network network;
 TranspositionTable TT;
@@ -38,9 +39,16 @@ void init_search_params() {
     constexpr double lmr_divisor = 2.2;
     for (int depth = 1; depth < 64; ++depth) {
         for (int move_counter = 1; move_counter < 64; ++move_counter) {
-            LMRTable[depth][move_counter] =
-                std::max(0., lmr_base + std::log(depth) * std::log(move_counter) / lmr_divisor);
+            LMRTable[depth][move_counter] = lmr_base + std::log(depth) * std::log(move_counter) / lmr_divisor;
+            assert(LMRTable[depth][move_counter] > 0);
         }
+    }
+
+    constexpr double lmp_base = 1;
+    constexpr double lmp_multiplier = 2.2;
+    for (int depth = 1; depth < LMPDepth; ++depth) {
+        LMPTable[0][depth] = lmp_base + lmp_multiplier * depth * depth;
+        LMPTable[1][depth] = 2 * lmp_base + 2 * lmp_multiplier * depth * depth; // Improving
     }
     LMRTable[0][0] = 0;
 }
