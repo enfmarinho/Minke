@@ -42,7 +42,7 @@ void TTEntry::reset() {
     m_best_move = MOVE_NONE;
     m_evaluation = 0;
     m_half_move_count = 0;
-    m_bound = BoundType::EMPTY;
+    m_bound = BOUND_EMPTY;
 }
 
 TTEntry *TranspositionTable::probe(const Position &position, bool &found) {

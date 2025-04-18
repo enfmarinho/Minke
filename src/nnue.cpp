@@ -90,7 +90,7 @@ ScoreType NNUE::eval(const Color &stm) const {
         case BLACK:
             return weight_sum_reduction(m_accumulators.back().black_neurons, m_accumulators.back().white_neurons);
         default:
-            assert(false && "Tried to use eval function with player none\n"); // Must not reach this
+            assert(false && "Tried to use eval function with player none\n");
     }
     __builtin_unreachable();
 }

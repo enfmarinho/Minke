@@ -84,8 +84,8 @@ ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &thre
 
     int delta = 100; // TODO
 
-    ScoreType alpha = ttentry->evaluation() - delta;
-    ScoreType beta = ttentry->evaluation() + delta;
+    ScoreType alpha = ttentry->eval() - delta;
+    ScoreType beta = ttentry->eval() + delta;
     ScoreType eval = negamax(alpha, beta, depth, pv_list, thread_data);
     if (eval >= beta)
         eval = negamax(alpha, MAX_SCORE, depth, pv_list, thread_data);
@@ -103,29 +103,30 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
     ++thread_data.nodes_searched;
 
     bool pv_node = beta - alpha > 1;
+    Position &position = thread_data.position;
 
     // Transposition table probe
     bool tthit;
-    TTEntry *ttentry = TT.probe(thread_data.position, tthit);
+    TTEntry *ttentry = TT.probe(position, tthit);
     if (!pv_node && tthit && ttentry->depth() >= depth &&
-        (ttentry->bound() == TTEntry::BoundType::EXACT ||
-         (ttentry->bound() == TTEntry::BoundType::UPPER && ttentry->evaluation() <= alpha) ||
-         (ttentry->bound() == TTEntry::BoundType::LOWER && ttentry->evaluation() >= beta))) {
+        (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->eval() <= alpha) ||
+         (ttentry->bound() == LOWER && ttentry->eval() >= beta))) {
         if (ttentry->best_move() != MOVE_NONE)
             pv_list.update(ttentry->best_move(), PvList());
-        return ttentry->evaluation();
+        return ttentry->eval();
     }
+    // Extraction data from ttentry if tthit
     Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
-    ScoreType tteval = (tthit ? ttentry->evaluation() : -MAX_SCORE);
+    ScoreType tteval = (tthit ? ttentry->eval() : -MAX_SCORE);
 
     // Early return conditions
     bool root = thread_data.searching_ply == 0;
     if (!root) {
-        if (thread_data.position.draw())
+        if (position.draw())
             return 0;
 
         if (thread_data.searching_ply > MAX_SEARCH_DEPTH - 1)
-            return thread_data.position.eval();
+            return position.eval();
 
         // Mate distance pruning
         alpha = std::max(alpha, -MATE_SCORE + thread_data.searching_ply);
@@ -135,37 +136,34 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
     }
 
     bool improving = false; // TODO
-    bool in_check = thread_data.position.in_check();
+    bool in_check = position.in_check();
     ScoreType eval = 0;
     if (!in_check) {
-        if (tthit) {
+        if (tthit)
             eval = tteval;
-        } else {
-            eval = thread_data.position.eval();
-        }
+        else
+            eval = position.eval();
     }
 
     // Forward pruning methods
     if (!in_check && !pv_node) {
         // Reverse futility pruning
-        if (depth < RFP_DEPTH && eval - RFP_MARGIN * (depth - improving) >= beta) {
+        if (depth < RFP_DEPTH && eval - RFP_MARGIN * (depth - improving) >= beta)
             return eval;
-        }
 
         // Null move pruning
-        if (!thread_data.position.last_was_null() && depth >= NMP_DEPTH && eval >= beta &&
-            thread_data.position.has_non_pawns()) {
+        if (!position.last_was_null() && depth >= NMP_DEPTH && eval >= beta && position.has_non_pawns()) {
+            // TODO check for advanced tweaks
             const int reduction = NMP_BASE + depth / NMP_DIVISOR + std::clamp((eval - beta) / 300, -1, 3);
 
-            thread_data.position.make_null_move();
+            position.make_null_move();
             ++thread_data.searching_ply;
             ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, pv_list, thread_data);
-            thread_data.position.unmake_null_move();
+            position.unmake_null_move();
             --thread_data.searching_ply;
 
-            if (null_score >= beta) {
+            if (null_score >= beta)
                 return null_score;
-            }
         }
     }
 
@@ -195,11 +193,12 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
 
             // SEE Pruning
             if (depth <= SEE_PRUNING_DEPTH && move_picker.picker_stage() >= PICK_GOOD_NOISY &&
-                !SEE(thread_data.position, move, see_margin[move.is_quiet()]))
+                !SEE(position, move, see_margin[move.is_quiet()])) {
                 continue;
+            }
         }
-        if (!thread_data.position.make_move<true>(move)) { // Avoid illegal moves
-            thread_data.position.unmake_move<true>(move);
+        if (!position.make_move<true>(move)) { // Avoid illegal moves
+            position.unmake_move<true>(move);
             continue;
         }
         ++thread_data.searching_ply;
@@ -231,7 +230,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         }
 
         --thread_data.searching_ply;
-        thread_data.position.unmake_move<true>(move);
+        position.unmake_move<true>(move);
         assert(score >= -MAX_SCORE);
 
         if (score > best_score) {
@@ -243,7 +242,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
                     pv_list.update(best_move, curr_pv);
 
                 if (score >= beta) { // Fails high
-                    thread_data.search_history.update(thread_data.position, move, depth);
+                    thread_data.search_history.update(position, move, depth);
                     break;
                 }
                 alpha = score; // Only update alpha if don't  failed high
@@ -253,15 +252,12 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
 
     if (moves_searched == 0) { // handle positions under stalemate or checkmate,
                                // i.e. positions with no legal moves to be made
-        return thread_data.position.in_check() ? -MATE_SCORE + thread_data.searching_ply : 0;
+        return position.in_check() ? -MATE_SCORE + thread_data.searching_ply : 0;
     }
 
     if (!thread_data.time_manager.time_over()) { // Save on TT if search was completed
-        TTEntry::BoundType bound = best_score >= beta   ? TTEntry::BoundType::LOWER
-                                   : alpha != old_alpha ? TTEntry::BoundType::EXACT
-                                                        : TTEntry::BoundType::UPPER;
-        ttentry->save(thread_data.position.get_hash(), depth, best_move, best_score,
-                      thread_data.position.get_game_ply(), bound);
+        BoundType bound = best_score >= beta ? LOWER : alpha != old_alpha ? EXACT : UPPER;
+        ttentry->save(position.get_hash(), depth, best_move, best_score, position.get_game_ply(), bound);
     }
 
     return best_score;
@@ -269,34 +265,33 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
 
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &thread_data) {
     ++thread_data.nodes_searched;
+    Position &position = thread_data.position;
     if (thread_data.time_manager.time_over() || thread_data.stop)
         return -MAX_SCORE;
-    else if (thread_data.position.draw())
+    else if (position.draw())
         return 0;
 
     bool tthit;
-    TTEntry *ttentry = TT.probe(thread_data.position, tthit);
+    TTEntry *ttentry = TT.probe(position, tthit);
     Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
 
-    ScoreType stand_pat = thread_data.position.eval();
-    if (stand_pat >= beta)
+    ScoreType stand_pat = position.eval();
+    alpha = std::max(alpha, stand_pat);
+    if (alpha >= beta)
         return beta;
-
-    if (alpha < stand_pat)
-        alpha = stand_pat;
 
     Move move = MOVE_NONE;
     MovePicker move_picker(ttmove, &thread_data, true);
     // TODO check if its worth to check for quiet moves if in check
     while ((move = move_picker.next_move(true)) != MOVE_NONE) {
         assert(move.is_capture() || move.is_promotion());
-        if (!thread_data.position.make_move<true>(move)) { // Avoid illegal moves
-            thread_data.position.unmake_move<true>(move);
+        if (!position.make_move<true>(move)) { // Avoid illegal moves
+            position.unmake_move<true>(move);
             continue;
         }
 
         ScoreType eval = -quiescence(-beta, -alpha, thread_data);
-        thread_data.position.unmake_move<true>(move);
+        position.unmake_move<true>(move);
         if (eval >= beta)
             return beta;
         else if (eval > alpha)

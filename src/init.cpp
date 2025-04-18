@@ -35,20 +35,20 @@ void init_all() {
 }
 
 void init_search_params() {
-    constexpr double lmr_base = 1;
-    constexpr double lmr_divisor = 2.2;
+    constexpr double LMR_BASE = 1;
+    constexpr double LMR_DIVISOR = 2.2;
     for (int depth = 1; depth < 64; ++depth) {
         for (int move_counter = 1; move_counter < 64; ++move_counter) {
-            LMR_TABLE[depth][move_counter] = lmr_base + std::log(depth) * std::log(move_counter) / lmr_divisor;
+            LMR_TABLE[depth][move_counter] = LMR_BASE + std::log(depth) * std::log(move_counter) / LMR_DIVISOR;
             assert(LMR_TABLE[depth][move_counter] > 0);
         }
     }
 
-    constexpr double lmp_base = 1;
-    constexpr double lmp_multiplier = 2.2;
+    constexpr double LMP_BASE = 1;
+    constexpr double LMP_MULTIPLIER = 2.2;
     for (int depth = 1; depth < LMP_DEPTH; ++depth) {
-        LMP_TABLE[0][depth] = lmp_base + lmp_multiplier * depth * depth;
-        LMP_TABLE[1][depth] = 2 * lmp_base + 2 * lmp_multiplier * depth * depth; // Improving
+        LMP_TABLE[0][depth] = LMP_BASE + LMP_MULTIPLIER * depth * depth;
+        LMP_TABLE[1][depth] = 2 * LMP_BASE + 2 * LMP_MULTIPLIER * depth * depth; // Improving
     }
     LMR_TABLE[0][0] = 0;
 }

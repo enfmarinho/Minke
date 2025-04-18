@@ -92,6 +92,13 @@ enum Direction : int {
     DOUBLE_SOUTH = 2 * SOUTH,
 };
 
+enum BoundType : char {
+    BOUND_EMPTY,
+    EXACT,
+    LOWER,
+    UPPER,
+};
+
 using HashType = uint64_t;
 using IndexType = int8_t;
 using CounterType = int;
