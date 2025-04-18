@@ -22,7 +22,7 @@ void MovePicker::init(Move ttmove, ThreadData *thread_data, bool qsearch) {
     this->qsearch = qsearch;
 
     // Don't pick ttmove if in qsearch unless ttmove is noisy
-    if (ttmove != MoveNone && (!qsearch || ttmove.is_noisy()))
+    if (ttmove != MoveNone)
         stage = PickTT;
     else
         stage = GenNoisy;
@@ -32,13 +32,17 @@ void MovePicker::init(Move ttmove, ThreadData *thread_data, bool qsearch) {
     curr = end = end_bad = moves;
 }
 
-Move MovePicker::next_move() { return next_move_scored().move; }
+Move MovePicker::next_move(const bool &skip_quiets) { return next_move_scored(skip_quiets).move; }
 
-ScoredMove MovePicker::next_move_scored() {
+ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
     switch (stage) {
         case PickTT:
             stage = GenNoisy;
-            return {ttmove, TT_Score};
+            if (!skip_quiets || ttmove.is_noisy()) {
+                return {ttmove, TT_Score};
+            } else {
+                // Fall-through
+            }
         case GenNoisy:
             end = gen_moves(curr, thread_data->position, Noisy);
             score_moves();
@@ -54,12 +58,18 @@ ScoredMove MovePicker::next_move_scored() {
                 else
                     ++curr;
             }
-            curr = end_bad;
             if (qsearch) {
                 stage = Finished;
                 return ScoredMoveNone;
             }
-            stage = GenQuiet;
+            if (skip_quiets) {
+                curr = moves;
+                stage = PickBadNoisy;
+                return next_move_scored(skip_quiets); // Work around to avoid the switch fall-through
+            } else {
+                curr = end_bad;
+                stage = GenQuiet;
+            }
             // Fall-through
         case GenQuiet:
             end = gen_moves(curr, thread_data->position, Quiet);

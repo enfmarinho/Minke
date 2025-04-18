@@ -175,8 +175,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
     ScoreType old_alpha = alpha;
     int moves_searched = 0;
 
+    bool skip_quiets = false;
     MovePicker move_picker(ttmove, &thread_data, false);
-    while ((move = move_picker.next_move()) != MoveNone) {
+    while ((move = move_picker.next_move(skip_quiets)) != MoveNone) {
         PvList curr_pv;
         if (!thread_data.position.make_move<true>(move)) { // Avoid illegal moves
             thread_data.position.unmake_move<true>(move);
@@ -266,7 +267,8 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &thread_data) {
 
     Move move = MoveNone;
     MovePicker move_picker(ttmove, &thread_data, true);
-    while ((move = move_picker.next_move()) != MoveNone) {
+    // TODO check if its worth to check for quiet moves if in check
+    while ((move = move_picker.next_move(true)) != MoveNone) {
         assert(move.is_capture() || move.is_promotion());
         if (!thread_data.position.make_move<true>(move)) { // Avoid illegal moves
             thread_data.position.unmake_move<true>(move);

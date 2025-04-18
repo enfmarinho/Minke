@@ -37,8 +37,8 @@ class MovePicker {
     ~MovePicker() = default;
 
     void init(Move ttmove, ThreadData *thread_data, bool qsearch);
-    Move next_move();
-    ScoredMove next_move_scored();
+    Move next_move(const bool &skip_quiets);
+    ScoredMove next_move_scored(const bool &skip_quiets);
 
     MovePickerStage picker_stage() const { return stage; }
 

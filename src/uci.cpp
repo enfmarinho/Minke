@@ -112,7 +112,7 @@ void UCI::print_debug_info() {
     MovePicker move_picker(ttmove, &m_thread_data, false);
     std::cout << "Move list: ";
     ScoredMove scored_move;
-    while ((scored_move = move_picker.next_move_scored()) != ScoredMoveNone) {
+    while ((scored_move = move_picker.next_move_scored(false)) != ScoredMoveNone) {
         if (!m_thread_data.position.make_move<false>(scored_move.move))
             std::cout << "*";
         std::cout << scored_move.move.get_algebraic_notation() << "(" << scored_move.score << ") ";
