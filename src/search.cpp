@@ -169,6 +169,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         }
     }
 
+    int see_margin[2] = {SEEPruningMultiplier * depth * depth, SEEPruningMultiplier * depth};
     Move move = MoveNone;
     Move best_move = MoveNone;
     ScoreType best_score = -MaxScore;
@@ -191,6 +192,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
                 if (!in_check && lmr_depth <= FPDepth && eval + fp_margin <= alpha)
                     skip_quiets = true;
             }
+
+            // SEE Pruning
+            if (depth <= SEEPruningDepth && move_picker.picker_stage() >= PickGoodNoisy &&
+                !SEE(thread_data.position, move, see_margin[move.is_quiet()]))
+                continue;
         }
         if (!thread_data.position.make_move<true>(move)) { // Avoid illegal moves
             thread_data.position.unmake_move<true>(move);

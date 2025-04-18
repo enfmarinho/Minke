@@ -15,6 +15,8 @@
 #include "time_manager.h"
 #include "types.h"
 
+constexpr int SEEPruningMultiplier = -20;
+constexpr int SEEPruningDepth = 10;
 constexpr int FPDepth = 8;
 extern int LMRTable[64][64];
 constexpr int LMPDepth = 11;
