@@ -19,10 +19,10 @@
 class TTEntry {
   public:
     enum class BoundType : char {
-        Empty,
-        Exact,
-        LowerBound,
-        UpperBound,
+        EMPTY,
+        EXACT,
+        LOWER,
+        UPPER,
     };
 
     TTEntry() = default;
@@ -45,7 +45,7 @@ class TTEntry {
     Move m_best_move;                     // 3 bytes
     int16_t m_evaluation;                 // 2 bytes // TODO change to ScoreType
     IndexType m_half_move_count;          // 1 byte
-    BoundType m_bound = BoundType::Empty; // 1 byte
+    BoundType m_bound = BoundType::EMPTY; // 1 byte
 };
 
 class TranspositionTable {

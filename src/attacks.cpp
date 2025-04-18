@@ -11,26 +11,26 @@
 #include "types.h"
 #include "utils.h"
 
-Bitboard BishopMasks[64];
-Bitboard RookMasks[64];
+Bitboard bishop_masks[64];
+Bitboard rook_masks[64];
 
-Bitboard BishopShifts[64];
-Bitboard RookShifts[64];
+Bitboard bishop_shifts[64];
+Bitboard rook_shifts[64];
 
-Bitboard BishopMagicNumbers[64];
-Bitboard RookMagicNumbers[64];
+Bitboard bishop_magic_numbers[64];
+Bitboard rook_magic_numbers[64];
 
-Bitboard PawnAttacks[2][64];
-Bitboard KnightAttacks[64];
-Bitboard KingAttacks[64];
-Bitboard BishopAttacks[64][512];
-Bitboard RookAttacks[64][4096];
+Bitboard pawn_attacks[2][64];
+Bitboard knight_attacks[64];
+Bitboard king_attacks[64];
+Bitboard bishop_attacks[64][512];
+Bitboard rook_attacks[64][4096];
 
 //=== Adapted from Stockfish.
 // Initialize all attacks, masks, magics and shifts tables for piece_type.
 // piece_type must by Bishop or Rook
 void init_magic_table(PieceType piece_type) {
-    assert(piece_type == Bishop || piece_type == Rook);
+    assert(piece_type == BISHOP || piece_type == ROOK);
 
     // Maybe optimal PRNG seeds to pick the correct magics in the shortest time
     int seeds[8] = {728, 10316, 55013, 32803, 12281, 15100, 16645, 255};
@@ -44,16 +44,16 @@ void init_magic_table(PieceType piece_type) {
 
         Bitboard mask, *magic, *attacks;
         int n_shifts;
-        if (piece_type == Bishop) {
-            mask = BishopMasks[sq] = generate_bishop_mask(sq);
-            magic = &BishopMagicNumbers[sq];
-            attacks = BishopAttacks[sq];
-            n_shifts = BishopShifts[sq] = 64 - count_bits(mask);
+        if (piece_type == BISHOP) {
+            mask = bishop_masks[sq] = generate_bishop_mask(sq);
+            magic = &bishop_magic_numbers[sq];
+            attacks = bishop_attacks[sq];
+            n_shifts = bishop_shifts[sq] = 64 - count_bits(mask);
         } else {
-            mask = RookMasks[sq] = generate_rook_mask(sq);
-            magic = &RookMagicNumbers[sq];
-            attacks = RookAttacks[sq];
-            n_shifts = RookShifts[sq] = 64 - count_bits(mask);
+            mask = rook_masks[sq] = generate_rook_mask(sq);
+            magic = &rook_magic_numbers[sq];
+            attacks = rook_attacks[sq];
+            n_shifts = rook_shifts[sq] = 64 - count_bits(mask);
         }
 
         // Use Carry-Rippler trick to enumerate all subsets of mask, store them on
@@ -63,7 +63,7 @@ void init_magic_table(PieceType piece_type) {
         do {
             occupancy[size] = blockers;
             reference[size] =
-                (piece_type == Bishop) ? generate_bishop_attacks(sq, blockers) : generate_rook_attacks(sq, blockers);
+                (piece_type == BISHOP) ? generate_bishop_attacks(sq, blockers) : generate_rook_attacks(sq, blockers);
 
             size++;
             blockers = (blockers - mask) & mask;
@@ -96,27 +96,27 @@ Bitboard generate_bishop_mask(Square sq) {
     Bitboard board = 0ULL;
     set_bit(board, sq);
 
-    if (board & not_a_file & not_1_rank) {
-        for (Bitboard board_cp = shift(board, SouthWest); board_cp & not_a_file & not_1_rank;
-             board_cp = shift(board_cp, SouthWest)) {
+    if (board & NOT_A_FILE & NOT_1_RANK) {
+        for (Bitboard board_cp = shift(board, SOUTH_WEST); board_cp & NOT_A_FILE & NOT_1_RANK;
+             board_cp = shift(board_cp, SOUTH_WEST)) {
             mask |= board_cp;
         }
     }
-    if (board & not_h_file & not_1_rank) {
-        for (Bitboard board_cp = shift(board, SouthEast); board_cp & not_h_file & not_1_rank;
-             board_cp = shift(board_cp, SouthEast)) {
+    if (board & NOT_H_FILE & NOT_1_RANK) {
+        for (Bitboard board_cp = shift(board, SOUTH_EAST); board_cp & NOT_H_FILE & NOT_1_RANK;
+             board_cp = shift(board_cp, SOUTH_EAST)) {
             mask |= board_cp;
         }
     }
-    if (board & not_a_file & not_8_rank) {
-        for (Bitboard board_cp = shift(board, NorthWest); board_cp & not_a_file & not_8_rank;
-             board_cp = shift(board_cp, NorthWest)) {
+    if (board & NOT_A_FILE & NOT_8_RANK) {
+        for (Bitboard board_cp = shift(board, NORTH_WEST); board_cp & NOT_A_FILE & NOT_8_RANK;
+             board_cp = shift(board_cp, NORTH_WEST)) {
             mask |= board_cp;
         }
     }
-    if (board & not_h_file & not_8_rank) {
-        for (Bitboard board_cp = shift(board, NorthEast); board_cp & not_h_file & not_8_rank;
-             board_cp = shift(board_cp, NorthEast)) {
+    if (board & NOT_H_FILE & NOT_8_RANK) {
+        for (Bitboard board_cp = shift(board, NORTH_EAST); board_cp & NOT_H_FILE & NOT_8_RANK;
+             board_cp = shift(board_cp, NORTH_EAST)) {
             mask |= board_cp;
         }
     }
@@ -129,23 +129,23 @@ Bitboard generate_rook_mask(Square sq) {
     Bitboard board = 0ULL;
     set_bit(board, sq);
 
-    if (board & not_8_rank) {
-        for (Bitboard board_cp = shift(board, North); board_cp & not_8_rank; board_cp = shift(board_cp, North)) {
+    if (board & NOT_8_RANK) {
+        for (Bitboard board_cp = shift(board, NORTH); board_cp & NOT_8_RANK; board_cp = shift(board_cp, NORTH)) {
             mask |= board_cp;
         }
     }
-    if (board & not_1_rank) {
-        for (Bitboard board_cp = shift(board, South); board_cp & not_1_rank; board_cp = shift(board_cp, South)) {
+    if (board & NOT_1_RANK) {
+        for (Bitboard board_cp = shift(board, SOUTH); board_cp & NOT_1_RANK; board_cp = shift(board_cp, SOUTH)) {
             mask |= board_cp;
         }
     }
-    if (board & not_a_file) {
-        for (Bitboard board_cp = shift(board, West); board_cp & not_a_file; board_cp = shift(board_cp, West)) {
+    if (board & NOT_A_FILE) {
+        for (Bitboard board_cp = shift(board, WEST); board_cp & NOT_A_FILE; board_cp = shift(board_cp, WEST)) {
             mask |= board_cp;
         }
     }
-    if (board & not_h_file) {
-        for (Bitboard board_cp = shift(board, East); board_cp & not_h_file; board_cp = shift(board_cp, East)) {
+    if (board & NOT_H_FILE) {
+        for (Bitboard board_cp = shift(board, EAST); board_cp & NOT_H_FILE; board_cp = shift(board_cp, EAST)) {
             mask |= board_cp;
         }
     }
@@ -158,17 +158,17 @@ Bitboard generate_pawn_attacks(Square sq, Color color) {
     Bitboard board = 0ULL;
     set_bit(board, sq);
 
-    int forward_offset = North;
-    Bitboard not_last_rank = ~RankMasks[7];
-    if (color == Black) {
-        forward_offset = South;
-        not_last_rank = ~RankMasks[0];
+    int forward_offset = NORTH;
+    Bitboard not_last_rank = ~RANK_MASKS[7];
+    if (color == BLACK) {
+        forward_offset = SOUTH;
+        not_last_rank = ~RANK_MASKS[0];
     }
 
-    if (board & not_a_file & not_last_rank)
-        attacks |= shift(board, forward_offset + West);
-    if (board & not_h_file & not_last_rank)
-        attacks |= shift(board, forward_offset + East);
+    if (board & NOT_A_FILE & not_last_rank)
+        attacks |= shift(board, forward_offset + WEST);
+    if (board & NOT_H_FILE & not_last_rank)
+        attacks |= shift(board, forward_offset + EAST);
 
     return attacks;
 }
@@ -178,22 +178,22 @@ Bitboard generate_knight_attacks(Square sq) {
     Bitboard board = 0ULL;
     set_bit(board, sq);
 
-    if (board & not_a_file & not_1_2_rank)
-        attacks |= shift(board, 2 * South + West);
-    if (board & not_h_file & not_1_2_rank)
-        attacks |= shift(board, 2 * South + East);
-    if (board & not_a_file & not_7_8_rank)
-        attacks |= shift(board, 2 * North + West);
-    if (board & not_h_file & not_7_8_rank)
-        attacks |= shift(board, 2 * North + East);
-    if (board & not_ab_file & not_1_rank)
-        attacks |= shift(board, 2 * West + South);
-    if (board & not_ab_file & not_8_rank)
-        attacks |= shift(board, 2 * West + North);
-    if (board & not_hg_file & not_1_rank)
-        attacks |= shift(board, 2 * East + South);
-    if (board & not_hg_file & not_8_rank)
-        attacks |= shift(board, 2 * East + North);
+    if (board & NOT_A_FILE & NOT_1_2_RANK)
+        attacks |= shift(board, 2 * SOUTH + WEST);
+    if (board & NOT_H_FILE & NOT_1_2_RANK)
+        attacks |= shift(board, 2 * SOUTH + EAST);
+    if (board & NOT_A_FILE & NOT_7_8_RANK)
+        attacks |= shift(board, 2 * NORTH + WEST);
+    if (board & NOT_H_FILE & NOT_7_8_RANK)
+        attacks |= shift(board, 2 * NORTH + EAST);
+    if (board & NOT_AB_FILE & NOT_1_RANK)
+        attacks |= shift(board, 2 * WEST + SOUTH);
+    if (board & NOT_AB_FILE & NOT_8_RANK)
+        attacks |= shift(board, 2 * WEST + NORTH);
+    if (board & NOT_HG_FILE & NOT_1_RANK)
+        attacks |= shift(board, 2 * EAST + SOUTH);
+    if (board & NOT_HG_FILE & NOT_8_RANK)
+        attacks |= shift(board, 2 * EAST + NORTH);
 
     return attacks;
 }
@@ -203,26 +203,26 @@ Bitboard generate_bishop_attacks(Square sq, const Bitboard& blockers) {
     Bitboard board = 0ULL;
     set_bit(board, sq);
 
-    for (Bitboard board_cp = board; board_cp & not_a_file & not_1_rank;) {
-        board_cp = shift(board_cp, SouthWest);
+    for (Bitboard board_cp = board; board_cp & NOT_A_FILE & NOT_1_RANK;) {
+        board_cp = shift(board_cp, SOUTH_WEST);
         attacks |= board_cp;
         if (board_cp & blockers)
             break;
     }
-    for (Bitboard board_cp = board; board_cp & not_h_file & not_1_rank;) {
-        board_cp = shift(board_cp, SouthEast);
+    for (Bitboard board_cp = board; board_cp & NOT_H_FILE & NOT_1_RANK;) {
+        board_cp = shift(board_cp, SOUTH_EAST);
         attacks |= board_cp;
         if (board_cp & blockers)
             break;
     }
-    for (Bitboard board_cp = board; board_cp & not_a_file & not_8_rank;) {
-        board_cp = shift(board_cp, NorthWest);
+    for (Bitboard board_cp = board; board_cp & NOT_A_FILE & NOT_8_RANK;) {
+        board_cp = shift(board_cp, NORTH_WEST);
         attacks |= board_cp;
         if (board_cp & blockers)
             break;
     }
-    for (Bitboard board_cp = board; board_cp & not_h_file & not_8_rank;) {
-        board_cp = shift(board_cp, NorthEast);
+    for (Bitboard board_cp = board; board_cp & NOT_H_FILE & NOT_8_RANK;) {
+        board_cp = shift(board_cp, NORTH_EAST);
         attacks |= board_cp;
         if (board_cp & blockers)
             break;
@@ -236,26 +236,26 @@ Bitboard generate_rook_attacks(Square sq, const Bitboard& blockers) {
     Bitboard board = 0ULL;
     set_bit(board, sq);
 
-    for (Bitboard board_cp = board; board_cp & not_8_rank;) {
-        board_cp = shift(board_cp, North);
+    for (Bitboard board_cp = board; board_cp & NOT_8_RANK;) {
+        board_cp = shift(board_cp, NORTH);
         attacks |= board_cp;
         if (board_cp & blockers)
             break;
     }
-    for (Bitboard board_cp = board; board_cp & not_1_rank;) {
-        board_cp = shift(board_cp, South);
+    for (Bitboard board_cp = board; board_cp & NOT_1_RANK;) {
+        board_cp = shift(board_cp, SOUTH);
         attacks |= board_cp;
         if (board_cp & blockers)
             break;
     }
-    for (Bitboard board_cp = board; board_cp & not_a_file;) {
-        board_cp = shift(board_cp, West);
+    for (Bitboard board_cp = board; board_cp & NOT_A_FILE;) {
+        board_cp = shift(board_cp, WEST);
         attacks |= board_cp;
         if (board_cp & blockers)
             break;
     }
-    for (Bitboard board_cp = board; board_cp & not_h_file;) {
-        board_cp = shift(board_cp, East);
+    for (Bitboard board_cp = board; board_cp & NOT_H_FILE;) {
+        board_cp = shift(board_cp, EAST);
         attacks |= board_cp;
         if (board_cp & blockers)
             break;
@@ -269,22 +269,22 @@ Bitboard generate_king_attacks(Square sq) {
     Bitboard board = 0ULL;
     set_bit(board, sq);
 
-    if (board & not_a_file)
-        attacks |= shift(board, West);
-    if (board & not_h_file)
-        attacks |= shift(board, East);
-    if (board & not_1_rank)
-        attacks |= shift(board, South);
-    if (board & not_8_rank)
-        attacks |= shift(board, North);
-    if (board & not_a_file & not_1_rank)
-        attacks |= shift(board, SouthWest);
-    if (board & not_a_file & not_8_rank)
-        attacks |= shift(board, NorthWest);
-    if (board & not_h_file & not_1_rank)
-        attacks |= shift(board, SouthEast);
-    if (board & not_h_file & not_8_rank)
-        attacks |= shift(board, NorthEast);
+    if (board & NOT_A_FILE)
+        attacks |= shift(board, WEST);
+    if (board & NOT_H_FILE)
+        attacks |= shift(board, EAST);
+    if (board & NOT_1_RANK)
+        attacks |= shift(board, SOUTH);
+    if (board & NOT_8_RANK)
+        attacks |= shift(board, NORTH);
+    if (board & NOT_A_FILE & NOT_1_RANK)
+        attacks |= shift(board, SOUTH_WEST);
+    if (board & NOT_A_FILE & NOT_8_RANK)
+        attacks |= shift(board, NORTH_WEST);
+    if (board & NOT_H_FILE & NOT_1_RANK)
+        attacks |= shift(board, SOUTH_EAST);
+    if (board & NOT_H_FILE & NOT_8_RANK)
+        attacks |= shift(board, NORTH_EAST);
 
     return attacks;
 }

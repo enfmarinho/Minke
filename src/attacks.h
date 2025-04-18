@@ -12,30 +12,30 @@
 
 #include "types.h"
 
-const Bitboard not_a_file = ~FileMasks[0];
-const Bitboard not_ab_file = ~(FileMasks[0] | FileMasks[1]);
-const Bitboard not_h_file = ~FileMasks[7];
-const Bitboard not_hg_file = ~(FileMasks[6] | FileMasks[7]);
+const Bitboard NOT_A_FILE = ~FILE_MASKS[0];
+const Bitboard NOT_AB_FILE = ~(FILE_MASKS[0] | FILE_MASKS[1]);
+const Bitboard NOT_H_FILE = ~FILE_MASKS[7];
+const Bitboard NOT_HG_FILE = ~(FILE_MASKS[6] | FILE_MASKS[7]);
 
-const Bitboard not_1_rank = ~RankMasks[0];
-const Bitboard not_1_2_rank = ~(RankMasks[0] | RankMasks[1]);
-const Bitboard not_8_rank = ~RankMasks[7];
-const Bitboard not_7_8_rank = ~(RankMasks[7] | RankMasks[6]);
+const Bitboard NOT_1_RANK = ~RANK_MASKS[0];
+const Bitboard NOT_1_2_RANK = ~(RANK_MASKS[0] | RANK_MASKS[1]);
+const Bitboard NOT_8_RANK = ~RANK_MASKS[7];
+const Bitboard NOT_7_8_RANK = ~(RANK_MASKS[7] | RANK_MASKS[6]);
 
-extern Bitboard BishopMasks[64];
-extern Bitboard RookMasks[64];
+extern Bitboard bishop_masks[64];
+extern Bitboard rook_masks[64];
 
-extern Bitboard BishopShifts[64];
-extern Bitboard RookShifts[64];
+extern Bitboard bishop_shifts[64];
+extern Bitboard rook_shifts[64];
 
-extern Bitboard BishopMagicNumbers[64];
-extern Bitboard RookMagicNumbers[64];
+extern Bitboard bishop_magic_numbers[64];
+extern Bitboard rook_magic_numbers[64];
 
-extern Bitboard PawnAttacks[2][64];
-extern Bitboard KnightAttacks[64];
-extern Bitboard KingAttacks[64];
-extern Bitboard BishopAttacks[64][512];
-extern Bitboard RookAttacks[64][4096];
+extern Bitboard pawn_attacks[2][64];
+extern Bitboard knight_attacks[64];
+extern Bitboard king_attacks[64];
+extern Bitboard bishop_attacks[64][512];
+extern Bitboard rook_attacks[64][4096];
 
 void init_magic_table(PieceType piece_type);
 
@@ -51,11 +51,12 @@ Bitboard generate_king_attacks(Square sq);
 inline int get_attack_index(Bitboard blockers, Bitboard magic, int shift) { return (blockers * magic) >> shift; }
 
 inline Bitboard get_bishop_attacks(const Square& sq, const Bitboard& occupancy) {
-    return BishopAttacks[sq][get_attack_index(occupancy & BishopMasks[sq], BishopMagicNumbers[sq], BishopShifts[sq])];
+    return bishop_attacks[sq]
+                         [get_attack_index(occupancy & bishop_masks[sq], bishop_magic_numbers[sq], bishop_shifts[sq])];
 }
 
 inline Bitboard get_rook_attacks(const Square& sq, const Bitboard& occupancy) {
-    return RookAttacks[sq][get_attack_index(occupancy & RookMasks[sq], RookMagicNumbers[sq], RookShifts[sq])];
+    return rook_attacks[sq][get_attack_index(occupancy & rook_masks[sq], rook_magic_numbers[sq], rook_shifts[sq])];
 }
 
 inline Bitboard get_queen_attacks(const Square& sq, const Bitboard& occupancy) {
@@ -63,19 +64,19 @@ inline Bitboard get_queen_attacks(const Square& sq, const Bitboard& occupancy) {
 }
 
 inline Bitboard get_piece_attacks(const Square& sq, const Bitboard& occupancy, PieceType piece_type) {
-    assert(piece_type >= Knight && piece_type <= King);
+    assert(piece_type >= KNIGHT && piece_type <= KING);
 
     switch (piece_type) {
-        case Knight:
-            return KnightAttacks[sq];
-        case Bishop:
+        case KNIGHT:
+            return knight_attacks[sq];
+        case BISHOP:
             return get_bishop_attacks(sq, occupancy);
-        case Rook:
+        case ROOK:
             return get_rook_attacks(sq, occupancy);
-        case Queen:
+        case QUEEN:
             return get_queen_attacks(sq, occupancy);
-        case King:
-            return KingAttacks[sq];
+        case KING:
+            return king_attacks[sq];
         default:
             __builtin_unreachable();
     }

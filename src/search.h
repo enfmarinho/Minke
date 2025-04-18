@@ -15,17 +15,17 @@
 #include "time_manager.h"
 #include "types.h"
 
-constexpr int SEEPruningMultiplier = -20;
-constexpr int SEEPruningDepth = 10;
-constexpr int FPDepth = 8;
-extern int LMRTable[64][64];
-constexpr int LMPDepth = 11;
-extern int LMPTable[2][LMPDepth];
-constexpr int RFP_depth = 10;
-constexpr int RFP_margin = 100;
-constexpr int NMP_depth = 3;
-constexpr int NMP_base = 3;
-constexpr int NMP_divisor = 4;
+constexpr int SEE_PRUNING_MULT = -20;
+constexpr int SEE_PRUNING_DEPTH = 10;
+constexpr int FP_DEPTH = 8;
+extern int LMR_TABLE[64][64];
+constexpr int LMP_DEPTH = 11;
+extern int LMP_TABLE[2][LMP_DEPTH];
+constexpr int RFP_DEPTH = 10;
+constexpr int RFP_MARGIN = 100;
+constexpr int NMP_DEPTH = 3;
+constexpr int NMP_BASE = 3;
+constexpr int NMP_DIVISOR = 4;
 
 struct ThreadData {
     Position position;

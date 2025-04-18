@@ -9,7 +9,6 @@
 #define UTILS_H
 
 #include <cassert>
-#include <cstdint>
 
 #include "types.h"
 
@@ -128,28 +127,28 @@ inline int get_rank(Square sq) { return sq >> 3; }
 inline int get_file(Square sq) { return sq & 0b111; }
 
 inline Piece get_piece(const PieceType &piece_type, const Color &color) {
-    return static_cast<Piece>(piece_type + color * ColorOffset);
+    return static_cast<Piece>(piece_type + color * COLOR_OFFSET);
 }
 
 inline PieceType get_piece_type(const Piece &piece, const Color &color) {
-    return static_cast<PieceType>(piece - color * ColorOffset);
+    return static_cast<PieceType>(piece - color * COLOR_OFFSET);
 }
 
 inline PieceType get_piece_type(const Piece &piece) {
-    assert(piece >= WhitePawn && piece <= Empty);
+    assert(piece >= WHITE_PAWN && piece <= EMPTY);
     if (piece >= 6)
         return static_cast<PieceType>(piece - 6);
     return static_cast<PieceType>(piece);
 }
 
-inline Color get_color(const Piece &piece) { return static_cast<Color>(piece / ColorOffset); }
+inline Color get_color(const Piece &piece) { return static_cast<Color>(piece / COLOR_OFFSET); }
 
 inline Square get_square(const int file, const int rank) { return static_cast<Square>(rank * 8 + file); }
 
-inline int get_pawn_start_rank(const Color &color) { return color == White ? 1 : 6; }
+inline int get_pawn_start_rank(const Color &color) { return color == WHITE ? 1 : 6; }
 
-inline int get_pawn_promotion_rank(const Color &color) { return color == White ? 7 : 0; }
+inline int get_pawn_promotion_rank(const Color &color) { return color == WHITE ? 7 : 0; }
 
-inline Direction get_pawn_offset(const Color &color) { return color == White ? North : South; }
+inline Direction get_pawn_offset(const Color &color) { return color == WHITE ? NORTH : SOUTH; }
 
 #endif // #ifndef UTILS_H

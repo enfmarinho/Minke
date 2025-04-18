@@ -20,7 +20,7 @@ class PvList {
     PvList &operator=(const PvList &other);
 
   private:
-    std::array<Move, MaxSearchDepth> m_pv;
+    std::array<Move, MAX_SEARCH_DEPTH> m_pv;
     CounterType m_size{0};
 };
 

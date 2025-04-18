@@ -13,7 +13,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <iostream>
 #include <span>
 
 #include "incbin.h"
@@ -40,18 +39,18 @@ void NNUE::push() { m_accumulators.push_back(m_accumulators.back()); }
 void NNUE::add_feature(const Piece &piece, const Square &sq) {
     const auto [white_index, black_index] = feature_indices(piece, sq);
 
-    for (int column{0}; column < HiddenLayerSize; ++column) {
-        m_accumulators.back().white_neurons[column] += network.hidden_weights[white_index * HiddenLayerSize + column];
-        m_accumulators.back().black_neurons[column] += network.hidden_weights[black_index * HiddenLayerSize + column];
+    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
+        m_accumulators.back().white_neurons[column] += network.hidden_weights[white_index * HIDDEN_LAYER_SIZE + column];
+        m_accumulators.back().black_neurons[column] += network.hidden_weights[black_index * HIDDEN_LAYER_SIZE + column];
     }
 }
 
 void NNUE::remove_feature(const Piece &piece, const Square &sq) {
     const auto [white_index, black_index] = feature_indices(piece, sq);
 
-    for (int column{0}; column < HiddenLayerSize; ++column) {
-        m_accumulators.back().white_neurons[column] -= network.hidden_weights[white_index * HiddenLayerSize + column];
-        m_accumulators.back().black_neurons[column] -= network.hidden_weights[black_index * HiddenLayerSize + column];
+    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
+        m_accumulators.back().white_neurons[column] -= network.hidden_weights[white_index * HIDDEN_LAYER_SIZE + column];
+        m_accumulators.back().black_neurons[column] -= network.hidden_weights[black_index * HIDDEN_LAYER_SIZE + column];
     }
 }
 
@@ -62,33 +61,33 @@ void NNUE::reset(const Position &position) {
     for (int sqi = a1; sqi <= h8; ++sqi) {
         Square sq = static_cast<Square>(sqi);
         Piece piece = position.consult(sq);
-        if (piece != Empty)
+        if (piece != EMPTY)
             add_feature(piece, sq);
     }
 }
 
-constexpr int32_t NNUE::crelu(const int32_t &input) const { return std::clamp(input, CreluMin, CreluMax); }
+constexpr int32_t NNUE::crelu(const int32_t &input) const { return std::clamp(input, CRELU_MIN, CRELU_MAX); }
 
 constexpr int32_t NNUE::screlu(const int32_t &input) const {
     const int32_t crelu_out = crelu(input);
     return crelu_out * crelu_out;
 }
 
-int32_t NNUE::weight_sum_reduction(const std::array<int16_t, HiddenLayerSize> &player,
-                                   const std::array<int16_t, HiddenLayerSize> &adversary) const {
+int32_t NNUE::weight_sum_reduction(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
+                                   const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const {
     int32_t eval = 0;
-    for (int neuron_index = 0; neuron_index < HiddenLayerSize; ++neuron_index) {
+    for (int neuron_index = 0; neuron_index < HIDDEN_LAYER_SIZE; ++neuron_index) {
         eval += screlu(player[neuron_index]) * network.output_weights[neuron_index];
-        eval += screlu(adversary[neuron_index]) * network.output_weights[neuron_index + HiddenLayerSize];
+        eval += screlu(adversary[neuron_index]) * network.output_weights[neuron_index + HIDDEN_LAYER_SIZE];
     }
-    return (eval / QA + network.output_bias) * Scale / QAB;
+    return (eval / QA + network.output_bias) * SCALE / QAB;
 }
 
 ScoreType NNUE::eval(const Color &stm) const {
     switch (stm) {
-        case White:
+        case WHITE:
             return weight_sum_reduction(m_accumulators.back().white_neurons, m_accumulators.back().black_neurons);
-        case Black:
+        case BLACK:
             return weight_sum_reduction(m_accumulators.back().black_neurons, m_accumulators.back().white_neurons);
         default:
             assert(false && "Tried to use eval function with player none\n"); // Must not reach this
@@ -96,9 +95,9 @@ ScoreType NNUE::eval(const Color &stm) const {
     __builtin_unreachable();
 }
 
-NNUE::Accumulator::Accumulator(std::span<const int16_t, HiddenLayerSize> bias) { reset(bias); }
+NNUE::Accumulator::Accumulator(std::span<const int16_t, HIDDEN_LAYER_SIZE> bias) { reset(bias); }
 
-void NNUE::Accumulator::reset(std::span<const int16_t, HiddenLayerSize> bias) {
+void NNUE::Accumulator::reset(std::span<const int16_t, HIDDEN_LAYER_SIZE> bias) {
     memcpy(white_neurons.data(), bias.data(), bias.size_bytes());
     memcpy(black_neurons.data(), bias.data(), bias.size_bytes());
 }
@@ -118,12 +117,12 @@ NNUE::Accumulator NNUE::debug_func(const Position &position) {
     for (int sqi = a1; sqi <= h8; ++sqi) {
         Square sq = static_cast<Square>(sqi);
         Piece piece = position.consult(sq);
-        if (piece != Empty) {
+        if (piece != EMPTY) {
             const auto [white_index, black_index] = feature_indices(piece, sq);
 
-            for (int column{0}; column < HiddenLayerSize; ++column) {
-                accumulator.white_neurons[column] += network.hidden_weights[white_index * HiddenLayerSize + column];
-                accumulator.black_neurons[column] += network.hidden_weights[black_index * HiddenLayerSize + column];
+            for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
+                accumulator.white_neurons[column] += network.hidden_weights[white_index * HIDDEN_LAYER_SIZE + column];
+                accumulator.black_neurons[column] += network.hidden_weights[black_index * HIDDEN_LAYER_SIZE + column];
             }
         }
     }

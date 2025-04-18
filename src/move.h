@@ -15,27 +15,27 @@
 #include "types.h"
 
 enum MoveType : char {
-    Regular = 0b0000,
-    Capture = 0b0100,
-    EnPassant = 0b010 | Capture,
-    Castling = 0b0011,
+    REGULAR = 0b0000,
+    CAPTURE = 0b0100,
+    EP = 0b010 | CAPTURE,
+    CASTLING = 0b0011,
 
-    PawnPromotionMask = 0b1000,
-    PawnPromotionKnight = PawnPromotionMask | 0b0000,
-    PawnPromotionBishop = PawnPromotionMask | 0b0001,
-    PawnPromotionRook = PawnPromotionMask | 0b0010,
-    PawnPromotionQueen = PawnPromotionMask | 0b011,
+    PAWN_PROMOTION_MASK = 0b1000,
+    PAWN_PROMOTION_KNIGHT = PAWN_PROMOTION_MASK | 0b0000,
+    PAWN_PROMOTION_BISHOP = PAWN_PROMOTION_MASK | 0b0001,
+    PAWN_PROMOTION_ROOK = PAWN_PROMOTION_MASK | 0b0010,
+    PAWN_PROMOTION_QUEEN = PAWN_PROMOTION_MASK | 0b011,
 
-    PawnPromotionKnightCapture = PawnPromotionKnight | Capture,
-    PawnPromotionBishopCapture = PawnPromotionBishop | Capture,
-    PawnPromotionRookCapture = PawnPromotionRook | Capture,
-    PawnPromotionQueenCapture = PawnPromotionQueen | Capture,
+    PAWN_PROMOTION_KNIGHT_CAPTURE = PAWN_PROMOTION_KNIGHT | CAPTURE,
+    PAWN_PROMOTION_BISHOP_CAPTURE = PAWN_PROMOTION_BISHOP | CAPTURE,
+    PAWN_PROMOTION_ROOK_CAPTURE = PAWN_PROMOTION_ROOK | CAPTURE,
+    PAWN_PROMOTION_QUEEN_CAPTURE = PAWN_PROMOTION_QUEEN | CAPTURE,
 };
 
 class Move {
   public:
-    inline Move() : m_bytes(0){};
-    inline Move(int16_t bytes) : m_bytes(bytes){};
+    inline Move() : m_bytes(0) {};
+    inline Move(int16_t bytes) : m_bytes(bytes) {};
     inline Move(Square from, Square to, MoveType move_type) { m_bytes = (move_type << 12) | (to << 6) | (from); }
 
     inline int from_and_to() const { return m_bytes & 0xFFF; }
@@ -49,12 +49,12 @@ class Move {
     inline int16_t internal() const { return m_bytes; }
     std::string get_algebraic_notation() const;
 
-    inline bool is_regular() const { return type() == Regular; }
-    inline bool is_castle() const { return type() == Castling; }
+    inline bool is_regular() const { return type() == REGULAR; }
+    inline bool is_castle() const { return type() == CASTLING; }
     inline bool is_quiet() const { return is_regular() || is_castle(); }
-    inline bool is_capture() const { return type() & Capture; }
-    inline bool is_promotion() const { return type() & PawnPromotionMask; }
-    inline bool is_ep() const { return type() == EnPassant; }
+    inline bool is_capture() const { return type() & CAPTURE; }
+    inline bool is_promotion() const { return type() & PAWN_PROMOTION_MASK; }
+    inline bool is_ep() const { return type() == EP; }
     inline bool is_noisy() const { return is_capture() || is_promotion(); }
 
     friend bool operator==(const Move& lhs, const Move& rhs);
@@ -74,8 +74,8 @@ inline bool operator==(const ScoredMove& lhs, const ScoredMove& rhs) {
     return lhs.move == rhs.move && lhs.score == rhs.score;
 }
 
-const Move MoveNone = Move();
-const ScoredMove ScoredMoveNone = {MoveNone, 0};
+const Move MOVE_NONE = Move();
+const ScoredMove SCORED_MOVE_NONE = {MOVE_NONE, 0};
 
 inline bool operator==(const Move& lhs, const Move& rhs) { return lhs.internal() == rhs.internal(); }
 inline bool operator==(const Move& lhs, const int& rhs) { return lhs.internal() == rhs; }

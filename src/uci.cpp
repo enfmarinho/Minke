@@ -30,7 +30,7 @@ UCI::UCI(int argc, char *argv[]) {
         if (argc > 2)
             m_thread_data.depth_limit = std::stoi(argv[2]);
         else
-            m_thread_data.depth_limit = EngineOptions::BenchDepth;
+            m_thread_data.depth_limit = EngineOptions::BENCH_DEPTH;
 
         bench();
         exit(0);
@@ -63,7 +63,7 @@ void UCI::loop() {
         } else if (token == "position") {
             position(iss);
         } else if (token == "ucinewgame") {
-            set_position(StartFEN, std::vector<std::string>());
+            set_position(START_FEN, std::vector<std::string>());
         } else if (token == "setoption") {
             if (!m_thread_data.stop) {
                 std::cerr << "Can not set an option while searching" << std::endl;
@@ -91,7 +91,7 @@ void UCI::loop() {
             else if (m_thread.joinable())
                 m_thread.join();
             m_thread_data.reset();
-            m_thread_data.depth_limit = EngineOptions::BenchDepth;
+            m_thread_data.depth_limit = EngineOptions::BENCH_DEPTH;
             parse_go(iss, true);
             bench();
         } else if (!token.empty()) {
@@ -104,7 +104,7 @@ void UCI::print_debug_info() {
     m_thread_data.position.print();
     bool found;
     auto entry = TT.probe(m_thread_data.position, found);
-    Move ttmove = MoveNone;
+    Move ttmove = MOVE_NONE;
     if (found) {
         ttmove = entry->best_move();
         std::cout << "Best move: " << ttmove.get_algebraic_notation() << std::endl;
@@ -112,7 +112,7 @@ void UCI::print_debug_info() {
     MovePicker move_picker(ttmove, &m_thread_data, false);
     std::cout << "Move list: ";
     ScoredMove scored_move;
-    while ((scored_move = move_picker.next_move_scored(false)) != ScoredMoveNone) {
+    while ((scored_move = move_picker.next_move_scored(false)) != SCORED_MOVE_NONE) {
         if (!m_thread_data.position.make_move<false>(scored_move.move))
             std::cout << "*";
         std::cout << scored_move.move.get_algebraic_notation() << "(" << scored_move.score << ") ";
@@ -125,7 +125,7 @@ void UCI::position(std::istringstream &iss) {
     std::string token, fen, move;
     iss >> token;
     if (token == "startpos") {
-        fen = StartFEN;
+        fen = START_FEN;
         iss >> move; // consume the "moves" token, if there is one.
     } else if (token == "fen") {
         while (iss >> token && token != "moves")
@@ -167,7 +167,7 @@ void UCI::set_option(std::istringstream &iss) {
 
 void UCI::bench() {
     TimeType total_time = 0;
-    for (const std::string &fen : benchmark_fen_list) {
+    for (const std::string &fen : BENCHMARK_FEN_LIST) {
         m_thread_data.position.set_fen<true>(fen);
         m_thread_data.time_manager.init();
         TT.clear();
@@ -189,8 +189,8 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
     bool is_leaf = (depth == 2);
     int64_t count = 0, nodes = 0;
 
-    ScoredMove moves[MaxMoves];
-    ScoredMove *end = gen_moves(moves, m_thread_data.position, GenAll);
+    ScoredMove moves[MAX_MOVES];
+    ScoredMove *end = gen_moves(moves, m_thread_data.position, GEN_ALL);
     for (ScoredMove *begin = moves; begin != end; ++begin) {
         Move move = begin->move;
         if (!position.make_move<false>(move)) {
@@ -241,13 +241,13 @@ bool UCI::parse_go(std::istringstream &iss, bool bench) {
             m_thread_data.node_limit = option;
         } else if (token == "movetime") {
             movetime = option;
-        } else if (token == "wtime" && m_thread_data.position.get_stm() == White) {
+        } else if (token == "wtime" && m_thread_data.position.get_stm() == WHITE) {
             time = option;
-        } else if (token == "btime" && m_thread_data.position.get_stm() == Black) {
+        } else if (token == "btime" && m_thread_data.position.get_stm() == BLACK) {
             time = option;
-        } else if (token == "winc" && m_thread_data.position.get_stm() == White) {
+        } else if (token == "winc" && m_thread_data.position.get_stm() == WHITE) {
             inc = option;
-        } else if (token == "binc" && m_thread_data.position.get_stm() == Black) {
+        } else if (token == "binc" && m_thread_data.position.get_stm() == BLACK) {
             inc = option;
         } else if (token == "movestogo") {
             movestogo = option;
@@ -261,6 +261,6 @@ bool UCI::parse_go(std::istringstream &iss, bool bench) {
 void UCI::go() { m_thread = std::thread(iterative_deepening, std::ref(m_thread_data)); }
 
 void EngineOptions::print() {
-    std::cout << "option name Hash type spin default " << hash_default << " min " << hash_min << " max " << hash_max
+    std::cout << "option name Hash type spin default " << HASH_DEFAULT << " min " << HASH_MIN << " max " << HASH_MAX
               << "\n";
 }

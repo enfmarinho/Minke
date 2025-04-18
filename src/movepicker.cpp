@@ -17,130 +17,131 @@
 MovePicker::MovePicker(Move ttmove, ThreadData *thread_data, bool qsearch) { init(ttmove, thread_data, qsearch); }
 
 void MovePicker::init(Move ttmove, ThreadData *thread_data, bool qsearch) {
-    this->thread_data = thread_data;
-    this->ttmove = ttmove;
-    this->qsearch = qsearch;
+    this->m_thread_data = thread_data;
+    this->m_ttmove = ttmove;
+    this->m_qsearch = qsearch;
 
     // Don't pick ttmove if in qsearch unless ttmove is noisy
-    if (ttmove != MoveNone)
-        stage = PickTT;
+    if (ttmove != MOVE_NONE)
+        m_stage = PICK_TT;
     else
-        stage = GenNoisy;
+        m_stage = GEN_NOISY;
 
-    killer1 = thread_data->search_history.consult_killer1(thread_data->searching_ply);
-    killer2 = thread_data->search_history.consult_killer2(thread_data->searching_ply);
-    curr = end = end_bad = moves;
+    m_killer1 = thread_data->search_history.consult_killer1(thread_data->searching_ply);
+    m_killer2 = thread_data->search_history.consult_killer2(thread_data->searching_ply);
+    m_curr = m_end = m_end_bad = m_moves;
 }
 
 Move MovePicker::next_move(const bool &skip_quiets) { return next_move_scored(skip_quiets).move; }
 
 ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
-    switch (stage) {
-        case PickTT:
-            stage = GenNoisy;
-            if (!skip_quiets || ttmove.is_noisy()) {
-                return {ttmove, TT_Score};
+    switch (m_stage) {
+        case PICK_TT:
+            m_stage = GEN_NOISY;
+            if (!skip_quiets || m_ttmove.is_noisy()) {
+                return {m_ttmove, TT_SCORE};
             } else {
                 // Fall-through
             }
-        case GenNoisy:
-            end = gen_moves(curr, thread_data->position, Noisy);
+        case GEN_NOISY:
+            m_end = gen_moves(m_curr, m_thread_data->position, NOISY);
             score_moves();
-            stage = PickGoodNoisy;
+            m_stage = PICK_GOOD_NOISY;
             // Fall-through
-        case PickGoodNoisy:
-            while (curr != end) {
+        case PICK_GOOD_NOISY:
+            while (m_curr != m_end) {
                 sort_next_move();
-                if (!SEE(thread_data->position, curr->move, 0) || curr->score == NonQueenPromotionScore) // Bad noisy
-                    *end_bad++ = *curr++;
-                else if (curr->move != ttmove)
-                    return *curr++;
+                if (!SEE(m_thread_data->position, m_curr->move, 0) ||
+                    m_curr->score == NON_QUEEN_PROMOTION_SCORE) // Bad noisy
+                    *m_end_bad++ = *m_curr++;
+                else if (m_curr->move != m_ttmove)
+                    return *m_curr++;
                 else
-                    ++curr;
+                    ++m_curr;
             }
-            if (qsearch) {
-                stage = Finished;
-                return ScoredMoveNone;
+            if (m_qsearch) {
+                m_stage = FINISHED;
+                return SCORED_MOVE_NONE;
             }
             if (skip_quiets) {
-                curr = moves;
-                stage = PickBadNoisy;
+                m_curr = m_moves;
+                m_stage = PICK_BAD_NOISY;
                 return next_move_scored(skip_quiets); // Work around to avoid the switch fall-through
             } else {
-                curr = end_bad;
-                stage = GenQuiet;
+                m_curr = m_end_bad;
+                m_stage = GEN_QUIET;
             }
             // Fall-through
-        case GenQuiet:
-            end = gen_moves(curr, thread_data->position, Quiet);
+        case GEN_QUIET:
+            m_end = gen_moves(m_curr, m_thread_data->position, QUIET);
             score_moves();
-            stage = PickQuiet;
+            m_stage = PICK_QUIET;
             // Fall-through
-        case PickQuiet:
-            while (curr != end) {
+        case PICK_QUIET:
+            while (m_curr != m_end) {
                 sort_next_move();
-                if (curr->move != ttmove)
-                    return *curr++;
+                if (m_curr->move != m_ttmove)
+                    return *m_curr++;
                 else
-                    ++curr;
+                    ++m_curr;
             }
-            curr = moves;
-            stage = PickBadNoisy;
+            m_curr = m_moves;
+            m_stage = PICK_BAD_NOISY;
             // Fall-through
-        case PickBadNoisy:
-            while (curr != end_bad) {
+        case PICK_BAD_NOISY:
+            while (m_curr != m_end_bad) {
                 // No need to call sort_next_move(), since bad noisy moves are already sorted in PickGoodNoisy
-                if (curr->move != ttmove)
-                    return *curr++;
+                if (m_curr->move != m_ttmove)
+                    return *m_curr++;
                 else
-                    ++curr;
+                    ++m_curr;
             }
-            stage = Finished;
+            m_stage = FINISHED;
             // Fall-through
-        case Finished:
-            return ScoredMoveNone;
+        case FINISHED:
+            return SCORED_MOVE_NONE;
         default:
             __builtin_unreachable();
     }
 }
 
 void MovePicker::sort_next_move() {
-    ScoredMove *best_move = curr;
-    for (ScoredMove *runner = curr + 1; runner != end; ++runner) {
+    ScoredMove *best_move = m_curr;
+    for (ScoredMove *runner = m_curr + 1; runner != m_end; ++runner) {
         if (runner->score > best_move->score)
             best_move = runner;
     }
-    std::swap(*best_move, *curr);
+    std::swap(*best_move, *m_curr);
 }
 
 void MovePicker::score_moves() {
-    for (ScoredMove *runner = curr; runner != end; ++runner) {
+    for (ScoredMove *runner = m_curr; runner != m_end; ++runner) {
         switch (runner->move.type()) {
-            case Castling:
+            case CASTLING:
                 // Fall-through
-            case Regular:
-                if (runner->move == killer1)
-                    runner->score = Killer1Score;
-                else if (runner->move == killer2)
-                    runner->score = Killer2Score;
+            case REGULAR:
+                if (runner->move == m_killer1)
+                    runner->score = KILLER_1_SCORE;
+                else if (runner->move == m_killer2)
+                    runner->score = KILLER_2_SCORE;
                 else
-                    runner->score = thread_data->search_history.consult(thread_data->position, runner->move);
+                    runner->score = m_thread_data->search_history.consult(m_thread_data->position, runner->move);
                 break;
-            case Capture:
-                runner->score = CaptureScore + 10 * SEE_values[thread_data->position.consult(runner->move.to())] -
-                                SEE_values[thread_data->position.consult(runner->move.from())] / 10;
-                assert(runner->score > CaptureScore && runner->score < CaptureScore + 10'000);
+            case CAPTURE:
+                runner->score = CAPTURE_SCORE + 10 * SEE_VALUES[m_thread_data->position.consult(runner->move.to())] -
+                                SEE_VALUES[m_thread_data->position.consult(runner->move.from())] / 10;
+                assert(runner->score > CAPTURE_SCORE && runner->score < CAPTURE_SCORE + 10'000);
                 break;
-            case EnPassant:
-                runner->score = CaptureScore;
+            case EP:
+                runner->score = CAPTURE_SCORE;
                 break;
-            case PawnPromotionQueen:
+            case PAWN_PROMOTION_QUEEN:
                 // Fall-through
-            case PawnPromotionQueenCapture:
-                runner->score = QueenPromotionScore;
+            case PAWN_PROMOTION_QUEEN_CAPTURE:
+                runner->score = QUEEN_PROMOTION_SCORE;
                 break;
             default: // Non queen promotion
-                runner->score = NonQueenPromotionScore;
+                runner->score = NON_QUEEN_PROMOTION_SCORE;
                 assert(runner->move.is_promotion());
                 break;
         }

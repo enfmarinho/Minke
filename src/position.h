@@ -37,53 +37,53 @@ class Position {
     void make_null_move();
     void unmake_null_move();
 
-    inline bool in_check() const { return is_attacked(get_king_placement(stm)); }
+    inline bool in_check() const { return is_attacked(get_king_placement(m_stm)); }
     bool is_attacked(const Square &sq) const;
     Bitboard attackers(const Square &sq) const;
 
-    inline bool last_was_null() const { return curr_state.ply_from_null == 0; }
+    inline bool last_was_null() const { return m_curr_state.ply_from_null == 0; }
     inline bool has_non_pawns() const {
-        return get_piece_bb(Knight) || get_piece_bb(Bishop) || get_piece_bb(Rook) || get_piece_bb(Queen);
+        return get_piece_bb(KNIGHT) || get_piece_bb(BISHOP) || get_piece_bb(ROOK) || get_piece_bb(QUEEN);
     }
     inline bool draw() { return insufficient_material() || repetition() || fifty_move_draw(); }
-    inline ScoreType eval() const { return nnue.eval(stm); }
+    inline ScoreType eval() const { return m_nnue.eval(m_stm); }
 
     int legal_move_amount();
     void print() const;
 
     Move get_movement(const std::string &algebraic_notation) const;
-    inline Bitboard get_occupancy() const { return occupancies[White] | occupancies[Black]; }
+    inline Bitboard get_occupancy() const { return m_occupancies[WHITE] | m_occupancies[BLACK]; }
     inline Bitboard get_occupancy(const Color &color) const {
-        assert(color == White || color == Black);
-        return occupancies[color];
+        assert(color == WHITE || color == BLACK);
+        return m_occupancies[color];
     }
     inline Bitboard get_piece_bb(const Piece &piece) const {
-        assert(piece >= WhitePawn && piece <= BlackKing);
-        return pieces[piece];
+        assert(piece >= WHITE_PAWN && piece <= BLACK_KING);
+        return m_pieces[piece];
     }
     inline Bitboard get_piece_bb(const PieceType &piece_type, const Color &color) const {
-        return get_piece_bb(static_cast<Piece>(piece_type + color * ColorOffset));
+        return get_piece_bb(static_cast<Piece>(piece_type + color * COLOR_OFFSET));
     }
     inline Bitboard get_piece_bb(const PieceType &piece_type) const {
-        return pieces[piece_type] | pieces[piece_type + ColorOffset];
+        return m_pieces[piece_type] | m_pieces[piece_type + COLOR_OFFSET];
     }
-    inline Square get_king_placement(const Color &color) const { return lsb(pieces[King + color * ColorOffset]); }
-    inline uint8_t get_castling_rights() const { return curr_state.castling_rights; }
-    inline Color get_stm() const { return stm; }
-    inline Color get_adversary() const { return static_cast<Color>(stm ^ 1); }
-    inline Square get_en_passant() const { return curr_state.en_passant; }
-    inline HashType get_hash() const { return hash_key; }
-    inline int get_game_ply() const { return game_clock_ply; }
-    inline int get_fifty_move_ply() const { return curr_state.fifty_move_ply; }
+    inline Square get_king_placement(const Color &color) const { return lsb(m_pieces[KING + color * COLOR_OFFSET]); }
+    inline uint8_t get_castling_rights() const { return m_curr_state.castling_rights; }
+    inline Color get_stm() const { return m_stm; }
+    inline Color get_adversary() const { return static_cast<Color>(m_stm ^ 1); }
+    inline Square get_en_passant() const { return m_curr_state.en_passant; }
+    inline HashType get_hash() const { return m_hash_key; }
+    inline int get_game_ply() const { return m_game_clock_ply; }
+    inline int get_fifty_move_ply() const { return m_curr_state.fifty_move_ply; }
     inline int get_material_count(const Piece &piece) const { return count_bits(get_piece_bb(piece)); }
     inline int get_material_count(const PieceType &piece_type, const Color &color) const {
-        return get_material_count(static_cast<Piece>(piece_type + color * ColorOffset));
+        return get_material_count(static_cast<Piece>(piece_type + color * COLOR_OFFSET));
     }
     inline int get_material_count(const PieceType &piece_type) const {
-        return count_bits(pieces[piece_type] | pieces[piece_type + ColorOffset]);
+        return count_bits(m_pieces[piece_type] | m_pieces[piece_type + COLOR_OFFSET]);
     }
     inline int get_material_count() const { return count_bits(get_occupancy()); }
-    inline Piece consult(const Square &sq) const { return board[sq]; }
+    inline Piece consult(const Square &sq) const { return m_board[sq]; }
 
   private:
     template <bool UPDATE>
@@ -114,23 +114,23 @@ class Position {
     void hash_ep_key();
     void hash_side_key();
 
-    inline void change_side() { stm = static_cast<Color>(stm ^ 1); }
+    inline void change_side() { m_stm = static_cast<Color>(m_stm ^ 1); }
 
-    Piece board[64];
-    Bitboard occupancies[2];
-    Bitboard pieces[12];
+    Piece m_board[64];
+    Bitboard m_occupancies[2];
+    Bitboard m_pieces[12];
 
-    Color stm;
-    HashType hash_key;
-    int game_clock_ply;
+    Color m_stm;
+    HashType m_hash_key;
+    int m_game_clock_ply;
 
-    int history_stack_head;
-    BoardState curr_state;
-    BoardState history_stack[MaxGameClock];
-    int played_positions_head;
-    HashType played_positions[MaxGameClock];
+    int m_history_stack_head;
+    BoardState m_curr_state;
+    BoardState m_history_stack[MAX_GAME_CLOCK];
+    int m_played_positions_head;
+    HashType m_played_positions[MAX_GAME_CLOCK];
 
-    NNUE nnue;
+    NNUE m_nnue;
 };
 
 #endif // #ifndef POSITION_H
