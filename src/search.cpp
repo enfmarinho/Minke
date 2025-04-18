@@ -185,6 +185,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
                 // Late Move Pruning or Move Count Pruning
                 if (lmr_depth <= LMPDepth && moves_searched >= LMPTable[improving][depth])
                     skip_quiets = true;
+
+                // Futility Pruning
+                const int fp_margin = 0;
+                if (!in_check && lmr_depth <= FPDepth && eval + fp_margin <= alpha)
+                    skip_quiets = true;
             }
         }
         if (!thread_data.position.make_move<true>(move)) { // Avoid illegal moves

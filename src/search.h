@@ -15,6 +15,7 @@
 #include "time_manager.h"
 #include "types.h"
 
+constexpr int FPDepth = 8;
 extern int LMRTable[64][64];
 constexpr int LMPDepth = 11;
 extern int LMPTable[2][LMPDepth];
