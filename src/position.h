@@ -85,14 +85,8 @@ class Position {
     }
     inline int get_material_count() const { return count_bits(get_occupancy()); }
     inline Piece consult(const Square &sq) const { return m_board[sq]; }
-    inline int get_history_ply() const {
-        assert(m_played_positions_head == m_history_stack_head);
-        return m_played_positions_head;
-    }
-    inline void reset_history() {
-        m_played_positions_head = 0;
-        m_history_stack_head = 0;
-    }
+    inline int get_history_ply() const { return m_history_ply; }
+    inline void reset_history() { m_history_ply = 0; }
 
   private:
     template <bool UPDATE>
@@ -133,10 +127,9 @@ class Position {
     HashType m_hash_key;
     int m_game_clock_ply;
 
-    int m_history_stack_head;
+    int m_history_ply;
     BoardState m_curr_state;
     BoardState m_history_stack[MAX_PLY];
-    int m_played_positions_head;
     HashType m_played_positions[MAX_PLY];
 
     NNUE m_nnue;

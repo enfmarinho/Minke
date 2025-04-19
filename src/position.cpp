@@ -205,9 +205,8 @@ void Position::reset() {
     std::memset(m_pieces, 0ULL, sizeof(m_pieces));
 
     m_hash_key = 0ULL;
-    m_history_stack_head = 0;
+    m_history_ply = 0;
     m_curr_state.reset();
-    m_played_positions_head = 0;
 
     if constexpr (UPDATE)
         reset_nnue();
@@ -256,8 +255,9 @@ bool Position::make_move(const Move &move) {
     if constexpr (UPDATE)
         m_nnue.push();
 
-    m_played_positions[m_played_positions_head++] = m_hash_key;
-    m_history_stack[m_history_stack_head++] = m_curr_state;
+    m_played_positions[m_history_ply] = m_hash_key;
+    m_history_stack[m_history_ply] = m_curr_state;
+    ++m_history_ply;
     ++m_game_clock_ply;
     ++m_curr_state.fifty_move_ply;
     ++m_curr_state.ply_from_null;
@@ -437,12 +437,11 @@ void Position::update_castling_rights(const Move &move) {
 
 template <bool UPDATE>
 void Position::unmake_move(const Move &move) {
-    assert(m_history_stack_head > 0); // check if there is a move to unmake
+    assert(m_history_ply > 0); // check if there is a move to unmake
     if constexpr (UPDATE)
         m_nnue.pop();
 
     --m_game_clock_ply;
-    --m_played_positions_head;
 
     change_side();
 
@@ -491,7 +490,7 @@ void Position::unmake_move(const Move &move) {
         hash_ep_key();
     hash_castle_key();
 
-    m_curr_state = m_history_stack[--m_history_stack_head];
+    m_curr_state = m_history_stack[--m_history_ply];
 
     if (m_curr_state.en_passant != NO_SQ)
         hash_ep_key();
@@ -503,8 +502,9 @@ template void Position::unmake_move<true>(const Move &move);
 template void Position::unmake_move<false>(const Move &move);
 
 void Position::make_null_move() {
-    m_history_stack[m_history_stack_head++] = m_curr_state;
-    m_played_positions[m_played_positions_head++] = m_hash_key;
+    m_history_stack[m_history_ply] = m_curr_state;
+    m_played_positions[m_history_ply] = m_hash_key;
+    ++m_history_ply;
 
     m_curr_state.ply_from_null = 0;
     m_curr_state.captured = EMPTY;
@@ -519,9 +519,10 @@ void Position::make_null_move() {
 }
 
 void Position::unmake_null_move() {
-    m_curr_state = m_history_stack[--m_history_stack_head];
+    --m_history_ply;
+    m_curr_state = m_history_stack[m_history_ply];
+    m_hash_key = m_played_positions[m_history_ply];
     --m_game_clock_ply;
-    m_hash_key = m_played_positions[--m_played_positions_head];
     change_side();
 }
 
@@ -676,11 +677,11 @@ bool Position::repetition() const {
 
     int counter = 0;
     int distance = std::min(m_curr_state.fifty_move_ply, m_curr_state.ply_from_null);
-    int starting_index = m_played_positions_head;
+    int starting_index = m_history_ply;
 
     for (int index = 4; index <= distance; index += 2)
         if (m_played_positions[starting_index - index] == m_hash_key) {
-            if (index < m_history_stack_head) // 2-fold repetition within the search tree, this avoids cycles
+            if (index < m_history_ply) // 2-fold repetition within the search tree, this avoids cycles
                 return true;
 
             counter++;
