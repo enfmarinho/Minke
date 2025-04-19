@@ -206,7 +206,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
 
         PvList curr_pv;
         ScoreType score;
-        if (moves_searched == 0) {
+        if (moves_searched == 1) {
             score = -negamax(-beta, -alpha, depth - 1, curr_pv, thread_data);
         } else {
             int reduction = 1;
