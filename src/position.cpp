@@ -673,7 +673,7 @@ bool Position::insufficient_material() const {
 }
 
 bool Position::repetition() const {
-    assert(m_game_clock_ply >= m_curr_state.fifty_move_ply);
+    assert(m_history_ply >= m_curr_state.fifty_move_ply);
 
     int counter = 0;
     int distance = std::min(m_curr_state.fifty_move_ply, m_curr_state.ply_from_null);
