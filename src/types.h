@@ -109,7 +109,7 @@ using Bitboard = uint64_t;
 
 constexpr int MAX_MOVES_PER_POS = 256;
 constexpr int MAX_SEARCH_DEPTH = 256;
-constexpr int MAX_PLY = MAX_SEARCH_DEPTH + 50 + 5; // Plus 50 because of fifty move rule and plus 5 just to be safe
+constexpr int MAX_PLY = MAX_SEARCH_DEPTH + 100 + 5; // Plus 100 because of fifty move rule and plus 5 just to be safe
 
 constexpr ScoreType MATE_SCORE = 100'000;
 constexpr ScoreType MATE_FOUND = MATE_SCORE - MAX_SEARCH_DEPTH;
