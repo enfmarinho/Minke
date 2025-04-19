@@ -599,7 +599,7 @@ Bitboard Position::attackers(const Square &sq) const {
 }
 
 int Position::legal_move_amount() {
-    ScoredMove moves[MAX_MOVES];
+    ScoredMove moves[MAX_MOVES_PER_POS];
     ScoredMove *end = gen_moves(moves, *this, GEN_ALL);
     int legal_amount = 0;
     for (ScoredMove *begin = moves; begin != end; ++begin) {
@@ -694,7 +694,7 @@ bool Position::repetition() const {
 // TODO it would be a little more efficient to do a specific legality check for the move
 bool Position::fifty_move_draw() {
     if (m_curr_state.fifty_move_ply >= 100) {
-        ScoredMove moves[MAX_MOVES];
+        ScoredMove moves[MAX_MOVES_PER_POS];
         ScoredMove *end = gen_moves(moves, *this, GEN_ALL);
         for (ScoredMove *begin = moves; begin != end; ++begin) {
             bool legal = make_move<false>(begin->move);

@@ -195,7 +195,7 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
     bool is_leaf = (depth == 2);
     int64_t count = 0, nodes = 0;
 
-    ScoredMove moves[MAX_MOVES];
+    ScoredMove moves[MAX_MOVES_PER_POS];
     ScoredMove *end = gen_moves(moves, m_thread_data.position, GEN_ALL);
     for (ScoredMove *begin = moves; begin != end; ++begin) {
         Move move = begin->move;

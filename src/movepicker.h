@@ -48,7 +48,7 @@ class MovePicker {
 
     bool m_qsearch;
     MovePickerStage m_stage;
-    ScoredMove m_moves[MAX_MOVES];
+    ScoredMove m_moves[MAX_MOVES_PER_POS];
     ScoredMove *m_curr, *m_end, *m_end_bad;
     Move m_ttmove, m_killer1, m_killer2;
     ThreadData *m_thread_data;
