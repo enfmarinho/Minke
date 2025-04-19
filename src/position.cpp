@@ -256,11 +256,11 @@ bool Position::make_move(const Move &move) {
     if constexpr (UPDATE)
         m_nnue.push();
 
+    m_played_positions[m_played_positions_head++] = m_hash_key;
     m_history_stack[m_history_stack_head++] = m_curr_state;
     ++m_game_clock_ply;
     ++m_curr_state.fifty_move_ply;
     ++m_curr_state.ply_from_null;
-    m_played_positions[m_played_positions_head++] = m_hash_key;
 
     if (m_curr_state.en_passant != NO_SQ) {
         hash_ep_key();
@@ -443,6 +443,7 @@ void Position::unmake_move(const Move &move) {
 
     --m_game_clock_ply;
     --m_played_positions_head;
+
     change_side();
 
     Square from = move.from();

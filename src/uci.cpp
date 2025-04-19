@@ -146,8 +146,14 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
         return;
     }
     TT.clear();
-    for (const std::string &algebraic_notation : move_list) {
-        m_thread_data.position.make_move<false>(m_thread_data.position.get_movement(algebraic_notation));
+
+    for (unsigned int index = 0; index < move_list.size(); ++index) {
+        // Make sure to only save the game history for the last 50 moves, more than that is completely unnecessary
+        // Moreover, the second conditional assures that the history stacks don't overflow
+        if (move_list.size() - index == 50 || m_thread_data.position.get_history_ply() > 50)
+            m_thread_data.position.reset_history();
+
+        m_thread_data.position.make_move<false>(m_thread_data.position.get_movement(move_list[index]));
     }
     m_thread_data.position.reset_nnue();
 }
