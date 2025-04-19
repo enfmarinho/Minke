@@ -130,7 +130,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
 
         // Mate distance pruning
         alpha = std::max(alpha, -MATE_SCORE + thread_data.searching_ply);
-        beta = std::min(beta, MATE_SCORE - thread_data.searching_ply);
+        beta = std::min(beta, MATE_SCORE - thread_data.searching_ply - 1);
         if (alpha >= beta)
             return alpha;
     }
