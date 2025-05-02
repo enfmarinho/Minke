@@ -86,6 +86,7 @@ class Position {
     inline int get_material_count() const { return count_bits(get_occupancy()); }
     inline Piece consult(const Square &sq) const { return m_board[sq]; }
     inline int get_history_ply() const { return m_history_ply; }
+    inline BoardState get_board_state() const { return m_curr_state; };
     inline void reset_history() { m_history_ply = 0; }
 
   private:
