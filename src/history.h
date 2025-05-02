@@ -15,6 +15,8 @@
 #include "position.h"
 #include "types.h"
 
+using HistoryType = int;
+
 class History {
   public:
     inline History() { reset(); }
@@ -25,14 +27,24 @@ class History {
         std::memset(m_killer_moves, MOVE_NONE.internal(), sizeof(m_killer_moves));
     };
 
-    inline void update(const Position &position, const Move &move, int depth) {
-        if (move.is_quiet())
-            save_killer(move, depth);
+    inline void update_history(const Position &position, const MoveList &quiet_moves, int depth) {
+        HistoryType bonus = calculate_bonus(depth);
+        Move best_move = quiet_moves.moves[quiet_moves.size - 1];
 
-        m_search_history_table[position.get_stm()][move.from_and_to()] += depth * depth;
+        save_killer(best_move, depth);
+
+        // Increase the score of the move that caused the beta cutoff
+        HistoryType *value = underlying_history_heuristic(position, best_move);
+        update_score(value, bonus);
+
+        // Decrease all the quiet moves scores that did not caused a beta cutoff
+        for (int idx = 0; idx < quiet_moves.size - 1; ++idx) {
+            value = underlying_history_heuristic(position, quiet_moves.moves[idx]);
+            update_score(value, -bonus);
+        }
     }
 
-    inline int consult(const Position &position, const Move &move) const {
+    inline HistoryType consult(const Position &position, const Move &move) const {
         return m_search_history_table[position.get_stm()][move.from_and_to()];
     }
 
@@ -43,12 +55,26 @@ class History {
     }
 
   private:
+    inline HistoryType calculate_bonus(const int depth) {
+        // TODO improve formula
+        return depth * depth;
+    }
+
     inline void save_killer(const Move &move, const int depth) {
         m_killer_moves[1][depth] = m_killer_moves[0][depth];
         m_killer_moves[0][depth] = move;
     }
 
-    int m_search_history_table[COLOR_NB][64 * 64];
+    HistoryType *underlying_history_heuristic(const Position &position, const Move &move) {
+        return &m_search_history_table[position.get_stm()][move.from_and_to()];
+    }
+
+    inline void update_score(HistoryType *value, const int bonus) {
+        // TODO scale this
+        *value += bonus;
+    }
+
+    HistoryType m_search_history_table[COLOR_NB][64 * 64];
     Move m_killer_moves[2][MAX_SEARCH_DEPTH];
 };
 #endif // #ifndef HISTORY_H

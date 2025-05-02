@@ -174,6 +174,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
     ScoreType old_alpha = alpha;
     int moves_searched = 0;
 
+    MoveList quiets_tried;
     bool skip_quiets = false;
     MovePicker move_picker(ttmove, &thread_data, false);
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
@@ -201,6 +202,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
             position.unmake_move<true>(move);
             continue;
         }
+
+        // Add move to tried list
+        if (move.is_quiet())
+            quiets_tried.push(move);
+
         ++thread_data.searching_ply;
         ++moves_searched;
 
@@ -242,7 +248,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
                     pv_list.update(best_move, curr_pv);
 
                 if (score >= beta) { // Fails high
-                    thread_data.search_history.update(position, move, depth);
+                    if (best_move.is_quiet())
+                        thread_data.search_history.update_history(position, quiets_tried, depth);
+
                     break;
                 }
                 alpha = score; // Only update alpha if don't  failed high
