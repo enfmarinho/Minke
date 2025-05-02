@@ -8,7 +8,9 @@
 #ifndef HISTORY_H
 #define HISTORY_H
 
+#include <algorithm>
 #include <cassert>
+#include <cstdlib>
 #include <cstring>
 
 #include "move.h"
@@ -16,6 +18,7 @@
 #include "types.h"
 
 using HistoryType = int;
+constexpr HistoryType HistoryDivisor = 16384;
 
 class History {
   public:
@@ -56,8 +59,8 @@ class History {
 
   private:
     inline HistoryType calculate_bonus(const int depth) {
-        // TODO improve formula
-        return depth * depth;
+        // Gravity formula taken from Berseck
+        return std::min(1729, 4 * depth * depth + 164 * depth - 113);
     }
 
     inline void save_killer(const Move &move, const int depth) {
@@ -70,8 +73,7 @@ class History {
     }
 
     inline void update_score(HistoryType *value, const int bonus) {
-        // TODO scale this
-        *value += bonus;
+        *value += bonus - *value * std::abs(bonus) / HistoryDivisor;
     }
 
     HistoryType m_search_history_table[COLOR_NB][64 * 64];
