@@ -47,7 +47,7 @@ class History {
         }
     }
 
-    inline HistoryType consult(const Position &position, const Move &move) const {
+    inline HistoryType get_history(const Position &position, const Move &move) const {
         return m_search_history_table[position.get_stm()][move.from_and_to()];
     }
 

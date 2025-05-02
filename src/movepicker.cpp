@@ -125,7 +125,7 @@ void MovePicker::score_moves() {
                 else if (runner->move == m_killer2)
                     runner->score = KILLER_2_SCORE;
                 else
-                    runner->score = m_thread_data->search_history.consult(m_thread_data->position, runner->move);
+                    runner->score = m_thread_data->search_history.get_history(m_thread_data->position, runner->move);
                 break;
             case CAPTURE:
                 runner->score = CAPTURE_SCORE + 10 * SEE_VALUES[m_thread_data->position.consult(runner->move.to())] -
