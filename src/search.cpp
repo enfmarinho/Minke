@@ -174,7 +174,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
     ScoreType old_alpha = alpha;
     int moves_searched = 0;
 
-    MoveList quiets_tried;
+    MoveList quiets_tried, tacticals_tried;
     bool skip_quiets = false;
     MovePicker move_picker(ttmove, &thread_data, false);
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
@@ -206,6 +206,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         // Add move to tried list
         if (move.is_quiet())
             quiets_tried.push(move);
+        else
+            tacticals_tried.push(move);
 
         ++thread_data.searching_ply;
         ++moves_searched;
@@ -249,7 +251,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
 
                 if (score >= beta) { // Fails high
                     if (best_move.is_quiet())
-                        thread_data.search_history.update_history(position, quiets_tried, depth);
+                        thread_data.search_history.update_history(position, quiets_tried, tacticals_tried, depth);
+                    else
+                        thread_data.search_history.update_capture_history(position, tacticals_tried, depth);
 
                     break;
                 }
