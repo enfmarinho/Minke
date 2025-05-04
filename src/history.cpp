@@ -23,6 +23,7 @@ inline void update_score(HistoryType *value, const int bonus) {
 History::History() { reset(); }
 
 void History::reset() {
+    std::memset(m_capture_history, 0, sizeof(m_capture_history));
     std::memset(m_search_history_table, 0, sizeof(m_search_history_table));
     std::memset(m_killer_moves, MOVE_NONE.internal(), sizeof(m_killer_moves));
 };
