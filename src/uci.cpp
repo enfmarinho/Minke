@@ -63,6 +63,7 @@ void UCI::loop() {
         } else if (token == "position") {
             position(iss);
         } else if (token == "ucinewgame") {
+            reset_search_data();
             set_position(START_FEN, std::vector<std::string>());
         } else if (token == "setoption") {
             if (!m_thread_data.stop) {
@@ -145,7 +146,6 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
         std::cerr << "Invalid FEN!" << std::endl;
         return;
     }
-    TT.clear();
 
     for (unsigned int index = 0; index < move_list.size(); ++index) {
         // Make sure to only save the game history for the last 100 positions, more than that is completely unnecessary
@@ -156,6 +156,11 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
         m_thread_data.position.make_move<false>(m_thread_data.position.get_movement(move_list[index]));
     }
     m_thread_data.position.reset_nnue();
+}
+
+void UCI::reset_search_data() {
+    m_thread_data.search_history.reset();
+    TT.clear();
 }
 
 void UCI::set_option(std::istringstream &iss) {
