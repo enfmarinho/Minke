@@ -180,7 +180,7 @@ void UCI::bench() {
     TimeType total_time = 0;
     for (const std::string &fen : BENCHMARK_FEN_LIST) {
         m_thread_data.position.set_fen<true>(fen);
-        m_thread_data.time_manager.init();
+        m_thread_data.time_manager.reset();
         TT.clear();
         TimeType start_time = now();
         go();
@@ -265,7 +265,7 @@ bool UCI::parse_go(std::istringstream &iss, bool bench) {
         }
     }
 
-    m_thread_data.time_manager.init(m_thread_data.position, inc, time, movestogo, movetime, infinite);
+    m_thread_data.time_manager.reset(inc, time, movestogo, movetime, infinite);
     return false;
 }
 

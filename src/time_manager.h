@@ -16,9 +16,8 @@ class TimeManager {
     TimeManager();
     ~TimeManager() = default;
 
-    void init(const Position &position, CounterType inc, CounterType time, CounterType movestogo, CounterType movetime,
-              bool infinite);
-    void init();
+    void reset(CounterType inc, CounterType time, CounterType movestogo, CounterType movetime, bool infinite);
+    void reset();
     void update();
     bool stop_early() const;
     bool time_over() const;
