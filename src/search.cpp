@@ -36,13 +36,12 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
     std::cout << std::endl;
 }
 
-void ThreadData::reset() {
+void ThreadData::reset_search_parameters() {
     stop = true;
     searching_ply = 0;
     nodes_searched = -1; // Avoid counting the root
     node_limit = std::numeric_limits<int>::max();
     depth_limit = MAX_SEARCH_DEPTH;
-    search_history.reset();
 }
 
 void iterative_deepening(ThreadData &thread_data) {

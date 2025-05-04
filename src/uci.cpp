@@ -25,7 +25,7 @@
 #include "types.h"
 
 UCI::UCI(int argc, char *argv[]) {
-    m_thread_data.reset();
+    m_thread_data.reset_search_parameters();
     if (argc > 1 && std::string(argv[1]) == "bench") {
         if (argc > 2)
             m_thread_data.depth_limit = std::stoi(argv[2]);
@@ -55,7 +55,7 @@ void UCI::loop() {
                 continue;
             else if (m_thread.joinable())
                 m_thread.join();
-            m_thread_data.reset();
+            m_thread_data.reset_search_parameters();
             if (parse_go(iss))
                 perft(m_thread_data.position, m_thread_data.depth_limit);
             else
@@ -91,7 +91,7 @@ void UCI::loop() {
                 continue;
             else if (m_thread.joinable())
                 m_thread.join();
-            m_thread_data.reset();
+            m_thread_data.reset_search_parameters();
             m_thread_data.depth_limit = EngineOptions::BENCH_DEPTH;
             parse_go(iss, true);
             bench();
