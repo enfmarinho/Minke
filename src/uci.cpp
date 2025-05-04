@@ -63,8 +63,7 @@ void UCI::loop() {
         } else if (token == "position") {
             position(iss);
         } else if (token == "ucinewgame") {
-            reset_search_data();
-            set_position(START_FEN, std::vector<std::string>());
+            ucinewgame();
         } else if (token == "setoption") {
             if (!m_thread_data.stop) {
                 std::cerr << "Can not set an option while searching" << std::endl;
@@ -158,8 +157,11 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
     m_thread_data.position.reset_nnue();
 }
 
-void UCI::reset_search_data() {
+void UCI::ucinewgame() {
     m_thread_data.search_history.reset();
+    m_thread_data.time_manager.reset();
+    m_thread_data.position.set_fen<true>(START_FEN);
+    m_thread_data.reset_search_parameters();
     TT.clear();
 }
 

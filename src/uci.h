@@ -34,7 +34,7 @@ class UCI {
   private:
     void position(std::istringstream &);
     void set_position(const std::string &fen, const std::vector<std::string> &move_list);
-    void reset_search_data();
+    void ucinewgame();
 
     void set_option(std::istringstream &);
 
