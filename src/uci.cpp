@@ -155,6 +155,7 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
         m_thread_data.position.make_move<false>(m_thread_data.position.get_movement(move_list[index]));
     }
     m_thread_data.position.reset_nnue();
+    TT.clear(); // TODO remove this
 }
 
 void UCI::ucinewgame() {
