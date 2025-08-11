@@ -129,12 +129,13 @@ void MovePicker::score_moves() {
                 break;
             case CAPTURE:
                 runner->score =
-                    CAPTURE_SCORE + 16 * SEE_VALUES[m_thread_data->position.consult(runner->move.to())] +
-                    m_thread_data->search_history.get_capture_history(m_thread_data->position, runner->move) / 16;
-
+                    CAPTURE_SCORE + 20 * SEE_VALUES[m_thread_data->position.consult(runner->move.to())] +
+                    m_thread_data->search_history.get_capture_history(m_thread_data->position, runner->move);
                 break;
             case EP:
-                runner->score = CAPTURE_SCORE;
+                runner->score =
+                    CAPTURE_SCORE + 20 * SEE_VALUES[PAWN] +
+                    m_thread_data->search_history.get_capture_history(m_thread_data->position, runner->move);
                 break;
             case PAWN_PROMOTION_QUEEN:
                 // Fall-through

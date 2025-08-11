@@ -28,38 +28,44 @@ void History::reset() {
     std::memset(m_killer_moves, MOVE_NONE.internal(), sizeof(m_killer_moves));
 };
 
-void History::update_history(const Position &position, const MoveList &quiet_moves, const MoveList tactical_moves,
-                             int depth) {
+void History::update_history(const Position &position, const MoveList &quiet_moves, const MoveList &tactical_moves,
+                             bool is_quiet, int depth) {
     HistoryType bonus = calculate_bonus(depth);
-    Move best_move = quiet_moves.moves[quiet_moves.size - 1];
+    Move best_move = MOVE_NONE;
+    if (is_quiet) {
+        best_move = quiet_moves.moves[quiet_moves.size - 1];
+        save_killer(best_move, depth);
 
-    save_killer(best_move, depth);
+        // Increase the score of the move that caused the beta cutoff
+        update_history_heuristic_score(position, best_move, bonus);
 
-    // Increase the score of the move that caused the beta cutoff
-    HistoryType *value = underlying_history_heuristic(position, best_move);
-    update_score(value, bonus);
+        // Decrease all the quiet moves scores that did not caused a beta cutoff
+        for (int idx = 0; idx < quiet_moves.size - 1; ++idx) {
+            update_history_heuristic_score(position, quiet_moves.moves[idx], -bonus);
+        }
 
-    // Decrease all the quiet moves scores that did not caused a beta cutoff
-    for (int idx = 0; idx < quiet_moves.size - 1; ++idx) {
-        value = underlying_history_heuristic(position, quiet_moves.moves[idx]);
-        update_score(value, -bonus);
+    } else {
+        best_move = tactical_moves.moves[tactical_moves.size - 1];
+        update_capture_history_score(position, best_move, bonus);
     }
 
     // Decrease all the noisy moves scores that did not caused a beta cutoff
     for (int idx = 0; idx < tactical_moves.size; ++idx) {
-        value = underlying_capture_history(position, tactical_moves.moves[idx]);
-        update_score(value, -bonus);
+        Move move = tactical_moves.moves[idx];
+        if (move != best_move)
+            update_capture_history_score(position, move, -bonus);
     }
 }
 
-void History::update_capture_history(const Position &position, const MoveList tactical_moves, int depth) {
-    Move best_move = tactical_moves.moves[tactical_moves.size - 1];
-    HistoryType bonus = calculate_bonus(depth);
-    HistoryType *value = underlying_capture_history(position, best_move);
-    update_score(value, bonus);
+void History::update_capture_history_score(const Position &position, const Move &move, int bonus) {
+    Square to = move.to();
+    PieceType moved_pt = get_piece_type(position.consult(move.from()));
+    PieceType captured_pt = move.is_ep() ? PAWN : get_piece_type(position.consult(to));
+    HistoryType *ptr = &m_capture_history[moved_pt][to][captured_pt];
+    update_score(ptr, bonus);
+}
 
-    for (int idx = 0; idx < tactical_moves.size - 1; ++idx) {
-        value = underlying_capture_history(position, tactical_moves.moves[idx]);
-        update_score(value, -bonus);
-    }
+void History::update_history_heuristic_score(const Position &position, const Move &move, int bonus) {
+    HistoryType *ptr = &m_search_history_table[position.get_stm()][move.from_and_to()];
+    update_score(ptr, bonus);
 }

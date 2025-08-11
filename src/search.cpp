@@ -249,10 +249,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
                     pv_list.update(best_move, curr_pv);
 
                 if (score >= beta) { // Fails high
-                    if (best_move.is_quiet())
-                        thread_data.search_history.update_history(position, quiets_tried, tacticals_tried, depth);
-                    else
-                        thread_data.search_history.update_capture_history(position, tacticals_tried, depth);
+                    thread_data.search_history.update_history(position, quiets_tried, tacticals_tried,
+                                                              best_move.is_quiet(), depth);
 
                     break;
                 }

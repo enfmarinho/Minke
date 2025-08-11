@@ -22,9 +22,8 @@ class History {
 
     void reset();
 
-    void update_history(const Position &position, const MoveList &quiet_moves, const MoveList tactical_moves,
-                        int depth);
-    void update_capture_history(const Position &position, const MoveList tactical_moves, int depth);
+    void update_history(const Position &position, const MoveList &quiet_moves, const MoveList &tactical_moves,
+                        bool is_quiet, int depth);
 
     inline HistoryType get_history(const Position &position, const Move &move) const {
         return m_search_history_table[position.get_stm()][move.from_and_to()];
@@ -33,7 +32,7 @@ class History {
     inline HistoryType get_capture_history(const Position &position, const Move &move) {
         Square to = move.to();
         PieceType moved_pt = get_piece_type(position.consult(move.from()));
-        PieceType captured_pt = get_piece_type(position.consult(to));
+        PieceType captured_pt = move.is_ep() ? PAWN : get_piece_type(position.consult(to));
         return m_capture_history[moved_pt][to][captured_pt];
     }
 
@@ -44,20 +43,12 @@ class History {
     }
 
   private:
+    void update_capture_history_score(const Position &position, const Move &move, int bonus);
+    void update_history_heuristic_score(const Position &position, const Move &move, int bonus);
+
     inline void save_killer(const Move &move, const int depth) {
         m_killer_moves[1][depth] = m_killer_moves[0][depth];
         m_killer_moves[0][depth] = move;
-    }
-
-    HistoryType *underlying_history_heuristic(const Position &position, const Move &move) {
-        return &m_search_history_table[position.get_stm()][move.from_and_to()];
-    }
-
-    HistoryType *underlying_capture_history(const Position &position, const Move &move) {
-        Square to = move.to();
-        PieceType moved_pt = get_piece_type(position.consult(move.from()));
-        PieceType captured_pt = get_piece_type(position.consult(to));
-        return &m_capture_history[moved_pt][to][captured_pt];
     }
 
     HistoryType m_capture_history[6][64][5];
