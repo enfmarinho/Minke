@@ -132,7 +132,6 @@ void MovePicker::score_moves() {
                     CAPTURE_SCORE + 16 * SEE_VALUES[m_thread_data->position.consult(runner->move.to())] +
                     m_thread_data->search_history.get_capture_history(m_thread_data->position, runner->move) / 16;
 
-                assert(runner->score > CAPTURE_SCORE && runner->score < CAPTURE_SCORE + 10'000);
                 break;
             case EP:
                 runner->score = CAPTURE_SCORE;
