@@ -61,6 +61,7 @@ void UCI::loop() {
             else
                 go();
         } else if (token == "position") {
+            TT.clear();
             position(iss);
         } else if (token == "ucinewgame") {
             ucinewgame();
