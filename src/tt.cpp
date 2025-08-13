@@ -54,7 +54,7 @@ TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
 
     TTBucket *bucket = &m_table[table_index];
     TTEntry *replace = &bucket->entry[0];
-    for (IndexType index = 1; index < bucket_size; ++index) {
+    for (IndexType index = 1; index < BUCKET_SIZE; ++index) {
         if (replace->replace_factor(position.get_game_ply()) >
             bucket->entry[index].replace_factor(position.get_game_ply()))
             replace = &bucket->entry[index];

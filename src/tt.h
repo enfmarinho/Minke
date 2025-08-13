@@ -42,11 +42,11 @@ class TTEntry {
 };
 
 class TranspositionTable {
-    constexpr static IndexType bucket_size = 4;
+    constexpr static IndexType BUCKET_SIZE = 4;
     struct TTBucket {
         TTBucket() = default;
         ~TTBucket() = default;
-        std::array<TTEntry, bucket_size> entry;
+        std::array<TTEntry, BUCKET_SIZE> entry;
     };
 
     static_assert(sizeof(TTEntry) == 16, "TTEntry is not 16 bytes");
