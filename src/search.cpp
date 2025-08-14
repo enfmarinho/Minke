@@ -110,8 +110,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
     if (!pv_node && tthit && ttentry->depth() >= depth &&
         (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->eval() <= alpha) ||
          (ttentry->bound() == LOWER && ttentry->eval() >= beta))) {
-        if (ttentry->best_move() != MOVE_NONE)
-            pv_list.update(ttentry->best_move(), PvList());
         return ttentry->eval();
     }
     // Extraction data from ttentry if tthit
