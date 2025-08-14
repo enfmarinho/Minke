@@ -143,7 +143,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
     }
 
     // Forward pruning methods
-    if (!in_check && !pv_node) {
+    if (!in_check && !pv_node && !root) {
         // Reverse futility pruning
         if (depth < RFP_DEPTH && eval - RFP_MARGIN * (depth - improving) >= beta)
             return eval;
