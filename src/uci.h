@@ -48,7 +48,7 @@ class UCI {
     void eval();
 
     std::thread m_thread;
-    ThreadData m_thread_data;
+    ThreadData m_td;
 };
 
 #endif // #ifndef UCI_H

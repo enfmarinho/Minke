@@ -33,10 +33,10 @@ enum MovePickerStage {
 class MovePicker {
   public:
     MovePicker() = default;
-    MovePicker(Move ttmove, ThreadData *thread_data, bool qsearch);
+    MovePicker(Move ttmove, ThreadData *td, bool qsearch);
     ~MovePicker() = default;
 
-    void init(Move ttmove, ThreadData *thread_data, bool qsearch);
+    void init(Move ttmove, ThreadData *td, bool qsearch);
     Move next_move(const bool &skip_quiets);
     ScoredMove next_move_scored(const bool &skip_quiets);
 
@@ -51,7 +51,7 @@ class MovePicker {
     ScoredMove m_moves[MAX_MOVES_PER_POS];
     ScoredMove *m_curr, *m_end, *m_end_bad;
     Move m_ttmove, m_killer1, m_killer2;
-    ThreadData *m_thread_data;
+    ThreadData *m_td;
 };
 
 #endif // #ifndef MOVEPICKER_H

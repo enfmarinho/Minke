@@ -14,10 +14,10 @@
 #include "search.h"
 #include "types.h"
 
-MovePicker::MovePicker(Move ttmove, ThreadData *thread_data, bool qsearch) { init(ttmove, thread_data, qsearch); }
+MovePicker::MovePicker(Move ttmove, ThreadData *td, bool qsearch) { init(ttmove, td, qsearch); }
 
-void MovePicker::init(Move ttmove, ThreadData *thread_data, bool qsearch) {
-    this->m_thread_data = thread_data;
+void MovePicker::init(Move ttmove, ThreadData *td, bool qsearch) {
+    this->m_td = td;
     this->m_ttmove = ttmove;
     this->m_qsearch = qsearch;
 
@@ -27,8 +27,8 @@ void MovePicker::init(Move ttmove, ThreadData *thread_data, bool qsearch) {
     else
         m_stage = GEN_NOISY;
 
-    m_killer1 = thread_data->search_history.consult_killer1(thread_data->searching_ply);
-    m_killer2 = thread_data->search_history.consult_killer2(thread_data->searching_ply);
+    m_killer1 = td->search_history.consult_killer1(td->height);
+    m_killer2 = td->search_history.consult_killer2(td->height);
     m_curr = m_end = m_end_bad = m_moves;
 }
 
@@ -44,15 +44,14 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
                 // Fall-through
             }
         case GEN_NOISY:
-            m_end = gen_moves(m_curr, m_thread_data->position, NOISY);
+            m_end = gen_moves(m_curr, m_td->position, NOISY);
             score_moves();
             m_stage = PICK_GOOD_NOISY;
             // Fall-through
         case PICK_GOOD_NOISY:
             while (m_curr != m_end) {
                 sort_next_move();
-                if (!SEE(m_thread_data->position, m_curr->move, 0) ||
-                    m_curr->score == NON_QUEEN_PROMOTION_SCORE) // Bad noisy
+                if (!SEE(m_td->position, m_curr->move, 0) || m_curr->score == NON_QUEEN_PROMOTION_SCORE) // Bad noisy
                     *m_end_bad++ = *m_curr++;
                 else if (m_curr->move != m_ttmove)
                     return *m_curr++;
@@ -73,7 +72,7 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
             }
             // Fall-through
         case GEN_QUIET:
-            m_end = gen_moves(m_curr, m_thread_data->position, QUIET);
+            m_end = gen_moves(m_curr, m_td->position, QUIET);
             score_moves();
             m_stage = PICK_QUIET;
             // Fall-through
@@ -125,17 +124,15 @@ void MovePicker::score_moves() {
                 else if (runner->move == m_killer2)
                     runner->score = KILLER_2_SCORE;
                 else
-                    runner->score = m_thread_data->search_history.get_history(m_thread_data->position, runner->move);
+                    runner->score = m_td->search_history.get_history(m_td->position, runner->move);
                 break;
             case CAPTURE:
-                runner->score =
-                    CAPTURE_SCORE + 20 * SEE_VALUES[m_thread_data->position.consult(runner->move.to())] +
-                    m_thread_data->search_history.get_capture_history(m_thread_data->position, runner->move);
+                runner->score = CAPTURE_SCORE + 20 * SEE_VALUES[m_td->position.consult(runner->move.to())] +
+                                m_td->search_history.get_capture_history(m_td->position, runner->move);
                 break;
             case EP:
-                runner->score =
-                    CAPTURE_SCORE + 20 * SEE_VALUES[PAWN] +
-                    m_thread_data->search_history.get_capture_history(m_thread_data->position, runner->move);
+                runner->score = CAPTURE_SCORE + 20 * SEE_VALUES[PAWN] +
+                                m_td->search_history.get_capture_history(m_td->position, runner->move);
                 break;
             case PAWN_PROMOTION_QUEEN:
                 // Fall-through

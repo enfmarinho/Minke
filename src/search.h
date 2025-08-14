@@ -34,17 +34,17 @@ struct ThreadData {
 
     int64_t nodes_searched;
     int64_t node_limit;
-    int searching_ply;
+    int height;
     int depth_limit;
     bool stop;
 
     void reset_search_parameters();
 };
 
-void iterative_deepening(ThreadData &thread_data);
-ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &thread_data);
-ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvList &pv_list, ThreadData &thread_data);
-ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &thread_data);
+void iterative_deepening(ThreadData &td);
+ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &td);
+ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvList &pv_list, ThreadData &td);
+ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td);
 bool SEE(Position &position, const Move &move, int threshold);
 
 #endif // #ifndef SEARCH_H
