@@ -134,7 +134,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
 
     bool improving = false; // TODO
     bool in_check = position.in_check();
-    ScoreType eval = 0;
+    ScoreType eval = -MAX_SCORE;
     if (!in_check) {
         if (tthit)
             eval = tteval;
