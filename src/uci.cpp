@@ -81,8 +81,6 @@ void UCI::loop() {
             std::cout << "uciok" << std::endl;
         } else if (token == "isready") {
             std::cout << "readyok" << std::endl;
-        } else if (token == "help" || token == "--help") {
-            std::cout << "TODO write help message." << std::endl;
         } else if (token == "d") {
             print_debug_info();
         } else if (token == "bench") {
