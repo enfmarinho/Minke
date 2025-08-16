@@ -170,8 +170,7 @@ void UCI::set_option(std::istringstream &iss) {
     iss >> token;
     iss >> garbage; // Consume the "value" token.
     iss >> value;
-    // TODO check if values are valid
-    if (token == "Hash") {
+    if (token == "Hash" && value >= EngineOptions::HASH_MIN && value <= EngineOptions::HASH_MAX) {
         TT.resize(value);
     }
 }
