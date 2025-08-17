@@ -37,6 +37,7 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
 }
 
 void ThreadData::reset_search_parameters() {
+    best_move = MOVE_NONE;
     stop = true;
     height = 0;
     nodes_searched = -1; // Avoid counting the root
@@ -52,15 +53,10 @@ void iterative_deepening(ThreadData &td) {
         PvList pv_list;
         ScoreType eval = negamax(-MAX_SCORE, MAX_SCORE, depth, pv_list, td);
         if (!td.time_manager.time_over() && !td.stop) { // Search was successful
-            bool tthit;
-            TTEntry *entry = TT.probe(td.position, tthit);
-
-            best_move = entry->best_move();
-            if (best_move == MOVE_NONE) { // No legal moves
-                assert(depth == 1 && !tthit);
+            best_move = td.best_move;
+            if (best_move == MOVE_NONE) // No legal moves
                 break;
-            }
-            assert(tthit);
+
             print_search_info(depth, eval, pv_list, td);
         }
         if (depth > 5)
@@ -264,6 +260,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
     if (!td.time_manager.time_over()) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
         ttentry->save(position.get_hash(), depth, best_move, best_score, position.get_game_ply(), bound);
+        td.best_move = best_move;
     }
 
     return best_score;

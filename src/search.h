@@ -31,6 +31,7 @@ struct ThreadData {
     Position position;
     TimeManager time_manager;
     History search_history;
+    Move best_move;
 
     int64_t nodes_searched;
     int64_t node_limit;
