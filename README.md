@@ -29,11 +29,11 @@ This will trigger the compilation process. Then to run it, just use:
 - Captures 
     - Static Exchange Evaluation (SEE)
     - Most Valuable Victim - Least Valuable Aggressor (MVV-LVA)
+    - Capture history
 - Historic Heuristic
 - Killer Moves
 ## Search
 - Iterative Deepening
-- Aspiration Windows
 - Negamax search with alpha-beta pruning
 - Principal Variation Search (PVS)
 - Transposition Table Cutoffs
@@ -41,6 +41,7 @@ This will trigger the compilation process. Then to run it, just use:
 - Null Move Pruning (NMP)
 - Reverse Futility Pruning (RFP)
 - Quiescence Search
+- Mate Distance Pruning
 ## Evaluation
 - Quantized NNUE (Easily Updatable Neural Network)
     - Accumulators
