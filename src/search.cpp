@@ -171,26 +171,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
     bool skip_quiets = false;
     MovePicker move_picker(ttmove, &td, false);
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
-        // if (!root && best_score > -MATE_FOUND) {
-        //     int lmr_depth = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
-
-        // if (!skip_quiets) {
-        // // Late Move Pruning or Move Count Pruning
-        // if (lmr_depth < LMP_DEPTH && moves_searched >= LMP_TABLE[improving][lmr_depth])
-        // skip_quiets = true;
-
-        // // Futility Pruning
-        //     const int fp_margin = 0;
-        //     if (!in_check && lmr_depth <= FP_DEPTH && eval + fp_margin <= alpha)
-        //         skip_quiets = true;
-        // }
-
-        // // SEE Pruning
-        // if (depth <= SEE_PRUNING_DEPTH && move_picker.picker_stage() >= PICK_GOOD_NOISY &&
-        //     !SEE(position, move, see_margin[move.is_quiet()])) {
-        //     continue;
-        // }
-        // }
         if (!position.make_move<true>(move)) { // Avoid illegal moves
             position.unmake_move<true>(move);
             continue;
