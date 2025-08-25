@@ -26,6 +26,15 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   add_compile_options("-O3" "-march=native" "-DNDEBUG")
 endif()
 
+# set neural net path
+set(NEURAL_NET_PATH ${CMAKE_SOURCE_DIR}/src/minke.bin)
+
+# Make init.cpp recompiled when NEURAL_NET_PATH has changed
+set_property(
+  SOURCE ${CMAKE_SOURCE_DIR}/src/init.cpp
+  APPEND
+  PROPERTY OBJECT_DEPENDS ${NEURAL_NET_PATH})
+
 # Add and link executable.
 add_executable(
   minke
