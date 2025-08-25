@@ -8,7 +8,6 @@
 #ifndef TIME_MANAGER_H
 #define TIME_MANAGER_H
 
-#include "position.h"
 #include "types.h"
 
 class TimeManager {
