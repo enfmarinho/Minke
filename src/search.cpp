@@ -160,7 +160,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         }
     }
 
-    int see_margin[2] = {SEE_PRUNING_MULT * depth * depth, SEE_PRUNING_MULT * depth};
     Move move = MOVE_NONE;
     Move best_move = MOVE_NONE;
     ScoreType best_score = -MAX_SCORE;
