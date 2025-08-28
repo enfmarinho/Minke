@@ -90,7 +90,7 @@ ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &td) 
     return eval;
 }
 
-ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvList &pv_list, ThreadData &td) {
+ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td) {
     if (td.time_manager.time_over() || td.stop) // Out of time
         return -MAX_SCORE;
     else if (depth <= 0)
@@ -127,6 +127,12 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
     // Extraction data from ttentry if tthit
     Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
     ScoreType tteval = (tthit ? ttentry->eval() : -MAX_SCORE);
+
+    // Internal Iterative Reductions
+    if (!tthit && depth >= 4) {
+        --depth;
+    }
+
     bool improving = false; // TODO
     bool in_check = position.in_check();
     ScoreType eval = -MAX_SCORE;
