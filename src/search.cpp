@@ -90,7 +90,7 @@ ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &td) 
     return eval;
 }
 
-ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvList &pv_list, ThreadData &td) {
+ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td) {
     if (td.time_manager.time_over() || td.stop) // Out of time
         return -MAX_SCORE;
     else if (depth <= 0)
@@ -99,18 +99,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
 
     bool pv_node = alpha != beta - 1;
     Position &position = td.position;
-
-    // Transposition table probe
-    bool tthit;
-    TTEntry *ttentry = TT.probe(position, tthit);
-    if (!pv_node && tthit && ttentry->depth() >= depth &&
-        (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->eval() <= alpha) ||
-         (ttentry->bound() == LOWER && ttentry->eval() >= beta))) {
-        return ttentry->eval();
-    }
-    // Extraction data from ttentry if tthit
-    Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
-    ScoreType tteval = (tthit ? ttentry->eval() : -MAX_SCORE);
 
     // Early return conditions
     bool root = td.height == 0;
@@ -126,6 +114,23 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvL
         beta = std::min(beta, MATE_SCORE - td.height - 1);
         if (alpha >= beta)
             return alpha;
+    }
+
+    // Transposition table probe
+    bool tthit;
+    TTEntry *ttentry = TT.probe(position, tthit);
+    if (!pv_node && tthit && ttentry->depth() >= depth &&
+        (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->eval() <= alpha) ||
+         (ttentry->bound() == LOWER && ttentry->eval() >= beta))) {
+        return ttentry->eval();
+    }
+    // Extraction data from ttentry if tthit
+    Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
+    ScoreType tteval = (tthit ? ttentry->eval() : -MAX_SCORE);
+
+    // Internal Iterative Reductions
+    if (!tthit && depth >= 4) {
+        --depth;
     }
 
     bool improving = false; // TODO

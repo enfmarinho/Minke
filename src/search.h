@@ -44,7 +44,7 @@ struct ThreadData {
 
 void iterative_deepening(ThreadData &td);
 ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &td);
-ScoreType negamax(ScoreType alpha, ScoreType beta, const CounterType &depth, PvList &pv_list, ThreadData &td);
+ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td);
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td);
 bool SEE(Position &position, const Move &move, int threshold);
 
