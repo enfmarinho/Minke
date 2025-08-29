@@ -1,6 +1,8 @@
 build
+buildDebug
 buildRelease
 .cache
 *.o
 *.out
 *.exe
+minke

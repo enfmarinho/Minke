@@ -18,7 +18,11 @@
 #include "types.h"
 #include "uci.h"
 
-INCBIN(NetParameters, "../src/minke.bin");
+#ifndef NET_PATH
+#define NET_PATH "../src/minke.bin"
+#endif // !NET_FILE
+
+INCBIN(NetParameters, NET_PATH);
 
 int LMR_TABLE[64][64];
 int LMP_TABLE[2][LMP_DEPTH];
