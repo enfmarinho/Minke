@@ -50,6 +50,7 @@ class Position {
     inline ScoreType eval() const { return m_nnue.eval(m_stm); }
 
     int legal_move_amount();
+    bool no_legal_moves();
     void print() const;
 
     Move get_movement(const std::string &algebraic_notation) const;
