@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD 20)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Datagen")
+  add_compile_options("-DDATAGEN_BUILD")
+  set(CMAKE_BUILD_TYPE Release)
 endif()
 
 add_compile_options("-pthread")
