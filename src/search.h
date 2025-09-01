@@ -35,7 +35,6 @@ struct SearchLimits {
 
     SearchLimits();
     SearchLimits(int depth, int optimum_node, int maximum_node);
-    SearchLimits(const SearchLimits &rhs) = default;
 
     void reset();
 };

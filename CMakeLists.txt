@@ -11,7 +11,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Datagen")
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-add_compile_options("-fuse-ld=lld" "-pthread")
+add_compile_options("-pthread")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_compile_options(
     "-Wall"
@@ -24,6 +24,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   add_compile_options("-O3" "-march=native" "-DNDEBUG")
 endif()
+add_link_options("-fuse-ld=lld")
 
 # Path to the neural net
 set(NET_PATH "${CMAKE_SOURCE_DIR}/src/minke.bin")
