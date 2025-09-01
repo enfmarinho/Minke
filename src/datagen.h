@@ -238,7 +238,7 @@ class DatagenThread {
 
 class DatagenEngine {
   public:
-    void datagen_loop(SearchLimits limits, const std::string book_path, int thread_count, int tt_size_mb) {
+    void datagen_loop(const SearchLimits& limits, const std::string book_path, int thread_count, int tt_size_mb) {
         OpeningBook book(book_path);
         start(limits, book, thread_count, tt_size_mb);
         std::cout << "Datagen started with " << thread_count << " thread!" << std::endl;
@@ -260,7 +260,6 @@ class DatagenEngine {
                 std::cout << "Datagen paused" << std::endl;
 
             } else if (command == "resume") {
-                std::cout << "here" << std::endl;
                 run();
                 std::cout << "Datagen resumed" << std::endl;
             }
@@ -306,7 +305,7 @@ class DatagenEngine {
         std::cout << line;
     }
 
-    void start(SearchLimits limits, const OpeningBook& book, int thread_count, int tt_size_mb) {
+    void start(const SearchLimits& limits, const OpeningBook& book, int thread_count, int tt_size_mb) {
         stop_flag = false;
         for (int i = 0; i < thread_count; ++i) {
             datagen_threads.emplace_back(limits, i, book);
