@@ -15,9 +15,11 @@ add_compile_options("-pthread")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_compile_options(
     "-Wall"
+    "-Wshadow"
     "-Wsign-compare"
     "-Wold-style-cast"
-    "-Wsystem-headers"
+    "-Wpedantic"
+    "-Wextra"
     "-Wcast-align"
     "-Wcast-qual"
     "-g")
