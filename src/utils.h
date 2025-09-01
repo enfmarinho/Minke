@@ -10,6 +10,8 @@
 
 #include <bit>
 #include <cassert>
+#include <cstdint>
+#include <random>
 
 #include "types.h"
 
@@ -151,5 +153,12 @@ inline int get_pawn_start_rank(const Color &color) { return color == WHITE ? 1 :
 inline int get_pawn_promotion_rank(const Color &color) { return color == WHITE ? 7 : 0; }
 
 inline Direction get_pawn_offset(const Color &color) { return color == WHITE ? NORTH : SOUTH; }
+
+inline int64_t rand(int64_t min, int64_t max) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<int64_t> dist(min, max);
+    return dist(gen);
+}
 
 #endif // #ifndef UTILS_H

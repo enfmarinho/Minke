@@ -13,6 +13,7 @@
 #include "history.h"
 #include "pv_list.h"
 #include "time_manager.h"
+#include "tt.h"
 #include "types.h"
 
 constexpr int SEE_PRUNING_MULT = -20;
@@ -27,22 +28,36 @@ constexpr int NMP_DEPTH = 3;
 constexpr int NMP_BASE = 3;
 constexpr int NMP_DIVISOR = 4;
 
+struct SearchLimits {
+    int depth;
+    int optimum_node;
+    int maximum_node;
+
+    SearchLimits();
+    SearchLimits(int depth, int optimum_node, int maximum_node);
+
+    void reset();
+};
+
 struct ThreadData {
     Position position;
+    TranspositionTable tt;
     TimeManager time_manager;
     History search_history;
     Move best_move;
 
+    SearchLimits search_limits;
     int64_t nodes_searched;
-    int64_t node_limit;
     int height;
-    int depth_limit;
     bool stop;
+    bool report;
 
+    ThreadData();
     void reset_search_parameters();
+    void set_search_limits(const SearchLimits sl);
 };
 
-void iterative_deepening(ThreadData &td);
+ScoreType iterative_deepening(ThreadData &td);
 ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &td);
 ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td);
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td);

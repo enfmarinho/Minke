@@ -1,6 +1,7 @@
 build
 buildDebug
 buildRelease
+data
 .cache
 *.o
 *.out

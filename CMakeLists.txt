@@ -6,25 +6,31 @@ set(CMAKE_CXX_STANDARD 20)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Datagen")
+  add_compile_options("-DDATAGEN_BUILD")
+  set(CMAKE_BUILD_TYPE Release)
 endif()
 
 add_compile_options("-pthread")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_compile_options(
     "-Wall"
-    "-Wpedantic"
+    "-Wshadow"
     "-Wsign-compare"
     "-Wold-style-cast"
+    "-Wpedantic"
+    "-Wextra"
     "-Wcast-align"
     "-Wcast-qual"
-    "-fsanitize=undefined"
     "-fsanitize=address"
+    "-fsanitize=undefined"
     "-g")
   add_link_options(-fsanitize=address)
   add_link_options(-fsanitize=undefined)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   add_compile_options("-O3" "-march=native" "-DNDEBUG")
 endif()
+add_link_options("-fuse-ld=lld")
 
 # Path to the neural net
 set(NET_PATH "${CMAKE_SOURCE_DIR}/src/minke.bin")

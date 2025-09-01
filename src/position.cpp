@@ -611,6 +611,19 @@ int Position::legal_move_amount() {
     return legal_amount;
 }
 
+bool Position::no_legal_moves() {
+    ScoredMove moves[MAX_MOVES_PER_POS];
+    ScoredMove *end = gen_moves(moves, *this, GEN_ALL);
+    for (ScoredMove *curr = moves; curr != end; ++curr) {
+        bool legal = make_move<false>(curr->move);
+        unmake_move<false>(curr->move);
+
+        if (legal)
+            return false;
+    }
+    return true;
+}
+
 void Position::print() const {
     auto print_line = []() -> void {
         for (IndexType i = 0; i < 8; ++i) {

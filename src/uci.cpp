@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -16,6 +17,7 @@
 #include <vector>
 
 #include "benchmark.h"
+#include "datagen.h"
 #include "move.h"
 #include "movegen.h"
 #include "movepicker.h"
@@ -25,16 +27,51 @@
 #include "types.h"
 
 UCI::UCI(int argc, char *argv[]) {
+    m_td.tt.resize(EngineOptions::HASH_DEFAULT);
     m_td.reset_search_parameters();
+
     if (argc > 1 && std::string(argv[1]) == "bench") {
         if (argc > 2)
-            m_td.depth_limit = std::stoi(argv[2]);
+            m_td.search_limits.depth = std::stoi(argv[2]);
         else
-            m_td.depth_limit = EngineOptions::BENCH_DEPTH;
+            m_td.search_limits.depth = EngineOptions::BENCH_DEPTH;
 
         bench();
         exit(0);
     }
+
+#ifdef DATAGEN_BUILD
+    if (argc > 1 && std::string(argv[1]) == "datagen") {
+        int concurrency = 1;
+        int tt_size_mb = EngineOptions::HASH_DEFAULT;
+        std::string book_path;
+        SearchLimits search_limits(DATAGEN_DEFAULT_MAX_DEPTH, DATAGEN_DEFAULT_OPTIMUM_NODE_LIMIT,
+                                   DATAGEN_DEFAULT_MAXIMUM_NODE_LIMIT);
+
+        auto read_command_line_opt = [&](int idx) {
+            if (strcmp(argv[idx], "--book") == 0)
+                book_path = argv[idx + 1];
+            else if (strcmp(argv[idx], "--concurrency") == 0)
+                concurrency = std::stoi(argv[idx + 1]);
+            else if (strcmp(argv[idx], "--tt-size") == 0)
+                tt_size_mb = std::stoi(argv[idx + 1]);
+            else if (strcmp(argv[idx], "--depth") == 0)
+                search_limits.depth = std::stoi(argv[idx + 1]);
+            else if (strcmp(argv[idx], "--node-optimum-limit") == 0)
+                search_limits.depth = std::stoi(argv[idx + 1]);
+            else if (strcmp(argv[idx], "--node-maximum-limit") == 0)
+                search_limits.depth = std::stoi(argv[idx + 1]);
+        };
+
+        for (int curr = 2; argc > curr + 1; curr += 2)
+            read_command_line_opt(curr);
+
+        DatagenEngine dt_engine;
+        dt_engine.datagen_loop(search_limits, book_path, concurrency, tt_size_mb);
+
+        exit(0);
+    }
+#endif // DATAGEN_BUILD
 }
 
 void UCI::loop() {
@@ -57,7 +94,7 @@ void UCI::loop() {
                 m_thread.join();
             m_td.reset_search_parameters();
             if (parse_go(iss))
-                perft(m_td.position, m_td.depth_limit);
+                perft(m_td.position, m_td.search_limits.depth);
             else
                 go();
         } else if (token == "position") {
@@ -89,7 +126,7 @@ void UCI::loop() {
             else if (m_thread.joinable())
                 m_thread.join();
             m_td.reset_search_parameters();
-            m_td.depth_limit = EngineOptions::BENCH_DEPTH;
+            m_td.search_limits.depth = EngineOptions::BENCH_DEPTH;
             parse_go(iss, true);
             bench();
         } else if (!token.empty()) {
@@ -101,7 +138,7 @@ void UCI::loop() {
 void UCI::print_debug_info() {
     m_td.position.print();
     bool found;
-    auto entry = TT.probe(m_td.position, found);
+    auto entry = m_td.tt.probe(m_td.position, found);
     Move ttmove = MOVE_NONE;
     if (found) {
         ttmove = entry->best_move();
@@ -160,7 +197,7 @@ void UCI::ucinewgame() {
     m_td.time_manager.reset();
     m_td.position.set_fen<true>(START_FEN);
     m_td.reset_search_parameters();
-    TT.clear();
+    m_td.tt.clear();
 }
 
 void UCI::set_option(std::istringstream &iss) {
@@ -171,7 +208,7 @@ void UCI::set_option(std::istringstream &iss) {
     iss >> garbage; // Consume the "value" token.
     iss >> value;
     if (token == "Hash" && value >= EngineOptions::HASH_MIN && value <= EngineOptions::HASH_MAX) {
-        TT.resize(value);
+        m_td.tt.resize(value);
     }
 }
 
@@ -180,7 +217,7 @@ void UCI::bench() {
     for (const std::string &fen : BENCHMARK_FEN_LIST) {
         m_td.position.set_fen<true>(fen);
         m_td.time_manager.reset();
-        TT.clear();
+        m_td.tt.clear();
         TimeType start_time = now();
         go();
         m_thread.join();
@@ -243,12 +280,12 @@ bool UCI::parse_go(std::istringstream &iss, bool bench) {
         CounterType option;
         iss >> option;
         if (token == "perft" && !iss.fail()) { // Don't "perft" if depth hasn't been passed
-            m_td.depth_limit = option;
+            m_td.search_limits.depth = option;
             return true;
         } else if (token == "depth") {
-            m_td.depth_limit = option;
+            m_td.search_limits.depth = option;
         } else if (token == "nodes") {
-            m_td.node_limit = option;
+            m_td.search_limits.maximum_node = option;
         } else if (token == "movetime") {
             movetime = option;
         } else if (token == "wtime" && m_td.position.get_stm() == WHITE) {

@@ -12,7 +12,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
-#include <limits>
 
 #include "attacks.h"
 #include "move.h"
@@ -36,29 +35,56 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
     std::cout << std::endl;
 }
 
+SearchLimits::SearchLimits() { reset(); }
+
+SearchLimits::SearchLimits(int depth, int optimum_node, int maximum_node)
+    : depth(depth), optimum_node(optimum_node), maximum_node(maximum_node) {}
+
+void SearchLimits::reset() {
+    depth = MAX_SEARCH_DEPTH;
+    optimum_node = std::numeric_limits<int>::max();
+    maximum_node = std::numeric_limits<int>::max();
+}
+
+ThreadData::ThreadData() {
+    report = true;
+    reset_search_parameters();
+}
+
 void ThreadData::reset_search_parameters() {
     best_move = MOVE_NONE;
     stop = true;
     height = 0;
     nodes_searched = -1; // Avoid counting the root
-    node_limit = std::numeric_limits<int>::max();
-    depth_limit = MAX_SEARCH_DEPTH;
+    time_manager.reset();
+    search_limits.reset();
 }
 
-void iterative_deepening(ThreadData &td) {
+void ThreadData::set_search_limits(const SearchLimits sl) { search_limits = sl; }
+
+inline bool stop_search(const ThreadData &td) {
+    return td.time_manager.time_over() || td.stop || td.nodes_searched > td.search_limits.maximum_node;
+}
+
+ScoreType iterative_deepening(ThreadData &td) {
     td.stop = false;
 
     Move best_move = MOVE_NONE;
-    for (CounterType depth = 1; depth <= td.depth_limit; ++depth) {
+    ScoreType past_eval = -MAX_SCORE;
+    for (CounterType depth = 1; depth <= td.search_limits.depth; ++depth) {
         PvList pv_list;
         ScoreType eval = negamax(-MAX_SCORE, MAX_SCORE, depth, pv_list, td);
-        if (!td.time_manager.time_over() && !td.stop) { // Search was successful
-            best_move = td.best_move;
-            if (best_move == MOVE_NONE) // No legal moves
-                break;
+        if (stop_search(td)) // Search did not finished completely
+            break;
 
+        best_move = td.best_move;
+        past_eval = eval;
+        if (best_move == MOVE_NONE) // No legal moves
+            break;
+
+        if (td.report)
             print_search_info(depth, eval, pv_list, td);
-        }
+
         if (depth > 5)
             td.time_manager.update();
         if (td.time_manager.stop_early())
@@ -67,13 +93,17 @@ void iterative_deepening(ThreadData &td) {
         td.time_manager.can_stop(); // Avoids stopping before depth 1 has been searched through
     }
 
-    std::cout << "bestmove " << (best_move == MOVE_NONE ? "none" : best_move.get_algebraic_notation()) << std::endl;
+    if (td.report)
+        std::cout << "bestmove " << (best_move == MOVE_NONE ? "none" : best_move.get_algebraic_notation()) << std::endl;
+
     td.stop = true;
+    td.best_move = best_move; // A partial search would mess this up
+    return past_eval;
 }
 
 ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &td) {
     bool tthit;
-    TTEntry *ttentry = TT.probe(td.position, tthit);
+    TTEntry *ttentry = td.tt.probe(td.position, tthit);
     if (!tthit)
         return negamax(-MAX_SCORE, MAX_SCORE, depth, pv_list, td);
 
@@ -91,7 +121,7 @@ ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &td) 
 }
 
 ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td) {
-    if (td.time_manager.time_over() || td.stop) // Out of time
+    if (stop_search(td)) // Out of time
         return -MAX_SCORE;
     else if (depth <= 0)
         return quiescence(alpha, beta, td);
@@ -118,7 +148,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
 
     // Transposition table probe
     bool tthit;
-    TTEntry *ttentry = TT.probe(position, tthit);
+    TTEntry *ttentry = td.tt.probe(position, tthit);
     if (!pv_node && tthit && ttentry->depth() >= depth &&
         (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->eval() <= alpha) ||
          (ttentry->bound() == LOWER && ttentry->eval() >= beta))) {
@@ -241,7 +271,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
         return position.in_check() ? -MATE_SCORE + td.height : 0;
     }
 
-    if (!td.time_manager.time_over()) { // Save on TT if search was completed
+    if (!stop_search(td)) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
         ttentry->save(position.get_hash(), depth, best_move, best_score, position.get_game_ply(), bound);
         td.best_move = best_move;
@@ -253,13 +283,13 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     ++td.nodes_searched;
     Position &position = td.position;
-    if (td.time_manager.time_over() || td.stop)
+    if (stop_search(td))
         return -MAX_SCORE;
     else if (position.draw())
         return 0;
 
     bool tthit;
-    TTEntry *ttentry = TT.probe(position, tthit);
+    TTEntry *ttentry = td.tt.probe(position, tthit);
     Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
 
     ScoreType stand_pat = position.eval();
