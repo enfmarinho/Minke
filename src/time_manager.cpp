@@ -14,9 +14,7 @@ TimeManager::TimeManager() : m_time_set{false}, m_can_stop{false} {}
 void TimeManager::reset(CounterType inc, CounterType time, CounterType mtg, CounterType movetime, bool infinite) {
     constexpr int overhead = 50;
 
-    m_start_time = now();
-    m_movetime = false;
-    m_can_stop = false;
+    reset();
 
     // Neither time nor movetime was set, both are non-positive or infinite flag was used, so search until stop command
     m_time_set = (time > 0 || movetime > 0) && !infinite;
