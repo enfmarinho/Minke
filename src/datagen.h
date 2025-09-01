@@ -28,7 +28,7 @@ static constexpr int DATAGEN_REPORT_INTERVAL = 10000;
 static constexpr int DATAGEN_OPENING_RANDOM_MOVES = 8;
 static constexpr int DATAGEN_MAX_CONSECUTIVE_WIN_SCORES = 4;
 static constexpr int DATAGEN_MAX_CONSECUTIVE_DRAW_SCORES = 6;
-static constexpr int DATAGEN_BASELINE_WIN_SCORE = 2000;
+static constexpr int DATAGEN_BASELINE_WIN_SCORE = 1500;
 static constexpr int DATAGEN_BASELINE_DRAW_SCORE = 10;
 
 struct FenData {
