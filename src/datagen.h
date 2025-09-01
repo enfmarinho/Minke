@@ -309,6 +309,11 @@ class DatagenEngine {
 
     void start(const SearchLimits& limits, const OpeningBook& book, int thread_count, int tt_size_mb) {
         stop_flag = false;
+
+        // datagen_threads must reserve all needed space beforehand, since reallocation would make previous addresses
+        // invalid
+        datagen_threads.reserve(thread_count);
+        threads.reserve(thread_count);
         for (int i = 0; i < thread_count; ++i) {
             datagen_threads.emplace_back(limits, i, book, tt_size_mb);
             threads.emplace_back(&DatagenThread::run, &datagen_threads[i]);
