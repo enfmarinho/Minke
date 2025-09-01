@@ -102,7 +102,7 @@ void UCI::loop() {
 void UCI::print_debug_info() {
     m_td.position.print();
     bool found;
-    auto entry = TT.probe(m_td.position, found);
+    auto entry = m_td.tt.probe(m_td.position, found);
     Move ttmove = MOVE_NONE;
     if (found) {
         ttmove = entry->best_move();
@@ -161,7 +161,7 @@ void UCI::ucinewgame() {
     m_td.time_manager.reset();
     m_td.position.set_fen<true>(START_FEN);
     m_td.reset_search_parameters();
-    TT.clear();
+    m_td.tt.clear();
 }
 
 void UCI::set_option(std::istringstream &iss) {
@@ -172,7 +172,7 @@ void UCI::set_option(std::istringstream &iss) {
     iss >> garbage; // Consume the "value" token.
     iss >> value;
     if (token == "Hash" && value >= EngineOptions::HASH_MIN && value <= EngineOptions::HASH_MAX) {
-        TT.resize(value);
+        m_td.tt.resize(value);
     }
 }
 
@@ -181,7 +181,7 @@ void UCI::bench() {
     for (const std::string &fen : BENCHMARK_FEN_LIST) {
         m_td.position.set_fen<true>(fen);
         m_td.time_manager.reset();
-        TT.clear();
+        m_td.tt.clear();
         TimeType start_time = now();
         go();
         m_thread.join();

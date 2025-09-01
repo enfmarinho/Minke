@@ -14,9 +14,7 @@
 #include "incbin.h"
 #include "nnue.h"
 #include "search.h"
-#include "tt.h"
 #include "types.h"
-#include "uci.h"
 
 #ifndef NET_PATH
 #define NET_PATH "../src/minke.bin"
@@ -28,10 +26,8 @@ int LMR_TABLE[64][64];
 int LMP_TABLE[2][LMP_DEPTH];
 HashKeys hash_keys;
 Network network;
-TranspositionTable TT;
 
 void init_all() {
-    TT.resize(EngineOptions::HASH_DEFAULT);
     init_search_params();
     init_network_params();
     init_hash_keys();

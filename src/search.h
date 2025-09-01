@@ -13,6 +13,7 @@
 #include "history.h"
 #include "pv_list.h"
 #include "time_manager.h"
+#include "tt.h"
 #include "types.h"
 
 constexpr int SEE_PRUNING_MULT = -20;
@@ -40,6 +41,7 @@ struct SearchLimits {
 
 struct ThreadData {
     Position position;
+    TranspositionTable tt;
     TimeManager time_manager;
     History search_history;
     Move best_move;

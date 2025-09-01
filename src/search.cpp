@@ -95,7 +95,7 @@ ScoreType iterative_deepening(ThreadData &td) {
 
 ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &td) {
     bool tthit;
-    TTEntry *ttentry = TT.probe(td.position, tthit);
+    TTEntry *ttentry = td.tt.probe(td.position, tthit);
     if (!tthit)
         return negamax(-MAX_SCORE, MAX_SCORE, depth, pv_list, td);
 
@@ -140,7 +140,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
 
     // Transposition table probe
     bool tthit;
-    TTEntry *ttentry = TT.probe(position, tthit);
+    TTEntry *ttentry = td.tt.probe(position, tthit);
     if (!pv_node && tthit && ttentry->depth() >= depth &&
         (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->eval() <= alpha) ||
          (ttentry->bound() == LOWER && ttentry->eval() >= beta))) {
@@ -281,7 +281,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         return 0;
 
     bool tthit;
-    TTEntry *ttentry = TT.probe(position, tthit);
+    TTEntry *ttentry = td.tt.probe(position, tthit);
     Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
 
     ScoreType stand_pat = position.eval();

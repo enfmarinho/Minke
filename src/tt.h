@@ -74,6 +74,4 @@ class TranspositionTable {
     std::unique_ptr<TTBucket[]> m_table;
 };
 
-extern TranspositionTable TT;
-
 #endif // #ifndef TT_H
