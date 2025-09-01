@@ -20,9 +20,9 @@
 #include "search.h"
 #include "types.h"
 
-static constexpr int DATAGEN_DEFAULT_MAX_DEPTH = 5;
-static constexpr int DATAGEN_DEFAULT_OPTIMUM_NODE_LIMIT = 100;
-static constexpr int DATAGEN_DEFAULT_MAXIMUM_NODE_LIMIT = 100;
+static constexpr int DATAGEN_DEFAULT_MAX_DEPTH = 9;
+static constexpr int DATAGEN_DEFAULT_OPTIMUM_NODE_LIMIT = 3000;
+static constexpr int DATAGEN_DEFAULT_MAXIMUM_NODE_LIMIT = 9000;
 static constexpr int DATAGEN_REPORT_INTERVAL = 10000;
 
 static constexpr int DATAGEN_OPENING_RANDOM_MOVES = 8;
