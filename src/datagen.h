@@ -98,8 +98,15 @@ class DatagenThread {
     DatagenThread() = delete;
     DatagenThread(const SearchLimits& limits, int id, const OpeningBook& book)
         : id(id), game_count(0), fen_count(0), stop_flag(false), book(book), search_limits(limits) {}
+    DatagenThread(const DatagenThread& rhs)
+        : id(rhs.id),
+          game_count(rhs.game_count),
+          fen_count(rhs.fen_count),
+          stop_flag(rhs.stop_flag),
+          book(rhs.book),
+          search_limits(rhs.search_limits) {}
 
-    void start() {
+    void start(int tt_size_mb) {
         std::filesystem::path path("data/minke_data" + std::to_string(id) + ".txt");
 
         // Assure path is valid for the creation of the output file
@@ -108,6 +115,7 @@ class DatagenThread {
         file_out.open(path, std::ios_base::ios_base::app);
 
         td.report = false;
+        td.tt.resize(tt_size_mb);
         run();
 
         file_out.close();
@@ -139,9 +147,8 @@ class DatagenThread {
         std::string game_result = "";
         int win_count = 0;
         int draw_count = 0;
-        while (true) {
+        while (!stop_flag) {
             ++fen_count;
-
             bool in_check = td.position.in_check();
             if (td.position.no_legal_moves()) {
                 game_result = (in_check ? std::to_string(td.position.get_stm()) + ".0" : "0.5");
@@ -177,7 +184,7 @@ class DatagenThread {
             if (!game_result.empty())
                 break;
 
-            if ((!td.best_move.is_noisy() || !in_check) && !td.stop)
+            if (!td.best_move.is_noisy() && !in_check && !stop_flag)
                 collected_fens.push_back({td.position.get_fen(), score});
 
             td.position.make_move<true>(td.best_move);
@@ -231,9 +238,9 @@ class DatagenThread {
 
 class DatagenEngine {
   public:
-    void datagen_loop(SearchLimits limits, const std::string book_path, int thread_count) {
+    void datagen_loop(SearchLimits limits, const std::string book_path, int thread_count, int tt_size_mb) {
         OpeningBook book(book_path);
-        start(limits, book, thread_count);
+        start(limits, book, thread_count, tt_size_mb);
         std::cout << "Datagen started with " << thread_count << " thread!" << std::endl;
 
         start_time = now();
@@ -299,11 +306,11 @@ class DatagenEngine {
         std::cout << line;
     }
 
-    void start(SearchLimits limits, const OpeningBook& book, int thread_count) {
+    void start(SearchLimits limits, const OpeningBook& book, int thread_count, int tt_size_mb) {
         stop_flag = false;
         for (int i = 0; i < thread_count; ++i) {
             datagen_threads.emplace_back(limits, i, book);
-            threads.emplace_back(&DatagenThread::start, &datagen_threads[i]);
+            threads.emplace_back(&DatagenThread::start, &datagen_threads[i], tt_size_mb);
         }
 
         run_report_thread();
