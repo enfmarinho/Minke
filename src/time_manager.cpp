@@ -9,7 +9,7 @@
 
 #include "types.h"
 
-TimeManager::TimeManager() : m_time_set{false}, m_can_stop{false} {}
+TimeManager::TimeManager() { reset(); }
 
 void TimeManager::reset(CounterType inc, CounterType time, CounterType mtg, CounterType movetime, bool infinite) {
     constexpr int overhead = 50;
