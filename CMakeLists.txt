@@ -11,20 +11,16 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Datagen")
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-add_compile_options("-pthread")
+add_compile_options("-fuse-ld=lld" "-pthread")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_compile_options(
     "-Wall"
-    "-Wpedantic"
     "-Wsign-compare"
     "-Wold-style-cast"
+    "-Wsystem-headers"
     "-Wcast-align"
     "-Wcast-qual"
-    "-fsanitize=undefined"
-    "-fsanitize=address"
     "-g")
-  add_link_options(-fsanitize=address)
-  add_link_options(-fsanitize=undefined)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   add_compile_options("-O3" "-march=native" "-DNDEBUG")
 endif()
