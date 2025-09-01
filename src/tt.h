@@ -67,8 +67,10 @@ class TranspositionTable {
     TTEntry *probe(const Position &position, bool &found);
     void resize(size_t MB);
     void clear();
+    int tt_size_mb() const { return size_mb; }
 
   private:
+    size_t size_mb{0};
     size_t m_table_size{0};
     size_t m_table_mask{0};
     std::unique_ptr<TTBucket[]> m_table;

@@ -63,6 +63,7 @@ TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
 }
 
 void TranspositionTable::resize(size_t MB) {
+    size_mb = MB;
     m_table_size = MB * 1024 * 1024 / sizeof(TTBucket);
     m_table_mask = m_table_size - 1;
     m_table = std::make_unique<TTBucket[]>(m_table_size);
