@@ -96,17 +96,22 @@ class OpeningBook {
 class DatagenThread {
   public:
     DatagenThread() = delete;
-    DatagenThread(const SearchLimits& limits, int id, const OpeningBook& book)
-        : id(id), game_count(0), fen_count(0), stop_flag(false), book(book), search_limits(limits) {}
+    DatagenThread(const SearchLimits& limits, int id, const OpeningBook& book, int tt_size_mb)
+        : id(id), game_count(0), fen_count(0), stop_flag(false), book(book), search_limits(limits) {
+        init(tt_size_mb);
+    }
     DatagenThread(const DatagenThread& rhs)
         : id(rhs.id),
           game_count(rhs.game_count),
           fen_count(rhs.fen_count),
           stop_flag(rhs.stop_flag),
           book(rhs.book),
-          search_limits(rhs.search_limits) {}
+          search_limits(rhs.search_limits) {
+        init(rhs.td.tt.tt_size_mb());
+    }
+    ~DatagenThread() { file_out.close(); }
 
-    void start(int tt_size_mb) {
+    void init(int tt_size_mb) {
         std::filesystem::path path("data/minke_data" + std::to_string(id) + ".txt");
 
         // Assure path is valid for the creation of the output file
@@ -116,9 +121,6 @@ class DatagenThread {
 
         td.report = false;
         td.tt.resize(tt_size_mb);
-        run();
-
-        file_out.close();
     }
 
     void run() {
@@ -308,8 +310,8 @@ class DatagenEngine {
     void start(const SearchLimits& limits, const OpeningBook& book, int thread_count, int tt_size_mb) {
         stop_flag = false;
         for (int i = 0; i < thread_count; ++i) {
-            datagen_threads.emplace_back(limits, i, book);
-            threads.emplace_back(&DatagenThread::start, &datagen_threads[i], tt_size_mb);
+            datagen_threads.emplace_back(limits, i, book, tt_size_mb);
+            threads.emplace_back(&DatagenThread::run, &datagen_threads[i]);
         }
 
         run_report_thread();
