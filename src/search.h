@@ -55,7 +55,7 @@ struct ThreadData {
     void set_search_limits(const SearchLimits sl);
 };
 
-void iterative_deepening(ThreadData &td);
+ScoreType iterative_deepening(ThreadData &td);
 ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &td);
 ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td);
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td);

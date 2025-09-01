@@ -62,13 +62,14 @@ void ThreadData::reset_search_parameters() {
 
 void ThreadData::set_search_limits(const SearchLimits sl) { search_limits = sl; }
 
+ScoreType iterative_deepening(ThreadData &td) {
     td.stop = false;
 
     Move best_move = MOVE_NONE;
-    for (CounterType depth = 1; depth <= td.depth_limit; ++depth) {
+    ScoreType eval = -MAX_SCORE;
     for (CounterType depth = 1; depth <= td.search_limits.depth; ++depth) {
         PvList pv_list;
-        ScoreType eval = negamax(-MAX_SCORE, MAX_SCORE, depth, pv_list, td);
+        eval = negamax(-MAX_SCORE, MAX_SCORE, depth, pv_list, td);
         if (!td.time_manager.time_over() && !td.stop) { // Search was successful
             best_move = td.best_move;
             if (best_move == MOVE_NONE) // No legal moves
@@ -89,6 +90,7 @@ void ThreadData::set_search_limits(const SearchLimits sl) { search_limits = sl; 
         std::cout << "bestmove " << (best_move == MOVE_NONE ? "none" : best_move.get_algebraic_notation()) << std::endl;
 
     td.stop = true;
+    return eval;
 }
 
 ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &td) {
