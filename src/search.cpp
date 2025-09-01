@@ -62,6 +62,10 @@ void ThreadData::reset_search_parameters() {
 
 void ThreadData::set_search_limits(const SearchLimits sl) { search_limits = sl; }
 
+inline bool stop_search(const ThreadData &td) {
+    return td.time_manager.time_over() || td.stop || td.nodes_searched > td.search_limits.maximum_node;
+}
+
 ScoreType iterative_deepening(ThreadData &td) {
     td.stop = false;
 
@@ -113,7 +117,7 @@ ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &td) 
 }
 
 ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td) {
-    if (td.time_manager.time_over() || td.stop) // Out of time
+    if (stop_search(td)) // Out of time
         return -MAX_SCORE;
     else if (depth <= 0)
         return quiescence(alpha, beta, td);
@@ -263,7 +267,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
         return position.in_check() ? -MATE_SCORE + td.height : 0;
     }
 
-    if (!td.time_manager.time_over()) { // Save on TT if search was completed
+    if (!stop_search(td)) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
         ttentry->save(position.get_hash(), depth, best_move, best_score, position.get_game_ply(), bound);
         td.best_move = best_move;
@@ -275,7 +279,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     ++td.nodes_searched;
     Position &position = td.position;
-    if (td.time_manager.time_over() || td.stop)
+    if (stop_search(td))
         return -MAX_SCORE;
     else if (position.draw())
         return 0;
