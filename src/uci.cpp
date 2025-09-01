@@ -26,11 +26,12 @@
 
 UCI::UCI(int argc, char *argv[]) {
     m_td.reset_search_parameters();
+
     if (argc > 1 && std::string(argv[1]) == "bench") {
         if (argc > 2)
-            m_td.depth_limit = std::stoi(argv[2]);
+            m_td.search_limits.depth = std::stoi(argv[2]);
         else
-            m_td.depth_limit = EngineOptions::BENCH_DEPTH;
+            m_td.search_limits.depth = EngineOptions::BENCH_DEPTH;
 
         bench();
         exit(0);
@@ -57,7 +58,7 @@ void UCI::loop() {
                 m_thread.join();
             m_td.reset_search_parameters();
             if (parse_go(iss))
-                perft(m_td.position, m_td.depth_limit);
+                perft(m_td.position, m_td.search_limits.depth);
             else
                 go();
         } else if (token == "position") {
@@ -89,7 +90,7 @@ void UCI::loop() {
             else if (m_thread.joinable())
                 m_thread.join();
             m_td.reset_search_parameters();
-            m_td.depth_limit = EngineOptions::BENCH_DEPTH;
+            m_td.search_limits.depth = EngineOptions::BENCH_DEPTH;
             parse_go(iss, true);
             bench();
         } else if (!token.empty()) {
@@ -243,12 +244,12 @@ bool UCI::parse_go(std::istringstream &iss, bool bench) {
         CounterType option;
         iss >> option;
         if (token == "perft" && !iss.fail()) { // Don't "perft" if depth hasn't been passed
-            m_td.depth_limit = option;
+            m_td.search_limits.depth = option;
             return true;
         } else if (token == "depth") {
-            m_td.depth_limit = option;
+            m_td.search_limits.depth = option;
         } else if (token == "nodes") {
-            m_td.node_limit = option;
+            m_td.search_limits.maximum_node = option;
         } else if (token == "movetime") {
             movetime = option;
         } else if (token == "wtime" && m_td.position.get_stm() == WHITE) {

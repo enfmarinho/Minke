@@ -27,19 +27,32 @@ constexpr int NMP_DEPTH = 3;
 constexpr int NMP_BASE = 3;
 constexpr int NMP_DIVISOR = 4;
 
+struct SearchLimits {
+    int depth;
+    int optimum_node;
+    int maximum_node;
+
+    SearchLimits();
+    SearchLimits(int depth, int optimum_node, int maximum_node);
+
+    void reset();
+};
+
 struct ThreadData {
     Position position;
     TimeManager time_manager;
     History search_history;
     Move best_move;
 
+    SearchLimits search_limits;
     int64_t nodes_searched;
-    int64_t node_limit;
     int height;
-    int depth_limit;
     bool stop;
+    bool report;
 
+    ThreadData();
     void reset_search_parameters();
+    void set_search_limits(const SearchLimits sl);
 };
 
 void iterative_deepening(ThreadData &td);

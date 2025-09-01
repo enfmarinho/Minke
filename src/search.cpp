@@ -12,7 +12,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
-#include <limits>
 
 #include "attacks.h"
 #include "move.h"
@@ -36,20 +35,38 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
     std::cout << std::endl;
 }
 
+SearchLimits::SearchLimits() { reset(); }
+
+SearchLimits::SearchLimits(int depth, int optimum_node, int maximum_node)
+    : depth(depth), optimum_node(optimum_node), maximum_node(maximum_node) {}
+
+void SearchLimits::reset() {
+    depth = MAX_SEARCH_DEPTH;
+    optimum_node = std::numeric_limits<int>::max();
+    maximum_node = std::numeric_limits<int>::max();
+}
+
+ThreadData::ThreadData() {
+    report = true;
+    reset_search_parameters();
+}
+
 void ThreadData::reset_search_parameters() {
     best_move = MOVE_NONE;
     stop = true;
     height = 0;
     nodes_searched = -1; // Avoid counting the root
-    node_limit = std::numeric_limits<int>::max();
-    depth_limit = MAX_SEARCH_DEPTH;
+    time_manager.reset();
+    search_limits.reset();
 }
 
-void iterative_deepening(ThreadData &td) {
+void ThreadData::set_search_limits(const SearchLimits sl) { search_limits = sl; }
+
     td.stop = false;
 
     Move best_move = MOVE_NONE;
     for (CounterType depth = 1; depth <= td.depth_limit; ++depth) {
+    for (CounterType depth = 1; depth <= td.search_limits.depth; ++depth) {
         PvList pv_list;
         ScoreType eval = negamax(-MAX_SCORE, MAX_SCORE, depth, pv_list, td);
         if (!td.time_manager.time_over() && !td.stop) { // Search was successful
@@ -57,7 +74,8 @@ void iterative_deepening(ThreadData &td) {
             if (best_move == MOVE_NONE) // No legal moves
                 break;
 
-            print_search_info(depth, eval, pv_list, td);
+            if (td.report)
+                print_search_info(depth, eval, pv_list, td);
         }
         if (depth > 5)
             td.time_manager.update();
@@ -67,7 +85,9 @@ void iterative_deepening(ThreadData &td) {
         td.time_manager.can_stop(); // Avoids stopping before depth 1 has been searched through
     }
 
-    std::cout << "bestmove " << (best_move == MOVE_NONE ? "none" : best_move.get_algebraic_notation()) << std::endl;
+    if (td.report)
+        std::cout << "bestmove " << (best_move == MOVE_NONE ? "none" : best_move.get_algebraic_notation()) << std::endl;
+
     td.stop = true;
 }
 
