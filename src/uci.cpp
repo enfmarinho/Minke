@@ -29,6 +29,7 @@
 UCI::UCI(int argc, char *argv[]) {
     m_td.tt.resize(EngineOptions::HASH_DEFAULT);
     m_td.reset_search_parameters();
+    m_td.report = true;
 
     if (argc > 1 && std::string(argv[1]) == "bench") {
         if (argc > 2)
