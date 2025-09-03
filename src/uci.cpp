@@ -157,6 +157,11 @@ void UCI::print_debug_info() {
 }
 
 void UCI::position(std::istringstream &iss) {
+    m_td.search_history.reset();
+    m_td.time_manager.reset();
+    m_td.reset_search_parameters();
+    m_td.tt.clear();
+
     std::string token, fen, move;
     iss >> token;
     if (token == "startpos") {
