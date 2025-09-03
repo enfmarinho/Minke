@@ -17,7 +17,7 @@
 #include "types.h"
 
 namespace EngineOptions {
-constexpr CounterType BENCH_DEPTH = 8;
+constexpr CounterType BENCH_DEPTH = 12;
 static constexpr CounterType HASH_DEFAULT = 16;
 static constexpr CounterType HASH_MIN = 1;
 static constexpr CounterType HASH_MAX = 2097152;
@@ -44,7 +44,7 @@ class UCI {
     void go();
 
     void print_debug_info();
-    void bench();
+    void bench(int depth);
     void eval();
 
     std::thread m_thread;
