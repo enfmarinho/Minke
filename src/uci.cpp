@@ -277,10 +277,11 @@ bool UCI::parse_go(std::istringstream &iss, bool bench) {
     CounterType movetime = -1;
     CounterType inc = -1;
     bool infinite = false;
+
     while (iss >> token) {
         if (token == "infinite" && !bench) {
             infinite = true;
-            return false;
+            break;
         }
 
         CounterType option;
