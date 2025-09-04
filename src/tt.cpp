@@ -7,8 +7,6 @@
 
 #include "tt.h"
 
-#include <strings.h>
-
 #include <cstddef>
 #include <cstdlib>
 #include <iostream>
