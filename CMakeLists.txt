@@ -28,9 +28,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_link_options(-fsanitize=address)
   add_link_options(-fsanitize=undefined)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-  add_compile_options("-O3" "-march=native" "-DNDEBUG")
+  add_compile_options("-O3" "-funroll-loops" "-march=native" "-DNDEBUG")
 endif()
 add_link_options("-fuse-ld=lld")
+add_link_options("-flto")
 
 # Path to the neural net
 set(NET_PATH "${CMAKE_SOURCE_DIR}/src/minke.bin")
