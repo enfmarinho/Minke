@@ -10,7 +10,6 @@
 
 #include <array>
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 
 #include "position.h"
@@ -34,11 +33,11 @@ class TTEntry {
 
   private:
     HashType m_hash;                 // 8 bytes
-    IndexType m_depth;               // 1 byte
-    Move m_best_move;                // 3 bytes
-    int16_t m_score;                 // 2 bytes // TODO change to ScoreType
-    IndexType m_half_move_count;     // 1 byte
+    Move m_best_move;                // 2 bytes
+    ScoreType m_score;               // 2 bytes
     BoundType m_bound = BOUND_EMPTY; // 1 byte
+    IndexType m_half_move_count;     // 1 byte
+    IndexType m_depth;               // 1 byte
 };
 
 class TranspositionTable {

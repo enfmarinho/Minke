@@ -74,8 +74,8 @@ class NNUE {
 
     constexpr int32_t crelu(const int32_t &input) const;
     constexpr int32_t screlu(const int32_t &input) const;
-    int32_t weight_sum_reduction(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
-                                 const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const;
+    ScoreType weight_sum_reduction(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
+                                   const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const;
 
     std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
 };
