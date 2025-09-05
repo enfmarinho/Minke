@@ -9,7 +9,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <cstring>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -29,14 +28,14 @@
 UCI::UCI(int argc, char *argv[]) {
     m_td.tt.resize(EngineOptions::HASH_DEFAULT);
     m_td.reset_search_parameters();
+    m_td.report = true;
 
     if (argc > 1 && std::string(argv[1]) == "bench") {
+        int depth = EngineOptions::BENCH_DEPTH;
         if (argc > 2)
-            m_td.search_limits.depth = std::stoi(argv[2]);
-        else
-            m_td.search_limits.depth = EngineOptions::BENCH_DEPTH;
+            depth = std::stoi(argv[2]);
 
-        bench();
+        bench(depth);
         exit(0);
     }
 
@@ -125,14 +124,14 @@ void UCI::loop() {
                 continue;
             else if (m_thread.joinable())
                 m_thread.join();
-            m_td.reset_search_parameters();
-            m_td.search_limits.depth = EngineOptions::BENCH_DEPTH;
-            parse_go(iss, true);
-            bench();
+            bench(EngineOptions::BENCH_DEPTH);
         } else if (!token.empty()) {
             std::cout << "Unknown command: '" << token << "'. Type help for information." << std::endl;
         }
     } while (token != "quit");
+
+    if (m_thread.joinable())
+        m_thread.join();
 }
 
 void UCI::print_debug_info() {
@@ -212,22 +211,25 @@ void UCI::set_option(std::istringstream &iss) {
     }
 }
 
-void UCI::bench() {
+void UCI::bench(int depth) {
     TimeType total_time = 0;
+    int64_t nodes_searched = 0;
     for (const std::string &fen : BENCHMARK_FEN_LIST) {
         m_td.position.set_fen<true>(fen);
-        m_td.time_manager.reset();
+        m_td.reset_search_parameters();
+        m_td.search_limits.depth = depth;
         m_td.tt.clear();
         TimeType start_time = now();
         go();
         m_thread.join();
+        nodes_searched += m_td.nodes_searched;
         total_time += now() - start_time;
     }
 
     std::cout << "\n==========================\n";
     std::cout << "Total time: " << total_time << "ms\n";
-    std::cout << "Nodes searched: " << m_td.nodes_searched << "\n";
-    std::cout << "Nodes per second: " << m_td.nodes_searched * 1000 / total_time;
+    std::cout << "Nodes searched: " << nodes_searched << "\n";
+    std::cout << "Nodes per second: " << nodes_searched * 1000 / total_time;
     std::cout << "\n==========================";
     std::cout << std::endl;
 }
@@ -271,10 +273,11 @@ bool UCI::parse_go(std::istringstream &iss, bool bench) {
     CounterType movetime = -1;
     CounterType inc = -1;
     bool infinite = false;
+
     while (iss >> token) {
         if (token == "infinite" && !bench) {
             infinite = true;
-            return false;
+            break;
         }
 
         CounterType option;

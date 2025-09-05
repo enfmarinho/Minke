@@ -168,7 +168,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
     ScoreType eval = -MAX_SCORE;
     if (!in_check) {
         if (tthit)
-            eval = tteval;
+            eval = ttscore;
         else
             eval = position.eval();
     }
