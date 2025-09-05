@@ -24,11 +24,11 @@ class TTEntry {
     HashType hash() const { return m_hash; }
     IndexType depth() const { return m_depth; }
     Move best_move() const { return m_best_move; }
-    ScoreType eval() const { return m_evaluation; }
+    ScoreType score() const { return m_score; }
     BoundType bound() const { return m_bound; }
     CounterType relative_age(const CounterType &half_move_count) const;
     CounterType replace_factor(const CounterType &half_move_count) const;
-    void save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &evaluation,
+    void save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
               const CounterType &half_move_counter, const BoundType &bound);
     void reset();
 
@@ -36,7 +36,7 @@ class TTEntry {
     HashType m_hash;                 // 8 bytes
     IndexType m_depth;               // 1 byte
     Move m_best_move;                // 3 bytes
-    int16_t m_evaluation;            // 2 bytes // TODO change to ScoreType
+    int16_t m_score;                 // 2 bytes // TODO change to ScoreType
     IndexType m_half_move_count;     // 1 byte
     BoundType m_bound = BOUND_EMPTY; // 1 byte
 };
