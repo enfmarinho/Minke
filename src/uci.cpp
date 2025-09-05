@@ -129,6 +129,9 @@ void UCI::loop() {
             std::cout << "Unknown command: '" << token << "'. Type help for information." << std::endl;
         }
     } while (token != "quit");
+
+    if (m_thread.joinable())
+        m_thread.join();
 }
 
 void UCI::print_debug_info() {
