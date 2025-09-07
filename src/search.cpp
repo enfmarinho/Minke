@@ -140,8 +140,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
             return position.eval();
 
         // Mate distance pruning
-        alpha = std::max(alpha, -MATE_SCORE + td.height);
-        beta = std::min(beta, MATE_SCORE - td.height - 1);
+        alpha = std::max(alpha, static_cast<ScoreType>(-MATE_SCORE + td.height));
+        beta = std::min(beta, static_cast<ScoreType>(MATE_SCORE - td.height - 1));
         if (alpha >= beta)
             return alpha;
     }
