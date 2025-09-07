@@ -73,14 +73,17 @@ constexpr int32_t NNUE::screlu(const int32_t &input) const {
     return crelu_out * crelu_out;
 }
 
-int32_t NNUE::weight_sum_reduction(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
-                                   const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const {
+ScoreType NNUE::weight_sum_reduction(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
+                                     const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const {
     int32_t eval = 0;
     for (int neuron_index = 0; neuron_index < HIDDEN_LAYER_SIZE; ++neuron_index) {
         eval += screlu(player[neuron_index]) * network.output_weights[neuron_index];
         eval += screlu(adversary[neuron_index]) * network.output_weights[neuron_index + HIDDEN_LAYER_SIZE];
     }
-    return (eval / QA + network.output_bias) * SCALE / QAB;
+
+    eval = (eval / QA + network.output_bias) * SCALE / QAB;
+
+    return std::clamp(eval, -MATE_FOUND + 1, MATE_FOUND - 1);
 }
 
 ScoreType NNUE::eval(const Color &stm) const {
