@@ -100,7 +100,7 @@ enum BoundType : char {
 };
 
 using HashType = uint64_t;
-using IndexType = int8_t;
+using IndexType = uint8_t;
 using CounterType = int;
 using ScoreType = int32_t; // TODO change to int16_t
 using TimeType = std::chrono::milliseconds::rep;
