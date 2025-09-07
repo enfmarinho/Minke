@@ -624,6 +624,99 @@ bool Position::no_legal_moves() {
     return true;
 }
 
+bool Position::is_pseudo_legal(const Move &move) const {
+    if (move == MOVE_NONE)
+        return false;
+
+    Square from = move.from();
+    Square to = move.to();
+    Piece moved_piece = consult(from);
+    PieceType moved_piece_type = get_piece_type(moved_piece, m_stm);
+
+    // No piece in "from" square or piece is not stm
+    if (moved_piece == EMPTY || get_color(moved_piece) != m_stm)
+        return false;
+    if (get_color(consult(to)) == m_stm) // stm piece on "to" square
+        return false;
+    if (move.is_capture() && !move.is_ep() && consult(to) == EMPTY)
+        return false;
+    if ((!move.is_capture() || move.is_ep()) && consult(to) != EMPTY)
+        return false;
+    if (moved_piece_type != PAWN && (move.is_ep() || move.is_promotion()))
+        return false;
+
+    // get_piece_attacks can't be called when piece_type = PAWN, so this has to cause an early return clause
+    if (moved_piece_type == PAWN) {
+        int pawn_offset = get_pawn_offset(m_stm);
+        if (move.is_ep()) {
+            if (m_curr_state.en_passant != to || !(get_piece_bb(PAWN, get_adversary()) & (1ULL << (to - pawn_offset))))
+                return false;
+        } else if (move.is_capture()) {
+            if (!(pawn_attacks[m_stm][from] & (1ULL << to)))
+                return false;
+        } else if (from + 2 * pawn_offset == to) {
+            if (get_rank(from) != get_pawn_start_rank(m_stm) ||
+                consult(static_cast<Square>(from + pawn_offset)) != EMPTY)
+                return false;
+        } else if (from + pawn_offset != to) {
+            return false;
+        } else if (move.is_promotion()) {
+            int from_rank = get_rank(from);
+            int to_rank = get_rank(to);
+
+            if (m_stm == WHITE && (from_rank != 6 || to_rank != 7))
+                return false;
+            if (m_stm == BLACK && (from_rank != 1 || to_rank != 0))
+                return false;
+        } else if ((m_stm == WHITE && get_rank(to) == 7) ||
+                   (m_stm == BLACK && get_rank(to) == 0)) { // No promotion flag in promotion rank
+            return false;
+        }
+
+        return true;
+    }
+
+    // Castling moves has to cause an early return because castling is a border case for the king attacks array
+    if (move.is_castle()) {
+        if (moved_piece_type != KING)
+            return false;
+
+        bool castling_short = (from == e1 && to == g1) || (from == e8 && to == g8);
+        bool castling_long = (from == e1 && to == c1) || (from == e8 && to == c8);
+
+        if (!castling_short && !castling_long)
+            return false;
+
+        uint8_t short_right = WHITE_OO;
+        uint8_t long_right = WHITE_OOO;
+        Bitboard short_castling_crossing_mask = WHITE_OO_CROSSING_MASK;
+        Bitboard long_castling_crossing_mask = WHITE_OOO_CROSSING_MASK;
+        if (m_stm == BLACK) {
+            short_right = BLACK_OO;
+            long_right = BLACK_OOO;
+            short_castling_crossing_mask = BLACK_OO_CROSSING_MASK;
+            long_castling_crossing_mask = BLACK_OOO_CROSSING_MASK;
+        }
+
+        if (castling_short &&
+            (!(get_castling_rights() & short_right) || (get_occupancy() & short_castling_crossing_mask))) {
+            return false;
+        }
+        if (castling_long &&
+            (!(get_castling_rights() & long_right) || (get_occupancy() & long_castling_crossing_mask))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    Bitboard moved_piece_attacks = get_piece_attacks(from, get_occupancy(), moved_piece_type);
+    if (!(moved_piece_attacks & (1ULL << to))) // moved_piece doesn't attack square "to"
+        return false;
+
+    return true;
+}
+
 void Position::print() const {
     auto print_line = []() -> void {
         for (IndexType i = 0; i < 8; ++i) {
