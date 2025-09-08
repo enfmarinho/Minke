@@ -9,7 +9,7 @@ CXX = g++
 CXXSTD = -std=c++20
 CXXWARNS = -Wall
 CXXFLAGS = -O3 -funroll-loops -DNDEBUG -DNET_PATH=\"$(NET_PATH)\" $(CXXSTD) $(CXXWARNS)
-CXXLINKERFLAGS = -flto
+CXXLINKERFLAGS = -flto -fuse-ld=lld
 
 NATIVEFLAGS = -march=native
 AVX2FLAGS = -DUSE_AVX2 -DUSE_SIMD -mavx2 -mbmi -mfma
