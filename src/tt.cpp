@@ -25,11 +25,12 @@ CounterType TTEntry::replace_factor(const CounterType &half_move_counter) const 
 }
 
 void TTEntry::save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-                   const CounterType &half_move_counter, const BoundType &bound) {
+                   const ScoreType &static_eval, const CounterType &half_move_counter, const BoundType &bound) {
     m_hash = hash;
     m_depth = depth;
     m_best_move = best_move;
     m_score = score;
+    m_static_eval = static_eval;
     m_half_move_count = half_move_counter;
     m_bound = bound;
 }
@@ -39,6 +40,7 @@ void TTEntry::reset() {
     m_depth = 0;
     m_best_move = MOVE_NONE;
     m_score = 0;
+    m_static_eval = 0;
     m_half_move_count = 0;
     m_bound = BOUND_EMPTY;
 }

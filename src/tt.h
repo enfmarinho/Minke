@@ -24,17 +24,19 @@ class TTEntry {
     IndexType depth() const { return m_depth; }
     Move best_move() const { return m_best_move; }
     ScoreType score() const { return m_score; }
+    ScoreType static_eval() const { return m_static_eval; }
     BoundType bound() const { return m_bound; }
     CounterType relative_age(const CounterType &half_move_count) const;
     CounterType replace_factor(const CounterType &half_move_count) const;
     void save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-              const CounterType &half_move_counter, const BoundType &bound);
+              const ScoreType &static_eval, const CounterType &half_move_counter, const BoundType &bound);
     void reset();
 
   private:
     HashType m_hash;                 // 8 bytes
     Move m_best_move;                // 2 bytes
     ScoreType m_score;               // 2 bytes
+    ScoreType m_static_eval;         // 2 bytes
     ScoreType m_evaluation;          // 2 bytes
     IndexType m_depth;               // 1 byte
     IndexType m_half_move_count;     // 1 byte
@@ -42,15 +44,15 @@ class TTEntry {
 };
 
 class TranspositionTable {
-    constexpr static IndexType BUCKET_SIZE = 4;
+    constexpr static IndexType BUCKET_SIZE = 3;
     struct TTBucket {
         TTBucket() = default;
         ~TTBucket() = default;
         std::array<TTEntry, BUCKET_SIZE> entry;
     };
 
-    static_assert(sizeof(TTEntry) == 16, "TTEntry is not 16 bytes");
-    static_assert(sizeof(TTBucket) == 64, "TTBucket is not 64 bytes");
+    static_assert(sizeof(TTEntry) == 24, "TTEntry is not 24 bytes");
+    static_assert(sizeof(TTBucket) == 72, "TTBucket is not 72 bytes");
 
   public:
     TranspositionTable() = default;

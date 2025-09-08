@@ -45,6 +45,7 @@ struct ThreadData {
     TimeManager time_manager;
     History search_history;
     Move best_move;
+    ScoreType static_eval[MAX_SEARCH_DEPTH];
 
     SearchLimits search_limits;
     int64_t nodes_searched;
