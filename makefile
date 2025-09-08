@@ -9,7 +9,7 @@ CXX = clang++
 CXXSTD = -std=c++20
 CXXWARNS = -Wall
 CXXFLAGS = -O3 -funroll-loops -DNDEBUG -DNET_PATH=\"$(NET_PATH)\" $(CXXSTD) $(CXXWARNS)
-CXXLINKERFLAGS = -flto -fuse-ld=lld
+CXXLINKERFLAGS = -flto
 
 NATIVEFLAGS = -march=native
 AVX2FLAGS = -DUSE_AVX2 -DUSE_SIMD -mavx2 -mbmi -mfma
@@ -29,6 +29,10 @@ else
     MKDIR = mkdir -p
     RMDIR = rm -rf
     RM = rm
+endif
+
+ifeq ($(CXX), clang++)
+	CXXLINKERFLAGS += -fuse-ld=lld
 endif
 
 all: $(ARCHS)
