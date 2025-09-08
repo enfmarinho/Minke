@@ -5,7 +5,7 @@ BASE_BUILD_DIR = build
 SOURCES = $(wildcard src/*.cpp)
 OBJECTS = $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(notdir $(SOURCES)))
 
-CXX = clang++
+CXX = g++
 CXXSTD = -std=c++20
 CXXWARNS = -Wall
 CXXFLAGS = -O3 -funroll-loops -DNDEBUG -DNET_PATH=\"$(NET_PATH)\" $(CXXSTD) $(CXXWARNS)
@@ -16,7 +16,7 @@ AVX2FLAGS = -DUSE_AVX2 -DUSE_SIMD -mavx2 -mbmi -mfma
 BMI2FLAGS = -DUSE_AVX2 -DUSE_SIMD -mavx2 -mbmi -mbmi2 -mfma
 AVX512FLAGS = -DUSE_AVX512 -DUSE_SIMD -mavx512f -mavx512bw -mfma
 APPLESILICONFLAGS = -march=armv8.5-a -mcpu=apple-m1 -DUSE_SIMD -DUSE_APPLE_SILICON
-ARCHS = native avx2 bmi2 avx512 apple-silicon 
+ARCHS = native avx2 bmi2 avx512 
 
 ifeq ($(OS), Windows_NT)
 	CXXFLAGS += -static
@@ -25,6 +25,11 @@ ifeq ($(OS), Windows_NT)
     RMDIR = cmd /C rmdir /S /Q
     RM = del
 else
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S), Darwin)
+		CXX = clang++
+		ARCHS = apple-silicon
+	endif
     CXXLINKERFLAGS += -pthread
     MKDIR = mkdir -p
     RMDIR = rm -rf
@@ -69,6 +74,6 @@ $(BUILD_DIR):
 
 clean:
 	$(RMDIR) $(BASE_BUILD_DIR)
-	$(RM) -f $(foreach v,$(ARCHS),$(EXE)-$(v))
+	$(RM) -f $(foreach v,$(ARCHS),$(EXE)-$(v)) apple-silicon
 
 -include $(OBJECTS:.o=.d)
