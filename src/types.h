@@ -114,6 +114,7 @@ constexpr int MAX_PLY = MAX_SEARCH_DEPTH + 100 + 5; // Plus 100 because of fifty
 constexpr ScoreType MATE_SCORE = 32000;
 constexpr ScoreType MATE_FOUND = MATE_SCORE - MAX_SEARCH_DEPTH;
 constexpr ScoreType MAX_SCORE = 32500;
+constexpr ScoreType SCORE_NONE = MAX_SCORE + 10;
 constexpr CounterType NUMBER_OF_PIECES = 6;
 constexpr IndexType BOARD_HEIGHT = 8;
 constexpr IndexType BOARD_WIDTH = 8;
