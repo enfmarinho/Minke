@@ -184,14 +184,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
         eval = raw_eval = td.static_eval[td.height] = position.eval();
     }
 
-    bool improving = false;
-    if (!in_check) {
-        if (td.height > 1) {
-            improving = static_eval > td.static_eval[td.height - 2] || td.static_eval[td.height - 2] == SCORE_NONE;
-        } else if (td.height > 3) {
-            improving = static_eval > td.static_eval[td.height - 4] || td.static_eval[td.height - 4] == SCORE_NONE;
-        }
-    }
+    bool improving = td.height >= 2 && (td.static_eval[td.height] > td.static_eval[td.height - 2] ||
+                                        td.static_eval[td.height - 2] == SCORE_NONE);
 
     // Forward pruning methods
     if (!in_check && !pv_node && !root) {
