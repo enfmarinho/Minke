@@ -109,8 +109,8 @@ ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &td) 
 
     int delta = 100; // TODO
 
-    ScoreType alpha = ttentry->eval() - delta;
-    ScoreType beta = ttentry->eval() + delta;
+    ScoreType alpha = ttentry->score() - delta;
+    ScoreType beta = ttentry->score() + delta;
     ScoreType eval = negamax(alpha, beta, depth, pv_list, td);
     if (eval >= beta)
         eval = negamax(alpha, MAX_SCORE, depth, pv_list, td);
@@ -150,13 +150,13 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
     bool tthit;
     TTEntry *ttentry = td.tt.probe(position, tthit);
     if (!pv_node && tthit && ttentry->depth() >= depth &&
-        (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->eval() <= alpha) ||
-         (ttentry->bound() == LOWER && ttentry->eval() >= beta))) {
-        return ttentry->eval();
+        (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->score() <= alpha) ||
+         (ttentry->bound() == LOWER && ttentry->score() >= beta))) {
+        return ttentry->score();
     }
     // Extraction data from ttentry if tthit
     Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
-    ScoreType tteval = (tthit ? ttentry->eval() : -MAX_SCORE);
+    ScoreType tteval = (tthit ? ttentry->score() : -MAX_SCORE);
 
     // Internal Iterative Reductions
     if (!tthit && depth >= 4) {
