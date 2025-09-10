@@ -164,14 +164,24 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
         --depth;
     }
 
-    ScoreType static_eval = SCORE_NONE;
+    ScoreType eval = SCORE_NONE;
+    ScoreType raw_eval = SCORE_NONE;
     bool in_check = position.in_check();
     if (in_check) {
-        static_eval = td.static_eval[td.height] = SCORE_NONE;
-    } else if (tthit && ttentry->static_eval() != SCORE_NONE) {
-        static_eval = td.static_eval[td.height] = ttentry->static_eval();
+        eval = raw_eval = td.static_eval[td.height] = SCORE_NONE;
+    } else if (tthit) {
+        raw_eval = ttentry->static_eval();
+        if (raw_eval == SCORE_NONE)
+            raw_eval = position.eval();
+        eval = td.static_eval[td.height] = raw_eval;
+
+        if (ttentry->score() != SCORE_NONE &&
+            (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->score() < eval) ||
+             (ttentry->bound() == LOWER && ttentry->score() > eval))) {
+            eval = ttentry->score();
+        }
     } else {
-        static_eval = td.static_eval[td.height] = position.eval();
+        eval = raw_eval = td.static_eval[td.height] = position.eval();
     }
 
     bool improving = false;
@@ -186,13 +196,13 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
     // Forward pruning methods
     if (!in_check && !pv_node && !root) {
         // Reverse futility pruning
-        if (depth < RFP_DEPTH && static_eval - RFP_MARGIN * (depth - improving) >= beta)
-            return static_eval;
+        if (depth < RFP_DEPTH && eval - RFP_MARGIN * (depth - improving) >= beta)
+            return eval;
 
         // Null move pruning
-        if (!position.last_was_null() && depth >= NMP_DEPTH && static_eval >= beta && position.has_non_pawns()) {
+        if (!position.last_was_null() && depth >= NMP_DEPTH && eval >= beta && position.has_non_pawns()) {
             // TODO check for advanced tweaks
-            const int reduction = NMP_BASE + depth / NMP_DIVISOR + std::clamp((static_eval - beta) / 300, -1, 3);
+            const int reduction = NMP_BASE + depth / NMP_DIVISOR + std::clamp((eval - beta) / 300, -1, 3);
 
             position.make_null_move();
             ++td.height;
@@ -285,7 +295,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
 
     if (!stop_search(td)) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
-        ttentry->save(position.get_hash(), depth, best_move, best_score, static_eval, position.get_game_ply(), bound);
+        ttentry->save(position.get_hash(), depth, best_move, best_score, raw_eval, position.get_game_ply(), bound);
         td.best_move = best_move;
     }
 
