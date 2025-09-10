@@ -158,7 +158,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
     }
     // Extraction data from ttentry if tthit
     Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
-    ScoreType ttscore = (tthit ? ttentry->score() : -MAX_SCORE);
 
     // Internal Iterative Reductions
     if (!tthit && depth >= 4) {
@@ -170,9 +169,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
     if (in_check) {
         static_eval = td.static_eval[td.height] = SCORE_NONE;
     } else if (tthit && ttentry->static_eval() != SCORE_NONE) {
-        static_eval = ttentry->static_eval();
+        static_eval = td.static_eval[td.height] = ttentry->static_eval();
     } else {
-        static_eval = position.eval();
+        static_eval = td.static_eval[td.height] = position.eval();
     }
 
     bool improving = false;
