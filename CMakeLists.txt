@@ -4,37 +4,44 @@ project(Minke)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 set(CMAKE_CXX_STANDARD 20)
 
+# Sources files
+file(GLOB SOURCES src/*.cpp)
+
+# Common flags
+set(NET_PATH "${CMAKE_SOURCE_DIR}/src/minke.bin")
+set(COMMON_COMPILE_FLAGS "-DNET_PATH=\"${NET_PATH}\"")
+set(COMMON_LINK_FLAGS "")
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Datagen")
-  add_compile_options("-DDATAGEN_BUILD")
+  set(COMMON_COMPILE_FLAGS ${COMMON_COMPILE_FLAGS} "-DDATAGEN_BUILD")
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-add_compile_options("-pthread")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_compile_options(
-    "-Wall"
-    "-Wshadow"
-    "-Wsign-compare"
-    "-Wold-style-cast"
-    "-Wpedantic"
-    "-Wextra"
-    "-Wcast-align"
-    "-Wcast-qual"
-    "-fsanitize=address"
-    "-fsanitize=undefined"
-    "-g")
-  add_link_options(-fsanitize=address)
-  add_link_options(-fsanitize=undefined)
+  set(COMMON_COMPILE_FLAGS
+      ${COMMON_COMPILE_FLAGS}
+      "-Wall"
+      "-Wshadow"
+      "-Wsign-compare"
+      "-Wold-style-cast"
+      "-Wpedantic"
+      "-Wextra"
+      "-Wcast-align"
+      "-Wcast-qual"
+      "-g")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-  add_compile_options("-O3" "-funroll-loops" "-march=native" "-DNDEBUG")
+  set(COMMON_COMPILE_FLAGS ${COMMON_COMPILE_FLAGS} "-O3" "-funroll-loops"
+                           "-DNDEBUG")
+  set(COMMON_LINK_FLAGS ${COMMON_COMPILE_FLAGS} "-fuse-ld=lld" "-flto")
 endif()
-add_link_options("-fuse-ld=lld")
-add_link_options("-flto")
 
-# Path to the neural net
-set(NET_PATH "${CMAKE_SOURCE_DIR}/src/minke.bin")
+if(WIN32)
+  set(COMMON_COMPILE_FLAGS ${COMMON_COMPILE_FLAGS} "-static")
+elseif(UNIX)
+  set(COMMON_LINK_FLAGS ${COMMON_LINK_FLAGS} "-pthread")
+endif()
 
 # Make init.cpp recompiled when NET_PATH has changed
 set_property(
@@ -42,25 +49,19 @@ set_property(
   APPEND
   PROPERTY OBJECT_DEPENDS ${NET_PATH})
 
-# Define NET_PATH macro
-add_compile_options("-DNET_PATH=\"${NET_PATH}\"")
+function(add_minke_variant name flags)
+  add_executable(minke-${name} ${SOURCES})
+  target_compile_options(minke-${name} PRIVATE ${COMMON_COMPILE_FLAGS} ${flags})
+  target_link_options(minke-${name} PRIVATE ${COMMON_LINK_FLAGS})
+endfunction()
 
-# Add and link executable.
-add_executable(
-  minke
-  "src/attacks.cpp"
-  "src/history.cpp"
-  "src/init.cpp"
-  "src/main.cpp"
-  "src/move.cpp"
-  "src/movegen.cpp"
-  "src/movepicker.cpp"
-  "src/nnue.cpp"
-  "src/position.cpp"
-  "src/pv_list.cpp"
-  "src/search.cpp"
-  "src/time_manager.cpp"
-  "src/tt.cpp"
-  "src/uci.cpp")
-
-target_link_libraries(minke)
+if(APPLE)
+  add_minke_variant(
+    apple-silicon
+    "-march=armv8.5-a;-mcpu=apple-m1;-DUSE_SIMD;-DUSE_APPLE_SILICON")
+else()
+  add_minke_variant(native "-march=native")
+  add_minke_variant(avx2 "-DUSE_AVX2;-DUSE_SIMD;-mavx2;-mbmi;-mfma")
+  add_minke_variant(bmi2 "-DUSE_AVX2;-DUSE_SIMD;-mavx2;-mbmi;-mbmi2;-mfma")
+  add_minke_variant(avx512 "-DUSE_AVX512;-DUSE_SIMD;-mavx512f;-mavx512bw;-mfma")
+endif()
