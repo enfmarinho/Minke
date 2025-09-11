@@ -11,6 +11,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 #include "attacks.h"
@@ -52,6 +53,7 @@ ThreadData::ThreadData() {
 }
 
 void ThreadData::reset_search_parameters() {
+    memset(static_eval, SCORE_NONE, sizeof(static_eval));
     best_move = MOVE_NONE;
     stop = true;
     height = 0;
@@ -163,15 +165,23 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
         --depth;
     }
 
-    bool improving = false; // TODO
     bool in_check = position.in_check();
-    ScoreType eval = -MAX_SCORE;
-    if (!in_check) {
-        if (tthit)
-            eval = tteval;
-        else
-            eval = position.eval();
+    ScoreType eval;
+    if (in_check) {
+        eval = td.static_eval[td.height] = SCORE_NONE;
+    } else if (tthit) {
+        eval = td.static_eval[td.height] = position.eval();
+        if (ttentry->score() != SCORE_NONE &&
+            (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->score() < eval) ||
+             (ttentry->bound() == LOWER && ttentry->score() > eval)))
+            eval = ttentry->score();
+
+    } else {
+        eval = td.static_eval[td.height] = position.eval();
     }
+
+    bool improving = td.height >= 2 && td.static_eval[td.height] > td.static_eval[td.height - 2] ||
+                     td.static_eval[td.height - 2] == SCORE_NONE;
 
     // Forward pruning methods
     if (!in_check && !pv_node && !root) {
@@ -234,6 +244,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
                 reduction -= !move.is_quiet();
                 // Reduce less when in check
                 reduction -= in_check;
+                // Reduce more if not improving
+                if (!improving)
+                    reduction += 1;
                 // Reduce less if move is killer
                 reduction -= td.search_history.is_killer(move, depth);
 
