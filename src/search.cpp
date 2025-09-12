@@ -303,9 +303,14 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     else if (td.height >= MAX_SEARCH_DEPTH - 1)
         return position.in_check() ? 0 : position.eval();
 
+    bool pv_node = alpha != beta - 1;
     bool tthit;
-    TTEntry *ttentry = td.tt.probe(position, tthit);
-    Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
+    TTEntry *tte = td.tt.probe(position, tthit);
+    if (!pv_node && tthit && tte->score() != SCORE_NONE &&
+        (tte->bound() == EXACT || (tte->bound() == UPPER && tte->score() <= alpha) ||
+         (tte->bound() == LOWER && tte->score() >= beta))) {
+        return tte->score();
+    }
 
     ScoreType stand_pat = position.eval();
     alpha = std::max(alpha, stand_pat);
@@ -313,7 +318,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         return beta;
 
     Move move = MOVE_NONE;
-    MovePicker move_picker(ttmove, &td, true);
+    MovePicker move_picker((tthit ? tte->best_move() : MOVE_NONE), &td, true);
     // TODO check if its worth to check for quiet moves if in check
     while ((move = move_picker.next_move(true)) != MOVE_NONE) {
         assert(move.is_capture() || move.is_promotion());
