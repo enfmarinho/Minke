@@ -138,8 +138,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
         if (position.draw())
             return 0;
 
-        if (td.height > MAX_SEARCH_DEPTH - 1)
-            return position.eval();
+        if (td.height >= MAX_SEARCH_DEPTH - 1)
+            return position.in_check() ? 0 : position.eval();
 
         // Mate distance pruning
         alpha = std::max(alpha, static_cast<ScoreType>(-MATE_SCORE + td.height));
@@ -300,6 +300,8 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         return -MAX_SCORE;
     else if (position.draw())
         return 0;
+    else if (td.height >= MAX_SEARCH_DEPTH - 1)
+        return position.in_check() ? 0 : position.eval();
 
     bool tthit;
     TTEntry *ttentry = td.tt.probe(position, tthit);
