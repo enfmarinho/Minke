@@ -75,7 +75,7 @@ ScoreType iterative_deepening(ThreadData &td) {
     ScoreType past_eval = -MAX_SCORE;
     for (CounterType depth = 1; depth <= td.search_limits.depth; ++depth) {
         PvList pv_list;
-        ScoreType eval = negamax(-MAX_SCORE, MAX_SCORE, depth, pv_list, td);
+        ScoreType eval = aspiration(depth, past_eval, pv_list, td);
         if (stop_search(td)) // Search did not finished completely
             break;
 
@@ -103,23 +103,39 @@ ScoreType iterative_deepening(ThreadData &td) {
     return past_eval;
 }
 
-ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &td) {
-    bool tthit;
-    TTEntry *ttentry = td.tt.probe(td.position, tthit);
-    if (!tthit)
-        return negamax(-MAX_SCORE, MAX_SCORE, depth, pv_list, td);
+ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, PvList &pv_list, ThreadData &td) {
+    ScoreType alpha = -MAX_SCORE;
+    ScoreType beta = MAX_SCORE;
+    ScoreType delta = AW_DELTA;
+    if (depth >= AW_MIN_DEPTH) {
+        alpha = prev_score - delta;
+        beta = prev_score + delta;
+    }
 
-    int delta = 100; // TODO
+    ScoreType score;
+    CounterType curr_depth = depth;
+    while (true) {
+        ScoreType curr_score = negamax(alpha, beta, curr_depth, pv_list, td);
 
-    ScoreType alpha = ttentry->score() - delta;
-    ScoreType beta = ttentry->score() + delta;
-    ScoreType eval = negamax(alpha, beta, depth, pv_list, td);
-    if (eval >= beta)
-        eval = negamax(alpha, MAX_SCORE, depth, pv_list, td);
-    else if (eval <= alpha)
-        eval = negamax(-MAX_SCORE, beta, depth, pv_list, td);
+        if (stop_search(td))
+            break;
 
-    return eval;
+        score = curr_score;
+
+        if (curr_score <= alpha) {
+            beta = (alpha + beta) / 2;
+            alpha = std::max(-MAX_SCORE, score - delta);
+        } else if (curr_score >= beta) {
+            beta = std::min(static_cast<ScoreType>(score + delta), MAX_SCORE);
+            curr_depth = std::max(curr_depth - 1, depth);
+        } else {
+            break;
+        }
+
+        delta += delta / 2;
+    }
+
+    return score;
 }
 
 ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td) {
