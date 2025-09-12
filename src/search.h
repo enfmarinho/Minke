@@ -27,6 +27,8 @@ constexpr int RFP_MARGIN = 100;
 constexpr int NMP_DEPTH = 3;
 constexpr int NMP_BASE = 3;
 constexpr int NMP_DIVISOR = 4;
+constexpr int AW_MIN_DEPTH = 4;
+constexpr int AW_DELTA = 10;
 
 struct SearchLimits {
     int depth;
@@ -59,7 +61,7 @@ struct ThreadData {
 };
 
 ScoreType iterative_deepening(ThreadData &td);
-ScoreType aspiration(const CounterType &depth, PvList &pv_list, ThreadData &td);
+ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, PvList &pv_list, ThreadData &td);
 ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td);
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td);
 bool SEE(Position &position, const Move &move, int threshold);
