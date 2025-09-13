@@ -1,29 +1,37 @@
-# Minke
-Working in progress UCI compatible chess engine done in order to learn and to get 
+ # Minke
+Work in progress UCI compatible chess engine done in order to learn and to get 
 fun. Based on NNUE evaluation, Bitboard board representation and a lot of search 
 enhancements.
 
-# Compiling and running
-There is a CMakeList.txt file in order to facilitate the compiling process, so
-you just need to clone this repository, then use the cmake command to generate 
-the build directory and then trigger the compilation process, for that, use the
-following commands:
-```bash
-git clone https://github.com/enfmarinho/Minke.git && cd Minke
-cmake -S . -B build
-cmake --build build
+## Building
+### Clone the Repository
 ```
-This will trigger the compilation process. Then to run it, just use:
-```bash
-./build/minke
+git clone https://github.com/enfmarinho/Minke.git
+cd Minke
 ```
-# Features
-## Board Representation
+### Compile
+To compile Minke use the makefile like so: 
+```
+make <ARCH>
+```
+
+Replace \<ARCH\> with the desired target architecture:
+- avx2
+- bmi2
+- avx512
+- native
+- apple-silicon
+
+This will generate the executable called minke-\<ARCH\>
+
+## Features
+### Board Representation
 - Bitboards
 - Plain Magic Bitboards
-## Move Generation
+### Move Generation
 - Staged Move Generator
-### Move ordering
+- Pseudo-legal
+#### Move ordering
 - Transposition Table Move
 - Promotions
 - Captures 
@@ -32,19 +40,33 @@ This will trigger the compilation process. Then to run it, just use:
     - Capture history
 - Historic Heuristic
 - Killer Moves
-## Search
+### Search
 - Iterative Deepening
-- Negamax search with alpha-beta pruning
+- Negamax with Alpha-Beta Pruning
+- Aspiration Windows Search 
 - Principal Variation Search (PVS)
 - Transposition Table Cutoffs
 - Late Move Reduction (LMR)
 - Null Move Pruning (NMP)
 - Reverse Futility Pruning (RFP)
+- Internal Iterative Reduction (IIR)
 - Quiescence Search
 - Mate Distance Pruning
-## Evaluation
+- Improving Heuristic
+### Evaluation
 - Quantized NNUE (Easily Updatable Neural Network)
-    - Accumulators
     - SCrelu as the activation neuron
-    - Net trainer: [bullet](https://github.com/jw1912/bullet)
     - Net architecture: (768 -> 1024)x2 -> 1
+
+## Acknowledgements
+Minke has been inspired by several other chess engines, such as:
+* [Alexandria](https://github.com/PGG106/Alexandria)
+* [Altair](https://github.com/Alex2262/AltairChessEngine)
+* [Stormphrax](https://github.com/Ciekce/Stormphrax)
+* [Berserk](https://github.com/jhonnold/berserk)
+* [Ethereal](https://github.com/AndyGrant/Ethereal)
+  
+Other important tools used in the development of Minke include:
+* [bullet](https://github.com/jw1912/bullet)
+* [CPW](https://www.chessprogramming.org/Main_Page)
+* [fastchess](https://github.com/Disservin/fastchess)
