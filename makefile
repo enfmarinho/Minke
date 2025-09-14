@@ -20,12 +20,13 @@ ARCHS = native avx2 bmi2 avx512
 
 ifeq ($(OS), Windows_NT)
 	CXXFLAGS += -static
-    EXE := $(EXE).exe
+    SUFFIX := .exe
     MKDIR = cmd /C mkdir
     RMDIR = cmd /C rmdir /S /Q
     RM = del
 else
 	UNAME_S := $(shell uname -s)
+	SUFFIX := 
 	ifeq ($(UNAME_S), Darwin)
 		CXX = clang++
 		ARCHS = apple-silicon
@@ -43,19 +44,19 @@ endif
 all: $(ARCHS)
 
 native:
-	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(NATIVEFLAGS)" $(EXE)-$@
+	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(NATIVEFLAGS)" $(EXE)-$@$(SUFFIX)
 
 avx2:
-	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(AVX2FLAGS)" $(EXE)-$@
+	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(AVX2FLAGS)" $(EXE)-$@$(SUFFIX)
 
 bmi2:
-	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(BMI2FLAGS)" $(EXE)-$@
+	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(BMI2FLAGS)" $(EXE)-$@$(SUFFIX)
 
 avx512:
-	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(AVX512FLAGS)" $(EXE)-$@
+	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(AVX512FLAGS)" $(EXE)-$@$(SUFFIX)
 
 apple-silicon:
-	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(APPLESILICONFLAGS)" $(EXE)-$@
+	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(APPLESILICONFLAGS)" $(EXE)-$@$(SUFFIX)
 
 $(EXE)-%: $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(ARCH_FLAGS) $(CXXLINKERFLAGS) -o $@ $^
