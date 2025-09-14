@@ -112,7 +112,7 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, PvLis
         beta = prev_score + delta;
     }
 
-    ScoreType score;
+    ScoreType score = SCORE_NONE;
     while (true) {
         ScoreType curr_score = negamax(alpha, beta, depth, pv_list, td);
 
@@ -172,7 +172,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
     }
     // Extraction data from ttentry if tthit
     Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
-    ScoreType tteval = (tthit ? ttentry->score() : -MAX_SCORE);
 
     // Internal Iterative Reductions
     if (!tthit && depth >= 4) {
@@ -194,8 +193,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
         eval = td.static_eval[td.height] = position.eval();
     }
 
-    bool improving = td.height >= 2 && td.static_eval[td.height] > td.static_eval[td.height - 2] ||
-                     td.static_eval[td.height - 2] == SCORE_NONE;
+    bool improving = td.height >= 2 && (td.static_eval[td.height] > td.static_eval[td.height - 2] ||
+                                        td.static_eval[td.height - 2] == SCORE_NONE);
 
     // Forward pruning methods
     if (!in_check && !pv_node && !root) {
