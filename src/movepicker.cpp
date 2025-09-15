@@ -21,7 +21,6 @@ void MovePicker::init(Move ttmove, ThreadData *td, bool qsearch) {
     this->m_ttmove = ttmove;
     this->m_qsearch = qsearch;
 
-    // Don't pick ttmove if in qsearch unless ttmove is noisy
     if (ttmove != MOVE_NONE)
         m_stage = PICK_TT;
     else
@@ -34,11 +33,11 @@ void MovePicker::init(Move ttmove, ThreadData *td, bool qsearch) {
 
 Move MovePicker::next_move(const bool &skip_quiets) { return next_move_scored(skip_quiets).move; }
 
-ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
+ScoredMove MovePicker::next_move_scored(const bool &skip) {
     switch (m_stage) {
         case PICK_TT:
             m_stage = GEN_NOISY;
-            if (!skip_quiets || m_ttmove.is_noisy()) {
+            if (!skip || m_ttmove.is_noisy()) {
                 return {m_ttmove, TT_SCORE};
             } else {
                 // Fall-through
@@ -58,18 +57,20 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
                 else
                     ++m_curr;
             }
-            if (m_qsearch) {
-                m_stage = FINISHED;
-                return SCORED_MOVE_NONE;
-            }
-            if (skip_quiets) {
+            if (skip) {
+                // in quiescence search skip quiets and bad captures
+                if (m_qsearch) {
+                    m_stage = FINISHED;
+                    return SCORED_MOVE_NONE;
+                }
+
+                // if in search skip only quiets
                 m_curr = m_moves;
                 m_stage = PICK_BAD_NOISY;
-                return next_move_scored(skip_quiets); // Work around to avoid the switch fall-through
-            } else {
-                m_curr = m_end_bad;
-                m_stage = GEN_QUIET;
+                return next_move_scored(skip); // Work around to avoid the switch fall-through
             }
+            m_curr = m_end_bad;
+            m_stage = GEN_QUIET;
             // Fall-through
         case GEN_QUIET:
             m_end = gen_moves(m_curr, m_td->position, QUIET);
