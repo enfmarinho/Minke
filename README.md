@@ -57,6 +57,7 @@ This will generate the executable called minke-\<ARCH\>
 - Quantized NNUE (Easily Updatable Neural Network)
     - SCrelu as the activation neuron
     - Net architecture: (768 -> 1024)x2 -> 1
+    - Trained with 13 billion positions from [Stockfish nodes5000pv2_UHO data](https://drive.google.com/file/d/1UQdZN_LWQ265spwTBwDKo0t1WjSJKvWY/view)
 
 ## Acknowledgements
 Minke has been inspired by several other chess engines, such as:
