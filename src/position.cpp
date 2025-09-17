@@ -262,7 +262,6 @@ bool Position::make_move(const Move &move) {
     ++m_game_clock_ply;
     ++m_curr_state.fifty_move_ply;
     ++m_curr_state.ply_from_null;
-    update_pin_and_checkers_bb();
 
     if (m_curr_state.en_passant != NO_SQ) {
         hash_ep_key();
@@ -292,6 +291,7 @@ bool Position::make_move(const Move &move) {
         legal = !in_check();
 
     change_side();
+    update_pin_and_checkers_bb();
     return legal;
 }
 
@@ -507,7 +507,6 @@ void Position::make_null_move() {
     m_history_stack[m_history_ply] = m_curr_state;
     m_played_positions[m_history_ply] = m_hash_key;
     ++m_history_ply;
-    update_pin_and_checkers_bb();
 
     m_curr_state.ply_from_null = 0;
     m_curr_state.captured = EMPTY;
@@ -519,6 +518,7 @@ void Position::make_null_move() {
     }
     hash_side_key();
     change_side();
+    update_pin_and_checkers_bb();
 }
 
 void Position::unmake_null_move() {
