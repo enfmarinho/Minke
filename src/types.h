@@ -107,6 +107,7 @@ using TimeType = std::chrono::milliseconds::rep;
 using TimePoint = std::chrono::steady_clock::time_point;
 using Bitboard = uint64_t;
 
+constexpr Bitboard ALL_BITS = -1ULL;
 constexpr int MAX_MOVES_PER_POS = 256;
 constexpr int MAX_SEARCH_DEPTH = 256;
 constexpr int MAX_PLY = MAX_SEARCH_DEPTH + 100 + 5; // Plus 100 because of fifty move rule and plus 5 just to be safe
