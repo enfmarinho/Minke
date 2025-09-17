@@ -110,6 +110,7 @@ class Position {
     template <bool UPDATE>
     void make_en_passant(const Move &move);
     void update_castling_rights(const Move &move);
+    void update_pin_and_checkers_bb();
 
     bool insufficient_material() const;
     bool repetition() const;

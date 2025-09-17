@@ -109,6 +109,7 @@ bool Position::set_fen(const std::string &fen) {
         std::cerr << "INVALID FEN: game clock is not a number." << std::endl;
         return false;
     }
+    update_pin_and_checkers_bb();
 
     return true;
 }
@@ -261,6 +262,7 @@ bool Position::make_move(const Move &move) {
     ++m_game_clock_ply;
     ++m_curr_state.fifty_move_ply;
     ++m_curr_state.ply_from_null;
+    update_pin_and_checkers_bb();
 
     if (m_curr_state.en_passant != NO_SQ) {
         hash_ep_key();
@@ -505,6 +507,7 @@ void Position::make_null_move() {
     m_history_stack[m_history_ply] = m_curr_state;
     m_played_positions[m_history_ply] = m_hash_key;
     ++m_history_ply;
+    update_pin_and_checkers_bb();
 
     m_curr_state.ply_from_null = 0;
     m_curr_state.captured = EMPTY;
@@ -524,6 +527,28 @@ void Position::unmake_null_move() {
     m_hash_key = m_played_positions[m_history_ply];
     --m_game_clock_ply;
     change_side();
+}
+
+void Position::update_pin_and_checkers_bb() {
+    Color adversary = static_cast<Color>(m_stm ^ 1);
+    Square king_sq = get_king_placement(m_stm);
+    m_curr_state.pins = 0;
+    m_curr_state.checkers = (pawn_attacks[m_stm][king_sq] & get_piece_bb(PAWN, adversary)) // Pawns
+                            | (knight_attacks[king_sq] & get_piece_bb(KNIGHT, adversary)); // Knights;
+
+    Bitboard slider_checkers =
+        ((get_piece_bb(QUEEN, adversary) | get_piece_bb(BISHOP, adversary)) & get_bishop_attacks(king_sq, 0)) |
+        ((get_piece_bb(QUEEN, adversary) | get_piece_bb(ROOK, adversary)) & get_rook_attacks(king_sq, 0));
+    while (slider_checkers) {
+        Square sq = poplsb(slider_checkers);
+
+        Bitboard blockers = between_squares[king_sq][sq] & get_occupancy();
+        if (!blockers) {
+            set_bit(m_curr_state.checkers, sq);
+        } else if (count_bits(blockers) == 1) {
+            set_bits(m_curr_state.pins, blockers & get_occupancy(m_stm));
+        }
+    }
 }
 
 Move Position::get_movement(const std::string &algebraic_notation) const {
