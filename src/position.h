@@ -89,6 +89,8 @@ class Position {
     inline Piece consult(const Square &sq) const { return m_board[sq]; }
     inline int get_history_ply() const { return m_history_ply; }
     inline BoardState get_board_state() const { return m_curr_state; };
+    inline Bitboard get_checkers() const { return m_curr_state.checkers; }
+    inline Bitboard get_pins() const { return m_curr_state.pins; }
     inline void reset_history() { m_history_ply = 0; }
 
   private:
