@@ -54,7 +54,7 @@ static inline ScoredMove* gen_pawn_moves(ScoredMove* moves, const Position& posi
     if (!pawns) // No pawns
         return moves;
 
-    Bitboard empty_targets = ~position.get_occupancy() & destination;
+    Bitboard empty_targets = ~position.get_occupancy();
     Bitboard single_push = shift(pawns, pawn_offset) & empty_targets;
     Bitboard promotion = single_push & RANK_MASKS[get_pawn_promotion_rank(stm)];
 
@@ -63,16 +63,20 @@ static inline ScoredMove* gen_pawn_moves(ScoredMove* moves, const Position& posi
         Bitboard double_push =
             shift(single_push_no_promotion, pawn_offset) & empty_targets & RANK_MASKS[(stm == WHITE ? 3 : 4)];
 
+        single_push_no_promotion &= destination;
         while (single_push_no_promotion) {
             Square to = poplsb(single_push_no_promotion);
             *moves++ = {Move(static_cast<Square>(to - pawn_offset), to, REGULAR), 0};
         }
+
+        double_push &= destination;
         while (double_push) {
             Square to = poplsb(double_push);
             *moves++ = {Move(static_cast<Square>(to - 2 * pawn_offset), to, REGULAR), 0};
         }
     }
     if (gen_type & NOISY) {
+        promotion &= destination;
         while (promotion) {
             Square to = poplsb(promotion);
             *moves++ = {Move(static_cast<Square>(to - pawn_offset), to, PAWN_PROMOTION_QUEEN), 0};
@@ -169,7 +173,7 @@ ScoredMove* gen_moves(ScoredMove* moves, const Position& position, const MoveGen
         moves = gen_piece_moves(moves, position, ROOK, destination, gen_type);
         moves = gen_piece_moves(moves, position, QUEEN, destination, gen_type);
     }
-    moves = gen_piece_moves(moves, position, KING, destination, gen_type);
+    moves = gen_piece_moves(moves, position, KING, ALL_BITS, gen_type);
 
     if (!position.in_check() && (gen_type & QUIET))
         moves = gen_castling_moves(moves, position);
