@@ -26,12 +26,14 @@ int LMR_TABLE[64][64];
 int LMP_TABLE[2][LMP_DEPTH];
 HashKeys hash_keys;
 Network network;
+Bitboard between_squares[64][64];
 
 void init_all() {
     init_search_params();
     init_network_params();
     init_hash_keys();
     init_magic_attack_tables();
+    init_between_squares();
 }
 
 void init_search_params() {
@@ -101,5 +103,21 @@ void init_magic_attack_tables() {
         pawn_attacks[BLACK][sq] = generate_pawn_attacks(sq, BLACK);
         knight_attacks[sq] = generate_knight_attacks(sq);
         king_attacks[sq] = generate_king_attacks(sq);
+    }
+}
+
+void init_between_squares() {
+    for (int sqi1 = a1; sqi1 <= h8; ++sqi1) {
+        for (int sqi2 = a1; sqi2 <= h8; ++sqi2) {
+            Square sq1 = static_cast<Square>(sqi1);
+            Square sq2 = static_cast<Square>(sqi2);
+            Bitboard occ1 = (1ULL << sq1);
+            Bitboard occ2 = (1ULL << sq2);
+            if (get_bishop_attacks(sq1, 0) & occ2) {
+                between_squares[sq1][sq2] = get_bishop_attacks(sq1, occ2) & get_bishop_attacks(sq2, occ1);
+            } else if (get_rook_attacks(sq1, 0) & occ2) {
+                between_squares[sq1][sq2] = get_rook_attacks(sq1, occ2) & get_rook_attacks(sq2, occ1);
+            }
+        }
     }
 }

@@ -18,4 +18,6 @@ void init_hash_keys();
 
 void init_magic_attack_tables();
 
+void init_between_squares();
+
 #endif // #ifndef INIT_H
