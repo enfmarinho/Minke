@@ -89,8 +89,7 @@ ScoreType iterative_deepening(ThreadData &td) {
         if (td.report)
             print_search_info(depth, eval, pv_list, td);
 
-        if (depth > 5)
-            td.time_manager.update();
+        td.time_manager.update(td, eval, best_move, depth);
         if (td.time_manager.stop_early())
             break;
 
