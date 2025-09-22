@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -54,6 +55,7 @@ ThreadData::ThreadData() {
 
 void ThreadData::reset_search_parameters() {
     memset(static_eval, SCORE_NONE, sizeof(static_eval));
+    memset(nodes_searched_table, 0, sizeof(nodes_searched_table));
     best_move = MOVE_NONE;
     stop = true;
     height = 0;
@@ -232,6 +234,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
             position.unmake_move<true>(move);
             continue;
         }
+        int64_t nodes_before_search = td.nodes_searched;
 
         // Add move to tried list
         if (move.is_quiet())
@@ -272,6 +275,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
 
         --td.height;
         position.unmake_move<true>(move);
+        if (root) {
+            td.nodes_searched_table[move.from_and_to()] += td.nodes_searched - nodes_before_search;
+        }
         assert(score >= -MAX_SCORE);
 
         if (score > best_score) {

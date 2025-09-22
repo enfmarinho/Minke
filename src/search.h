@@ -48,6 +48,7 @@ struct ThreadData {
     History search_history;
     Move best_move;
     ScoreType static_eval[MAX_SEARCH_DEPTH];
+    CounterType nodes_searched_table[64 * 64];
 
     SearchLimits search_limits;
     int64_t nodes_searched;
