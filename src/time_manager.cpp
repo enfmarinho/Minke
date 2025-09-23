@@ -7,6 +7,8 @@
 
 #include "time_manager.h"
 
+#include "move.h"
+#include "search.h"
 #include "types.h"
 
 TimeManager::TimeManager() { reset(); }
@@ -31,11 +33,12 @@ void TimeManager::reset(CounterType inc, CounterType time, CounterType mtg, Coun
     time = std::min(time - overhead, time / 2); // Decrease the overhead on total time
     time = std::max(time, 1);                   // Ensure time is positive
     inc = std::max(inc, 0);                     // Ensure inc is non negative
-    mtg = (mtg > 0 ? std::max(mtg, 50) : 50);   // Ensure movestogo is at most 50 if positive, else set it to 50
+    mtg = (mtg > 0 ? std::max(mtg, 50) : 40);   // Ensure movestogo is at most 50 if positive, else set it to 40
 
-    double base_time = 0.8 * time / static_cast<double>(mtg) + inc;
+    double base_time = 0.8 * time / static_cast<double>(mtg) + inc * 0.5;
+    m_optimum_base_time = base_time;
     m_optimum_time = m_start_time + base_time;
-    m_maximum_time = m_start_time + 4 * base_time;
+    m_maximum_time = m_start_time + 5 * base_time;
 
     // Limit time usage to 80% of total game time
     TimeType max_time = m_start_time + 0.8 * time;
@@ -47,13 +50,35 @@ void TimeManager::reset() {
     m_movetime = false;
     m_can_stop = false;
     m_time_set = false;
-    m_start_time = now();
+    m_maximum_time = m_optimum_time = m_start_time = now();
+    m_optimum_base_time = 0;
+
+    move_stability = 0;
+    prev_best_move = MOVE_NONE;
 }
 
-void TimeManager::update() {
+void TimeManager::update(const ThreadData &td, const Move &best_move, const int &depth) {
+    constexpr int MOVE_STABILITY_LIMIT = 5;
+    constexpr double MOVE_STABILITY_FACTORS[MOVE_STABILITY_LIMIT] = {2.5, 1.7, 1.4, 0.9, 0.8};
+
     if (m_movetime || !m_time_set)
         return;
-    // TODO update time manager m_optimum_time
+
+    if (best_move == prev_best_move)
+        move_stability = std::min(move_stability + 1, MOVE_STABILITY_LIMIT - 1);
+    else
+        move_stability = 0;
+    prev_best_move = best_move;
+
+    double best_move_nodes_fraction =
+        static_cast<double>(td.nodes_searched_table[best_move.from_and_to()]) / static_cast<double>(td.nodes_searched);
+    double scale = (1.5 - best_move_nodes_fraction) * 1.5;
+    scale *= MOVE_STABILITY_FACTORS[move_stability];
+
+    if (depth >= 5) {
+        m_optimum_base_time *= scale;
+        m_optimum_time = m_start_time + m_optimum_base_time;
+    }
 }
 
 bool TimeManager::stop_early() const { return m_can_stop && now() > m_optimum_time; }
