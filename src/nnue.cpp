@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <span>
 
 #include "incbin.h"
@@ -66,32 +67,39 @@ void NNUE::reset(const Position &position) {
     }
 }
 
-constexpr int32_t NNUE::crelu(const int32_t &input) const { return std::clamp(input, CRELU_MIN, CRELU_MAX); }
+inline int32_t NNUE::crelu(const int32_t &input) const { return std::clamp(input, CRELU_MIN, CRELU_MAX); }
 
-constexpr int32_t NNUE::screlu(const int32_t &input) const {
+inline int32_t NNUE::screlu(const int32_t &input) const {
     const int32_t crelu_out = crelu(input);
     return crelu_out * crelu_out;
 }
 
 ScoreType NNUE::weight_sum_reduction(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
-                                     const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const {
+                                     const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary,
+                                     const int output_bucket) const {
+    const int player_offset = output_bucket * 2 * HIDDEN_LAYER_SIZE;
+    const int adversary_offset = player_offset + HIDDEN_LAYER_SIZE;
+
     int32_t eval = 0;
-    for (int neuron_index = 0; neuron_index < HIDDEN_LAYER_SIZE; ++neuron_index) {
-        eval += screlu(player[neuron_index]) * network.output_weights[neuron_index];
-        eval += screlu(adversary[neuron_index]) * network.output_weights[neuron_index + HIDDEN_LAYER_SIZE];
+    for (int i = 0; i < HIDDEN_LAYER_SIZE; ++i) {
+        eval += screlu(player[i]) * network.output_weights[i + player_offset];
+        eval += screlu(adversary[i]) * network.output_weights[i + adversary_offset];
     }
 
-    eval = (eval / QA + network.output_bias) * SCALE / QAB;
+    eval = (eval / QA + network.output_bias[output_bucket]) * SCALE / QAB;
 
     return std::clamp(eval, -MATE_FOUND + 1, MATE_FOUND - 1);
 }
 
-ScoreType NNUE::eval(const Color &stm) const {
+ScoreType NNUE::eval(const int piece_count, const Color &stm) const {
+    const int output_bucket = (piece_count - 2) / OUTPUT_BUCKETS;
     switch (stm) {
         case WHITE:
-            return weight_sum_reduction(m_accumulators.back().white_neurons, m_accumulators.back().black_neurons);
+            return weight_sum_reduction(m_accumulators.back().white_neurons, m_accumulators.back().black_neurons,
+                                        output_bucket);
         case BLACK:
-            return weight_sum_reduction(m_accumulators.back().black_neurons, m_accumulators.back().white_neurons);
+            return weight_sum_reduction(m_accumulators.back().black_neurons, m_accumulators.back().white_neurons,
+                                        output_bucket);
         default:
             assert(false && "Tried to use eval function with player none\n");
     }

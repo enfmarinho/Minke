@@ -11,7 +11,6 @@
 #include <array>
 #include <cassert>
 #include <cstdint>
-#include <cstring>
 #include <span>
 #include <vector>
 
@@ -21,6 +20,7 @@ class Position;
 
 constexpr int INPUT_LAYER_SIZE = 64 * 12;
 constexpr int HIDDEN_LAYER_SIZE = 1024;
+constexpr int OUTPUT_BUCKETS = 8;
 
 constexpr int32_t CRELU_MIN = 0;
 constexpr int32_t CRELU_MAX = 255;
@@ -34,10 +34,10 @@ constexpr int QAB = QA * QB;
 struct alignas(64) Network {
     std::array<int16_t, INPUT_LAYER_SIZE * HIDDEN_LAYER_SIZE> hidden_weights;
     std::array<int16_t, HIDDEN_LAYER_SIZE> hidden_bias;
-    std::array<int16_t, HIDDEN_LAYER_SIZE * 2> output_weights;
-    int16_t output_bias;
+    std::array<int16_t, HIDDEN_LAYER_SIZE * 2 * OUTPUT_BUCKETS> output_weights;
+    int16_t output_bias[OUTPUT_BUCKETS];
 };
-extern Network network;
+extern const Network &network;
 
 // NOTE: NNUE must be initialized using reset().
 class NNUE {
@@ -56,7 +56,7 @@ class NNUE {
     void remove_feature(const Piece &piece, const Square &sq);
 
     void reset(const Position &position);
-    ScoreType eval(const Color &stm) const;
+    ScoreType eval(const int piece_count, const Color &stm) const;
 
     Accumulator debug_func(const Position &position);
 
@@ -72,10 +72,11 @@ class NNUE {
     };
     friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
 
-    constexpr int32_t crelu(const int32_t &input) const;
-    constexpr int32_t screlu(const int32_t &input) const;
+    inline int32_t crelu(const int32_t &input) const;
+    inline int32_t screlu(const int32_t &input) const;
     ScoreType weight_sum_reduction(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
-                                   const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const;
+                                   const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary,
+                                   const int output_bucket) const;
 
     std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
 };
