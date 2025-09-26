@@ -124,7 +124,10 @@ void UCI::loop() {
                 continue;
             else if (m_thread.joinable())
                 m_thread.join();
-            bench(EngineOptions::BENCH_DEPTH);
+
+            int bench_depth = EngineOptions::BENCH_DEPTH;
+            iss >> std::skipws >> bench_depth;
+            bench(bench_depth);
         } else if (!token.empty()) {
             std::cout << "Unknown command: '" << token << "'. Type help for information." << std::endl;
         }
