@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <span>
 
 #include "incbin.h"
