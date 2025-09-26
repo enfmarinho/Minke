@@ -18,6 +18,7 @@
 
 #include "incbin.h"
 #include "position.h"
+#include "simd.h"
 #include "types.h"
 #include "utils.h"
 
@@ -74,25 +75,48 @@ constexpr int32_t NNUE::screlu(const int32_t &input) const {
     return crelu_out * crelu_out;
 }
 
-ScoreType NNUE::weight_sum_reduction(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
-                                     const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const {
-    int32_t eval = 0;
-    for (int neuron_index = 0; neuron_index < HIDDEN_LAYER_SIZE; ++neuron_index) {
-        eval += screlu(player[neuron_index]) * network.output_weights[neuron_index];
-        eval += screlu(adversary[neuron_index]) * network.output_weights[neuron_index + HIDDEN_LAYER_SIZE];
+ScoreType NNUE::flatten_screlu_and_affine(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
+                                          const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const {
+#ifdef USE_SIMD
+    vepi32 sum_vec = vepi32_zero();
+    for (int i = 0; i < HIDDEN_LAYER_SIZE; i += REGISTER_SIZE) {
+        vepi16 player_weights_vec = vepi16_load(&network.output_weights[i]);
+        vepi16 player_vec = vepi16_load(&player[i]);
+
+        player_vec = vepi16_clamp(player_vec, QZERO, QONE);
+        vepi32 player_product = vepi16_madd(vepi16_mult(player_vec, player_weights_vec), player_vec);
+        sum_vec = vepi32_add(sum_vec, player_product);
+
+        vepi16 adversary_weights_vec = vepi16_load(&network.output_weights[i + HIDDEN_LAYER_SIZE]);
+        vepi16 adversary_vec = vepi16_load(&adversary[i]);
+
+        adversary_vec = vepi16_clamp(adversary_vec, QZERO, QONE);
+        vepi32 adversary_product = vepi16_madd(vepi16_mult(adversary_vec, adversary_weights_vec), adversary_vec);
+        sum_vec = vepi32_add(sum_vec, adversary_product);
     }
 
-    eval = (eval / QA + network.output_bias) * SCALE / QAB;
+    int32_t sum = vepi32_reduce_add(sum_vec);
 
-    return std::clamp(eval, -MATE_FOUND + 1, MATE_FOUND - 1);
+#else
+
+    int32_t sum = 0;
+    for (int neuron_index = 0; neuron_index < HIDDEN_LAYER_SIZE; ++neuron_index) {
+        sum += screlu(player[neuron_index]) * network.output_weights[neuron_index];
+        sum += screlu(adversary[neuron_index]) * network.output_weights[neuron_index + HIDDEN_LAYER_SIZE];
+    }
+
+#endif
+
+    sum = (sum / QA + network.output_bias) * SCALE / QAB;
+    return std::clamp(sum, -MATE_FOUND + 1, MATE_FOUND - 1);
 }
 
 ScoreType NNUE::eval(const Color &stm) const {
     switch (stm) {
         case WHITE:
-            return weight_sum_reduction(m_accumulators.back().white_neurons, m_accumulators.back().black_neurons);
+            return flatten_screlu_and_affine(m_accumulators.back().white_neurons, m_accumulators.back().black_neurons);
         case BLACK:
-            return weight_sum_reduction(m_accumulators.back().black_neurons, m_accumulators.back().white_neurons);
+            return flatten_screlu_and_affine(m_accumulators.back().black_neurons, m_accumulators.back().white_neurons);
         default:
             assert(false && "Tried to use eval function with player none\n");
     }
