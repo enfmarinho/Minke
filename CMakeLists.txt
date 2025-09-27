@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(
   Minke
-  VERSION 2.0
+  VERSION 2.0.0
   LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -69,3 +69,5 @@ elseif(arch STREQUAL "avx512")
 else()
   target_compile_options(minke PRIVATE -march=native)
 endif()
+set_target_properties(minke PROPERTIES OUTPUT_NAME
+                                       "minke-v${PROJECT_VERSION}-${arch}")
