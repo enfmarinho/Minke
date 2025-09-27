@@ -11,9 +11,23 @@
 #include <bit>
 #include <cassert>
 #include <cstdint>
+#include <iostream>
 #include <random>
 
 #include "types.h"
+
+inline void print_bb(Bitboard bb) {
+    for (int line = 7; line >= 0; --line) {
+        for (int column = 0; column < 8; ++column) {
+            int sq = line * 8 + column;
+            if (!column)
+                std::cout << "  " << line + 1 << "  ";
+            std::cout << (bb & (1ULL << sq) ? 1 : 0) << " ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n     a b c d e f g h\n\n";
+}
 
 inline void set_bit(Bitboard &bitboard, const Square &sq) { bitboard |= (1ULL << sq); }
 inline void set_bit(Bitboard &bitboard, const int &sq) { bitboard |= (1ULL << sq); }
