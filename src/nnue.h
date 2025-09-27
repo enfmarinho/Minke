@@ -11,10 +11,10 @@
 #include <array>
 #include <cassert>
 #include <cstdint>
-#include <cstring>
 #include <span>
 #include <vector>
 
+#include "simd.h"
 #include "types.h"
 
 class Position;
@@ -30,6 +30,11 @@ constexpr int SCALE = 400;
 constexpr int QA = 255;
 constexpr int QB = 64;
 constexpr int QAB = QA * QB;
+
+#ifdef USE_SIMD
+const vepi16 QZERO = vepi16_zero();
+const vepi16 QONE = vepi16_set(QA);
+#endif
 
 struct alignas(64) Network {
     std::array<int16_t, INPUT_LAYER_SIZE * HIDDEN_LAYER_SIZE> hidden_weights;
@@ -74,8 +79,8 @@ class NNUE {
 
     constexpr int32_t crelu(const int32_t &input) const;
     constexpr int32_t screlu(const int32_t &input) const;
-    ScoreType weight_sum_reduction(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
-                                   const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const;
+    ScoreType flatten_screlu_and_affine(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
+                                        const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const;
 
     std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
 };
