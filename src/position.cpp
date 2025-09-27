@@ -289,7 +289,7 @@ bool Position::make_move(const Move &move) {
     hash_side_key();
 
     if (!move.is_castle()) // If move is a castle, the legality has already been checked by make_castle()
-        legal = !in_check();
+        legal = !is_attacked(get_king_placement(m_stm));
 
     change_side();
     update_pin_and_checkers_bb();

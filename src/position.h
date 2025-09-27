@@ -38,7 +38,7 @@ class Position {
     void make_null_move();
     void unmake_null_move();
 
-    inline bool in_check() const { return is_attacked(get_king_placement(m_stm)); }
+    inline bool in_check() const { return m_curr_state.checkers; }
     bool is_attacked(const Square &sq) const;
     bool is_pseudo_legal(const Move &move) const;
     Bitboard attackers(const Square &sq) const;
