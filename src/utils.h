@@ -22,7 +22,7 @@ inline void print_bb(Bitboard bb) {
             int sq = line * 8 + column;
             if (!column)
                 std::cout << "  " << line + 1 << "  ";
-            std::cout << (bb & (1ULL << sq) ? 1 : 0) << " ";
+            std::cout << (bb & (1ULL << sq) ? "\033[32m1\033[0m" : "0") << " ";
         }
         std::cout << "\n";
     }
