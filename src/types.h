@@ -148,7 +148,11 @@ struct BoardState {
     int ply_from_null;
     uint8_t castling_rights;
     Square en_passant;
+    Bitboard checkers;
+    Bitboard pins;
     void reset() {
+        checkers = 0;
+        pins = 0;
         captured = EMPTY;
         fifty_move_ply = 0;
         ply_from_null = 0;

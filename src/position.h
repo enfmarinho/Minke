@@ -89,6 +89,8 @@ class Position {
     inline Piece consult(const Square &sq) const { return m_board[sq]; }
     inline int get_history_ply() const { return m_history_ply; }
     inline BoardState get_board_state() const { return m_curr_state; };
+    inline Bitboard get_checkers() const { return m_curr_state.checkers; }
+    inline Bitboard get_pins() const { return m_curr_state.pins; }
     inline void reset_history() { m_history_ply = 0; }
 
   private:
@@ -110,6 +112,7 @@ class Position {
     template <bool UPDATE>
     void make_en_passant(const Move &move);
     void update_castling_rights(const Move &move);
+    void update_pin_and_checkers_bb();
 
     bool insufficient_material() const;
     bool repetition() const;
