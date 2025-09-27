@@ -326,7 +326,7 @@ void Position::make_capture(const Move &move) {
 
     m_curr_state.fifty_move_ply = 0;
     m_curr_state.captured = consult(to);
-    assert(m_curr_state.captured != EMPTY);
+    assert(m_curr_state.captured != EMPTY && get_piece_type(m_curr_state.captured) != KING);
 
     remove_piece<UPDATE>(m_curr_state.captured, to);
     remove_piece<UPDATE>(piece, from);
