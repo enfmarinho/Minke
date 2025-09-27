@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <string>
 
 #include "attacks.h"
 #include "hash.h"
@@ -759,7 +760,7 @@ void Position::print() const {
             Square sq = get_square(file, rank);
             Piece piece = m_board[sq];
             PieceType piece_type = get_piece_type(piece);
-            char piece_char = ' ';
+            char piece_char = '-';
             if (piece_type == PAWN)
                 piece_char = 'p';
             else if (piece_type == KNIGHT)
@@ -776,7 +777,14 @@ void Position::print() const {
             if (piece <= WHITE_KING) // Piece is white
                 piece_char = toupper(piece_char);
 
-            std::cout << "| " << piece_char << " ";
+            std::string color = "";
+            if (m_curr_state.checkers & (1ULL << sq)) {
+                color = "\033[31m";
+            } else if (m_curr_state.pins & (1ULL << sq)) {
+                color = "\033[34m";
+            }
+
+            std::cout << "| " << color << piece_char << (color != "" ? "\033[0m" : "") << " ";
         }
         std::cout << "| " << rank + 1 << "\n";
     }
