@@ -534,7 +534,7 @@ void Position::unmake_null_move() {
 void Position::update_pin_and_checkers_bb() {
     Color adversary = get_adversary();
     Square king_sq = get_king_placement(m_stm);
-    m_curr_state.pins = 0;
+    m_curr_state.pins[m_stm] = 0;
     m_curr_state.checkers = (pawn_attacks[m_stm][king_sq] & get_piece_bb(PAWN, adversary)) // Pawns
                             | (knight_attacks[king_sq] & get_piece_bb(KNIGHT, adversary)); // Knights;
 
@@ -548,7 +548,27 @@ void Position::update_pin_and_checkers_bb() {
         if (!blockers) {
             set_bit(m_curr_state.checkers, sq);
         } else if (count_bits(blockers) == 1) {
-            set_bits(m_curr_state.pins, blockers & get_occupancy(m_stm));
+            set_bits(m_curr_state.pins[m_stm], blockers & get_occupancy(m_stm));
+        }
+    }
+    update_adversary_pin_bb();
+}
+
+void Position::update_adversary_pin_bb() {
+    Color adversary = get_stm();
+    Color stm = get_adversary();
+    Square king_sq = get_king_placement(stm);
+    m_curr_state.pins[stm] = 0;
+
+    Bitboard slider_checkers =
+        ((get_piece_bb(QUEEN, adversary) | get_piece_bb(BISHOP, adversary)) & get_bishop_attacks(king_sq, 0)) |
+        ((get_piece_bb(QUEEN, adversary) | get_piece_bb(ROOK, adversary)) & get_rook_attacks(king_sq, 0));
+    while (slider_checkers) {
+        Square sq = poplsb(slider_checkers);
+
+        Bitboard blockers = between_squares[king_sq][sq] & get_occupancy();
+        if (count_bits(blockers) == 1) {
+            set_bits(m_curr_state.pins[stm], blockers & get_occupancy(stm));
         }
     }
 }
@@ -780,7 +800,7 @@ void Position::print() const {
             std::string color = "";
             if (m_curr_state.checkers & (1ULL << sq)) {
                 color = "\033[31m";
-            } else if (m_curr_state.pins & (1ULL << sq)) {
+            } else if (m_curr_state.pins[m_stm] & (1ULL << sq)) {
                 color = "\033[34m";
             }
 

@@ -149,10 +149,11 @@ struct BoardState {
     uint8_t castling_rights;
     Square en_passant;
     Bitboard checkers;
-    Bitboard pins;
+    Bitboard pins[COLOR_NB];
     void reset() {
         checkers = 0;
-        pins = 0;
+        pins[WHITE] = 0;
+        pins[BLACK] = 0;
         captured = EMPTY;
         fifty_move_ply = 0;
         ply_from_null = 0;
