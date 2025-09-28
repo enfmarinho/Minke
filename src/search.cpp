@@ -20,6 +20,7 @@
 #include "position.h"
 #include "tt.h"
 #include "types.h"
+#include "utils.h"
 
 static void print_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
                               const ThreadData &td) {
@@ -357,7 +358,7 @@ bool SEE(Position &position, const Move &move, int threshold) {
 
     Square from = move.from();
     Square to = move.to();
-    Piece target = position.consult(to);
+    Piece target = move.is_ep() ? WHITE_PAWN : position.consult(to); // piece color does not matter
     Piece attacker = position.consult(from);
 
     int score = SEE_VALUES[target] - threshold;
@@ -370,11 +371,17 @@ bool SEE(Position &position, const Move &move, int threshold) {
     if (score >= 0) // Already surpassed threshold
         return true;
 
-    Bitboard attackers = position.attackers(to);
+    const Bitboard white_pins = position.get_pins(WHITE);
+    const Bitboard black_pins = position.get_pins(BLACK);
+    const Bitboard white_ray = between_squares[position.get_king_placement(WHITE)][to] | 1ULL << to;
+    const Bitboard black_ray = between_squares[position.get_king_placement(BLACK)][to] | 1ULL << to;
+    const Bitboard not_pinned = ~(white_pins | black_pins) | (white_pins & white_ray) | (black_pins & black_ray);
+
+    Bitboard attackers = position.attackers(to) & not_pinned;
     Bitboard occupancy = position.get_occupancy() ^ (1ULL << from); // Removed already used attacker
     Bitboard diagonal_attackers = position.get_piece_bb(BISHOP) | position.get_piece_bb(QUEEN);
     Bitboard line_attackers = position.get_piece_bb(ROOK) | position.get_piece_bb(QUEEN);
-    Color stm = static_cast<Color>(!position.get_stm());
+    Color stm = position.get_adversary();
 
     while (true) {
         attackers &= occupancy; // Remove used piece from attackers bitboard
@@ -400,7 +407,7 @@ bool SEE(Position &position, const Move &move, int threshold) {
             break;
         }
 
-        occupancy ^= (my_attackers & -my_attackers); // Remove used piece, i.e. unset lsb
+        occupancy ^= (1ULL << lsb(my_attackers)); // Remove used piece, i.e. unset lsb
 
         // Add x-ray attackers, if there is any
         switch (cheapest_attacker) {
