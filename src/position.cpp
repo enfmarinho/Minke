@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <string>
 
 #include "attacks.h"
 #include "hash.h"
@@ -110,6 +111,7 @@ bool Position::set_fen(const std::string &fen) {
         std::cerr << "INVALID FEN: game clock is not a number." << std::endl;
         return false;
     }
+    update_pin_and_checkers_bb();
 
     return true;
 }
@@ -288,9 +290,10 @@ bool Position::make_move(const Move &move) {
     hash_side_key();
 
     if (!move.is_castle()) // If move is a castle, the legality has already been checked by make_castle()
-        legal = !in_check();
+        legal = !is_attacked(get_king_placement(m_stm));
 
     change_side();
+    update_pin_and_checkers_bb();
     return legal;
 }
 
@@ -324,7 +327,7 @@ void Position::make_capture(const Move &move) {
 
     m_curr_state.fifty_move_ply = 0;
     m_curr_state.captured = consult(to);
-    assert(m_curr_state.captured != EMPTY);
+    assert(m_curr_state.captured != EMPTY && get_piece_type(m_curr_state.captured) != KING);
 
     remove_piece<UPDATE>(m_curr_state.captured, to);
     remove_piece<UPDATE>(piece, from);
@@ -517,6 +520,7 @@ void Position::make_null_move() {
     }
     hash_side_key();
     change_side();
+    update_pin_and_checkers_bb();
 }
 
 void Position::unmake_null_move() {
@@ -525,6 +529,28 @@ void Position::unmake_null_move() {
     m_hash_key = m_played_positions[m_history_ply];
     --m_game_clock_ply;
     change_side();
+}
+
+void Position::update_pin_and_checkers_bb() {
+    Color adversary = get_adversary();
+    Square king_sq = get_king_placement(m_stm);
+    m_curr_state.pins = 0;
+    m_curr_state.checkers = (pawn_attacks[m_stm][king_sq] & get_piece_bb(PAWN, adversary)) // Pawns
+                            | (knight_attacks[king_sq] & get_piece_bb(KNIGHT, adversary)); // Knights;
+
+    Bitboard slider_checkers =
+        ((get_piece_bb(QUEEN, adversary) | get_piece_bb(BISHOP, adversary)) & get_bishop_attacks(king_sq, 0)) |
+        ((get_piece_bb(QUEEN, adversary) | get_piece_bb(ROOK, adversary)) & get_rook_attacks(king_sq, 0));
+    while (slider_checkers) {
+        Square sq = poplsb(slider_checkers);
+
+        Bitboard blockers = between_squares[king_sq][sq] & get_occupancy();
+        if (!blockers) {
+            set_bit(m_curr_state.checkers, sq);
+        } else if (count_bits(blockers) == 1) {
+            set_bits(m_curr_state.pins, blockers & get_occupancy(m_stm));
+        }
+    }
 }
 
 Move Position::get_movement(const std::string &algebraic_notation) const {
@@ -734,7 +760,7 @@ void Position::print() const {
             Square sq = get_square(file, rank);
             Piece piece = m_board[sq];
             PieceType piece_type = get_piece_type(piece);
-            char piece_char = ' ';
+            char piece_char = '-';
             if (piece_type == PAWN)
                 piece_char = 'p';
             else if (piece_type == KNIGHT)
@@ -751,7 +777,14 @@ void Position::print() const {
             if (piece <= WHITE_KING) // Piece is white
                 piece_char = toupper(piece_char);
 
-            std::cout << "| " << piece_char << " ";
+            std::string color = "";
+            if (m_curr_state.checkers & (1ULL << sq)) {
+                color = "\033[31m";
+            } else if (m_curr_state.pins & (1ULL << sq)) {
+                color = "\033[34m";
+            }
+
+            std::cout << "| " << color << piece_char << (color != "" ? "\033[0m" : "") << " ";
         }
         std::cout << "| " << rank + 1 << "\n";
     }
