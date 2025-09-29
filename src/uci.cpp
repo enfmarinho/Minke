@@ -229,12 +229,8 @@ void UCI::bench(int depth) {
         total_time += now() - start_time;
     }
 
-    std::cout << "\n==========================\n";
-    std::cout << "Total time: " << total_time << "ms\n";
-    std::cout << "Nodes searched: " << nodes_searched << "\n";
-    std::cout << "Nodes per second: " << nodes_searched * 1000 / total_time;
-    std::cout << "\n==========================";
-    std::cout << std::endl;
+    std::cout << "\ninfo time " << total_time << "ms\n";
+    std::cout << nodes_searched << " nodes " << nodes_searched * 1000 / total_time << " nps\n";
 }
 
 int64_t UCI::perft(Position &position, CounterType depth, bool root) {
