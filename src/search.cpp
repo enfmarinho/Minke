@@ -11,7 +11,6 @@
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
-#include <cstring>
 #include <iostream>
 
 #include "attacks.h"
@@ -41,7 +40,7 @@ SearchLimits::SearchLimits() { reset(); }
 SearchLimits::SearchLimits(int depth, int optimum_node, int maximum_node)
     : depth(depth), optimum_node(optimum_node), maximum_node(maximum_node) {}
 
-void SearchLimits::reset() {
+inline void SearchLimits::reset() {
     depth = MAX_SEARCH_DEPTH;
     optimum_node = std::numeric_limits<int>::max();
     maximum_node = std::numeric_limits<int>::max();
@@ -53,7 +52,6 @@ ThreadData::ThreadData() {
 }
 
 void ThreadData::reset_search_parameters() {
-    memset(static_eval, SCORE_NONE, sizeof(static_eval));
     best_move = MOVE_NONE;
     stop = true;
     height = 0;
@@ -65,7 +63,7 @@ void ThreadData::reset_search_parameters() {
         nodes[i].reset();
 }
 
-void ThreadData::set_search_limits(const SearchLimits sl) { search_limits = sl; }
+void ThreadData::set_search_limits(const SearchLimits sl) { this->search_limits = sl; }
 
 inline bool stop_search(const ThreadData &td) {
     return td.time_manager.time_over() || td.stop || td.nodes_searched > td.search_limits.maximum_node;
@@ -77,8 +75,7 @@ ScoreType iterative_deepening(ThreadData &td) {
     Move best_move = MOVE_NONE;
     ScoreType past_eval = -MAX_SCORE;
     for (CounterType depth = 1; depth <= td.search_limits.depth; ++depth) {
-        PvList pv_list;
-        ScoreType eval = aspiration(depth, past_eval, pv_list, td);
+        ScoreType eval = aspiration(depth, past_eval, td);
         if (stop_search(td)) // Search did not finished completely
             break;
 
@@ -88,7 +85,7 @@ ScoreType iterative_deepening(ThreadData &td) {
             break;
 
         if (td.report)
-            print_search_info(depth, eval, pv_list, td);
+            print_search_info(depth, eval, td.nodes[0].pv_list, td);
 
         if (depth > 5)
             td.time_manager.update();
@@ -106,7 +103,7 @@ ScoreType iterative_deepening(ThreadData &td) {
     return past_eval;
 }
 
-ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, PvList &pv_list, ThreadData &td) {
+ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td) {
     ScoreType alpha = -MAX_SCORE;
     ScoreType beta = MAX_SCORE;
     ScoreType delta = AW_DELTA;
@@ -117,7 +114,7 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, PvLis
 
     ScoreType score = SCORE_NONE;
     while (true) {
-        ScoreType curr_score = negamax(alpha, beta, depth, pv_list, td);
+        ScoreType curr_score = negamax(alpha, beta, depth, td);
 
         if (stop_search(td))
             break;
@@ -139,7 +136,7 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, PvLis
     return score;
 }
 
-ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td) {
+ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData &td) {
     if (stop_search(td)) // Out of time
         return -MAX_SCORE;
     else if (depth <= 0)
@@ -185,20 +182,20 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
     bool in_check = position.in_check();
     ScoreType eval;
     if (in_check) {
-        eval = td.static_eval[td.height] = SCORE_NONE;
+        eval = node.static_eval = SCORE_NONE;
     } else if (tthit) {
-        eval = td.static_eval[td.height] = position.eval();
+        eval = node.static_eval = position.eval();
         if (ttentry->score() != SCORE_NONE &&
             (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->score() < eval) ||
              (ttentry->bound() == LOWER && ttentry->score() > eval)))
             eval = ttentry->score();
 
     } else {
-        eval = td.static_eval[td.height] = position.eval();
+        eval = node.static_eval = position.eval();
     }
 
-    bool improving = td.height >= 2 && (td.static_eval[td.height] > td.static_eval[td.height - 2] ||
-                                        td.static_eval[td.height - 2] == SCORE_NONE);
+    bool improving = td.height >= 2 && (node.static_eval > td.nodes[td.height - 2].static_eval ||
+                                        td.nodes[td.height - 2].static_eval == SCORE_NONE);
 
     // Forward pruning methods
     if (!in_check && !pv_node && !root) {
@@ -215,7 +212,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
 
             position.make_null_move();
             ++td.height;
-            ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, pv_list, td);
+            ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, td);
             position.unmake_null_move();
             --td.height;
 
@@ -250,10 +247,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
         ++td.height;
         ++moves_searched;
 
-        PvList curr_pv;
         ScoreType score;
         if (moves_searched == 1) {
-            score = -negamax(-beta, -alpha, depth - 1, curr_pv, td);
+            score = -negamax(-beta, -alpha, depth - 1, td);
         } else {
             int reduction = 1;
             // Perform LMR in case a minimum amount of moves were searched, the depth is greater than 3, the move is
@@ -273,9 +269,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
 
                 reduction = std::clamp(reduction, 1, depth - 1);
             }
-            score = -negamax(-alpha - 1, -alpha, depth - reduction, curr_pv, td);
+            score = -negamax(-alpha - 1, -alpha, depth - reduction, td);
             if (score > alpha && score < beta)
-                score = -negamax(-beta, -alpha, depth - 1, curr_pv, td);
+                score = -negamax(-beta, -alpha, depth - 1, td);
         }
 
         --td.height;
@@ -288,7 +284,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
             if (score > alpha) {
                 best_move = move;
                 if (pv_node)
-                    pv_list.update(best_move, curr_pv);
+                    node.pv_list.update(best_move, td.nodes[td.height + 1].pv_list);
 
                 if (score >= beta) { // Failed high
                     td.search_history.update_history(position, quiets_tried, tacticals_tried, best_move.is_quiet(),
