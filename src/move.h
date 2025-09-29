@@ -34,8 +34,8 @@ enum MoveType : char {
 
 class Move {
   public:
-    inline Move() : m_bytes(0){};
-    inline Move(int16_t bytes) : m_bytes(bytes){};
+    inline Move() : m_bytes(0) {};
+    inline Move(int16_t bytes) : m_bytes(bytes) {};
     inline Move(Square from, Square to, MoveType move_type) { m_bytes = (move_type << 12) | (to << 6) | (from); }
 
     inline int from_and_to() const { return m_bytes & 0xFFF; }
@@ -77,6 +77,8 @@ inline bool operator==(const ScoredMove& lhs, const ScoredMove& rhs) {
 struct MoveList {
     Move moves[MAX_MOVES_PER_POS];
     int size{0};
+
+    void clear() { size = 0; }
 
     void push(Move move) {
         assert(size < MAX_MOVES_PER_POS);
