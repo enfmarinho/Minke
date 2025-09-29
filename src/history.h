@@ -12,6 +12,8 @@
 #include "position.h"
 #include "types.h"
 
+struct ThreadData;
+
 using HistoryType = int;
 constexpr HistoryType HistoryDivisor = 16384;
 
@@ -22,8 +24,7 @@ class History {
 
     void reset();
 
-    void update_history(const Position &position, const MoveList &quiet_moves, const MoveList &tactical_moves,
-                        bool is_quiet, int depth, const Move &past_move);
+    void update_history(const ThreadData &td, const Move &best_move, int depth);
 
     inline HistoryType get_history(const Position &position, const Move &move) const {
         return m_search_history_table[position.get_stm()][move.from_and_to()];

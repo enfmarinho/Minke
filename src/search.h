@@ -45,11 +45,14 @@ struct NodeData {
     Move curr_move;
     ScoreType static_eval;
     PvList pv_list;
+    MoveList quiets_tried, tacticals_tried;
 
     inline void reset() {
         curr_move = MOVE_NONE;
         static_eval = SCORE_NONE;
         pv_list.clear();
+        quiets_tried.clear();
+        tacticals_tried.clear();
     }
 };
 

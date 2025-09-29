@@ -146,6 +146,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
     bool pv_node = alpha != beta - 1;
     Position &position = td.position;
     NodeData &node = td.nodes[td.height];
+    node.reset();
 
     // Early return conditions
     bool root = td.height == 0;
@@ -208,8 +209,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
             // TODO check for advanced tweaks
             const int reduction = NMP_BASE + depth / NMP_DIVISOR + std::clamp((eval - beta) / 300, -1, 3);
 
-            node.curr_move = MOVE_NONE;
-
+            // is not necessary to set node.curr_move to MOVE_NONE here because it has already been done on node.reset()
             position.make_null_move();
             ++td.height;
             ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, td);
@@ -223,12 +223,10 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
 
     Move move = MOVE_NONE;
     Move best_move = MOVE_NONE;
-    Move prev_move = td.height > 0 ? td.nodes[td.height - 1].curr_move : MOVE_NONE;
     ScoreType best_score = -MAX_SCORE;
     ScoreType old_alpha = alpha;
     int moves_searched = 0;
 
-    MoveList quiets_tried, tacticals_tried;
     bool skip_quiets = false;
     MovePicker move_picker(ttmove, &td, false);
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
@@ -240,9 +238,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
 
         // Add move to tried list
         if (move.is_quiet())
-            quiets_tried.push(move);
+            node.quiets_tried.push(move);
         else
-            tacticals_tried.push(move);
+            node.tacticals_tried.push(move);
 
         ++td.height;
         ++moves_searched;
@@ -287,8 +285,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
                     node.pv_list.update(best_move, td.nodes[td.height + 1].pv_list);
 
                 if (score >= beta) { // Failed high
-                    td.search_history.update_history(position, quiets_tried, tacticals_tried, best_move.is_quiet(),
-                                                     depth, prev_move);
+                    td.search_history.update_history(td, best_move, depth);
                     break;
                 }
                 alpha = score; // Only update alpha if don't failed high
@@ -329,8 +326,8 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         return tte->score();
     }
 
-    ScoreType stand_pat = position.eval();
-    alpha = std::max(alpha, stand_pat);
+    ScoreType static_eval = position.eval();
+    alpha = std::max(alpha, static_eval);
     if (alpha >= beta)
         return beta;
 
@@ -338,18 +335,17 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     MovePicker move_picker((tthit ? tte->best_move() : MOVE_NONE), &td, true);
     // TODO check if its worth to check for quiet moves if in check
     while ((move = move_picker.next_move(true)) != MOVE_NONE) {
-        assert(move.is_capture() || move.is_promotion());
         if (!position.make_move<true>(move)) { // Avoid illegal moves
             position.unmake_move<true>(move);
             continue;
         }
 
-        ScoreType eval = -quiescence(-beta, -alpha, td);
+        ScoreType score = -quiescence(-beta, -alpha, td);
         position.unmake_move<true>(move);
-        if (eval >= beta)
+        if (score >= beta)
             return beta;
-        else if (eval > alpha)
-            alpha = eval;
+        else if (score > alpha)
+            alpha = score;
     }
 
     return alpha;

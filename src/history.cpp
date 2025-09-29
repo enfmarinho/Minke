@@ -11,6 +11,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "search.h"
+
 inline HistoryType calculate_bonus(const int depth) {
     // Gravity formula taken from Berseck
     return std::min(1729, 4 * depth * depth + 164 * depth - 113);
@@ -28,33 +30,34 @@ void History::reset() {
     std::memset(m_killer_moves, MOVE_NONE.internal(), sizeof(m_killer_moves));
 };
 
-void History::update_history(const Position &position, const MoveList &quiet_moves, const MoveList &tactical_moves,
-                             bool is_quiet, int depth, const Move &prev_move) {
+void History::update_history(const ThreadData &td, const Move &best_move, int depth) {
+    const NodeData &node = td.nodes[td.height];
+    const MoveList quiets_tried = node.quiets_tried;
+    const MoveList tacticals_tried = node.tacticals_tried;
+
     HistoryType bonus = calculate_bonus(depth);
-    Move best_move = MOVE_NONE;
-    if (is_quiet) {
-        best_move = quiet_moves.moves[quiet_moves.size - 1];
+    if (best_move.is_quiet()) {
         save_killer(best_move, depth);
-        save_counter(prev_move, best_move);
+        if (td.height > 0)
+            save_counter(td.nodes[td.height - 1].curr_move, best_move);
 
         // Increase the score of the move that caused the beta cutoff
-        update_history_heuristic_score(position, best_move, bonus);
+        update_history_heuristic_score(td.position, best_move, bonus);
 
         // Decrease all the quiet moves scores that did not caused a beta cutoff
-        for (int idx = 0; idx < quiet_moves.size - 1; ++idx) {
-            update_history_heuristic_score(position, quiet_moves.moves[idx], -bonus);
+        for (int idx = 0; idx < quiets_tried.size - 1; ++idx) {
+            update_history_heuristic_score(td.position, quiets_tried.moves[idx], -bonus);
         }
 
     } else {
-        best_move = tactical_moves.moves[tactical_moves.size - 1];
-        update_capture_history_score(position, best_move, bonus);
+        update_capture_history_score(td.position, best_move, bonus);
     }
 
     // Decrease all the noisy moves scores that did not caused a beta cutoff
-    for (int idx = 0; idx < tactical_moves.size; ++idx) {
-        Move move = tactical_moves.moves[idx];
+    for (int idx = 0; idx < tacticals_tried.size; ++idx) {
+        Move move = tacticals_tried.moves[idx];
         if (move != best_move)
-            update_capture_history_score(position, move, -bonus);
+            update_capture_history_score(td.position, move, -bonus);
     }
 }
 
