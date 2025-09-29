@@ -29,12 +29,13 @@ void History::reset() {
 };
 
 void History::update_history(const Position &position, const MoveList &quiet_moves, const MoveList &tactical_moves,
-                             bool is_quiet, int depth) {
+                             bool is_quiet, int depth, const Move &prev_move) {
     HistoryType bonus = calculate_bonus(depth);
     Move best_move = MOVE_NONE;
     if (is_quiet) {
         best_move = quiet_moves.moves[quiet_moves.size - 1];
         save_killer(best_move, depth);
+        save_counter(prev_move, best_move);
 
         // Increase the score of the move that caused the beta cutoff
         update_history_heuristic_score(position, best_move, bonus);

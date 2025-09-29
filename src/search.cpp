@@ -114,7 +114,7 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, PvLis
 
     ScoreType score = SCORE_NONE;
     while (true) {
-        ScoreType curr_score = negamax(alpha, beta, depth, pv_list, td);
+        ScoreType curr_score = negamax(alpha, beta, depth, pv_list, td, MOVE_NONE);
 
         if (stop_search(td))
             break;
@@ -136,7 +136,8 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, PvLis
     return score;
 }
 
-ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td) {
+ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td,
+                  const Move &prev_move) {
     if (stop_search(td)) // Out of time
         return -MAX_SCORE;
     else if (depth <= 0)
@@ -209,7 +210,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
 
             position.make_null_move();
             ++td.height;
-            ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, pv_list, td);
+            ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, pv_list, td, MOVE_NONE);
             position.unmake_null_move();
             --td.height;
 
@@ -226,7 +227,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
 
     MoveList quiets_tried, tacticals_tried;
     bool skip_quiets = false;
-    MovePicker move_picker(ttmove, &td, false);
+    MovePicker move_picker(ttmove, td.search_history.consult_counter(prev_move), &td, false);
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
         if (!position.make_move<true>(move)) { // Avoid illegal moves
             position.unmake_move<true>(move);
@@ -245,7 +246,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
         PvList curr_pv;
         ScoreType score;
         if (moves_searched == 1) {
-            score = -negamax(-beta, -alpha, depth - 1, curr_pv, td);
+            score = -negamax(-beta, -alpha, depth - 1, curr_pv, td, move);
         } else {
             int reduction = 1;
             // Perform LMR in case a minimum amount of moves were searched, the depth is greater than 3, the move is
@@ -265,9 +266,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
 
                 reduction = std::clamp(reduction, 1, depth - 1);
             }
-            score = -negamax(-alpha - 1, -alpha, depth - reduction, curr_pv, td);
+            score = -negamax(-alpha - 1, -alpha, depth - reduction, curr_pv, td, move);
             if (score > alpha && score < beta)
-                score = -negamax(-beta, -alpha, depth - 1, curr_pv, td);
+                score = -negamax(-beta, -alpha, depth - 1, curr_pv, td, move);
         }
 
         --td.height;
@@ -284,7 +285,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv
 
                 if (score >= beta) { // Failed high
                     td.search_history.update_history(position, quiets_tried, tacticals_tried, best_move.is_quiet(),
-                                                     depth);
+                                                     depth, prev_move);
                     break;
                 }
                 alpha = score; // Only update alpha if don't failed high
@@ -331,7 +332,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         return beta;
 
     Move move = MOVE_NONE;
-    MovePicker move_picker((tthit ? tte->best_move() : MOVE_NONE), &td, true);
+    MovePicker move_picker((tthit ? tte->best_move() : MOVE_NONE), MOVE_NONE, &td, true);
     // TODO check if its worth to check for quiet moves if in check
     while ((move = move_picker.next_move(true)) != MOVE_NONE) {
         assert(move.is_capture() || move.is_promotion());

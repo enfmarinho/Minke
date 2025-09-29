@@ -18,6 +18,7 @@ enum BaseScore {
     CAPTURE_SCORE = 20'000,
     KILLER_1_SCORE = 19'000,
     KILLER_2_SCORE = 18'000,
+    COUNTER_SCORE = 17'000,
 };
 
 enum MovePickerStage {
@@ -33,10 +34,10 @@ enum MovePickerStage {
 class MovePicker {
   public:
     MovePicker() = default;
-    MovePicker(Move ttmove, ThreadData *td, bool qsearch);
+    MovePicker(Move ttmove, const Move &counter_move, ThreadData *td, bool qsearch);
     ~MovePicker() = default;
 
-    void init(Move ttmove, ThreadData *td, bool qsearch);
+    void init(Move ttmove, const Move &counter_move, ThreadData *td, bool qsearch);
     Move next_move(const bool &skip_quiets);
     ScoredMove next_move_scored(const bool &skip_quiets);
 
@@ -50,7 +51,7 @@ class MovePicker {
     MovePickerStage m_stage;
     ScoredMove m_moves[MAX_MOVES_PER_POS];
     ScoredMove *m_curr, *m_end, *m_end_bad;
-    Move m_ttmove, m_killer1, m_killer2;
+    Move m_ttmove, m_killer1, m_killer2, m_counter;
     ThreadData *m_td;
 };
 
