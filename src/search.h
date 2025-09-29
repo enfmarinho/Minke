@@ -41,6 +41,12 @@ struct SearchLimits {
     void reset();
 };
 
+struct NodeData {
+    Move curr_move;
+
+    void reset() { curr_move = MOVE_NONE; }
+};
+
 struct ThreadData {
     Position position;
     TranspositionTable tt;
@@ -48,6 +54,7 @@ struct ThreadData {
     History search_history;
     Move best_move;
     ScoreType static_eval[MAX_SEARCH_DEPTH];
+    NodeData nodes[MAX_SEARCH_DEPTH];
 
     SearchLimits search_limits;
     int64_t nodes_searched;
@@ -62,8 +69,7 @@ struct ThreadData {
 
 ScoreType iterative_deepening(ThreadData &td);
 ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, PvList &pv_list, ThreadData &td);
-ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td,
-                  const Move &prev_move);
+ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td);
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td);
 bool SEE(Position &position, const Move &move, int threshold);
 

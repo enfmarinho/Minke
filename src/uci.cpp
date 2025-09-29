@@ -146,7 +146,7 @@ void UCI::print_debug_info() {
         ttmove = entry->best_move();
         std::cout << "Best move: " << ttmove.get_algebraic_notation() << std::endl;
     }
-    MovePicker move_picker(ttmove, MOVE_NONE, &m_td, false);
+    MovePicker move_picker(ttmove, &m_td, false);
     std::cout << "Move list: ";
     ScoredMove scored_move;
     while ((scored_move = move_picker.next_move_scored(false)) != SCORED_MOVE_NONE) {

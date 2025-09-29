@@ -34,10 +34,10 @@ enum MovePickerStage {
 class MovePicker {
   public:
     MovePicker() = default;
-    MovePicker(Move ttmove, const Move &counter_move, ThreadData *td, bool qsearch);
+    MovePicker(Move ttmove, ThreadData *td, bool qsearch);
     ~MovePicker() = default;
 
-    void init(Move ttmove, const Move &counter_move, ThreadData *td, bool qsearch);
+    void init(Move ttmove, ThreadData *td, bool qsearch);
     Move next_move(const bool &skip_quiets);
     ScoredMove next_move_scored(const bool &skip_quiets);
 
