@@ -12,6 +12,8 @@
 #include "position.h"
 #include "types.h"
 
+struct ThreadData;
+
 using HistoryType = int;
 constexpr HistoryType HistoryDivisor = 16384;
 
@@ -22,8 +24,7 @@ class History {
 
     void reset();
 
-    void update_history(const Position &position, const MoveList &quiet_moves, const MoveList &tactical_moves,
-                        bool is_quiet, int depth);
+    void update_history(const ThreadData &td, const Move &best_move, int depth);
 
     inline HistoryType get_history(const Position &position, const Move &move) const {
         return m_search_history_table[position.get_stm()][move.from_and_to()];
@@ -38,6 +39,12 @@ class History {
 
     inline Move consult_killer1(const int &depth) const { return m_killer_moves[0][depth]; }
     inline Move consult_killer2(const int &depth) const { return m_killer_moves[1][depth]; }
+    inline Move consult_counter(const Move &past_move) {
+        // TODO try the usual indexing ([piece_type][to]), instead of butterfly
+        if (past_move == MOVE_NONE)
+            return MOVE_NONE;
+        return m_counter_moves[past_move.from_and_to()];
+    }
     inline bool is_killer(const Move &move, const int &depth) const {
         return move == consult_killer1(depth) || move == consult_killer2(depth);
     }
@@ -51,8 +58,14 @@ class History {
         m_killer_moves[0][depth] = move;
     }
 
+    inline void save_counter(const Move &past_move, const Move &move) {
+        if (past_move != MOVE_NONE)
+            m_counter_moves[past_move.from_and_to()] = move;
+    }
+
     HistoryType m_capture_history[6][64][5];
     HistoryType m_search_history_table[COLOR_NB][64 * 64];
+    Move m_counter_moves[64 * 64];
     Move m_killer_moves[2][MAX_SEARCH_DEPTH];
 };
 

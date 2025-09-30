@@ -35,21 +35,37 @@ struct SearchLimits {
     int optimum_node;
     int maximum_node;
 
-    SearchLimits();
-    SearchLimits(int depth, int optimum_node, int maximum_node);
+    inline SearchLimits();
+    inline SearchLimits(int depth, int optimum_node, int maximum_node);
 
-    void reset();
+    inline void reset();
+};
+
+struct NodeData {
+    Move curr_move;
+    ScoreType static_eval;
+    PvList pv_list;
+    MoveList quiets_tried, tacticals_tried;
+
+    inline void reset() {
+        curr_move = MOVE_NONE;
+        static_eval = SCORE_NONE;
+        pv_list.clear();
+        quiets_tried.clear();
+        tacticals_tried.clear();
+    }
 };
 
 struct ThreadData {
-    Position position;
     TranspositionTable tt;
-    TimeManager time_manager;
+
+    Position position;
     History search_history;
+    NodeData nodes[MAX_SEARCH_DEPTH];
     Move best_move;
-    ScoreType static_eval[MAX_SEARCH_DEPTH];
 
     SearchLimits search_limits;
+    TimeManager time_manager;
     int64_t nodes_searched;
     int height;
     bool stop;
@@ -61,8 +77,8 @@ struct ThreadData {
 };
 
 ScoreType iterative_deepening(ThreadData &td);
-ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, PvList &pv_list, ThreadData &td);
-ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, PvList &pv_list, ThreadData &td);
+ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);
+ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData &td);
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td);
 bool SEE(Position &position, const Move &move, int threshold);
 

@@ -17,11 +17,10 @@
 MovePicker::MovePicker(Move ttmove, ThreadData *td, bool qsearch) { init(ttmove, td, qsearch); }
 
 void MovePicker::init(Move ttmove, ThreadData *td, bool qsearch) {
-    this->m_td = td;
-    this->m_ttmove = ttmove;
-    this->m_qsearch = qsearch;
+    m_td = td;
+    m_ttmove = ttmove;
+    m_qsearch = qsearch;
 
-    // Don't pick ttmove if in qsearch unless ttmove is noisy
     if (ttmove != MOVE_NONE)
         m_stage = PICK_TT;
     else
@@ -29,6 +28,13 @@ void MovePicker::init(Move ttmove, ThreadData *td, bool qsearch) {
 
     m_killer1 = td->search_history.consult_killer1(td->height);
     m_killer2 = td->search_history.consult_killer2(td->height);
+
+    m_counter = MOVE_NONE;
+    if (m_td->height > 0)
+        m_counter = td->search_history.consult_counter(td->nodes[td->height - 1].curr_move);
+    if (m_counter == m_killer1 || m_counter == m_killer2)
+        m_counter = MOVE_NONE;
+
     m_curr = m_end = m_end_bad = m_moves;
 }
 
@@ -123,6 +129,8 @@ void MovePicker::score_moves() {
                     runner->score = KILLER_1_SCORE;
                 else if (runner->move == m_killer2)
                     runner->score = KILLER_2_SCORE;
+                else if (runner->move == m_counter)
+                    runner->score = COUNTER_SCORE;
                 else
                     runner->score = m_td->search_history.get_history(m_td->position, runner->move);
                 break;
