@@ -245,6 +245,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
         ++td.height;
         ++moves_searched;
 
+        td.nodes[td.height].pv_list.clear();
         ScoreType score;
         if (moves_searched == 1) {
             score = -negamax(-beta, -alpha, depth - 1, td);
