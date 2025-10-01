@@ -16,11 +16,11 @@
 #include "search.h"
 #include "types.h"
 
-#ifndef NET_PATH
-#define NET_PATH "../src/minke.bin"
-#endif // !NET_FILE
+#ifndef EVALFILE
+#define EVALFILE "../src/minke.bin"
+#endif // !EVALFILE
 
-INCBIN(NetParameters, NET_PATH);
+INCBIN(NetParameters, EVALFILE);
 
 int LMR_TABLE[64][64];
 int LMP_TABLE[2][LMP_DEPTH];
