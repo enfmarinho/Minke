@@ -358,7 +358,7 @@ bool SEE(Position &position, const Move &move, int threshold) {
 
     Square from = move.from();
     Square to = move.to();
-    Piece target = position.consult(to);
+    Piece target = move.is_ep() ? WHITE_PAWN : position.consult(to); // piece color does not matter
     Piece attacker = position.consult(from);
 
     int score = SEE_VALUES[target] - threshold;
