@@ -234,13 +234,13 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
             position.unmake_move<true>(move);
             continue;
         }
-        node.curr_move = move;
+        node.curr_pmove = {move, position.consult(move.to())};
 
         // Add move to tried list
         if (move.is_quiet())
-            node.quiets_tried.push(move);
+            node.quiets_tried.push(node.curr_pmove);
         else
-            node.tacticals_tried.push(move);
+            node.tacticals_tried.push(node.curr_pmove);
 
         ++td.height;
         ++moves_searched;
@@ -319,6 +319,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         return position.in_check() ? 0 : position.eval();
 
     bool pv_node = alpha != beta - 1;
+    NodeData &node = td.nodes[td.height];
     bool tthit;
     TTEntry *tte = td.tt.probe(position, tthit);
     if (!pv_node && tthit && tte->score() != SCORE_NONE &&
@@ -340,6 +341,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
             position.unmake_move<true>(move);
             continue;
         }
+        node.curr_pmove = {move, position.consult(move.to())};
 
         ScoreType score = -quiescence(-beta, -alpha, td);
         position.unmake_move<true>(move);
