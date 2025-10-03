@@ -217,6 +217,7 @@ void UCI::set_option(std::istringstream &iss) {
 void UCI::bench(int depth) {
     TimeType total_time = 0;
     int64_t nodes_searched = 0;
+    m_td.report = false;
     for (const std::string &fen : BENCHMARK_FEN_LIST) {
         m_td.position.set_fen<true>(fen);
         m_td.reset_search_parameters();
@@ -229,7 +230,7 @@ void UCI::bench(int depth) {
         total_time += now() - start_time;
     }
 
-    std::cout << "\ninfo time " << total_time << "ms\n";
+    std::cout << "info time " << total_time << "ms\n";
     std::cout << nodes_searched << " nodes " << nodes_searched * 1000 / total_time << " nps\n";
 }
 
@@ -312,4 +313,6 @@ void UCI::go() { m_thread = std::thread(iterative_deepening, std::ref(m_td)); }
 void EngineOptions::print() {
     std::cout << "option name Hash type spin default " << HASH_DEFAULT << " min " << HASH_MIN << " max " << HASH_MAX
               << "\n";
+    std::cout << "option name Threads type spin default " << THREADS_DEFAULT << " min " << THREADS_MIN << " max "
+              << THREADS_MAX << "\n";
 }
