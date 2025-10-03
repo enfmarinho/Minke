@@ -14,13 +14,13 @@ add_executable(minke ${SOURCES})
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" build_type)
 if(NOT CMAKE_BUILD_TYPE)
-  set(buildtype release)
+  set(build_type release)
 elseif(build_type STREQUAL "datagen")
   target_compile_definitions(minke PRIVATE DATAGEN_BUILD)
-  set(buildtype release)
+  set(build_type release)
 endif()
 
-if(release STREQUAL "debug")
+if(build_type STREQUAL "debug")
   target_compile_options(
     minke
     PRIVATE -Wall
