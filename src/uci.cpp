@@ -313,4 +313,6 @@ void UCI::go() { m_thread = std::thread(iterative_deepening, std::ref(m_td)); }
 void EngineOptions::print() {
     std::cout << "option name Hash type spin default " << HASH_DEFAULT << " min " << HASH_MIN << " max " << HASH_MAX
               << "\n";
+    std::cout << "option name Threads type spin default " << THREADS_DEFAULT << " min " << THREADS_MIN << " max "
+              << THREADS_MAX << "\n";
 }
