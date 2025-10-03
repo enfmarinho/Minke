@@ -47,7 +47,7 @@ ifeq ($(CXX), clang++)
 	CXXLINKERFLAGS += -fuse-ld=lld
 endif
 
-all: $(ARCHS)
+all: native
 
 native:
 	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(NATIVEFLAGS)" \
