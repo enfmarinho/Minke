@@ -14,13 +14,13 @@ add_executable(minke ${SOURCES})
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" build_type)
 if(NOT CMAKE_BUILD_TYPE)
-  set(buildtype release)
+  set(build_type release)
 elseif(build_type STREQUAL "datagen")
   target_compile_definitions(minke PRIVATE DATAGEN_BUILD)
-  set(buildtype release)
+  set(build_type release)
 endif()
 
-if(release STREQUAL "debug")
+if(build_type STREQUAL "debug")
   target_compile_options(
     minke
     PRIVATE -Wall
@@ -44,13 +44,13 @@ elseif(UNIX)
   target_link_libraries(minke PRIVATE Threads::Threads)
 endif()
 
-# Define NET_PATH and make init.cpp recompiled when NET_PATH has changed
-set(NET_PATH "${CMAKE_SOURCE_DIR}/src/minke.bin")
-target_compile_definitions(minke PRIVATE NET_PATH=\"${NET_PATH}\")
+# Define EVALFILE and make init.cpp recompiled when EVALFILE has changed
+set(EVALFILE "${CMAKE_SOURCE_DIR}/src/minke.bin")
+target_compile_definitions(minke PRIVATE EVALFILE=\"${EVALFILE}\")
 set_property(
   SOURCE ${CMAKE_SOURCE_DIR}/src/init.cpp
   APPEND
-  PROPERTY OBJECT_DEPENDS ${NET_PATH})
+  PROPERTY OBJECT_DEPENDS ${EVALFILE})
 
 # Build variants
 string(TOLOWER "${CMAKE_BUILD_ARCH}" arch)

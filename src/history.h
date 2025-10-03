@@ -34,7 +34,7 @@ class History {
         Square to = move.to();
         PieceType moved_pt = get_piece_type(position.consult(move.from()));
         PieceType captured_pt = move.is_ep() ? PAWN : get_piece_type(position.consult(to));
-        return m_capture_history[moved_pt][to][captured_pt];
+        return m_capture_history[position.get_stm()][moved_pt][to][captured_pt];
     }
 
     inline Move consult_killer1(const int &depth) const { return m_killer_moves[0][depth]; }
@@ -63,7 +63,7 @@ class History {
             m_counter_moves[past_move.from_and_to()] = move;
     }
 
-    HistoryType m_capture_history[6][64][5];
+    HistoryType m_capture_history[2][6][64][5];
     HistoryType m_search_history_table[COLOR_NB][64 * 64];
     Move m_counter_moves[64 * 64];
     Move m_killer_moves[2][MAX_SEARCH_DEPTH];

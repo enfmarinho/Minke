@@ -21,6 +21,9 @@ constexpr CounterType BENCH_DEPTH = 12;
 static constexpr CounterType HASH_DEFAULT = 16;
 static constexpr CounterType HASH_MIN = 1;
 static constexpr CounterType HASH_MAX = 2097152;
+static constexpr CounterType THREADS_DEFAULT = 1;
+static constexpr CounterType THREADS_MIN = 1;
+static constexpr CounterType THREADS_MAX = 1;
 void print();
 } // namespace EngineOptions
 

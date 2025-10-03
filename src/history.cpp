@@ -65,7 +65,7 @@ void History::update_capture_history_score(const Position &position, const Move 
     Square to = move.to();
     PieceType moved_pt = get_piece_type(position.consult(move.from()));
     PieceType captured_pt = move.is_ep() ? PAWN : get_piece_type(position.consult(to));
-    HistoryType *ptr = &m_capture_history[moved_pt][to][captured_pt];
+    HistoryType *ptr = &m_capture_history[position.get_stm()][moved_pt][to][captured_pt];
     update_score(ptr, bonus);
 }
 
