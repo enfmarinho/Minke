@@ -124,7 +124,10 @@ void UCI::loop() {
                 continue;
             else if (m_thread.joinable())
                 m_thread.join();
-            bench(EngineOptions::BENCH_DEPTH);
+
+            int bench_depth = EngineOptions::BENCH_DEPTH;
+            iss >> std::skipws >> bench_depth;
+            bench(bench_depth);
         } else if (!token.empty()) {
             std::cout << "Unknown command: '" << token << "'. Type help for information." << std::endl;
         }
@@ -214,6 +217,7 @@ void UCI::set_option(std::istringstream &iss) {
 void UCI::bench(int depth) {
     TimeType total_time = 0;
     int64_t nodes_searched = 0;
+    m_td.report = false;
     for (const std::string &fen : BENCHMARK_FEN_LIST) {
         m_td.position.set_fen<true>(fen);
         m_td.reset_search_parameters();
@@ -226,12 +230,8 @@ void UCI::bench(int depth) {
         total_time += now() - start_time;
     }
 
-    std::cout << "\n==========================\n";
-    std::cout << "Total time: " << total_time << "ms\n";
-    std::cout << "Nodes searched: " << nodes_searched << "\n";
-    std::cout << "Nodes per second: " << nodes_searched * 1000 / total_time;
-    std::cout << "\n==========================";
-    std::cout << std::endl;
+    std::cout << "info time " << total_time << "ms\n";
+    std::cout << nodes_searched << " nodes " << nodes_searched * 1000 / total_time << " nps\n";
 }
 
 int64_t UCI::perft(Position &position, CounterType depth, bool root) {
@@ -313,4 +313,6 @@ void UCI::go() { m_thread = std::thread(iterative_deepening, std::ref(m_td)); }
 void EngineOptions::print() {
     std::cout << "option name Hash type spin default " << HASH_DEFAULT << " min " << HASH_MIN << " max " << HASH_MAX
               << "\n";
+    std::cout << "option name Threads type spin default " << THREADS_DEFAULT << " min " << THREADS_MIN << " max "
+              << THREADS_MAX << "\n";
 }

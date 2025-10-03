@@ -38,7 +38,7 @@ class Position {
     void make_null_move();
     void unmake_null_move();
 
-    inline bool in_check() const { return is_attacked(get_king_placement(m_stm)); }
+    inline bool in_check() const { return m_curr_state.checkers; }
     bool is_attacked(const Square &sq) const;
     bool is_pseudo_legal(const Move &move) const;
     Bitboard attackers(const Square &sq) const;
@@ -89,6 +89,8 @@ class Position {
     inline Piece consult(const Square &sq) const { return m_board[sq]; }
     inline int get_history_ply() const { return m_history_ply; }
     inline BoardState get_board_state() const { return m_curr_state; };
+    inline Bitboard get_checkers() const { return m_curr_state.checkers; }
+    inline Bitboard get_pins() const { return m_curr_state.pins; }
     inline void reset_history() { m_history_ply = 0; }
 
   private:
@@ -110,6 +112,7 @@ class Position {
     template <bool UPDATE>
     void make_en_passant(const Move &move);
     void update_castling_rights(const Move &move);
+    void update_pin_and_checkers_bb();
 
     bool insufficient_material() const;
     bool repetition() const;

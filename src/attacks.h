@@ -37,6 +37,8 @@ extern Bitboard king_attacks[64];
 extern Bitboard bishop_attacks[64][512];
 extern Bitboard rook_attacks[64][4096];
 
+extern Bitboard between_squares[64][64];
+
 void init_magic_table(PieceType piece_type);
 
 Bitboard generate_bishop_mask(Square sq);

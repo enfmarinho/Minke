@@ -17,6 +17,7 @@ class PvList {
   public:
     void update(Move new_move, const PvList &list);
     void print() const;
+    void clear();
     PvList &operator=(const PvList &other);
 
   private:
