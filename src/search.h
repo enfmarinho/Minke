@@ -36,7 +36,7 @@ struct SearchLimits {
     int maximum_node;
 
     inline SearchLimits();
-    inline SearchLimits(int depth, int optimum_node, int maximum_node);
+    inline SearchLimits(int _depth, int _optimum_node, int _maximum_node);
 
     inline void reset();
 };
