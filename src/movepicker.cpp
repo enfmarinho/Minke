@@ -47,8 +47,8 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
             if (!skip_quiets || m_ttmove.is_noisy()) {
                 return {m_ttmove, TT_SCORE};
             } else {
-                // Fall-through
             }
+            // Fall-through
         case GEN_NOISY:
             m_end = gen_moves(m_curr, m_td->position, NOISY);
             score_moves();

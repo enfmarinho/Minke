@@ -37,8 +37,8 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
 
 SearchLimits::SearchLimits() { reset(); }
 
-SearchLimits::SearchLimits(int depth, int optimum_node, int maximum_node)
-    : depth(depth), optimum_node(optimum_node), maximum_node(maximum_node) {}
+SearchLimits::SearchLimits(int _depth, int _optimum_node, int _maximum_node)
+    : depth(_depth), optimum_node(_optimum_node), maximum_node(_maximum_node) {}
 
 inline void SearchLimits::reset() {
     depth = MAX_SEARCH_DEPTH;
