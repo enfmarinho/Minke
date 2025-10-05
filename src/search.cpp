@@ -131,7 +131,7 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, Threa
             break;
         }
 
-        delta += delta / 2;
+        delta += delta * (aw_widening_factor() / 100.0);
     }
 
     return score;
