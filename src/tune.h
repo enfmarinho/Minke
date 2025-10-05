@@ -100,4 +100,22 @@ class TunableParamList {
 
 #endif // #ifdef TUNE
 
+// Aspiration Windows
+TUNABLE_PARAM(aw_min_depth, 4, 1, 10, 0.5, 0.002)
+TUNABLE_PARAM(aw_first_window, 10, 5, 200, 10, 0.002)
+TUNABLE_PARAM(aw_widening_factor, 50, 1, 100, 5, 0.002)
+
+// Null move pruning
+TUNABLE_PARAM(nmp_base_reduction, 3, 1, 5, 0.5, 0.002)
+TUNABLE_PARAM(nmp_depth_reduction_divisor, 4, 2, 8, 0.5, 0.002)
+TUNABLE_PARAM(nmp_min_depth, 3, 2, 8, 0.5, 0.002)
+
+// Reverse Futility Pruning
+TUNABLE_PARAM(rfp_margin, 100, 50, 150, 5, 0.002)
+TUNABLE_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)
+
+// Late Move Reductions
+TUNABLE_PARAM(lmr_base, 100, 50, 150, 5, 0.002)
+TUNABLE_PARAM(lmr_divisor, 220, 150, 350, 10, 0.002)
+
 #endif // #ifndef TUNE_H

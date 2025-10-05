@@ -18,6 +18,7 @@
 #include "movepicker.h"
 #include "position.h"
 #include "tt.h"
+#include "tune.h"
 #include "types.h"
 
 static void print_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
@@ -106,8 +107,8 @@ ScoreType iterative_deepening(ThreadData &td) {
 ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td) {
     ScoreType alpha = -MAX_SCORE;
     ScoreType beta = MAX_SCORE;
-    ScoreType delta = AW_DELTA;
-    if (depth >= AW_MIN_DEPTH) {
+    ScoreType delta = aw_first_window();
+    if (depth >= aw_min_depth()) {
         alpha = prev_score - delta;
         beta = prev_score + delta;
     }
@@ -201,13 +202,14 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
     // Forward pruning methods
     if (!in_check && !pv_node && !root) {
         // Reverse futility pruning
-        if (depth < RFP_DEPTH && eval - RFP_MARGIN * (depth - improving) >= beta)
+        if (depth < rfp_max_depth() && eval - rfp_margin() * (depth - improving) >= beta)
             return eval;
 
         // Null move pruning
-        if (!position.last_was_null() && depth >= NMP_DEPTH && eval >= beta && position.has_non_pawns()) {
+        if (!position.last_was_null() && depth >= nmp_min_depth() && eval >= beta && position.has_non_pawns()) {
             // TODO check for advanced tweaks
-            const int reduction = NMP_BASE + depth / NMP_DIVISOR + std::clamp((eval - beta) / 300, -1, 3);
+            const int reduction =
+                nmp_base_reduction() + depth / nmp_depth_reduction_divisor() + std::clamp((eval - beta) / 300, -1, 3);
 
             // is not necessary to set node.curr_move to MOVE_NONE here because it has already been done on node.reset()
             position.make_null_move();

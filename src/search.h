@@ -16,19 +16,7 @@
 #include "tt.h"
 #include "types.h"
 
-constexpr int SEE_PRUNING_MULT = -20;
-constexpr int SEE_PRUNING_DEPTH = 10;
-constexpr int FP_DEPTH = 8;
 extern int LMR_TABLE[64][64];
-constexpr int LMP_DEPTH = 11;
-extern int LMP_TABLE[2][LMP_DEPTH];
-constexpr int RFP_DEPTH = 10;
-constexpr int RFP_MARGIN = 100;
-constexpr int NMP_DEPTH = 3;
-constexpr int NMP_BASE = 3;
-constexpr int NMP_DIVISOR = 4;
-constexpr int AW_MIN_DEPTH = 4;
-constexpr int AW_DELTA = 10;
 
 struct SearchLimits {
     int depth;
