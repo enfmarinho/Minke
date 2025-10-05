@@ -14,6 +14,7 @@
 #include "incbin.h"
 #include "nnue.h"
 #include "search.h"
+#include "tune.h"
 #include "types.h"
 
 #ifndef EVALFILE
@@ -23,7 +24,7 @@
 INCBIN(NetParameters, EVALFILE);
 
 int LMR_TABLE[64][64];
-int LMP_TABLE[2][LMP_DEPTH];
+// int LMP_TABLE[2][LMP_DEPTH];
 HashKeys hash_keys;
 Network network;
 Bitboard between_squares[64][64];
@@ -37,22 +38,21 @@ void init_all() {
 }
 
 void init_search_params() {
-    constexpr double LMR_BASE = 1;
-    constexpr double LMR_DIVISOR = 2.2;
     for (int depth = 1; depth < 64; ++depth) {
         for (int move_counter = 1; move_counter < 64; ++move_counter) {
-            LMR_TABLE[depth][move_counter] = LMR_BASE + std::log(depth) * std::log(move_counter) / LMR_DIVISOR;
+            LMR_TABLE[depth][move_counter] =
+                (lmr_base() / 100.0) + std::log(depth) * std::log(move_counter) / (lmr_divisor() / 100.0);
             assert(LMR_TABLE[depth][move_counter] > 0);
         }
     }
-
-    constexpr double LMP_BASE = 1;
-    constexpr double LMP_MULTIPLIER = 2.2;
-    for (int depth = 1; depth < LMP_DEPTH; ++depth) {
-        LMP_TABLE[0][depth] = LMP_BASE + LMP_MULTIPLIER * depth * depth;
-        LMP_TABLE[1][depth] = 2 * LMP_BASE + 2 * LMP_MULTIPLIER * depth * depth; // Improving
-    }
     LMR_TABLE[0][0] = 0;
+
+    // constexpr double LMP_BASE = 1;
+    // constexpr double LMP_MULTIPLIER = 2.2;
+    // for (int depth = 1; depth < LMP_DEPTH; ++depth) {
+    //     LMP_TABLE[0][depth] = LMP_BASE + LMP_MULTIPLIER * depth * depth;
+    //     LMP_TABLE[1][depth] = 2 * LMP_BASE + 2 * LMP_MULTIPLIER * depth * depth; // Improving
+    // }
 }
 
 void init_network_params() {

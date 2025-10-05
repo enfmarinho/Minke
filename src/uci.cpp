@@ -17,12 +17,14 @@
 
 #include "benchmark.h"
 #include "datagen.h"
+#include "init.h"
 #include "move.h"
 #include "movegen.h"
 #include "movepicker.h"
 #include "position.h"
 #include "search.h"
 #include "tt.h"
+#include "tune.h"
 #include "types.h"
 
 UCI::UCI(int argc, char *argv[]) {
@@ -87,6 +89,9 @@ void UCI::loop() {
         if (token == "quit" || token == "stop") {
             m_td.stop = true;
         } else if (token == "go") {
+#ifdef TUNE
+            init_search_params();
+#endif
             if (!m_td.stop)
                 continue;
             else if (m_thread.joinable())
@@ -128,7 +133,15 @@ void UCI::loop() {
             int bench_depth = EngineOptions::BENCH_DEPTH;
             iss >> std::skipws >> bench_depth;
             bench(bench_depth);
-        } else if (!token.empty()) {
+        }
+#ifdef TUNE
+        else if (token == "tuneinfo") {
+            for (const TunableParam &tunable_param : TunableParamList::get()) {
+                tunable_param.print_ob_format();
+            }
+        }
+#endif
+        else if (!token.empty()) {
             std::cout << "Unknown command: '" << token << "'. Type help for information." << std::endl;
         }
     } while (token != "quit");
@@ -211,6 +224,16 @@ void UCI::set_option(std::istringstream &iss) {
     iss >> value;
     if (token == "Hash" && value >= EngineOptions::HASH_MIN && value <= EngineOptions::HASH_MAX) {
         m_td.tt.resize(value);
+    } else if (token == "Threads") {
+        // For now this is only for compatibility with OpenBench
+    }
+#ifdef TUNE
+    else if (TunableParam *param_ptr = TunableParamList::get().find(token)) {
+        param_ptr->curr_value = value;
+    }
+#endif
+    else {
+        std::cout << "Trying to set unknown option: " << token << "\n";
     }
 }
 
@@ -315,4 +338,10 @@ void EngineOptions::print() {
               << "\n";
     std::cout << "option name Threads type spin default " << THREADS_DEFAULT << " min " << THREADS_MIN << " max "
               << THREADS_MAX << "\n";
+
+#ifdef TUNE
+    for (const TunableParam &tunable_param : TunableParamList::get()) {
+        tunable_param.print();
+    }
+#endif
 }
