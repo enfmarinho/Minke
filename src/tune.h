@@ -36,7 +36,7 @@ struct TunableParam {
 
     // This function print the TunableParam in the OpenBench input format
     void print_ob_format() const {
-        std::cout << name << ", " << curr_value << ", " << min_value << ", " << max_value << ", " << cend << ", "
+        std::cout << name << ", int, " << curr_value << ", " << min_value << ", " << max_value << ", " << cend << ", "
                   << rend << "\n";
     }
 };
