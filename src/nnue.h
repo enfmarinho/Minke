@@ -66,7 +66,7 @@ class NNUE {
     Accumulator debug_func(const Position &position);
 
   private:
-    struct Accumulator {
+    struct alignas(64) Accumulator {
         std::array<int16_t, HIDDEN_LAYER_SIZE> white_neurons;
         std::array<int16_t, HIDDEN_LAYER_SIZE> black_neurons;
 
