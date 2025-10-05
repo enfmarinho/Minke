@@ -177,8 +177,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
     Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
 
     // Internal Iterative Reductions
-    if (!tthit && depth >= 4) {
-        --depth;
+    if (!tthit && depth >= iir_min_depth()) {
+        depth -= iir_depth_reduction();
     }
 
     bool in_check = position.in_check();
