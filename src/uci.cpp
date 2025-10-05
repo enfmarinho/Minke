@@ -17,6 +17,7 @@
 
 #include "benchmark.h"
 #include "datagen.h"
+#include "init.h"
 #include "move.h"
 #include "movegen.h"
 #include "movepicker.h"
@@ -88,6 +89,9 @@ void UCI::loop() {
         if (token == "quit" || token == "stop") {
             m_td.stop = true;
         } else if (token == "go") {
+#ifdef TUNE
+            init_search_params();
+#endif
             if (!m_td.stop)
                 continue;
             else if (m_thread.joinable())
