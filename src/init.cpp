@@ -24,7 +24,7 @@
 INCBIN(NetParameters, EVALFILE);
 
 int LMR_TABLE[64][64];
-// int LMP_TABLE[2][LMP_DEPTH];
+int LMP_TABLE[2][LMP_DEPTH];
 HashKeys hash_keys;
 Network network;
 Bitboard between_squares[64][64];
@@ -47,12 +47,10 @@ void init_search_params() {
     }
     LMR_TABLE[0][0] = 0;
 
-    // constexpr double LMP_BASE = 1;
-    // constexpr double LMP_MULTIPLIER = 2.2;
-    // for (int depth = 1; depth < LMP_DEPTH; ++depth) {
-    //     LMP_TABLE[0][depth] = LMP_BASE + LMP_MULTIPLIER * depth * depth;
-    //     LMP_TABLE[1][depth] = 2 * LMP_BASE + 2 * LMP_MULTIPLIER * depth * depth; // Improving
-    // }
+    for (int depth = 0; depth < LMP_DEPTH; ++depth) {
+        LMP_TABLE[0][depth] = (lmp_base() / 100.0) + (lmp_scale() / 100.0) * depth * depth;
+        LMP_TABLE[1][depth] = 2 * (lmp_base() / 100.0) + 2 * (lmp_scale() / 100.0) * depth * depth; // Improving
+    }
 }
 
 void init_network_params() {

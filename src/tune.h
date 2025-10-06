@@ -118,6 +118,10 @@ TUNABLE_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)
 TUNABLE_PARAM(lmr_base, 107, 50, 150, 5, 0.002)
 TUNABLE_PARAM(lmr_divisor, 210, 150, 350, 10, 0.002)
 
+// Late Moves Pruning
+TUNABLE_PARAM(lmp_base, 120, 100, 200, 5, 0.002)
+TUNABLE_PARAM(lmp_scale, 30, 130, 5, 0.5, 0.002)
+
 // Interval Iterative Reduction
 TUNABLE_PARAM(iir_min_depth, 4, 3, 8, 0.5, 0.002)
 TUNABLE_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
