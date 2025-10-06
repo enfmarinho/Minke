@@ -1,8 +1,7 @@
 #ifndef TUNE_H
 #define TUNE_H
 
-#ifdef TUNE
-
+#if defined(TUNE) || defined(TUNE_TM)
 #include <cassert>
 #include <iostream>
 #include <string>
@@ -121,5 +120,21 @@ TUNABLE_PARAM(lmr_divisor, 210, 150, 350, 10, 0.002)
 // Interval Iterative Reduction
 TUNABLE_PARAM(iir_min_depth, 4, 3, 8, 0.5, 0.002)
 TUNABLE_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
+
+// Time Manager
+TUNABLE_PARAM(tm_default_mtg, 40, 20, 60, 2, 0.002)
+TUNABLE_PARAM(tm_inc_scale, 50, 20, 100, 4, 0.002)
+TUNABLE_PARAM(tm_opt_time_scale, 80, 20, 100, 4, 0.002)
+TUNABLE_PARAM(tm_max_time_scale, 80, 20, 100, 4, 0.002)
+
+TUNABLE_PARAM(tm_move_stability_factor1, 150, 100, 300, 10, 0.002)
+TUNABLE_PARAM(tm_move_stability_factor2, 120, 70, 250, 9, 0.002)
+TUNABLE_PARAM(tm_move_stability_factor3, 100, 50, 150, 5, 0.002)
+TUNABLE_PARAM(tm_move_stability_factor4, 90, 50, 150, 5, 0.002)
+TUNABLE_PARAM(tm_move_stability_factor5, 80, 40, 100, 3, 0.002)
+
+TUNABLE_PARAM(tm_node_base, 150, 100, 300, 10, 0.002)
+TUNABLE_PARAM(tm_node_scale, 150, 100, 250, 7.5, 0.002)
+TUNABLE_PARAM(tm_update_min_depth, 4, 2, 8, 0.5, 0.002)
 
 #endif // #ifndef TUNE_H
