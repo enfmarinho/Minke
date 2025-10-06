@@ -8,7 +8,10 @@
 #ifndef TIME_MANAGER_H
 #define TIME_MANAGER_H
 
+#include "move.h"
 #include "types.h"
+
+struct ThreadData;
 
 class TimeManager {
   public:
@@ -17,7 +20,7 @@ class TimeManager {
 
     void reset(CounterType inc, CounterType time, CounterType movestogo, CounterType movetime, bool infinite);
     void reset();
-    void update();
+    void update(const ThreadData &td, const Move &best_move, const int &depth);
     bool stop_early() const;
     bool time_over() const;
     TimeType time_passed() const;
@@ -25,8 +28,12 @@ class TimeManager {
 
   private:
     TimeType m_start_time;
+    TimeType m_optimum_base_time;
     TimeType m_optimum_time;
     TimeType m_maximum_time;
+
+    Move prev_best_move;
+    int move_stability_factor;
 
     bool m_movetime;
     bool m_time_set;
