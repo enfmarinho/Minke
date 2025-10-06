@@ -82,6 +82,6 @@ Other important tools used in the development of Minke include:
 [release-link]: https://github.com/enfmarinho/Minke/releases/latest
 [commits-link]: https://github.com/enfmarinho/Minke/commits/main
 
-[license-badge]: https://img.shields.io/github/license/enfmarinho/Minke
-[release-badge]: https://img.shields.io/github/v/release/enfmarinho/Minke
-[commits-badge]: https://img.shields.io/github/commits-since/enfmarinho/Minke/latest
+[license-badge]: https://img.shields.io/github/license/enfmarinho/Minke?style=for-the-badge
+[release-badge]: https://img.shields.io/github/v/release/enfmarinho/Minke?style=for-the-badge
+[commits-badge]: https://img.shields.io/github/commits-since/enfmarinho/Minke/latest?style=for-the-badge
