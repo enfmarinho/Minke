@@ -31,7 +31,7 @@ void TimeManager::reset(CounterType inc, CounterType time, CounterType mtg, Coun
     time = std::min(time - overhead, time / 2); // Decrease the overhead on total time
     time = std::max(time, 1);                   // Ensure time is positive
     inc = std::max(inc, 0);                     // Ensure inc is non negative
-    mtg = (mtg > 0 ? std::max(mtg, 50) : 50);   // Ensure movestogo is at most 50 if positive, else set it to 50
+    mtg = (mtg > 0 ? std::min(mtg, 50) : 50);   // Ensure movestogo is at most 50 if positive, else set it to 50
 
     double base_time = 0.8 * time / static_cast<double>(mtg) + inc;
     m_optimum_time = m_start_time + base_time;
