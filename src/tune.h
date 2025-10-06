@@ -126,4 +126,9 @@ TUNABLE_PARAM(lmp_scale, 30, 130, 5, 0.5, 0.002)
 TUNABLE_PARAM(iir_min_depth, 4, 3, 8, 0.5, 0.002)
 TUNABLE_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
 
+// Futility Pruning
+TUNABLE_PARAM(fp_max_depth, 10, 7, 13, 0.5, 0.002)
+TUNABLE_PARAM(fp_base, 230, 150, 300, 7.5, 0.002)
+TUNABLE_PARAM(fp_multiplier, 100, 50, 150, 5, 0.002)
+
 #endif // #ifndef TUNE_H

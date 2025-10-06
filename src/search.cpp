@@ -243,6 +243,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
             if (moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
                 skip_quiets = true;
             }
+            int lmr_depth = std::max(0, depth - LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)]);
+            int fp_margin = (fp_base() / 100.0) + lmr_depth * (fp_multiplier() / 100.0);
+            if (!in_check && lmr_depth < fp_max_depth() && eval + fp_margin <= alpha) {
+                skip_quiets = true;
+            }
         }
 
         // Add move to tried list
