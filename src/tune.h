@@ -86,18 +86,31 @@ class TunableParamList {
     // This could be a hash table to save lookup time but this is fine for now
     std::vector<TunableParam> m_params;
 };
+#endif // Tune related classes
 
+#ifdef TUNE
 #define TUNABLE_PARAM(name, default, min, max, cend, rend)                                                            \
     static_assert(cend >= 0.5);                                                                                       \
     inline const TunableParam &tuned_##name = TunableParamList::get().insert({#name, default, min, max, cend, rend}); \
     inline int name() { return tuned_##name.curr_value; }
 
 #else
-
 #define TUNABLE_PARAM(name, default, min, max, cend, rend) \
     constexpr int name() { return default; }
 
 #endif // #ifdef TUNE
+
+#ifdef TUNE_TM
+#define TUNABLE_TM_PARAM(name, default, min, max, cend, rend)                                                         \
+    static_assert(cend >= 0.5);                                                                                       \
+    inline const TunableParam &tuned_##name = TunableParamList::get().insert({#name, default, min, max, cend, rend}); \
+    inline int name() { return tuned_##name.curr_value; }
+
+#else
+#define TUNABLE_TM_PARAM(name, default, min, max, cend, rend) \
+    constexpr int name() { return default; }
+
+#endif // #ifdef TUNE_TM
 
 // Aspiration Windows
 TUNABLE_PARAM(aw_min_depth, 4, 1, 10, 0.5, 0.002)
@@ -122,19 +135,19 @@ TUNABLE_PARAM(iir_min_depth, 4, 3, 8, 0.5, 0.002)
 TUNABLE_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
 
 // Time Manager
-TUNABLE_PARAM(tm_default_mtg, 40, 20, 60, 2, 0.002)
-TUNABLE_PARAM(tm_inc_scale, 50, 20, 100, 4, 0.002)
-TUNABLE_PARAM(tm_opt_time_scale, 80, 20, 100, 4, 0.002)
-TUNABLE_PARAM(tm_max_time_scale, 80, 20, 100, 4, 0.002)
+TUNABLE_TM_PARAM(tm_default_mtg, 40, 20, 60, 2, 0.002)
+TUNABLE_TM_PARAM(tm_inc_scale, 50, 20, 100, 4, 0.002)
+TUNABLE_TM_PARAM(tm_opt_time_scale, 80, 20, 100, 4, 0.002)
+TUNABLE_TM_PARAM(tm_max_time_scale, 80, 20, 100, 4, 0.002)
 
-TUNABLE_PARAM(tm_move_stability_factor1, 150, 100, 300, 10, 0.002)
-TUNABLE_PARAM(tm_move_stability_factor2, 120, 70, 250, 9, 0.002)
-TUNABLE_PARAM(tm_move_stability_factor3, 100, 50, 150, 5, 0.002)
-TUNABLE_PARAM(tm_move_stability_factor4, 90, 50, 150, 5, 0.002)
-TUNABLE_PARAM(tm_move_stability_factor5, 80, 40, 100, 3, 0.002)
+TUNABLE_TM_PARAM(tm_move_stability_factor1, 150, 100, 300, 10, 0.002)
+TUNABLE_TM_PARAM(tm_move_stability_factor2, 120, 70, 250, 9, 0.002)
+TUNABLE_TM_PARAM(tm_move_stability_factor3, 100, 50, 150, 5, 0.002)
+TUNABLE_TM_PARAM(tm_move_stability_factor4, 90, 50, 150, 5, 0.002)
+TUNABLE_TM_PARAM(tm_move_stability_factor5, 80, 40, 100, 3, 0.002)
 
-TUNABLE_PARAM(tm_node_base, 150, 100, 300, 10, 0.002)
-TUNABLE_PARAM(tm_node_scale, 150, 100, 250, 7.5, 0.002)
-TUNABLE_PARAM(tm_update_min_depth, 4, 2, 8, 0.5, 0.002)
+TUNABLE_TM_PARAM(tm_node_base, 150, 100, 300, 10, 0.002)
+TUNABLE_TM_PARAM(tm_node_scale, 150, 100, 250, 7.5, 0.002)
+TUNABLE_TM_PARAM(tm_update_min_depth, 4, 2, 8, 0.5, 0.002)
 
 #endif // #ifndef TUNE_H

@@ -134,7 +134,7 @@ void UCI::loop() {
             iss >> std::skipws >> bench_depth;
             bench(bench_depth);
         }
-#ifdef TUNE
+#if defined(TUNE) || defined(TUNE_TM)
         else if (token == "tuneinfo") {
             for (const TunableParam &tunable_param : TunableParamList::get()) {
                 tunable_param.print_ob_format();
@@ -227,7 +227,7 @@ void UCI::set_option(std::istringstream &iss) {
     } else if (token == "Threads") {
         // For now this is only for compatibility with OpenBench
     }
-#ifdef TUNE
+#if defined(TUNE) || defined(TUNE_TM)
     else if (TunableParam *param_ptr = TunableParamList::get().find(token)) {
         param_ptr->curr_value = value;
     }
@@ -339,7 +339,7 @@ void EngineOptions::print() {
     std::cout << "option name Threads type spin default " << THREADS_DEFAULT << " min " << THREADS_MIN << " max "
               << THREADS_MAX << "\n";
 
-#ifdef TUNE
+#if defined(TUNE) || defined(TUNE_TM)
     for (const TunableParam &tunable_param : TunableParamList::get()) {
         tunable_param.print();
     }
