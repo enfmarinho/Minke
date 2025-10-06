@@ -5,9 +5,8 @@ data
 .cache
 
 # minke executables
-minke
-minke-native
-minke-avx2
-minke-bmi2
-minke-avx512
-minke-apple-silicon
+minke-*-native
+minke-*-avx2
+minke-*-bmi2
+minke-*-avx512
+minke-*-apple-silicon
