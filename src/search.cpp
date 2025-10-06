@@ -238,10 +238,20 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
         }
         node.curr_move = move;
 
-        if (!root && best_score > -MAX_SCORE && !skip_quiets) {
+        if (!root && best_score > -MAX_SCORE) {
             // Late Move Pruning
-            if (moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
+            if (!skip_quiets && moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
                 skip_quiets = true;
+            }
+
+            // SEE Pruning
+            int see_pruning_margin = [&]() {
+                if (move.is_quiet())
+                    return depth * see_quiet_margin();
+                return depth * depth * see_noisy_margin();
+            }();
+            if (depth < see_pruning_max_depth() && !SEE(position, move, see_pruning_margin)) {
+                continue;
             }
         }
 
