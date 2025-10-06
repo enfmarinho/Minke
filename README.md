@@ -1,7 +1,11 @@
- # Minke
-Work in progress UCI compatible chess engine done in order to learn and to get 
-fun. Based on NNUE evaluation, Bitboard board representation and a lot of search 
-enhancements.
+<div align="center">
+  <img src="./logo.png" alt="Minke" width="400"/>
+
+[![License][license-badge]][license-link]  
+[![Latest release][release-badge]][release-link]
+[![Commits][commits-badge]][commits-link]
+
+</div>
 
 ## Building
 ### Clone the Repository
@@ -12,7 +16,7 @@ cd Minke
 ### Compile
 To compile Minke use the makefile like so: 
 ```
-make <ARCH>
+make EXE=minke <ARCH>
 ```
 
 Replace \<ARCH\> with the desired target architecture:
@@ -22,7 +26,7 @@ Replace \<ARCH\> with the desired target architecture:
 - native
 - apple-silicon
 
-This will generate the executable called minke-\<ARCH\>
+This will generate the executable called minke
 
 ## Features
 ### Board Representation
@@ -71,3 +75,13 @@ Other important tools used in the development of Minke include:
 * [bullet](https://github.com/jw1912/bullet)
 * [CPW](https://www.chessprogramming.org/Main_Page)
 * [fastchess](https://github.com/Disservin/fastchess)
+* [OpenBench](https://github.com/AndyGrant/OpenBench)
+
+
+[license-link]: https://github.com/enfmarinho/Minke/blob/main/LICENSE
+[release-link]: https://github.com/enfmarinho/Minke/releases/latest
+[commits-link]: https://github.com/enfmarinho/Minke/commits/main
+
+[license-badge]: https://img.shields.io/github/license/enfmarinho/Minke
+[release-badge]: https://img.shields.io/github/v/release/enfmarinho/Minke
+[commits-badge]: https://img.shields.io/github/commits-since/enfmarinho/Minke/latest
