@@ -53,23 +53,23 @@ all: native
 
 native:
 	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(NATIVEFLAGS)" \
-		$(EXE)$(if $(EXE_NOT_SET),-v($VERSION))$(if $(EXE_NOT_SET),-$@)$(SUFFIX)
+		$(EXE)$(if $(EXE_NOT_SET),-v$(VERSION))$(if $(EXE_NOT_SET),-$@)$(SUFFIX)
 
 avx2:
 	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(AVX2FLAGS)" \
-		$(EXE)$(if $(EXE_NOT_SET),-v($VERSION))$(if $(EXE_NOT_SET),-$@)$(SUFFIX)
+		$(EXE)$(if $(EXE_NOT_SET),-v$(VERSION))$(if $(EXE_NOT_SET),-$@)$(SUFFIX)
 
 bmi2:
 	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(BMI2FLAGS)" \
-		$(EXE)$(if $(EXE_NOT_SET),-v($VERSION))$(if $(EXE_NOT_SET),-$@)$(SUFFIX)
+		$(EXE)$(if $(EXE_NOT_SET),-v$(VERSION))$(if $(EXE_NOT_SET),-$@)$(SUFFIX)
 
 avx512:
 	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(AVX512FLAGS)" \
-		$(EXE)$(if $(EXE_NOT_SET),-v($VERSION))$(if $(EXE_NOT_SET),-$@)$(SUFFIX)
+		$(EXE)$(if $(EXE_NOT_SET),-v$(VERSION))$(if $(EXE_NOT_SET),-$@)$(SUFFIX)
 
 apple-silicon:
 	$(MAKE) BUILD_DIR=$(BASE_BUILD_DIR)/$@ ARCH_FLAGS="$(APPLESILICONFLAGS)" \
-		$(EXE)$(if $(EXE_NOT_SET),-v($VERSION))$(if $(EXE_NOT_SET),-$@)$(SUFFIX)
+		$(EXE)$(if $(EXE_NOT_SET),-v$(VERSION))$(if $(EXE_NOT_SET),-$@)$(SUFFIX)
 
 $(EXE): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(ARCH_FLAGS) $(CXXLINKERFLAGS) -o $@ $^
