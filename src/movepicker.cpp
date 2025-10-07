@@ -64,11 +64,10 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
                 else
                     ++m_curr;
             }
-            if (m_qsearch) {
+            if (m_qsearch && skip_quiets) {
                 m_stage = FINISHED;
                 return SCORED_MOVE_NONE;
-            }
-            if (skip_quiets) {
+            } else if (skip_quiets) {
                 m_curr = m_moves;
                 m_stage = PICK_BAD_NOISY;
                 return next_move_scored(skip_quiets); // Work around to avoid the switch fall-through
