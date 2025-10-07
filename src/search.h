@@ -16,6 +16,8 @@
 #include "tt.h"
 #include "types.h"
 
+constexpr int LMP_DEPTH = 32;
+extern int LMP_TABLE[2][LMP_DEPTH];
 extern int LMR_TABLE[64][64];
 
 struct SearchLimits {

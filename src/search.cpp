@@ -238,6 +238,13 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
         }
         node.curr_move = move;
 
+        if (!root && best_score > -MAX_SCORE && !skip_quiets) {
+            // Late Move Pruning
+            if (moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
+                skip_quiets = true;
+            }
+        }
+
         // Add move to tried list
         if (move.is_quiet())
             node.quiets_tried.push(move);
