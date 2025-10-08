@@ -186,7 +186,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
     if (in_check) {
         eval = node.static_eval = SCORE_NONE;
     } else if (tthit) {
-        eval = node.static_eval = position.eval();
+        eval = node.static_eval = (ttentry->static_eval() != SCORE_NONE ? ttentry->static_eval() : position.eval());
+
         if (ttentry->score() != SCORE_NONE &&
             (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->score() < eval) ||
              (ttentry->bound() == LOWER && ttentry->score() > eval)))
