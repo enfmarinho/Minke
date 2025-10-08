@@ -336,29 +336,45 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         return tte->score();
     }
 
-    ScoreType static_eval = position.eval();
-    alpha = std::max(alpha, static_eval);
-    if (alpha >= beta)
+    ScoreType best_score = position.eval();
+    // Stand-pat
+    if (best_score >= beta)
         return beta;
+    alpha = std::max(alpha, best_score);
 
     Move move = MOVE_NONE;
     MovePicker move_picker((tthit ? tte->best_move() : MOVE_NONE), &td, true);
-    // TODO check if its worth to check for quiet moves if in check
-    while ((move = move_picker.next_move(true)) != MOVE_NONE) {
+    int moves_searched = 0;
+    bool in_check = position.in_check();
+    while ((move = move_picker.next_move(!in_check)) != MOVE_NONE) {
         if (!position.make_move<true>(move)) { // Avoid illegal moves
             position.unmake_move<true>(move);
             continue;
         }
+        ++moves_searched;
+        ++td.height;
 
         ScoreType score = -quiescence(-beta, -alpha, td);
+
         position.unmake_move<true>(move);
-        if (score >= beta)
-            return beta;
-        else if (score > alpha)
-            alpha = score;
+        --td.height;
+
+        if (score > best_score) {
+            best_score = score;
+            if (score > alpha) {
+                if (score >= beta) {
+                    break;
+                }
+                alpha = score;
+            }
+        }
     }
 
-    return alpha;
+    if (moves_searched == 0 && in_check) {
+        return -MATE_SCORE + td.height;
+    }
+
+    return best_score;
 }
 
 bool SEE(Position &position, const Move &move, int threshold) {
