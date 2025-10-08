@@ -343,8 +343,8 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
 
     Move move = MOVE_NONE;
     MovePicker move_picker((tthit ? tte->best_move() : MOVE_NONE), &td, true);
-    // TODO check if its worth to check for quiet moves if in check
-    while ((move = move_picker.next_move(true)) != MOVE_NONE) {
+    bool in_check = position.in_check();
+    while ((move = move_picker.next_move(!in_check)) != MOVE_NONE) {
         if (!position.make_move<true>(move)) { // Avoid illegal moves
             position.unmake_move<true>(move);
             continue;
