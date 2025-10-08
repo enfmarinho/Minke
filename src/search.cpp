@@ -196,8 +196,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
         eval = node.static_eval = position.eval();
     }
 
-    bool improving = td.height >= 2 && (node.static_eval > td.nodes[td.height - 2].static_eval ||
-                                        td.nodes[td.height - 2].static_eval == SCORE_NONE);
+    bool improving =
+        !in_check && td.height >= 2 &&
+        (node.static_eval > td.nodes[td.height - 2].static_eval || td.nodes[td.height - 2].static_eval == SCORE_NONE);
 
     // Forward pruning methods
     if (!in_check && !pv_node && !root) {
