@@ -268,7 +268,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
                 // Reduce more when move is a bad capture and less if move is quiet
                 reduction -= !move.is_quiet();
                 // Reduce less when in check
-                reduction -= in_check;
+                if (in_check)
+                    reduction -= 2;
                 // Reduce more if not improving
                 if (!improving)
                     reduction += 1;
