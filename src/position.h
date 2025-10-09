@@ -118,6 +118,9 @@ class Position {
     bool repetition() const;
     bool fifty_move_draw();
 
+    bool pawn_pseudo_legal(const Square &from, const Square &to, const Move &move) const;
+    bool castling_pseudo_legal(const Square &from, const Square &to, const PieceType &moved_piece_type) const;
+
     void hash_piece_key(const Piece &piece, const Square &sq);
     void hash_castle_key();
     void hash_ep_key();
