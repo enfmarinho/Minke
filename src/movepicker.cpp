@@ -76,6 +76,19 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
                 m_stage = GEN_QUIET;
             }
             // Fall-through
+        case PICK_KILLER_1:
+            if (m_killer1 != m_ttmove && m_td->position.is_pseudo_legal(m_killer1)) {
+                return {m_killer1, KILLER_2_SCORE};
+            }
+        case PICK_KILLER_2:
+            if (m_killer2 != m_ttmove && m_killer2 != m_killer1 && m_td->position.is_pseudo_legal(m_killer2)) {
+                return {m_killer2, KILLER_2_SCORE};
+            }
+        case PICK_COUNTER:
+            if (m_counter != m_ttmove && m_counter != m_killer1 && m_counter != m_killer2 &&
+                m_td->position.is_pseudo_legal(m_counter)) {
+                return {m_counter, COUNTER_SCORE};
+            }
         case GEN_QUIET:
             m_end = gen_moves(m_curr, m_td->position, QUIET);
             score_moves();
@@ -84,7 +97,8 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
         case PICK_QUIET:
             while (m_curr != m_end) {
                 sort_next_move();
-                if (m_curr->move != m_ttmove)
+                if (m_curr->move != m_ttmove && m_curr->move != m_killer1 && m_curr->move != m_killer2 &&
+                    m_curr->move != m_counter)
                     return *m_curr++;
                 else
                     ++m_curr;
@@ -124,14 +138,7 @@ void MovePicker::score_moves() {
             case CASTLING:
                 // Fall-through
             case REGULAR:
-                if (runner->move == m_killer1)
-                    runner->score = KILLER_1_SCORE;
-                else if (runner->move == m_killer2)
-                    runner->score = KILLER_2_SCORE;
-                else if (runner->move == m_counter)
-                    runner->score = COUNTER_SCORE;
-                else
-                    runner->score = m_td->search_history.get_history(m_td->position, runner->move);
+                runner->score = m_td->search_history.get_history(m_td->position, runner->move);
                 break;
             case CAPTURE:
                 runner->score = CAPTURE_SCORE + 20 * SEE_VALUES[m_td->position.consult(runner->move.to())] +
