@@ -115,7 +115,7 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, Threa
 
     ScoreType score = SCORE_NONE;
     while (true) {
-        ScoreType curr_score = negamax(alpha, beta, depth, td);
+        ScoreType curr_score = negamax(alpha, beta, depth, false, td);
 
         if (stop_search(td))
             break;
@@ -137,7 +137,7 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, Threa
     return score;
 }
 
-ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData &td) {
+ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool cutnode, ThreadData &td) {
     if (stop_search(td)) // Out of time
         return -MAX_SCORE;
     else if (depth <= 0)
@@ -214,7 +214,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
             // is not necessary to set node.curr_move to MOVE_NONE here because it has already been done on node.reset()
             position.make_null_move();
             ++td.height;
-            ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, td);
+            ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, !cutnode, td);
             position.unmake_null_move();
             --td.height;
 
@@ -257,7 +257,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
         td.nodes[td.height].pv_list.clear();
         ScoreType score;
         if (moves_searched == 1) {
-            score = -negamax(-beta, -alpha, depth - 1, td);
+            score = -negamax(-beta, -alpha, depth - 1, false, td);
         } else {
             int reduction = 1;
             // Perform LMR in case a minimum amount of moves were searched, the depth is greater than 3, the move is
@@ -277,9 +277,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData
 
                 reduction = std::clamp(reduction, 1, depth - 1);
             }
-            score = -negamax(-alpha - 1, -alpha, depth - reduction, td);
+            score = -negamax(-alpha - 1, -alpha, depth - reduction, true, td);
             if (score > alpha && score < beta)
-                score = -negamax(-beta, -alpha, depth - 1, td);
+                score = -negamax(-beta, -alpha, depth - 1, !cutnode, td);
         }
 
         --td.height;

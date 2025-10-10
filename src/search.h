@@ -68,7 +68,7 @@ struct ThreadData {
 
 ScoreType iterative_deepening(ThreadData &td);
 ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);
-ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData &td);
+ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool cutnode, ThreadData &td);
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td);
 bool SEE(Position &position, const Move &move, int threshold);
 
