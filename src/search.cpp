@@ -265,6 +265,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             if (moves_searched > 1 + pv_node && depth > 3 &&
                 (move.is_quiet() || move_picker.picker_stage() == PICK_BAD_NOISY)) {
                 reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
+                reduction += cutnode; // Reduce more on cutnodes
                 // Reduce more when move is a bad capture and less if move is quiet
                 reduction -= !move.is_quiet();
                 // Reduce less when in check
