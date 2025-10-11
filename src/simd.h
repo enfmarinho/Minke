@@ -71,6 +71,44 @@ inline vepi16 vepi16_clamp(vepi16 vec, const vepi16 min, const vepi16 max) {
 }
 inline int32_t vepi32_reduce_add(const vepi32 vec) { return _mm512_reduce_add_epi32(vec); }
 
+#elif USE_NEON
+#include <arm_neon.h>
+
+constexpr int REGISTER_SIZE = 8;
+
+using vepi16 = int16x8_t;
+using vepi32 = int32x4_t;
+
+inline vepi16 vepi16_zero() { return vdupq_n_s16(0); }
+inline vepi32 vepi32_zero() { return vdupq_n_s32(0); }
+inline vepi16 vepi16_set(const int16_t v) { return vdupq_n_s16(v); }
+inline vepi16 vepi16_load(const int16_t* data) { return vld1q_s16(data); }
+inline vepi16 vepi16_add(const vepi16 a, const vepi16 b) { return vaddq_s16(a, b); }
+inline vepi16 vepi16_sub(const vepi16 a, const vepi16 b) { return vsubq_s16(a, b); }
+inline vepi16 vepi16_mult(const vepi16 a, const vepi16 b) { return vmulq_s16(a, b); }
+inline vepi32 vepi16_madd(const vepi16 a, const vepi16 b) {
+    int32x4_t pl = vmull_s16(vget_low_s16(a), vget_low_s16(b));
+    int32x4_t ph = vmull_high_s16(a, b);
+    return vpaddq_s32(pl, ph);
+}
+inline vepi32 vepi32_add(const vepi32 a, const vepi32 b) { return vaddq_s32(a, b); }
+inline vepi16 vepi16_max(const vepi16 vec, const vepi16 max) { return vmaxq_s16(vec, max); }
+inline vepi16 vepi16_min(const vepi16 vec, const vepi16 min) { return vminq_s16(vec, min); }
+inline vepi16 vepi16_clamp(vepi16 vec, const vepi16 min, const vepi16 max) {
+    return vepi16_max(vepi16_min(vec, max), min);
+}
+inline int32_t vepi32_reduce_add(const vepi32 vec) {
+#if defined(__aarch64__)
+    return vaddvq_s32(vec);
+#else
+    int32x2_t low = vget_low_s32(vec);
+    int32x2_t high = vget_high_s32(vec);
+    int32x2_t sum = vpadd_s32(low, high);
+    sum = vpadd_s32(sum, sum);
+    return vget_lane_s32(sum, 0);
+#endif
+}
+
 #endif
 
 #endif // #ifndef SIMD_H
