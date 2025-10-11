@@ -23,7 +23,7 @@ NATIVEFLAGS = -march=native
 AVX2FLAGS = -DUSE_AVX2 -DUSE_SIMD -mavx2 -mbmi -mfma
 BMI2FLAGS = -DUSE_AVX2 -DUSE_SIMD -mavx2 -mbmi -mbmi2 -mfma
 AVX512FLAGS = -DUSE_AVX512 -DUSE_SIMD -mavx512f -mavx512bw -mfma
-APPLESILICONFLAGS = -march=armv8.5-a -mcpu=apple-m1 -DUSE_APPLE_SILICON
+APPLESILICONFLAGS = -DUSE_NEON -DUSE_SIMD -march=armv8.5-a
 ARCHS = native avx2 bmi2 avx512
 
 ifeq ($(OS), Windows_NT)
