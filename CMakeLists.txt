@@ -58,7 +58,7 @@ set_property(
 # Build variants
 string(TOLOWER "${CMAKE_BUILD_ARCH}" arch)
 if(arch STREQUAL "apple-silicon")
-  target_compile_definitions(minke PRIVATE USE_SIMD USE_ARM_NEON)
+  target_compile_definitions(minke PRIVATE USE_SIMD USE_NEON)
   target_compile_options(minke PRIVATE -march=armv8.5-a -mcpu=apple-m1)
 elseif(arch STREQUAL "avx2")
   target_compile_definitions(minke PRIVATE USE_SIMD USE_AVX2)
