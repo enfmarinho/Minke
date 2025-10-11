@@ -15,7 +15,6 @@
 struct ThreadData;
 
 using HistoryType = int;
-constexpr HistoryType HistoryDivisor = 16384;
 
 class History {
   public:
