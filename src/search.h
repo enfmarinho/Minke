@@ -11,6 +11,7 @@
 #include <cstdint>
 
 #include "history.h"
+#include "move.h"
 #include "pv_list.h"
 #include "time_manager.h"
 #include "tt.h"
@@ -33,12 +34,14 @@ struct SearchLimits {
 
 struct NodeData {
     Move curr_move;
+    Move excluded_move;
     ScoreType static_eval;
     PvList pv_list;
     MoveList quiets_tried, tacticals_tried;
 
     inline void reset() {
         curr_move = MOVE_NONE;
+        excluded_move = MOVE_NONE;
         static_eval = SCORE_NONE;
         pv_list.clear();
         quiets_tried.clear();
@@ -68,7 +71,7 @@ struct ThreadData {
 
 ScoreType iterative_deepening(ThreadData &td);
 ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);
-ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, ThreadData &td);
+ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool cutnode, ThreadData &td);
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td);
 bool SEE(Position &position, const Move &move, int threshold);
 
