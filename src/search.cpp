@@ -145,9 +145,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     ++td.nodes_searched;
 
     bool pv_node = alpha != beta - 1;
+    bool singular_search = td.nodes[td.height].excluded_move != MOVE_NONE;
     Position &position = td.position;
     NodeData &node = td.nodes[td.height];
-    node.reset();
 
     // Early return conditions
     bool root = td.height == 0;
@@ -168,7 +168,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     // Transposition table probe
     bool tthit;
     TTEntry *ttentry = td.tt.probe(position, tthit);
-    if (!pv_node && tthit && ttentry->depth() >= depth &&
+    tthit = tthit && !singular_search; // Don't use ttentry result if in singular search
+    if (!pv_node && !singular_search && tthit && ttentry->depth() >= depth &&
         (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->score() <= alpha) ||
          (ttentry->bound() == LOWER && ttentry->score() >= beta))) {
         return ttentry->score();
@@ -185,6 +186,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     ScoreType eval;
     if (in_check) {
         eval = node.static_eval = SCORE_NONE;
+    } else if (singular_search) {
+        eval = node.static_eval;
     } else if (tthit) {
         eval = node.static_eval = position.eval();
         if (ttentry->score() != SCORE_NONE &&
@@ -200,7 +203,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                                         td.nodes[td.height - 2].static_eval == SCORE_NONE);
 
     // Forward pruning methods
-    if (!in_check && !pv_node && !root) {
+    if (!in_check && !pv_node && !root && !singular_search) {
         // Reverse futility pruning
         if (depth < rfp_max_depth() && eval - rfp_margin() * (depth - improving) >= beta)
             return eval;
@@ -211,9 +214,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             const int reduction =
                 nmp_base_reduction() + depth / nmp_depth_reduction_divisor() + std::clamp((eval - beta) / 300, -1, 3);
 
-            // is not necessary to set node.curr_move to MOVE_NONE here because it has already been done on node.reset()
             position.make_null_move();
             ++td.height;
+            node.curr_move = MOVE_NONE;
             ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, !cutnode, td);
             position.unmake_null_move();
             --td.height;
@@ -231,7 +234,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     bool skip_quiets = false;
     MovePicker move_picker(ttmove, &td, false);
+    node.quiets_tried.clear();
+    node.tacticals_tried.clear();
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
+        if (move == td.nodes[td.height].excluded_move) // Skip excluded moves
+            continue;
         if (!position.make_move<true>(move)) { // Avoid illegal moves
             position.unmake_move<true>(move);
             continue;
@@ -245,6 +252,33 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             }
         }
 
+        // Extensions
+        int extension = 0;
+        if (!root && depth > singular_extension_min_depth() && move == ttmove && ttentry->depth() > depth - 4 &&
+            move != td.nodes[td.height].excluded_move && ttentry->bound() == LOWER) {
+            ScoreType singular_beta = ttentry->score() - depth;
+            ScoreType singular_depth = (depth - 1) / 2;
+
+            position.unmake_move<true>(ttmove);
+
+            td.nodes[td.height].excluded_move = ttmove;
+            ScoreType singular_score = negamax(singular_beta - 1, singular_beta, singular_depth, cutnode, td);
+            td.nodes[td.height].excluded_move = MOVE_NONE;
+
+            if (singular_score < singular_beta) {
+                extension = 1;
+
+                // TODO double extension
+                // } else if (singular_score >= beta) {
+                //     return singular_score;
+                // } else if (ttentry->score() <= alpha && ttentry->score() >= beta) {
+                //     extension = -1;
+            }
+
+            position.make_move<true>(ttmove);
+        }
+        int new_depth = depth + extension;
+
         // Add move to tried list
         if (move.is_quiet())
             node.quiets_tried.push(move);
@@ -257,7 +291,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         td.nodes[td.height].pv_list.clear();
         ScoreType score;
         if (moves_searched == 1) {
-            score = -negamax(-beta, -alpha, depth - 1, false, td);
+            score = -negamax(-beta, -alpha, new_depth - 1, false, td);
         } else {
             int reduction = 1;
             // Perform LMR in case a minimum amount of moves were searched, the depth is greater than 3, the move is
@@ -277,9 +311,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
                 reduction = std::clamp(reduction, 1, depth - 1);
             }
-            score = -negamax(-alpha - 1, -alpha, depth - reduction, true, td);
+            score = -negamax(-alpha - 1, -alpha, new_depth - reduction, true, td);
             if (score > alpha && score < beta)
-                score = -negamax(-beta, -alpha, depth - 1, !cutnode, td);
+                score = -negamax(-beta, -alpha, new_depth - 1, !cutnode, td);
         }
 
         --td.height;

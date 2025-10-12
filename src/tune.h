@@ -122,6 +122,9 @@ TUNABLE_PARAM(lmr_divisor, 207, 150, 350, 10, 0.002)
 TUNABLE_PARAM(lmp_base, 120, 100, 200, 5, 0.002)
 TUNABLE_PARAM(lmp_scale, 30, 20, 120, 5, 0.002)
 
+// Singular Extension
+TUNABLE_PARAM(singular_extension_min_depth, 7, 4, 10, 0.5, 0.002)
+
 // Interval Iterative Reduction
 TUNABLE_PARAM(iir_min_depth, 3, 3, 8, 0.5, 0.002)
 TUNABLE_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
