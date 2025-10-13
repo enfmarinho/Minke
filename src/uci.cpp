@@ -158,7 +158,8 @@ void UCI::print_debug_info() {
     Move ttmove = MOVE_NONE;
     if (found) {
         ttmove = entry->best_move();
-        std::cout << "Best move: " << ttmove.get_algebraic_notation() << std::endl;
+        std::cout << "Best move: " << ttmove.get_algebraic_notation(m_td.chess960, m_td.position.get_castle_rooks())
+                  << std::endl;
     }
     MovePicker move_picker(ttmove, &m_td, false);
     std::cout << "Move list: ";
@@ -166,8 +167,9 @@ void UCI::print_debug_info() {
     while ((scored_move = move_picker.next_move_scored(false)) != SCORED_MOVE_NONE) {
         if (!m_td.position.make_move<false>(scored_move.move))
             std::cout << "*";
-        std::cout << scored_move.move.get_algebraic_notation() << "(" << scored_move.score << ") ";
         m_td.position.unmake_move<false>(scored_move.move);
+        std::cout << scored_move.move.get_algebraic_notation(m_td.chess960, m_td.position.get_castle_rooks()) << "("
+                  << scored_move.score << ") ";
     }
     std::cout << "\nNNUE eval: " << m_td.position.eval() << std::endl;
 }
@@ -207,7 +209,8 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
         ScoredMove *end = gen_moves(moves, m_td.position, GEN_ALL);
 
         for (ScoredMove *curr = moves; curr != end; ++curr) {
-            if (move_list[index] == curr->move.get_algebraic_notation()) {
+            if (move_list[index] ==
+                curr->move.get_algebraic_notation(m_td.chess960, m_td.position.get_castle_rooks())) {
                 m_td.position.make_move<false>(curr->move);
                 break;
             }
@@ -311,7 +314,8 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
         position.unmake_move<false>(move);
 
         if (root)
-            std::cout << move.get_algebraic_notation() << ": " << count << std::endl;
+            std::cout << move.get_algebraic_notation(m_td.chess960, m_td.position.get_castle_rooks()) << ": " << count
+                      << std::endl;
     }
 
     if (root)

@@ -47,7 +47,7 @@ class Move {
         return static_cast<PieceType>((type() & 0b0011) + 1);
     }
     inline int16_t internal() const { return m_bytes; }
-    std::string get_algebraic_notation() const;
+    std::string get_algebraic_notation(const bool chess960, const Bitboard castle_rooks) const;
 
     inline bool is_regular() const { return type() == REGULAR; }
     inline bool is_castle() const { return type() == CASTLING; }
