@@ -202,7 +202,15 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
         if (move_list.size() - index == 100 || m_td.position.get_history_ply() > 100)
             m_td.position.reset_history();
 
-        m_td.position.make_move<false>(m_td.position.get_movement(move_list[index]));
+        ScoredMove moves[MAX_MOVES_PER_POS];
+        ScoredMove *end = gen_moves(moves, m_td.position, GEN_ALL);
+
+        for (ScoredMove *curr = moves; curr != end; ++curr) {
+            if (move_list[index] == curr->move.get_algebraic_notation()) {
+                m_td.position.make_move<false>(curr->move);
+                break;
+            }
+        }
     }
     m_td.position.reset_nnue();
 }
