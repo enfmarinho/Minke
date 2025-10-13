@@ -8,7 +8,6 @@
 #include "movegen.h"
 
 #include <cassert>
-#include <cstdint>
 
 #include "attacks.h"
 #include "move.h"
@@ -157,6 +156,20 @@ ScoredMove* gen_castling_moves(ScoredMove* moves, const Position& position) {
 
         if (crossing_mask & position.get_occupancy()) // There is a blocker
             continue;
+
+        Bitboard king_crossing = between_squares[king_from][king_to];
+        bool illegal = false;
+        while (king_crossing) {
+            Square sq = poplsb(king_crossing);
+            if (position.is_attacked(sq)) {
+                illegal = true;
+                break;
+            }
+        }
+
+        if (illegal) {
+            continue;
+        }
 
         *moves++ = {Move(king_from, king_to, CASTLING), 0};
     }
