@@ -90,6 +90,7 @@ class Position {
     inline BoardState get_board_state() const { return m_curr_state; };
     inline Bitboard get_checkers() const { return m_curr_state.checkers; }
     inline Bitboard get_pins() const { return m_curr_state.pins; }
+    inline Bitboard get_castle_rooks() const { return m_curr_state.castle_rooks; }
     inline void reset_history() { m_history_ply = 0; }
 
   private:
