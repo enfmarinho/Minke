@@ -271,8 +271,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 // TODO double extension
             } else if (singular_score >= beta) { // Multi-Cut
                 return singular_score;
-                // } else if (ttentry->score() <= alpha && ttentry->score() >= beta) {
-                //     extension = -1;
+            } else if (ttentry->score() <= alpha && ttentry->score() >= beta) {
+                extension = -1;
             }
 
             position.make_move<true>(ttmove);
