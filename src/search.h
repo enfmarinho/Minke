@@ -63,6 +63,7 @@ struct ThreadData {
     int height;
     bool stop;
     bool report;
+    bool chess960;
 
     ThreadData();
     void reset_search_parameters();

@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <exception>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -224,16 +225,39 @@ void UCI::ucinewgame() {
 }
 
 void UCI::set_option(std::istringstream &iss) {
+    std::string value;
+    int value_int;
+    bool value_bool;
+    auto valid_int_value = [&](int min, int max) -> bool {
+        try {
+            value_int = std::stoi(value);
+            return min <= value_int && value_int <= max;
+        } catch (const std::exception &) {
+            return false;
+        }
+    };
+    auto valid_bool_value = [&]() -> bool {
+        if (value == "true") {
+            value_bool = true;
+            return true;
+        } else if (value == "false") {
+            value_bool = false;
+            return true;
+        }
+        return false;
+    };
+
     std::string token, garbage;
-    int value;
     iss >> garbage; // Consume the "name" token
     iss >> token;
     iss >> garbage; // Consume the "value" token.
     iss >> value;
-    if (token == "Hash" && value >= EngineOptions::HASH_MIN && value <= EngineOptions::HASH_MAX) {
-        m_td.tt.resize(value);
-    } else if (token == "Threads") {
+    if (token == "Hash" && valid_int_value(EngineOptions::HASH_MIN, EngineOptions::HASH_MAX)) {
+        m_td.tt.resize(value_int);
+    } else if (token == "Threads" && valid_int_value(EngineOptions::THREADS_MIN, EngineOptions::THREADS_MAX)) {
         // For now this is only for compatibility with OpenBench
+    } else if (token == "UCI_Chess960" && valid_bool_value()) {
+        m_td.chess960 = value_bool;
     }
 #ifdef TUNE
     else if (TunableParam *param_ptr = TunableParamList::get().find(token)) {
