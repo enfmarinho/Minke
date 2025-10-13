@@ -136,25 +136,30 @@ static inline ScoredMove* gen_piece_moves(ScoredMove* moves, const Position& pos
 }
 
 ScoredMove* gen_castling_moves(ScoredMove* moves, const Position& position) {
-    uint8_t short_right = WHITE_OO;
-    uint8_t long_right = WHITE_OOO;
-    Bitboard short_castling_crossing_mask = WHITE_OO_CROSSING_MASK;
-    Bitboard long_castling_crossing_mask = WHITE_OOO_CROSSING_MASK;
-    int first_rank = 0;
-    if (position.get_stm() == BLACK) {
-        short_right = BLACK_OO;
-        long_right = BLACK_OOO;
-        short_castling_crossing_mask = BLACK_OO_CROSSING_MASK;
-        long_castling_crossing_mask = BLACK_OOO_CROSSING_MASK;
-        first_rank = 7;
-    }
+    Bitboard castle_rooks_stm = position.get_castle_rooks() & position.get_occupancy(position.get_stm());
+    Square king_from = position.get_king_placement(position.get_stm());
+    while (castle_rooks_stm) {
+        Square rook_from = poplsb(castle_rooks_stm);
+        Square king_to, rook_to;
+        if (rook_from > king_from) {
+            king_to = g1, rook_to = f1;
+        } else {
+            king_to = c1, rook_to = d1;
+        }
+        if (position.get_stm() == BLACK) {
+            king_to = static_cast<Square>(king_to ^ 56);
+            rook_to = static_cast<Square>(rook_to ^ 56);
+        }
 
-    Bitboard occupancy = position.get_occupancy();
-    uint8_t castling_rights = position.get_castling_rights();
-    if (castling_rights & short_right && !(occupancy & short_castling_crossing_mask))
-        *moves++ = {Move(get_square(4, first_rank), get_square(6, first_rank), CASTLING), 0};
-    if (castling_rights & long_right && !(occupancy & long_castling_crossing_mask))
-        *moves++ = {Move(get_square(4, first_rank), get_square(2, first_rank), CASTLING), 0};
+        Bitboard crossing_mask = between_squares[king_from][king_to] | between_squares[rook_from][rook_to] |
+                                 (1ULL << king_to) | (1ULL << rook_to);
+        crossing_mask &= ~((1ULL << king_from) | (1ULL << rook_from));
+
+        if (crossing_mask & position.get_occupancy()) // There is a blocker
+            continue;
+
+        *moves++ = {Move(king_from, king_to, CASTLING), 0};
+    }
 
     return moves;
 }
