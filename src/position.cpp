@@ -553,37 +553,6 @@ void Position::update_pin_and_checkers_bb() {
     }
 }
 
-Move Position::get_movement(const std::string &algebraic_notation) const {
-    Square from = get_square(algebraic_notation[0] - 'a', algebraic_notation[1] - '1');
-    Square to = get_square(algebraic_notation[2] - 'a', algebraic_notation[3] - '1');
-    MoveType move_type = MoveType::REGULAR;
-
-    if (algebraic_notation.size() == 5) { // Pawn promotion
-        if (tolower(algebraic_notation[4]) == 'q')
-            move_type = PAWN_PROMOTION_QUEEN;
-        else if (tolower(algebraic_notation[4]) == 'n')
-            move_type = PAWN_PROMOTION_KNIGHT;
-        else if (tolower(algebraic_notation[4]) == 'r')
-            move_type = PAWN_PROMOTION_ROOK;
-        else if (tolower(algebraic_notation[4]) == 'b')
-            move_type = PAWN_PROMOTION_BISHOP;
-    }
-
-    if (consult(to) != EMPTY) { // Capture
-        move_type = static_cast<MoveType>(move_type | CAPTURE);
-    } else if (get_piece_type(consult(from)) == KING && get_file(from) == 4 &&
-               (get_file(to) == 2 || get_file(to) == 6)) { // Castle
-        move_type = CASTLING;
-    } else if (get_piece_type(consult(from)) == PAWN && get_file(to) != get_file(from)) { // En passant
-        // Note that if this point is reached, consult(to) == empty, which is why this simple clause suffices, i.e. if
-        // it's not a simple capture and the pawn is not on its original file, it must be an en passant
-        assert(get_file(to) == get_file(get_en_passant()));
-        move_type = EP;
-    }
-
-    return Move(from, to, move_type);
-}
-
 bool Position::is_attacked(const Square &sq) const {
     Color opponent = get_adversary();
     Bitboard occupancy = get_occupancy();

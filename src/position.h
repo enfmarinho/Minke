@@ -54,7 +54,6 @@ class Position {
     bool no_legal_moves();
     void print() const;
 
-    Move get_movement(const std::string &algebraic_notation) const;
     inline Bitboard get_occupancy() const { return m_occupancies[WHITE] | m_occupancies[BLACK]; }
     inline Bitboard get_occupancy(const Color &color) const {
         assert(color == WHITE || color == BLACK);
