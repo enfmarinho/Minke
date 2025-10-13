@@ -81,14 +81,29 @@ bool Position::set_fen(const std::string &fen) {
     }
 
     for (char castling : fen_arguments[2]) {
-        if (castling == 'K')
+        if (castling == 'K') {
             set_bits(m_curr_state.castling_rights, static_cast<uint8_t>(WHITE_OO));
-        else if (castling == 'Q')
+            set_bit(m_curr_state.castle_rooks, msb(get_piece_bb(WHITE_ROOK) & RANK_MASKS[0]));
+        } else if (castling == 'Q') {
             set_bits(m_curr_state.castling_rights, static_cast<uint8_t>(WHITE_OOO));
-        else if (castling == 'k')
+            set_bit(m_curr_state.castle_rooks, lsb(get_piece_bb(WHITE_ROOK) & RANK_MASKS[0]));
+        } else if (castling == 'k') {
             set_bits(m_curr_state.castling_rights, static_cast<uint8_t>(BLACK_OO));
-        else if (castling == 'q')
+            set_bit(m_curr_state.castle_rooks, msb(get_piece_bb(BLACK_ROOK) & RANK_MASKS[7]));
+        } else if (castling == 'q') {
             set_bits(m_curr_state.castling_rights, static_cast<uint8_t>(BLACK_OOO));
+            set_bit(m_curr_state.castle_rooks, lsb(get_piece_bb(BLACK_ROOK) & RANK_MASKS[7]));
+        } else if ('A' <= castling && castling <= 'H') {
+            Square sq = get_square(castling - 'A', 0);
+            set_bits(m_curr_state.castling_rights,
+                     static_cast<uint8_t>(get_king_placement(WHITE) > sq ? WHITE_OOO : WHITE_OO));
+            set_bit(m_curr_state.castle_rooks, sq);
+        } else if ('a' <= castling && castling <= 'h') {
+            Square sq = get_square(castling - 'a', 7);
+            set_bits(m_curr_state.castling_rights,
+                     static_cast<uint8_t>(get_king_placement(BLACK) > sq ? BLACK_OOO : BLACK_OO));
+            set_bit(m_curr_state.castle_rooks, sq);
+        }
     }
     hash_castle_key();
 
