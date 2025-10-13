@@ -287,13 +287,12 @@ bool Position::make_move(const Move &move) {
 
     m_curr_state.captured = consult(move.to());
 
-    bool legal = true;
     if (move.is_regular())
         make_regular<UPDATE>(move);
     else if (move.is_capture() && !move.is_ep())
         make_capture<UPDATE>(move);
     else if (move.is_castle())
-        legal = make_castle<UPDATE>(move);
+        make_castle<UPDATE>(move);
     else if (move.is_promotion())
         make_promotion<UPDATE>(move);
     else if (move.is_ep())
@@ -304,8 +303,7 @@ bool Position::make_move(const Move &move) {
     hash_castle_key();
     hash_side_key();
 
-    if (!move.is_castle()) // If move is a castle, the legality has already been checked by make_castle()
-        legal = !is_attacked(get_king_placement(m_stm));
+    bool legal = !is_attacked(get_king_placement(m_stm));
 
     change_side();
     update_pin_and_checkers_bb();
@@ -354,7 +352,7 @@ void Position::make_capture(const Move &move) {
 }
 
 template <bool UPDATE>
-bool Position::make_castle(const Move &move) {
+void Position::make_castle(const Move &move) {
     Square from = move.from();
     Square to = move.to();
     Piece piece = consult(from);
@@ -386,20 +384,6 @@ bool Position::make_castle(const Move &move) {
         default:
             __builtin_unreachable();
     }
-
-    int offset = 1;
-    if (from > to) {
-        offset = -1;
-    }
-
-    int curr = from;
-    while (curr != to) {
-        curr += offset; // Check if from is not attack is not needed because movegen already assures it
-        if (is_attacked(static_cast<Square>(curr))) {
-            return false;
-        }
-    }
-    return true;
 }
 
 template <bool UPDATE>

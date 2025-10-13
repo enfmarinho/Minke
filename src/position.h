@@ -106,7 +106,7 @@ class Position {
     template <bool UPDATE>
     void make_capture(const Move &move);
     template <bool UPDATE>
-    bool make_castle(const Move &move);
+    void make_castle(const Move &move);
     template <bool UPDATE>
     void make_promotion(const Move &move);
     template <bool UPDATE>
