@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -116,8 +115,7 @@ ScoreType NNUE::flatten_screlu_and_affine(const std::array<int16_t, HIDDEN_LAYER
 }
 
 ScoreType NNUE::eval(const int piece_count, const Color &stm) const {
-    const int div = std::ceil(32 / static_cast<double>(OUTPUT_BUCKETS));
-    const int out_bucket = (piece_count - 2) / div;
+    const int out_bucket = output_bucket(piece_count);
     switch (stm) {
         case WHITE:
             return flatten_screlu_and_affine(m_accumulators.back().white_neurons, m_accumulators.back().black_neurons,

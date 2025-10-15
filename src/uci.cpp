@@ -168,7 +168,8 @@ void UCI::print_debug_info() {
         std::cout << scored_move.move.get_algebraic_notation() << "(" << scored_move.score << ") ";
         m_td.position.unmake_move<false>(scored_move.move);
     }
-    std::cout << "\nNNUE eval: " << m_td.position.eval() << std::endl;
+    std::cout << "\nNNUE eval: " << m_td.position.eval();
+    std::cout << "\nNNUE bucket: " << NNUE::output_bucket(m_td.position.get_material_count()) << std::endl;
 }
 
 void UCI::position(std::istringstream &iss) {
@@ -287,7 +288,7 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
     return nodes;
 }
 
-void UCI::eval() { std::cout << "The position evaluation is " << m_td.position.eval() << std::endl; }
+void UCI::eval() { std::cout << "Static eval: " << m_td.position.eval() << std::endl; }
 
 bool UCI::parse_go(std::istringstream &iss, bool bench) {
     std::string token;

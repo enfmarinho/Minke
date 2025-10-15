@@ -10,6 +10,7 @@
 
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <span>
 #include <vector>
@@ -63,6 +64,11 @@ class NNUE {
 
     void reset(const Position &position);
     ScoreType eval(const int piece_count, const Color &stm) const;
+
+    static inline int output_bucket(const int piece_count) {
+        const int div = std::ceil(32 / static_cast<double>(OUTPUT_BUCKETS));
+        return (piece_count - 2) / div;
+    }
 
     Accumulator debug_func(const Position &position);
 
