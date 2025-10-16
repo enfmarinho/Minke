@@ -81,14 +81,29 @@ bool Position::set_fen(const std::string &fen) {
     }
 
     for (char castling : fen_arguments[2]) {
-        if (castling == 'K')
+        if (castling == 'K') {
             set_bits(m_curr_state.castling_rights, static_cast<uint8_t>(WHITE_OO));
-        else if (castling == 'Q')
+            set_bit(m_curr_state.castle_rooks, msb(get_piece_bb(WHITE_ROOK) & RANK_MASKS[0]));
+        } else if (castling == 'Q') {
             set_bits(m_curr_state.castling_rights, static_cast<uint8_t>(WHITE_OOO));
-        else if (castling == 'k')
+            set_bit(m_curr_state.castle_rooks, lsb(get_piece_bb(WHITE_ROOK) & RANK_MASKS[0]));
+        } else if (castling == 'k') {
             set_bits(m_curr_state.castling_rights, static_cast<uint8_t>(BLACK_OO));
-        else if (castling == 'q')
+            set_bit(m_curr_state.castle_rooks, msb(get_piece_bb(BLACK_ROOK) & RANK_MASKS[7]));
+        } else if (castling == 'q') {
             set_bits(m_curr_state.castling_rights, static_cast<uint8_t>(BLACK_OOO));
+            set_bit(m_curr_state.castle_rooks, lsb(get_piece_bb(BLACK_ROOK) & RANK_MASKS[7]));
+        } else if ('A' <= castling && castling <= 'H') {
+            Square sq = get_square(castling - 'A', 0);
+            set_bits(m_curr_state.castling_rights,
+                     static_cast<uint8_t>(get_king_placement(WHITE) > sq ? WHITE_OOO : WHITE_OO));
+            set_bit(m_curr_state.castle_rooks, sq);
+        } else if ('a' <= castling && castling <= 'h') {
+            Square sq = get_square(castling - 'a', 7);
+            set_bits(m_curr_state.castling_rights,
+                     static_cast<uint8_t>(get_king_placement(BLACK) > sq ? BLACK_OOO : BLACK_OO));
+            set_bit(m_curr_state.castle_rooks, sq);
+        }
     }
     hash_castle_key();
 
@@ -272,13 +287,12 @@ bool Position::make_move(const Move &move) {
 
     m_curr_state.captured = consult(move.to());
 
-    bool legal = true;
     if (move.is_regular())
         make_regular<UPDATE>(move);
     else if (move.is_capture() && !move.is_ep())
         make_capture<UPDATE>(move);
     else if (move.is_castle())
-        legal = make_castle<UPDATE>(move);
+        make_castle<UPDATE>(move);
     else if (move.is_promotion())
         make_promotion<UPDATE>(move);
     else if (move.is_ep())
@@ -289,8 +303,7 @@ bool Position::make_move(const Move &move) {
     hash_castle_key();
     hash_side_key();
 
-    if (!move.is_castle()) // If move is a castle, the legality has already been checked by make_castle()
-        legal = !is_attacked(get_king_placement(m_stm));
+    bool legal = !is_attacked(get_king_placement(m_stm));
 
     change_side();
     update_pin_and_checkers_bb();
@@ -339,24 +352,35 @@ void Position::make_capture(const Move &move) {
 }
 
 template <bool UPDATE>
-bool Position::make_castle(const Move &move) {
+void Position::make_castle(const Move &move) {
     Square from = move.from();
     Square to = move.to();
     Piece piece = consult(from);
-    move_piece<UPDATE>(piece, from, to);
+    Piece rook = get_piece(ROOK, get_stm());
+
+    Bitboard stm_castling_rooks =
+        m_curr_state.castle_rooks & get_piece_bb(rook) & RANK_MASKS[get_stm() == WHITE ? 0 : 7];
+    Square rook_from = msb(stm_castling_rooks);
+    if (to == c1 || to == c8) {
+        rook_from = lsb(stm_castling_rooks);
+    }
+    remove_piece<UPDATE>(rook, rook_from);
+    remove_piece<UPDATE>(piece, from);
+    add_piece<UPDATE>(piece, to);
+
     switch (to) {
         case g1: // White castle short
-            move_piece<UPDATE>(WHITE_ROOK, h1, f1);
-            return !(is_attacked(e1) || is_attacked(f1) || is_attacked(g1));
+            add_piece<UPDATE>(WHITE_ROOK, f1);
+            break;
         case c1: // White castle long
-            move_piece<UPDATE>(WHITE_ROOK, a1, d1);
-            return !(is_attacked(e1) || is_attacked(d1) || is_attacked(c1));
+            add_piece<UPDATE>(WHITE_ROOK, d1);
+            break;
         case g8: // Black castle short
-            move_piece<UPDATE>(BLACK_ROOK, h8, f8);
-            return !(is_attacked(e8) || is_attacked(f8) || is_attacked(g8));
+            add_piece<UPDATE>(BLACK_ROOK, f8);
+            break;
         case c8: // Black castle long
-            move_piece<UPDATE>(BLACK_ROOK, a8, d8);
-            return !(is_attacked(e8) || is_attacked(d8) || is_attacked(c8));
+            add_piece<UPDATE>(BLACK_ROOK, d8);
+            break;
         default:
             __builtin_unreachable();
     }
@@ -394,47 +418,40 @@ void Position::update_castling_rights(const Move &move) {
         switch (m_stm) {
             case WHITE:
                 unset_mask(m_curr_state.castling_rights, static_cast<uint8_t>(WHITE_CASTLING));
+                unset_mask(m_curr_state.castle_rooks, RANK_MASKS[0]);
                 break;
             case BLACK:
                 unset_mask(m_curr_state.castling_rights, static_cast<uint8_t>(BLACK_CASTLING));
+                unset_mask(m_curr_state.castle_rooks, RANK_MASKS[7]);
                 break;
             default:
                 __builtin_unreachable();
         }
     } else if (moved_piece_type == ROOK) { // Moved rook
-        switch (from) {
-            case a1:
-                unset_mask(m_curr_state.castling_rights, static_cast<uint8_t>(WHITE_OOO));
-                break;
-            case h1:
-                unset_mask(m_curr_state.castling_rights, static_cast<uint8_t>(WHITE_OO));
-                break;
-            case a8:
-                unset_mask(m_curr_state.castling_rights, static_cast<uint8_t>(BLACK_OOO));
-                break;
-            case h8:
-                unset_mask(m_curr_state.castling_rights, static_cast<uint8_t>(BLACK_OO));
-                break;
-            default:
-                break;
+        Bitboard from_bb = 1ULL << from;
+        if (from_bb & m_curr_state.castle_rooks) {
+            unset_mask(m_curr_state.castle_rooks, from_bb);
+
+            if (from > get_king_placement(get_stm())) {
+                unset_mask(m_curr_state.castling_rights,
+                           static_cast<uint8_t>(get_stm() == WHITE ? WHITE_OO : BLACK_OO));
+            } else {
+                unset_mask(m_curr_state.castling_rights,
+                           static_cast<uint8_t>(get_stm() == WHITE ? WHITE_OOO : BLACK_OOO));
+            }
         }
     }
     if (get_piece_type(m_curr_state.captured) == ROOK) { // Captured rook
-        switch (to) {
-            case a1:
-                unset_mask(m_curr_state.castling_rights, static_cast<uint8_t>(WHITE_OOO));
-                break;
-            case h1:
-                unset_mask(m_curr_state.castling_rights, static_cast<uint8_t>(WHITE_OO));
-                break;
-            case a8:
-                unset_mask(m_curr_state.castling_rights, static_cast<uint8_t>(BLACK_OOO));
-                break;
-            case h8:
-                unset_mask(m_curr_state.castling_rights, static_cast<uint8_t>(BLACK_OO));
-                break;
-            default:
-                break;
+        Bitboard to_bb = 1ULL << to;
+        if (to_bb & m_curr_state.castle_rooks) {
+            unset_mask(m_curr_state.castle_rooks, to_bb);
+            if (to > get_king_placement(get_adversary())) {
+                unset_mask(m_curr_state.castling_rights,
+                           static_cast<uint8_t>(get_adversary() == WHITE ? WHITE_OO : BLACK_OO));
+            } else {
+                unset_mask(m_curr_state.castling_rights,
+                           static_cast<uint8_t>(get_adversary() == WHITE ? WHITE_OOO : BLACK_OOO));
+            }
         }
     }
 }
@@ -463,23 +480,30 @@ void Position::unmake_move(const Move &move) {
         }
         add_piece<false>(piece, from);
     } else if (move.is_castle()) {
-        move_piece<false>(piece, to, from);
+        remove_piece<false>(piece, to);
+        Bitboard rook_castle_bb =
+            m_history_stack[m_history_ply - 1].castle_rooks & RANK_MASKS[get_stm() == WHITE ? 0 : 7];
         switch (to) {
             case g1: // White castle short
-                move_piece<false>(WHITE_ROOK, f1, h1);
+                remove_piece<false>(get_piece(ROOK, get_stm()), f1);
+                add_piece<false>(WHITE_ROOK, msb(rook_castle_bb));
                 break;
             case c1: // White castle long
-                move_piece<false>(WHITE_ROOK, d1, a1);
+                remove_piece<false>(get_piece(ROOK, get_stm()), d1);
+                add_piece<false>(WHITE_ROOK, lsb(rook_castle_bb));
                 break;
             case g8: // Black castle short
-                move_piece<false>(BLACK_ROOK, f8, h8);
+                remove_piece<false>(get_piece(ROOK, get_stm()), f8);
+                add_piece<false>(BLACK_ROOK, msb(rook_castle_bb));
                 break;
             case c8: // Black castle long
-                move_piece<false>(BLACK_ROOK, d8, a8);
+                remove_piece<false>(get_piece(ROOK, get_stm()), d8);
+                add_piece<false>(BLACK_ROOK, lsb(rook_castle_bb));
                 break;
             default:
                 __builtin_unreachable();
         }
+        add_piece<false>(piece, from);
     } else if (move.is_promotion()) {
         remove_piece<false>(piece, to);
         piece = get_piece(PAWN, m_stm);
@@ -551,37 +575,6 @@ void Position::update_pin_and_checkers_bb() {
             set_bits(m_curr_state.pins, blockers & get_occupancy(m_stm));
         }
     }
-}
-
-Move Position::get_movement(const std::string &algebraic_notation) const {
-    Square from = get_square(algebraic_notation[0] - 'a', algebraic_notation[1] - '1');
-    Square to = get_square(algebraic_notation[2] - 'a', algebraic_notation[3] - '1');
-    MoveType move_type = MoveType::REGULAR;
-
-    if (algebraic_notation.size() == 5) { // Pawn promotion
-        if (tolower(algebraic_notation[4]) == 'q')
-            move_type = PAWN_PROMOTION_QUEEN;
-        else if (tolower(algebraic_notation[4]) == 'n')
-            move_type = PAWN_PROMOTION_KNIGHT;
-        else if (tolower(algebraic_notation[4]) == 'r')
-            move_type = PAWN_PROMOTION_ROOK;
-        else if (tolower(algebraic_notation[4]) == 'b')
-            move_type = PAWN_PROMOTION_BISHOP;
-    }
-
-    if (consult(to) != EMPTY) { // Capture
-        move_type = static_cast<MoveType>(move_type | CAPTURE);
-    } else if (get_piece_type(consult(from)) == KING && get_file(from) == 4 &&
-               (get_file(to) == 2 || get_file(to) == 6)) { // Castle
-        move_type = CASTLING;
-    } else if (get_piece_type(consult(from)) == PAWN && get_file(to) != get_file(from)) { // En passant
-        // Note that if this point is reached, consult(to) == empty, which is why this simple clause suffices, i.e. if
-        // it's not a simple capture and the pawn is not on its original file, it must be an en passant
-        assert(get_file(to) == get_file(get_en_passant()));
-        move_type = EP;
-    }
-
-    return Move(from, to, move_type);
 }
 
 bool Position::is_attacked(const Square &sq) const {

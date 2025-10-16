@@ -16,9 +16,9 @@ void PvList::update(Move new_move, const PvList &list) {
     m_size = list.m_size + 1;
 }
 
-void PvList::print() const {
+void PvList::print(const bool chess960, const Bitboard castle_rooks) const {
     for (int i = 0; i < m_size; ++i) {
-        std::cout << m_pv[i].get_algebraic_notation() << ' ';
+        std::cout << m_pv[i].get_algebraic_notation(chess960, castle_rooks) << ' ';
     }
 }
 void PvList::clear() { m_size = 0; }

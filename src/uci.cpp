@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <exception>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -157,7 +158,8 @@ void UCI::print_debug_info() {
     Move ttmove = MOVE_NONE;
     if (found) {
         ttmove = entry->best_move();
-        std::cout << "Best move: " << ttmove.get_algebraic_notation() << std::endl;
+        std::cout << "Best move: " << ttmove.get_algebraic_notation(m_td.chess960, m_td.position.get_castle_rooks())
+                  << std::endl;
     }
     MovePicker move_picker(ttmove, &m_td, false);
     std::cout << "Move list: ";
@@ -165,8 +167,9 @@ void UCI::print_debug_info() {
     while ((scored_move = move_picker.next_move_scored(false)) != SCORED_MOVE_NONE) {
         if (!m_td.position.make_move<false>(scored_move.move))
             std::cout << "*";
-        std::cout << scored_move.move.get_algebraic_notation() << "(" << scored_move.score << ") ";
         m_td.position.unmake_move<false>(scored_move.move);
+        std::cout << scored_move.move.get_algebraic_notation(m_td.chess960, m_td.position.get_castle_rooks()) << "("
+                  << scored_move.score << ") ";
     }
     std::cout << "\nNNUE eval: " << m_td.position.eval() << std::endl;
 }
@@ -202,7 +205,16 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
         if (move_list.size() - index == 100 || m_td.position.get_history_ply() > 100)
             m_td.position.reset_history();
 
-        m_td.position.make_move<false>(m_td.position.get_movement(move_list[index]));
+        ScoredMove moves[MAX_MOVES_PER_POS];
+        ScoredMove *end = gen_moves(moves, m_td.position, GEN_ALL);
+
+        for (ScoredMove *curr = moves; curr != end; ++curr) {
+            if (move_list[index] ==
+                curr->move.get_algebraic_notation(m_td.chess960, m_td.position.get_castle_rooks())) {
+                m_td.position.make_move<false>(curr->move);
+                break;
+            }
+        }
     }
     m_td.position.reset_nnue();
 }
@@ -216,16 +228,39 @@ void UCI::ucinewgame() {
 }
 
 void UCI::set_option(std::istringstream &iss) {
+    std::string value;
+    int value_int;
+    bool value_bool;
+    auto valid_int_value = [&](int min, int max) -> bool {
+        try {
+            value_int = std::stoi(value);
+            return min <= value_int && value_int <= max;
+        } catch (const std::exception &) {
+            return false;
+        }
+    };
+    auto valid_bool_value = [&]() -> bool {
+        if (value == "true") {
+            value_bool = true;
+            return true;
+        } else if (value == "false") {
+            value_bool = false;
+            return true;
+        }
+        return false;
+    };
+
     std::string token, garbage;
-    int value;
     iss >> garbage; // Consume the "name" token
     iss >> token;
     iss >> garbage; // Consume the "value" token.
     iss >> value;
-    if (token == "Hash" && value >= EngineOptions::HASH_MIN && value <= EngineOptions::HASH_MAX) {
-        m_td.tt.resize(value);
-    } else if (token == "Threads") {
+    if (token == "Hash" && valid_int_value(EngineOptions::HASH_MIN, EngineOptions::HASH_MAX)) {
+        m_td.tt.resize(value_int);
+    } else if (token == "Threads" && valid_int_value(EngineOptions::THREADS_MIN, EngineOptions::THREADS_MAX)) {
         // For now this is only for compatibility with OpenBench
+    } else if (token == "UCI_Chess960" && valid_bool_value()) {
+        m_td.chess960 = value_bool;
     }
 #ifdef TUNE
     else if (TunableParam *param_ptr = TunableParamList::get().find(token)) {
@@ -279,7 +314,8 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
         position.unmake_move<false>(move);
 
         if (root)
-            std::cout << move.get_algebraic_notation() << ": " << count << std::endl;
+            std::cout << move.get_algebraic_notation(m_td.chess960, m_td.position.get_castle_rooks()) << ": " << count
+                      << std::endl;
     }
 
     if (root)

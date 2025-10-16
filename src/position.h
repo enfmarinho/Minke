@@ -54,7 +54,6 @@ class Position {
     bool no_legal_moves();
     void print() const;
 
-    Move get_movement(const std::string &algebraic_notation) const;
     inline Bitboard get_occupancy() const { return m_occupancies[WHITE] | m_occupancies[BLACK]; }
     inline Bitboard get_occupancy(const Color &color) const {
         assert(color == WHITE || color == BLACK);
@@ -91,6 +90,7 @@ class Position {
     inline BoardState get_board_state() const { return m_curr_state; };
     inline Bitboard get_checkers() const { return m_curr_state.checkers; }
     inline Bitboard get_pins() const { return m_curr_state.pins; }
+    inline Bitboard get_castle_rooks() const { return m_curr_state.castle_rooks; }
     inline void reset_history() { m_history_ply = 0; }
 
   private:
@@ -106,7 +106,7 @@ class Position {
     template <bool UPDATE>
     void make_capture(const Move &move);
     template <bool UPDATE>
-    bool make_castle(const Move &move);
+    void make_castle(const Move &move);
     template <bool UPDATE>
     void make_promotion(const Move &move);
     template <bool UPDATE>

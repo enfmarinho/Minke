@@ -32,7 +32,7 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
     // Add 1 to time_passed() to avoid division by 0
     std::cout << " time " << td.time_manager.time_passed() << " nodes " << td.nodes_searched << " nps "
               << td.nodes_searched * 1000 / (td.time_manager.time_passed() + 1) << " pv ";
-    pv_list.print();
+    pv_list.print(td.chess960, td.position.get_castle_rooks());
     std::cout << std::endl;
 }
 
@@ -97,7 +97,11 @@ ScoreType iterative_deepening(ThreadData &td) {
     }
 
     if (td.report)
-        std::cout << "bestmove " << (best_move == MOVE_NONE ? "none" : best_move.get_algebraic_notation()) << std::endl;
+        std::cout << "bestmove "
+                  << (best_move == MOVE_NONE
+                          ? "none"
+                          : best_move.get_algebraic_notation(td.chess960, td.position.get_castle_rooks()))
+                  << std::endl;
 
     td.stop = true;
     td.best_move = best_move; // A partial search would mess this up

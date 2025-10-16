@@ -10,17 +10,23 @@
 #include "types.h"
 #include "utils.h"
 
-std::string Move::get_algebraic_notation() const {
+std::string Move::get_algebraic_notation(const bool chess960, const Bitboard castle_rooks) const {
     std::string algebraic_notation;
     Square source = from();
     Square target = to();
+    int move_type = type() & (~CAPTURE);
 
+    if (chess960 && move_type == CASTLING) {
+        Bitboard bb = castle_rooks & RANK_MASKS[get_rank(source)];
+        target = msb(bb);
+        if (source > target)
+            target = lsb(bb);
+    }
     algebraic_notation.push_back('a' + get_file(source));
     algebraic_notation.push_back('1' + get_rank(source));
     algebraic_notation.push_back('a' + get_file(target));
     algebraic_notation.push_back('1' + get_rank(target));
 
-    int move_type = type() & (~CAPTURE);
     if (move_type == MoveType::PAWN_PROMOTION_QUEEN)
         algebraic_notation.push_back('q');
     else if (move_type == MoveType::PAWN_PROMOTION_KNIGHT)
