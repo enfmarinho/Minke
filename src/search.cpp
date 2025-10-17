@@ -27,7 +27,7 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
     if (std::abs(eval) > MATE_FOUND) {
         std::cout << " score mate " << (eval < 0 ? "-" : "") << (MATE_SCORE - std::abs(eval) + 1) / 2;
     } else {
-        std::cout << " score cp " << eval;
+        std::cout << " score cp " << eval / 2;
     }
     // Add 1 to time_passed() to avoid division by 0
     std::cout << " time " << td.time_manager.time_passed() << " nodes " << td.nodes_searched << " nps "
