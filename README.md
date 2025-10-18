@@ -40,36 +40,40 @@ This will generate the executable called minke
 - Promotions
 - Captures 
     - Static Exchange Evaluation (SEE)
-    - Most Valuable Victim - Least Valuable Aggressor (MVV-LVA)
     - Capture history
-- Historic Heuristic
 - Killer Moves
+- Counter moves
+- Historic Heuristic
 ### Search
 - Iterative Deepening
 - Negamax with Alpha-Beta Pruning
 - Aspiration Windows Search 
-- Principal Variation Search (PVS)
 - Transposition Table Cutoffs
-- Late Move Reduction (LMR)
-- Null Move Pruning (NMP)
-- Reverse Futility Pruning (RFP)
-- Internal Iterative Reduction (IIR)
+- Principal Variation Search
+- Null Move Pruning
+- Reverse Futility Pruning
+- Late Move Reduction
+- Late Move Pruning
+- Internal Iterative Reduction
+- Improving Heuristic
+- Singular Extension
+- Multi-cut
 - Quiescence Search
 - Mate Distance Pruning
-- Improving Heuristic
 ### Evaluation
 - Quantized NNUE (Easily Updatable Neural Network)
     - SCrelu as the activation neuron
     - Net architecture: (768 -> 1024)x2 -> 1
-    - Trained with 13 billion positions from [Stockfish nodes5000pv2_UHO data](https://drive.google.com/file/d/1UQdZN_LWQ265spwTBwDKo0t1WjSJKvWY/view)
+    - Trained with a mix of Lella and Stockfish data
 
 ## Acknowledgements
 Minke has been inspired by several other chess engines, such as:
 * [Alexandria](https://github.com/PGG106/Alexandria)
 * [Altair](https://github.com/Alex2262/AltairChessEngine)
-* [Stormphrax](https://github.com/Ciekce/Stormphrax)
 * [Berserk](https://github.com/jhonnold/berserk)
 * [Ethereal](https://github.com/AndyGrant/Ethereal)
+* [Stormphrax](https://github.com/Ciekce/Stormphrax)
+* [Stockfish](https://github.com/official-stockfish/Stockfish)
   
 Other important tools used in the development of Minke include:
 * [bullet](https://github.com/jw1912/bullet)
