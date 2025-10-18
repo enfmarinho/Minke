@@ -264,7 +264,7 @@ void UCI::set_option(std::istringstream &iss) {
     }
 #ifdef TUNE
     else if (TunableParam *param_ptr = TunableParamList::get().find(token)) {
-        param_ptr->curr_value = value;
+        param_ptr->curr_value = std::stoi(value);
     }
 #endif
     else {
