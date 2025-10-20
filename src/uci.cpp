@@ -374,6 +374,7 @@ void EngineOptions::print() {
               << "\n";
     std::cout << "option name Threads type spin default " << THREADS_DEFAULT << " min " << THREADS_MIN << " max "
               << THREADS_MAX << "\n";
+    std::cout << "option name UCI_Chess960 type check default false\n";
 
 #ifdef TUNE
     for (const TunableParam &tunable_param : TunableParamList::get()) {
