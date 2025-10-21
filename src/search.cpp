@@ -311,6 +311,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                     reduction += 1;
                 // Reduce less if move is killer
                 reduction -= td.search_history.is_killer(move, depth);
+                // Reduce less if move is counter
+                reduction -= (move == move_picker.counter_move());
 
                 reduction = std::clamp(reduction, 1, depth - 1);
             } else {
