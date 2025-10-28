@@ -220,7 +220,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
             position.make_null_move();
             ++td.height;
-            node.curr_move = MOVE_NONE;
+            node.curr_pmove = PIECE_MOVE_NONE;
             ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, !cutnode, td);
             position.unmake_null_move();
             --td.height;
@@ -247,7 +247,13 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             position.unmake_move<true>(move);
             continue;
         }
-        node.curr_move = move;
+        node.curr_pmove = {move, position.consult(move.to())}; // move.to() because move has already been made
+
+        // Add move to tried list
+        if (move.is_quiet())
+            node.quiets_tried.push(node.curr_pmove);
+        else
+            node.tacticals_tried.push(node.curr_pmove);
 
         if (!root && best_score > -MAX_SCORE && !skip_quiets) {
             // Late Move Pruning
@@ -282,12 +288,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             position.make_move<true>(ttmove);
         }
         int new_depth = depth + extension;
-
-        // Add move to tried list
-        if (move.is_quiet())
-            node.quiets_tried.push(move);
-        else
-            node.tacticals_tried.push(move);
 
         ++td.height;
         ++moves_searched;
@@ -362,6 +362,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         return position.in_check() ? 0 : position.eval();
 
     bool pv_node = alpha != beta - 1;
+    NodeData &node = td.nodes[td.height];
     bool tthit;
     TTEntry *tte = td.tt.probe(position, tthit);
     if (!pv_node && tthit && tte->score() != SCORE_NONE &&
@@ -385,6 +386,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
             position.unmake_move<true>(move);
             continue;
         }
+        node.curr_pmove = {move, position.consult(move.to())};
         ++moves_searched;
         ++td.height;
 
