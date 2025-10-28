@@ -277,6 +277,7 @@ void UCI::bench(int depth) {
     int64_t nodes_searched = 0;
     m_td.report = false;
     for (const std::string &fen : BENCHMARK_FEN_LIST) {
+        ucinewgame();
         m_td.position.set_fen<true>(fen);
         m_td.reset_search_parameters();
         m_td.search_limits.depth = depth;
