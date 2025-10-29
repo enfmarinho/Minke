@@ -109,15 +109,15 @@ ScoreType iterative_deepening(ThreadData &td) {
 }
 
 ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td) {
-    ScoreType alpha = -MAX_SCORE;
-    ScoreType beta = MAX_SCORE;
-    ScoreType delta = aw_first_window();
+    int alpha = -MAX_SCORE;
+    int beta = MAX_SCORE;
+    int delta = aw_first_window();
     if (depth >= aw_min_depth()) {
         alpha = prev_score - delta;
         beta = prev_score + delta;
     }
 
-    ScoreType score = SCORE_NONE;
+    int score = SCORE_NONE;
     while (true) {
         ScoreType curr_score = negamax(alpha, beta, depth, false, td);
 
@@ -128,9 +128,9 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, Threa
 
         if (curr_score <= alpha) {
             beta = (alpha + beta) / 2;
-            alpha = std::max(-MAX_SCORE, score - delta);
+            alpha = std::max(static_cast<int>(-MAX_SCORE), score - delta);
         } else if (curr_score >= beta) {
-            beta = std::min(static_cast<ScoreType>(score + delta), MAX_SCORE);
+            beta = std::min(static_cast<int>(MAX_SCORE), score + delta);
         } else {
             break;
         }
