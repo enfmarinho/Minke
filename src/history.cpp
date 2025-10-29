@@ -30,11 +30,8 @@ void History::reset() {
     std::memset(m_killer_moves, MOVE_NONE.internal(), sizeof(m_killer_moves));
 };
 
-void History::update_history(const ThreadData &td, const Move &best_move, int depth) {
-    const NodeData &node = td.nodes[td.height];
-    const MoveList quiets_tried = node.quiets_tried;
-    const MoveList tacticals_tried = node.tacticals_tried;
-
+void History::update_history(const ThreadData &td, const Move &best_move, int depth, const MoveList &quiets_tried,
+                             const MoveList &tacticals_tried) {
     HistoryType quiet_bonus = calculate_score(depth, hist_bonus_mult(), hist_bonus_offset(), hist_bonus_max());
     HistoryType quiet_penalty = calculate_score(depth, hist_penalty_mult(), hist_penalty_offset(), hist_penalty_max());
     HistoryType capture_bonus =

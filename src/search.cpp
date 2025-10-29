@@ -238,8 +238,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     bool skip_quiets = false;
     MovePicker move_picker(ttmove, &td, false);
-    node.quiets_tried.clear();
-    node.tacticals_tried.clear();
+    MoveList quiets_tried, tacticals_tried;
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
         if (move == td.nodes[td.height].excluded_move) // Skip excluded moves
             continue;
@@ -285,9 +284,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
         // Add move to tried list
         if (move.is_quiet())
-            node.quiets_tried.push(move);
+            quiets_tried.push(move);
         else
-            node.tacticals_tried.push(move);
+            tacticals_tried.push(move);
 
         ++td.height;
         ++moves_searched;
@@ -329,7 +328,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                     node.pv_list.update(best_move, td.nodes[td.height + 1].pv_list);
 
                 if (score >= beta) { // Failed high
-                    td.search_history.update_history(td, best_move, depth);
+                    td.search_history.update_history(td, best_move, depth, quiets_tried, tacticals_tried);
                     break;
                 }
                 alpha = score; // Only update alpha if don't failed high
