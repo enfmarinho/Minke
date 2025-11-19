@@ -238,8 +238,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     bool skip_quiets = false;
     MovePicker move_picker(ttmove, &td, false);
-    node.quiets_tried.clear();
-    node.tacticals_tried.clear();
+    PieceMoveList quiets_tried, tacticals_tried;
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
         if (move == td.nodes[td.height].excluded_move) // Skip excluded moves
             continue;
@@ -248,12 +247,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             continue;
         }
         node.curr_pmove = {move, position.consult(move.to())}; // move.to() because move has already been made
-
-        // Add move to tried list
-        if (move.is_quiet())
-            node.quiets_tried.push(node.curr_pmove);
-        else
-            node.tacticals_tried.push(node.curr_pmove);
 
         if (!root && best_score > -MAX_SCORE && !skip_quiets) {
             // Late Move Pruning
@@ -288,7 +281,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             position.make_move<true>(ttmove);
         }
         int new_depth = depth + extension;
-
         ++td.height;
         ++moves_searched;
 
@@ -320,6 +312,12 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         position.unmake_move<true>(move);
         assert(score >= -MAX_SCORE);
 
+        // Add move to tried list
+        if (move.is_quiet())
+            quiets_tried.push(node.curr_pmove);
+        else
+            tacticals_tried.push(node.curr_pmove);
+
         if (score > best_score) {
             best_score = score;
 
@@ -329,7 +327,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                     node.pv_list.update(best_move, td.nodes[td.height + 1].pv_list);
 
                 if (score >= beta) { // Failed high
-                    td.search_history.update_history(td, best_move, depth);
+                    td.search_history.update_history(td, best_move, depth, quiets_tried, tacticals_tried);
                     break;
                 }
                 alpha = score; // Only update alpha if don't failed high

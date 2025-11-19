@@ -39,11 +39,8 @@ HistoryType History::get_history(const ThreadData &td, const Move &move) const {
     return get_history_heuristic_score(td.position, move) + get_continuation_history_score(td, pmove);
 }
 
-void History::update_history(const ThreadData &td, const Move &best_move, int depth) {
-    const NodeData &node = td.nodes[td.height];
-    const PieceMoveList quiets_tried = node.quiets_tried;
-    const PieceMoveList tacticals_tried = node.tacticals_tried;
-
+void History::update_history(const ThreadData &td, const Move &best_move, int depth, const PieceMoveList &quiets_tried,
+                             const PieceMoveList &tacticals_tried) {
     HistoryType quiet_bonus = calculate_score(depth, hist_bonus_mult(), hist_bonus_offset(), hist_bonus_max());
     HistoryType quiet_penalty = calculate_score(depth, hist_penalty_mult(), hist_penalty_offset(), hist_penalty_max());
     HistoryType cont_bonus = calculate_score(depth, cont_bonus_mult(), cont_bonus_offset(), cont_bonus_max());

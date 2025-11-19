@@ -24,7 +24,8 @@ class History {
 
     void reset();
 
-    void update_history(const ThreadData &td, const Move &best_move, int depth);
+    void update_history(const ThreadData &td, const Move &best_move, int depth, const PieceMoveList &quiets_tried,
+                        const PieceMoveList &tacticals_tried);
 
     HistoryType get_history(const ThreadData &td, const Move &move) const;
 
