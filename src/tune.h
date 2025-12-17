@@ -130,20 +130,20 @@ TUNABLE_PARAM(iir_min_depth, 3, 3, 8, 0.5, 0.002)
 TUNABLE_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
 
 // History Formulas Parameters
-TUNABLE_PARAM(hist_bonus_mult, 245, 1, 1024, 50, 0.002)
-TUNABLE_PARAM(hist_bonus_offset, 337, -512, 512, 50, 0.002)
-TUNABLE_PARAM(hist_bonus_max, 2316, 1500, 3500, 100, 0.002)
+TUNABLE_PARAM(hist_bonus_mult, 224, 1, 1024, 50, 0.002)
+TUNABLE_PARAM(hist_bonus_offset, 340, -512, 512, 50, 0.002)
+TUNABLE_PARAM(hist_bonus_max, 2329, 1500, 3500, 100, 0.002)
 
-TUNABLE_PARAM(hist_penalty_mult, -53, -1024, -1, 50, 0.002)
+TUNABLE_PARAM(hist_penalty_mult, -69, -1024, -1, 50, 0.002)
 TUNABLE_PARAM(hist_penalty_offset, -58, -512, 512, 50, 0.002)
-TUNABLE_PARAM(hist_penalty_max, -1034, -3500, -500, 150, 0.002)
+TUNABLE_PARAM(hist_penalty_max, -1089, -3500, -500, 150, 0.002)
 
-TUNABLE_PARAM(capt_hist_bonus_mult, 207, 1, 1024, 50, 0.002)
-TUNABLE_PARAM(capt_hist_bonus_offset, -46, -512, 512, 50, 0.002)
-TUNABLE_PARAM(capt_hist_bonus_max, 1410, 500, 3500, 150, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_mult, 220, 1, 1024, 50, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_offset, -35, -512, 512, 50, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_max, 1449, 500, 3500, 150, 0.002)
 
-TUNABLE_PARAM(capt_hist_penalty_mult, -319, -1024, -1, 50, 0.002)
-TUNABLE_PARAM(capt_hist_penalty_offset, -4, -512, 512, 50, 0.002)
-TUNABLE_PARAM(capt_hist_penalty_max, -1123, -3500, -500, 150, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_mult, -342, -1024, -1, 50, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_offset, -5, -512, 512, 50, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_max, -1072, -3500, -500, 150, 0.002)
 
 #endif // #ifndef TUNE_H
