@@ -239,7 +239,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             position.make_null_move();
             td.tt.prefetch(position.get_hash());
             ++td.height;
-            node.curr_move = MOVE_NONE;
+            node.curr_pmove = PIECE_MOVE_NONE;
             ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, !cutnode, td);
             position.unmake_null_move();
             --td.height;
@@ -260,7 +260,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                     continue;
                 }
 
-                node.curr_move = move;
+                node.curr_pmove.move = move;
                 ++td.height;
 
                 td.tt.prefetch(position.get_hash());
@@ -288,7 +288,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     bool skip_quiets = false;
     MovePicker move_picker(ttmove, &td, false);
-    MoveList quiets_tried, tacticals_tried;
+    PieceMoveList quiets_tried, tacticals_tried;
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
         if (move == td.nodes[td.height].excluded_move) // Skip excluded moves
             continue;
@@ -296,7 +296,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             position.unmake_move<true>(move);
             continue;
         }
-        node.curr_move = move;
+        PieceMove curr_pmove = {move, position.consult(move.to())}; // move.to() because move has already been made
+        node.curr_pmove = curr_pmove;
 
         if (!root && best_score >= -MATE_FOUND && !skip_quiets) {
             // Late Move Pruning
@@ -336,9 +337,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
         // Add move to tried list
         if (move.is_quiet())
-            quiets_tried.push(move);
+            quiets_tried.push(curr_pmove);
         else
-            tacticals_tried.push(move);
+            tacticals_tried.push(curr_pmove);
 
         ++td.height;
         ++moves_searched;
@@ -358,7 +359,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
                 // Reduce less if move is killer or counter
                 reduction -= td.search_history.is_killer(move, depth);
-                reduction -= td.search_history.is_counter(move, td.nodes[td.height - 2].curr_move);
+                reduction -= td.search_history.is_counter(move, td.nodes[td.height - 2].curr_pmove.move);
                 reduction = std::clamp(reduction, 1, depth - 1);
 
                 // Reduce less if this move is or was a principal variation
@@ -427,6 +428,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         return position.in_check() ? 0 : position.eval();
 
     bool pv_node = alpha != beta - 1;
+    NodeData &node = td.nodes[td.height];
     bool tthit;
     TTEntry *tte = td.tt.probe(position, tthit);
     Move ttmove = tthit ? tte->best_move() : MOVE_NONE;
@@ -439,7 +441,6 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         return ttscore;
     }
 
-    NodeData &node = td.nodes[td.height];
     bool in_check = position.in_check();
     ScoreType best_score, static_eval;
     if (in_check) {
@@ -472,6 +473,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         if (!position.is_legal(move)) { // Avoid illegal moves
             continue;
         }
+        node.curr_pmove = {move, position.consult(move.to())};
         ++moves_searched;
 
         if (best_score > -MATE_FOUND) {

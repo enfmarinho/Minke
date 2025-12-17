@@ -33,13 +33,13 @@ struct SearchLimits {
 };
 
 struct NodeData {
-    Move curr_move;
+    PieceMove curr_pmove;
     Move excluded_move;
     ScoreType static_eval;
     PvList pv_list;
 
     inline void reset() {
-        curr_move = MOVE_NONE;
+        curr_pmove = PIECE_MOVE_NONE;
         excluded_move = MOVE_NONE;
         static_eval = SCORE_NONE;
         pv_list.clear();
