@@ -24,12 +24,10 @@ class History {
 
     void reset();
 
-    void update_history(const ThreadData &td, const Move &best_move, int depth, const MoveList &quiets_tried,
-                        const MoveList &tacticals_tried);
+    void update_history(const ThreadData &td, const Move &best_move, int depth, const PieceMoveList &quiets_tried,
+                        const PieceMoveList &tacticals_tried);
 
-    inline HistoryType get_history(const Position &position, const Move &move) const {
-        return m_search_history_table[position.get_stm()][move.from_and_to()];
-    }
+    HistoryType get_history(const ThreadData &td, const Move &move) const;
 
     inline HistoryType get_capture_history(const Position &position, const Move &move) {
         Square to = move.to();
@@ -58,6 +56,12 @@ class History {
   private:
     void update_capture_history_score(const Position &position, const Move &move, int bonus);
     void update_history_heuristic_score(const Position &position, const Move &move, int bonus);
+    void update_continuation_history_table(const ThreadData &td, const PieceMove &pmove, int bonus);
+
+    void update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int offset);
+    HistoryType get_history_heuristic_score(const Position &position, const Move &move) const;
+    HistoryType get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const;
+    HistoryType get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const;
 
     inline void save_killer(const Move &move, const int depth) {
         m_killer_moves[1][depth] = m_killer_moves[0][depth];
@@ -71,6 +75,7 @@ class History {
 
     HistoryType m_capture_history[2][6][64][5];
     HistoryType m_search_history_table[COLOR_NB][64 * 64];
+    HistoryType m_continuation_history[12 * 64][12 * 64];
     Move m_counter_moves[64 * 64];
     Move m_killer_moves[2][MAX_SEARCH_DEPTH];
 };

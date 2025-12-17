@@ -34,7 +34,7 @@ void MovePicker::init(Move ttmove, ThreadData *td, bool qsearch, ScoreType thres
 
     m_counter = MOVE_NONE;
     if (m_td->height > 0)
-        m_counter = td->search_history.consult_counter(td->nodes[td->height - 1].curr_move);
+        m_counter = td->search_history.consult_counter(td->nodes[td->height - 1].curr_pmove.move);
     if (m_counter == m_killer1 || m_counter == m_killer2)
         m_counter = MOVE_NONE;
 
@@ -135,7 +135,7 @@ void MovePicker::score_moves() {
                 else if (runner->move == m_counter)
                     runner->score = COUNTER_SCORE;
                 else
-                    runner->score = m_td->search_history.get_history(m_td->position, runner->move);
+                    runner->score = m_td->search_history.get_history(*m_td, runner->move);
                 break;
             case CAPTURE:
                 runner->score = CAPTURE_SCORE + 20 * SEE_VALUES[m_td->position.consult(runner->move.to())] +
