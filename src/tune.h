@@ -102,8 +102,8 @@ class TunableParamList {
 
 // Aspiration Windows
 TUNABLE_PARAM(aw_min_depth, 3, 1, 10, 0.5, 0.002)
-TUNABLE_PARAM(aw_first_window, 39, 5, 200, 10, 0.002)
-TUNABLE_PARAM(aw_widening_factor, 50, 1, 100, 5, 0.002)
+TUNABLE_PARAM(aw_first_window, 31, 5, 200, 10, 0.002)
+TUNABLE_PARAM(aw_widening_factor, 52, 1, 100, 5, 0.002)
 
 // Null move pruning
 TUNABLE_PARAM(nmp_base_reduction, 4, 1, 5, 0.5, 0.002)
@@ -112,21 +112,21 @@ TUNABLE_PARAM(nmp_min_depth, 2, 2, 8, 0.5, 0.002)
 
 // Reverse Futility Pruning
 TUNABLE_PARAM(rfp_margin, 105, 50, 150, 5, 0.002)
-TUNABLE_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)
+TUNABLE_PARAM(rfp_max_depth, 11, 5, 15, 0.5, 0.002)
 
 // Late Move Reductions
-TUNABLE_PARAM(lmr_base, 107, 50, 150, 5, 0.002)
-TUNABLE_PARAM(lmr_divisor, 207, 150, 350, 10, 0.002)
+TUNABLE_PARAM(lmr_base, 106, 50, 150, 5, 0.002)
+TUNABLE_PARAM(lmr_divisor, 214, 150, 350, 10, 0.002)
 
 // Late Moves Pruning
-TUNABLE_PARAM(lmp_base, 120, 100, 200, 5, 0.002)
-TUNABLE_PARAM(lmp_scale, 30, 20, 120, 5, 0.002)
+TUNABLE_PARAM(lmp_base, 121, 100, 200, 5, 0.002)
+TUNABLE_PARAM(lmp_scale, 32, 20, 120, 5, 0.002)
 
 // Singular Extension
 TUNABLE_PARAM(singular_extension_min_depth, 7, 4, 10, 0.5, 0.002)
 
 // Interval Iterative Reduction
-TUNABLE_PARAM(iir_min_depth, 3, 3, 8, 0.5, 0.002)
+TUNABLE_PARAM(iir_min_depth, 4, 3, 8, 0.5, 0.002)
 TUNABLE_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
 
 // History Formulas Parameters
