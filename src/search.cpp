@@ -372,7 +372,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     ScoreType best_score = position.eval();
     // Stand-pat
     if (best_score >= beta)
-        return beta;
+        return best_score;
     alpha = std::max(alpha, best_score);
 
     Move move = MOVE_NONE;
