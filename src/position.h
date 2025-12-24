@@ -40,6 +40,7 @@ class Position {
 
     inline bool in_check() const { return m_curr_state.checkers; }
     bool is_attacked(const Square &sq) const;
+    bool is_legal(const Move &move);
     bool is_pseudo_legal(const Move &move) const;
     Bitboard attackers(const Square &sq) const;
 
