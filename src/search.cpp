@@ -369,7 +369,8 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         return tte->score();
     }
 
-    ScoreType best_score = position.eval();
+    ScoreType best_score, static_eval;
+    best_score = static_eval = position.eval();
     // Stand-pat
     if (best_score >= beta)
         return best_score;
@@ -385,12 +386,23 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
             continue;
         }
         ++moves_searched;
-        ++td.height;
 
+        // These make and unmake moves are necessary because there is no is_legal, so the move is applied to soon
+        position.unmake_move<false>(move);
+        if (best_score > -MATE_FOUND) {
+            ScoreType futility = static_eval + qsFutilityMargin();
+            if (!in_check && futility <= alpha && !SEE(position, move, 1)) {
+                best_score = std::max(best_score, futility);
+                continue;
+            }
+        }
+        position.make_move<false>(move);
+
+        ++td.height;
         ScoreType score = -quiescence(-beta, -alpha, td);
+        --td.height;
 
         position.unmake_move<true>(move);
-        --td.height;
 
         if (score > best_score) {
             best_score = score;

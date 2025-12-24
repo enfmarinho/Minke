@@ -129,6 +129,9 @@ TUNABLE_PARAM(singular_extension_min_depth, 7, 4, 10, 0.5, 0.002)
 TUNABLE_PARAM(iir_min_depth, 3, 3, 8, 0.5, 0.002)
 TUNABLE_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
 
+// Futility Pruning
+TUNABLE_PARAM(qsFutilityMargin, 200, 0, 500, 25, 0.002)
+
 // History Formulas Parameters
 TUNABLE_PARAM(hist_bonus_mult, 224, 1, 1024, 50, 0.002)
 TUNABLE_PARAM(hist_bonus_offset, 340, -512, 512, 50, 0.002)
