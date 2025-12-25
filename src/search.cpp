@@ -381,14 +381,12 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     int moves_searched = 0;
     bool in_check = position.in_check();
     while ((move = move_picker.next_move(!in_check)) != MOVE_NONE) {
-        if (!position.make_move<true>(move)) { // Avoid illegal moves
-            position.unmake_move<true>(move);
+        if (!position.is_legal(move)) { // Avoid illegal moves
             continue;
         }
         ++moves_searched;
 
         // These make and unmake moves are necessary because there is no is_legal, so the move is applied to soon
-        position.unmake_move<false>(move);
         if (best_score > -MATE_FOUND) {
             ScoreType futility = static_eval + qsFutilityMargin();
             if (!in_check && futility <= alpha && !SEE(position, move, 1)) {
@@ -396,7 +394,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
                 continue;
             }
         }
-        position.make_move<false>(move);
+        position.make_move<true>(move);
 
         ++td.height;
         ScoreType score = -quiescence(-beta, -alpha, td);
