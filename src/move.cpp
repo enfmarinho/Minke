@@ -18,9 +18,10 @@ std::string Move::get_algebraic_notation(const bool chess960, const Bitboard cas
 
     if (chess960 && move_type == CASTLING) {
         Bitboard bb = castle_rooks & RANK_MASKS[get_rank(source)];
-        target = msb(bb);
         if (source > target)
             target = lsb(bb);
+        else
+            target = msb(bb);
     }
     algebraic_notation.push_back('a' + get_file(source));
     algebraic_notation.push_back('1' + get_rank(source));
