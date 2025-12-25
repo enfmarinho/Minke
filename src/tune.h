@@ -1,3 +1,4 @@
+#define TUNE
 #ifndef TUNE_H
 #define TUNE_H
 
@@ -88,10 +89,13 @@ class TunableParamList {
     std::vector<TunableParam> m_params;
 };
 
-#define TUNABLE_PARAM(name, default, min, max, cend, rend)                                                            \
+#define ONLY_TUNABLE_PARAM(name, default, min, max, cend, rend)                                                       \
     static_assert(cend >= 0.5);                                                                                       \
     inline const TunableParam &tuned_##name = TunableParamList::get().insert({#name, default, min, max, cend, rend}); \
     inline int name() { return tuned_##name.curr_value; }
+
+#define TUNABLE_PARAM(name, default, min, max, cend, rend) \
+    constexpr int name() { return default; }
 
 #else
 
@@ -130,7 +134,7 @@ TUNABLE_PARAM(iir_min_depth, 3, 3, 8, 0.5, 0.002)
 TUNABLE_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
 
 // Futility Pruning
-TUNABLE_PARAM(qsFutilityMargin, 200, 0, 500, 25, 0.002)
+ONLY_TUNABLE_PARAM(qsFutilityMargin, 200, 0, 500, 25, 0.002)
 
 // History Formulas Parameters
 TUNABLE_PARAM(hist_bonus_mult, 224, 1, 1024, 50, 0.002)
