@@ -644,6 +644,55 @@ bool Position::no_legal_moves() {
     return true;
 }
 
+bool Position::is_legal(const Move &move) {
+    Square king_sq = get_king_placement(m_stm);
+    Square from = move.from();
+    Square to = move.to();
+    PieceType moved_pt = get_piece_type(consult(from));
+
+    if (move.is_castle()) {
+        Piece rook = get_piece(ROOK, get_stm());
+        Bitboard stm_castling_rooks =
+            m_curr_state.castle_rooks & get_piece_bb(rook) & RANK_MASKS[get_stm() == WHITE ? 0 : 7];
+        Square rook_from = msb(stm_castling_rooks);
+        if (to == c1 || to == c8) {
+            rook_from = lsb(stm_castling_rooks);
+        }
+        return !is_attacked(to) && !(get_pins() & (1ULL << rook_from)); // Other clauses were checked by movegen
+    }
+    if (move.is_ep()) {
+        int pawn_offset = (m_stm == WHITE ? NORTH : SOUTH);
+        Piece stm_pawn = get_piece(PAWN, m_stm);
+        Piece ntm_pawn = get_piece(PAWN, get_adversary());
+        remove_piece<false>(stm_pawn, from);
+        remove_piece<false>(ntm_pawn, static_cast<Square>(to - pawn_offset));
+        add_piece<false>(stm_pawn, to);
+        bool is_king_attacked = is_attacked(king_sq);
+        add_piece<false>(stm_pawn, from);
+        add_piece<false>(ntm_pawn, static_cast<Square>(to - pawn_offset));
+        remove_piece<false>(stm_pawn, to);
+        return !is_king_attacked;
+    }
+    if (moved_pt == KING) {
+        remove_piece<false>(get_piece(KING, m_stm), king_sq);
+        bool is_king_attacked = is_attacked(to);
+        add_piece<false>(get_piece(KING, m_stm), king_sq);
+        return !is_king_attacked;
+    }
+
+    if (count_bits(get_checkers()) > 1) // Double check can only be evaded by king movements
+        return false;
+
+    if (get_pins() & (1ULL << from)) // if piece is pinned, it must keep blocking the check
+        return !get_checkers() &&
+               (((1ULL << from) & between_squares[king_sq][to]) || ((1ULL << to) & between_squares[king_sq][from]));
+
+    if (get_checkers()) // If in check and not moving the king, it must either block the check or take the attacker
+        return (1ULL << to) & (get_checkers() | between_squares[lsb(get_checkers())][king_sq]);
+
+    return true;
+}
+
 // TODO if the moved piece and/or the capture piece is present in the move itself this could be way faster
 bool Position::is_pseudo_legal(const Move &move) const {
     if (move == MOVE_NONE)
