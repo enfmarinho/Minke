@@ -651,16 +651,14 @@ bool Position::is_legal(const Move &move) {
     PieceType moved_pt = get_piece_type(consult(from));
 
     if (move.is_castle()) {
-        Bitboard king_crossing = between_squares[from][to] | (1ULL << to);
-        bool legal = true;
-        while (king_crossing) {
-            Square sq = poplsb(king_crossing);
-            if (is_attacked(sq)) {
-                legal = false;
-                break;
-            }
+        Piece rook = get_piece(ROOK, get_stm());
+        Bitboard stm_castling_rooks =
+            m_curr_state.castle_rooks & get_piece_bb(rook) & RANK_MASKS[get_stm() == WHITE ? 0 : 7];
+        Square rook_from = msb(stm_castling_rooks);
+        if (to == c1 || to == c8) {
+            rook_from = lsb(stm_castling_rooks);
         }
-        return legal;
+        return !is_attacked(to) && !(get_pins() & (1ULL << rook_from)); // Other clauses were checked by movegen
     }
     if (move.is_ep()) {
         int pawn_offset = (m_stm == WHITE ? NORTH : SOUTH);
