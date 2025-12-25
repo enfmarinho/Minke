@@ -212,6 +212,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         if (depth < rfp_max_depth() && eval - rfp_margin() * (depth - improving) >= beta)
             return eval;
 
+        // Razoring heuristic
         if (depth <= razoring_max_depth() && node.static_eval + razoring_mult() * depth < alpha) {
             const ScoreType razor_score = quiescence(alpha, beta, td);
             if (razor_score <= alpha)
@@ -392,7 +393,6 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         }
         ++moves_searched;
 
-        // These make and unmake moves are necessary because there is no is_legal, so the move is applied to soon
         if (best_score > -MATE_FOUND) {
             ScoreType futility = static_eval + qsFutilityMargin();
             if (!in_check && futility <= alpha && !SEE(position, move, 1)) {
