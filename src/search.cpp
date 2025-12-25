@@ -247,12 +247,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     MovePicker move_picker(ttmove, &td, false);
     MoveList quiets_tried, tacticals_tried;
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
-        if (move == td.nodes[td.height].excluded_move) // Skip excluded moves
+        if (move == td.nodes[td.height].excluded_move || !position.is_legal(move)) // Skip excluded and illegal moves
             continue;
-        if (!position.make_move<true>(move)) { // Avoid illegal moves
-            position.unmake_move<true>(move);
-            continue;
-        }
+
         node.curr_move = move;
 
         if (!root && best_score > -MAX_SCORE && !skip_quiets) {
@@ -269,8 +266,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             ScoreType singular_beta = ttentry->score() - depth;
             ScoreType singular_depth = (depth - 1) / 2;
 
-            position.unmake_move<true>(ttmove);
-
             td.nodes[td.height].excluded_move = ttmove;
             ScoreType singular_score = negamax(singular_beta - 1, singular_beta, singular_depth, cutnode, td);
             td.nodes[td.height].excluded_move = MOVE_NONE;
@@ -284,8 +279,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 // } else if (ttentry->score() <= alpha && ttentry->score() >= beta) {
                 //     extension = -1;
             }
-
-            position.make_move<true>(ttmove);
         }
         int new_depth = depth + extension;
 
@@ -297,6 +290,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
         ++td.height;
         ++moves_searched;
+        position.make_move<true>(move);
 
         td.nodes[td.height].pv_list.clear();
         ScoreType score;
