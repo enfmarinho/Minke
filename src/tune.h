@@ -1,3 +1,4 @@
+#define TUNE
 #ifndef TUNE_H
 #define TUNE_H
 
@@ -88,10 +89,13 @@ class TunableParamList {
     std::vector<TunableParam> m_params;
 };
 
-#define TUNABLE_PARAM(name, default, min, max, cend, rend)                                                            \
+#define SEE_TUNABLE_PARAM(name, default, min, max, cend, rend)                                                        \
     static_assert(cend >= 0.5);                                                                                       \
     inline const TunableParam &tuned_##name = TunableParamList::get().insert({#name, default, min, max, cend, rend}); \
     inline int name() { return tuned_##name.curr_value; }
+
+#define TUNABLE_PARAM(name, default, min, max, cend, rend) \
+    constexpr int name() { return default; }
 
 #else
 
@@ -130,9 +134,9 @@ TUNABLE_PARAM(iir_min_depth, 3, 3, 8, 0.5, 0.002)
 TUNABLE_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
 
 // See Pruning
-TUNABLE_PARAM(see_pruning_max_depth, 10, 5, 15, 0.5, 0.002)
-TUNABLE_PARAM(see_pruning_quiet_mult, -70, -110, -10, 5, 0.002)
-TUNABLE_PARAM(see_pruning_noisy_mult, -20, -110, -10, 5, 0.002)
+SEE_TUNABLE_PARAM(see_pruning_max_depth, 10, 5, 15, 0.5, 0.002)
+SEE_TUNABLE_PARAM(see_pruning_quiet_mult, -70, -110, -10, 5, 0.002)
+SEE_TUNABLE_PARAM(see_pruning_noisy_mult, -20, -110, -10, 5, 0.002)
 
 // Razoring
 TUNABLE_PARAM(razoring_max_depth, 5, 2, 6, 0.5, 0.002)
