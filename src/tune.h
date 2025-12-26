@@ -114,6 +114,10 @@ TUNABLE_PARAM(nmp_min_depth, 2, 2, 8, 0.5, 0.002)
 TUNABLE_PARAM(rfp_margin, 105, 50, 150, 5, 0.002)
 TUNABLE_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)
 
+// Alpha Pruning
+TUNABLE_PARAM(alpha_pruning_depth, 5, 2, 8, 0.5, 0.002)
+TUNABLE_PARAM(alpha_margin, 3000, 500, 4500, 200, 0.002)
+
 // Late Move Reductions
 TUNABLE_PARAM(lmr_base, 107, 50, 150, 5, 0.002)
 TUNABLE_PARAM(lmr_divisor, 207, 150, 350, 10, 0.002)

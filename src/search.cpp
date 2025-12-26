@@ -215,6 +215,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         if (depth < rfp_max_depth() && eval - rfp_margin() * (depth - improving) >= beta)
             return eval;
 
+        if (depth < alpha_pruning_depth() && eval + alpha_margin() < alpha)
+            return eval;
+
         // Razoring heuristic
         if (depth <= razoring_max_depth() && node.static_eval + razoring_mult() * depth < alpha) {
             const ScoreType razor_score = quiescence(alpha, beta, td);
