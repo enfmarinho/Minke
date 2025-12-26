@@ -129,6 +129,11 @@ TUNABLE_PARAM(singular_extension_min_depth, 7, 4, 10, 0.5, 0.002)
 TUNABLE_PARAM(iir_min_depth, 3, 3, 8, 0.5, 0.002)
 TUNABLE_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
 
+// See Pruning
+TUNABLE_PARAM(see_pruning_max_depth, 10, 5, 15, 0.5, 0.002)
+TUNABLE_PARAM(see_pruning_quiet_mult, -70, -110, -10, 5, 0.002)
+TUNABLE_PARAM(see_pruning_noisy_mult, -20, -110, -10, 5, 0.002)
+
 // Razoring
 TUNABLE_PARAM(razoring_max_depth, 5, 2, 6, 0.5, 0.002)
 TUNABLE_PARAM(razoring_mult, 250, 150, 300, 7.5, 0.002)

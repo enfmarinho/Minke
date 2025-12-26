@@ -249,16 +249,27 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
         if (move == td.nodes[td.height].excluded_move) // Skip excluded moves
             continue;
-        if (!position.make_move<true>(move)) { // Avoid illegal moves
-            position.unmake_move<true>(move);
+        if (!position.is_legal(move)) // Avoid illegal moves
             continue;
-        }
+
         node.curr_move = move;
 
-        if (!root && best_score > -MAX_SCORE && !skip_quiets) {
-            // Late Move Pruning
-            if (moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
-                skip_quiets = true;
+        if (!root && best_score > -MAX_SCORE) {
+            if (!skip_quiets) {
+                // Late Move Pruning
+                if (moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
+                    skip_quiets = true;
+                }
+            }
+
+            int lmr_depth = depth - LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
+            lmr_depth = std::max(0, lmr_depth);
+
+            ScoreType see_margin = move.is_quiet() ? see_pruning_quiet_mult() * lmr_depth
+                                                   : see_pruning_noisy_mult() * lmr_depth * lmr_depth;
+            if (depth <= see_pruning_max_depth() && move_picker.picker_stage() >= PICK_QUIET &&
+                !SEE(position, move, see_margin)) {
+                continue;
             }
         }
 
@@ -268,8 +279,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             move != td.nodes[td.height].excluded_move && ttentry->bound() == LOWER) {
             ScoreType singular_beta = ttentry->score() - depth;
             ScoreType singular_depth = (depth - 1) / 2;
-
-            position.unmake_move<true>(ttmove);
 
             td.nodes[td.height].excluded_move = ttmove;
             ScoreType singular_score = negamax(singular_beta - 1, singular_beta, singular_depth, cutnode, td);
@@ -284,8 +293,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 // } else if (ttentry->score() <= alpha && ttentry->score() >= beta) {
                 //     extension = -1;
             }
-
-            position.make_move<true>(ttmove);
         }
         int new_depth = depth + extension;
 
@@ -297,6 +304,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
         ++td.height;
         ++moves_searched;
+        position.make_move<true>(move);
 
         td.nodes[td.height].pv_list.clear();
         ScoreType score;
