@@ -379,17 +379,34 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         return tte->score();
     }
 
+    NodeData &node = td.nodes[td.height];
+    bool in_check = position.in_check();
     ScoreType best_score, static_eval;
-    best_score = static_eval = position.eval();
+    if (in_check) {
+        static_eval = node.static_eval = SCORE_NONE;
+        best_score = -MAX_SCORE;
+    } else if (tthit) {
+        static_eval = node.static_eval = position.eval();
+
+        if (tte->score() != SCORE_NONE &&
+            (tte->bound() == EXACT || (tte->bound() == UPPER && tte->score() < static_eval) ||
+             (tte->bound() == LOWER && tte->score() > static_eval))) {
+            static_eval = tte->score();
+        }
+        best_score = static_eval;
+
+    } else {
+        best_score = static_eval = node.static_eval = position.eval();
+    }
+
     // Stand-pat
-    if (best_score >= beta)
+    if (!in_check && best_score >= beta)
         return best_score;
     alpha = std::max(alpha, best_score);
 
     Move move = MOVE_NONE;
     MovePicker move_picker((tthit ? tte->best_move() : MOVE_NONE), &td, true);
     int moves_searched = 0;
-    bool in_check = position.in_check();
     while ((move = move_picker.next_move(!in_check)) != MOVE_NONE) {
         if (!position.is_legal(move)) { // Avoid illegal moves
             continue;
