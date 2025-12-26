@@ -876,14 +876,12 @@ bool Position::repetition() const {
     return false;
 }
 
-// TODO it would be a little more efficient to do a specific legality check for the move
 bool Position::fifty_move_draw() {
     if (m_curr_state.fifty_move_ply >= 100) {
         ScoredMove moves[MAX_MOVES_PER_POS];
         ScoredMove *end = gen_moves(moves, *this, GEN_ALL);
         for (ScoredMove *begin = moves; begin != end; ++begin) {
-            bool legal = make_move<false>(begin->move);
-            unmake_move<false>(begin->move);
+            bool legal = is_legal(begin->move);
             if (legal)
                 return true;
         }
