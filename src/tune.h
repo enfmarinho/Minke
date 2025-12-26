@@ -121,6 +121,7 @@ TUNABLE_PARAM(lmr_divisor, 207, 150, 350, 10, 0.002)
 // Late Moves Pruning
 TUNABLE_PARAM(lmp_base, 120, 100, 200, 5, 0.002)
 TUNABLE_PARAM(lmp_scale, 30, 20, 120, 5, 0.002)
+TUNABLE_PARAM(lmp_max_depth, 8, 3, 13, 0.5, 0.002)
 
 // Singular Extension
 TUNABLE_PARAM(singular_extension_min_depth, 7, 4, 10, 0.5, 0.002)
