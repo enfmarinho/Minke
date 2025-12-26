@@ -404,7 +404,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         return best_score;
     alpha = std::max(alpha, best_score);
 
-    Move move = MOVE_NONE;
+    Move move = MOVE_NONE, best_move = MOVE_NONE;
     MovePicker move_picker((tthit ? tte->best_move() : MOVE_NONE), &td, true);
     int moves_searched = 0;
     while ((move = move_picker.next_move(!in_check)) != MOVE_NONE) {
@@ -430,6 +430,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
 
         if (score > best_score) {
             best_score = score;
+            best_move = move;
             if (score > alpha) {
                 if (score >= beta) {
                     break;
@@ -441,6 +442,11 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
 
     if (moves_searched == 0 && in_check) {
         return -MATE_SCORE + td.height;
+    }
+
+    if (!stop_search(td)) { // Save on TT if search was completed
+        BoundType bound = best_score >= beta ? LOWER : UPPER;
+        tte->save(position.get_hash(), 0, best_move, best_score, position.get_game_ply(), bound);
     }
 
     return best_score;
