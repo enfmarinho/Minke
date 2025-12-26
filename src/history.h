@@ -38,6 +38,10 @@ class History {
         return m_capture_history[position.get_stm()][moved_pt][to][captured_pt];
     }
 
+    inline void clear_killers(const int &depth) {
+        m_killer_moves[0][depth] = MOVE_NONE;
+        m_killer_moves[1][depth] = MOVE_NONE;
+    }
     inline Move consult_killer1(const int &depth) const { return m_killer_moves[0][depth]; }
     inline Move consult_killer2(const int &depth) const { return m_killer_moves[1][depth]; }
     inline Move consult_counter(const Move &past_move) {
