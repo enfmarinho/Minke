@@ -207,7 +207,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                                         td.nodes[td.height - 2].static_eval == SCORE_NONE);
 
     // Forward pruning methods
-    if (!in_check && !pv_node && !root && !singular_search) {
+    if (!in_check && !pv_node && !singular_search) {
         // Reverse futility pruning
         if (depth < rfp_max_depth() && eval - rfp_margin() * (depth - improving) >= beta)
             return eval;
