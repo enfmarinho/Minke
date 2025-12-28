@@ -1,7 +1,13 @@
 VERSION := 3.0.0
 
 DEFAULT_EVALFILE := beluga
-EVALFILE ?= $(DEFAULT_EVALFILE)
+ifndef EVALFILE
+	EVALFILE := $(DEFAULT_EVALFILE)
+	NNUE_FILE := $(EVALFILE).nnue
+else
+	NNUE_FILE := $(EVALFILE)
+endif
+
 
 BASE_BUILD_DIR := build
 
@@ -10,7 +16,7 @@ OBJECTS := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(notdir $(SOURCES)))
 
 CXXSTD := -std=c++20
 CXXWARNS := -Wall
-CXXFLAGS := -O3 -funroll-loops -DNDEBUG -DEVALFILE=\"$(EVALFILE).nnue\" $(CXXSTD) $(CXXWARNS)
+CXXFLAGS = -O3 -funroll-loops -DNDEBUG -DEVALFILE=\"$(NNUE_FILE)\" $(CXXSTD) $(CXXWARNS)
 LDFLAGS := -flto -fuse-ld=lld
 
 NATIVE_FLAGS := -march=native
@@ -53,13 +59,21 @@ define build
 		build
 endef
 
-.PHONY: all clean native avx2 bmi2 avx512 apple-silicon
+.PHONY: all clean native avx2 bmi2 avx512 apple-silicon evalfile
 all: native
 
-ifeq ($(EVALFILE),$(DEFAULT_EVALFILE))
-$(EVALFILE):
-	curl -sLO https://github.com/enfmarinho/MinkeNets/releases/download/$(DEFAULT_EVALFILE)/$(DEFAULT_EVALFILE).nnue
-endif
+evalfile:
+	@if [ ! -f $(NNUE_FILE) ]; then \
+		if [ "$(EVALFILE)" = "$(DEFAULT_EVALFILE)" ]; then \
+			echo "Downloading $(NNUE_FILE)..."; \
+			curl -sLO https://github.com/enfmarinho/MinkeNets/releases/download/$(DEFAULT_EVALFILE)/$(NNUE_FILE); \
+		else \
+			echo "Error: Network file '$(NNUE_FILE)' not found!"; \
+			exit 1; \
+		fi; \
+	else \
+		echo "Using network: $(NNUE_FILE)"; \
+	fi
 
 native:
 	$(call build,NATIVE,native)
@@ -76,8 +90,8 @@ avx512:
 apple-silicon:
 	$(call build,APPLESILICON,apple-silicon)
 
-build: $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $(ARCH_FLAGS) $(LDFLAGS) -o $(EXE) $^
+build: evalfile $(OBJECTS)
+	$(CXX) $(CXXFLAGS) $(ARCH_FLAGS) $(LDFLAGS) -o $(EXE) $(OBJECTS)
 
 $(BUILD_DIR)/%.o: src/%.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(ARCH_FLAGS) -c $< -o $@ -MMD -MP
