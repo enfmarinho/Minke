@@ -1,10 +1,11 @@
-build
-buildDebug
-buildRelease
-data
-.cache
+build/
+data/
+.cache/
 
-# minke executables
+# Minke nnue file
+*.nnue
+
+# Minke executables
 minke-*-native
 minke-*-avx2
 minke-*-bmi2
