@@ -48,7 +48,7 @@ elseif(UNIX)
 endif()
 
 # Define EVALFILE and make init.cpp recompiled when EVALFILE has changed
-set(EVALFILE "${CMAKE_SOURCE_DIR}/src/minke.bin")
+set(EVALFILE "${CMAKE_SOURCE_DIR}/beluga.nnue")
 target_compile_definitions(minke PRIVATE EVALFILE=\"${EVALFILE}\")
 set_property(
   SOURCE ${CMAKE_SOURCE_DIR}/src/init.cpp
