@@ -118,8 +118,9 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, Threa
     }
 
     int score = SCORE_NONE;
+    CounterType curr_depth = depth;
     while (true) {
-        ScoreType curr_score = negamax(alpha, beta, depth, false, td);
+        ScoreType curr_score = negamax(alpha, beta, curr_depth, false, td);
 
         if (stop_search(td))
             break;
@@ -129,8 +130,10 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, Threa
         if (curr_score <= alpha) {
             beta = (alpha + beta) / 2;
             alpha = std::max(static_cast<int>(-MAX_SCORE), score - delta);
+            curr_depth = depth;
         } else if (curr_score >= beta) {
             beta = std::min(static_cast<int>(MAX_SCORE), score + delta);
+            curr_depth = std::max(1, curr_depth - 1);
         } else {
             break;
         }
