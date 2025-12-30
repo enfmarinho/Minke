@@ -52,6 +52,8 @@ This will generate the executable called minke
 - Principal Variation Search
 - Null Move Pruning
 - Reverse Futility Pruning
+- Futility Pruning
+- Razoring
 - Late Move Reduction
 - Late Move Pruning
 - Internal Iterative Reduction
@@ -72,8 +74,8 @@ Minke has been inspired by several other chess engines, such as:
 * [Altair](https://github.com/Alex2262/AltairChessEngine)
 * [Berserk](https://github.com/jhonnold/berserk)
 * [Ethereal](https://github.com/AndyGrant/Ethereal)
-* [Stormphrax](https://github.com/Ciekce/Stormphrax)
 * [Stockfish](https://github.com/official-stockfish/Stockfish)
+* [Stormphrax](https://github.com/Ciekce/Stormphrax)
   
 Other important tools used in the development of Minke include:
 * [bullet](https://github.com/jw1912/bullet)
