@@ -207,6 +207,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     }
 
     // Clean killer moves for the next ply
+    td.nodes[td.height + 1].excluded_move = MOVE_NONE;
     td.search_history.clear_killers(depth + 1);
 
     bool improving = td.height >= 2 && (node.static_eval > td.nodes[td.height - 2].static_eval ||
