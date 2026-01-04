@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # - name: Install dependencies
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y clang-format make
+
+      - name: Check formatting
+        run: |
+          clang-format --version
+          files=$(git ls-files '*.cpp' '*.h')
+          clang-format --dry-run --Werror $files
+
+      - name: Build & Bench
+        run: |
+          make EXE=minke
+          ./minke bench | tee bench_output.txt
+
+      - name: Validate bench
+        run: |
+          set -e
+
+          # Extract bench result (nodes searched) from benchmark output
+          BENCH_OUTPUT=$(grep -oE '^[0-9]+ nodes' bench_output.txt | grep -oE '^[0-9]+')
+
+          if [ -z "$BENCH_OUTPUT" ]; then
+            echo "ERROR: Could not extract bench result from benchmark output"
+            exit 1
+          fi
+
+          # Extract Bench target from commit message
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+
+          BENCH_COMMIT=$(echo "$COMMIT_MSG" | grep -oE 'Bench:[[:space:]]*[0-9]+' | grep -oE '[0-9]+')
+
+          if [ -z "$BENCH_COMMIT" ]; then
+            echo "ERROR: Could not extract benchmark target from commit message"
+            exit 1
+          fi
+
+          echo "target bench: $BENCH_COMMIT"
+          echo "result bench: $BENCH_OUTPUT"
+
+          if [ "$BENCH_COMMIT" != "$BENCH_OUTPUT" ]; then
+            echo "ERROR: Benchmark result does not match bench target"
+            exit 1
+          fi
+
+          echo "Bench validation passed"
