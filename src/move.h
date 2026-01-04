@@ -34,8 +34,10 @@ enum MoveType : char {
 
 class Move {
   public:
+    // clang-format off
     inline Move() : m_bytes(0) {};
     inline Move(int16_t bytes) : m_bytes(bytes) {};
+    // clang-format on
     inline Move(Square from, Square to, MoveType move_type) { m_bytes = (move_type << 12) | (to << 6) | (from); }
 
     inline int from_and_to() const { return m_bytes & 0xFFF; }
