@@ -51,6 +51,22 @@ else
 	RM := rm
 endif
 
+NATIVE_ARCH = $(shell echo | $(CXX) -march=native -E -dM -)
+ifneq ($(findstring __AVX2__, $(NATIVE_ARCH)),)
+	DEFAULT_TARGET := avx2
+endif
+ifneq ($(findstring __BMI2__, $(NATIVE_ARCH)),)
+	DEFAULT_TARGET := bmi2
+endif
+ifneq ($(findstring __AVX512F__, $(NATIVE_ARCH)),)
+	ifneq ($(findstring __AVX512BW__, $(NATIVE_ARCH)),)
+		DEFAULT_TARGET := avx512
+	endif
+endif
+ifndef DEFAULT_TARGET
+	DEFAULT_TARGET := native
+endif
+
 define build
 	$(MAKE) \
 		ARCH_FLAGS="$($1_FLAGS)" \
@@ -60,7 +76,7 @@ define build
 endef
 
 .PHONY: all clean native avx2 bmi2 avx512 apple-silicon evalfile
-all: native
+all: $(DEFAULT_TARGET)
 
 evalfile:
 	@if [ ! -f $(NNUE_FILE) ]; then \
