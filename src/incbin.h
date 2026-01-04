@@ -1,3 +1,4 @@
+// clang-format off
 /**
  * @file incbin.h
  * @author Dale Weiler
@@ -443,3 +444,4 @@
 #endif
 
 #endif
+// clang-format on
