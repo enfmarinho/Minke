@@ -233,6 +233,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 nmp_base_reduction() + depth / nmp_depth_reduction_divisor() + std::clamp((eval - beta) / 300, -1, 3);
 
             position.make_null_move();
+            td.tt.prefetch(position.get_hash());
             ++td.height;
             node.curr_move = MOVE_NONE;
             ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, !cutnode, td);
@@ -277,6 +278,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             ScoreType singular_depth = (depth - 1) / 2;
 
             position.unmake_move<true>(ttmove);
+            td.tt.prefetch(position.get_hash());
 
             td.nodes[td.height].excluded_move = ttmove;
             ScoreType singular_score = negamax(singular_beta - 1, singular_beta, singular_depth, cutnode, td);
@@ -294,6 +296,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
             position.make_move<true>(ttmove);
         }
+        td.tt.prefetch(position.get_hash());
         int new_depth = depth + extension;
 
         // Add move to tried list
@@ -425,6 +428,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
             }
         }
         position.make_move<true>(move);
+        td.tt.prefetch(position.get_hash());
 
         ++td.height;
         ScoreType score = -quiescence(-beta, -alpha, td);

@@ -60,6 +60,11 @@ TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
     return found = false, replace;
 }
 
+void TranspositionTable::prefetch(const HashType &key) {
+    HashType table_index = key & m_table_mask;
+    __builtin_prefetch(&m_table[table_index]);
+}
+
 void TranspositionTable::resize(size_t MB) {
     size_mb = MB;
     m_table_size = MB * 1024 * 1024 / sizeof(TTBucket);

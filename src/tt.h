@@ -64,6 +64,7 @@ class TranspositionTable {
      * should be replaced.
      */
     TTEntry *probe(const Position &position, bool &found);
+    void prefetch(const HashType &key);
     void resize(size_t MB);
     void clear();
     int tt_size_mb() const { return size_mb; }
