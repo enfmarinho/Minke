@@ -62,7 +62,7 @@ TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
 
 void TranspositionTable::prefetch(const HashType &key) {
     HashType table_index = key & m_table_mask;
-    __builtin_prefetch(&m_table[table_index]);
+    __builtin_prefetch(&m_table[table_index].entry[0]);
 }
 
 void TranspositionTable::resize(size_t MB) {
