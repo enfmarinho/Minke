@@ -15,6 +15,10 @@
 #include "position.h"
 #include "types.h"
 
+constexpr int AGE_INC = 1;
+constexpr int MAX_AGE = 255 + AGE_INC;
+constexpr int AGE_MASK = MAX_AGE - 1;
+
 class TTEntry {
   public:
     TTEntry() = default;
@@ -25,10 +29,9 @@ class TTEntry {
     Move best_move() const { return m_best_move; }
     ScoreType score() const { return m_score; }
     BoundType bound() const { return m_bound; }
-    CounterType relative_age(const CounterType &half_move_count) const;
-    CounterType replace_factor(const CounterType &half_move_count) const;
+    IndexType age() const { return m_age; }
     void save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &evaluation,
-              const CounterType &half_move_counter, const BoundType &bound);
+              const IndexType &tt_age, const BoundType &bound);
     void reset();
 
   private:
@@ -36,7 +39,7 @@ class TTEntry {
     Move m_best_move;                // 2 bytes
     ScoreType m_score;               // 2 bytes
     IndexType m_depth;               // 1 byte
-    IndexType m_half_move_count;     // 1 byte
+    IndexType m_age;                 // 1 byte
     BoundType m_bound = BOUND_EMPTY; // 1 byte
 };
 
@@ -67,9 +70,12 @@ class TranspositionTable {
     void prefetch(const HashType &key);
     void resize(size_t MB);
     void clear();
+    void increment_table_age() { m_tt_age = (m_tt_age + AGE_INC) & AGE_MASK; }
+    IndexType age() { return m_tt_age; }
     int tt_size_mb() const { return size_mb; }
 
   private:
+    IndexType m_tt_age;
     size_t size_mb{0};
     size_t m_table_size{0};
     size_t m_table_mask{0};

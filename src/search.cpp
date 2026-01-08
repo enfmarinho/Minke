@@ -72,6 +72,7 @@ inline bool stop_search(const ThreadData &td) {
 
 ScoreType iterative_deepening(ThreadData &td) {
     td.stop = false;
+    td.tt.increment_table_age();
 
     Move best_move = MOVE_NONE;
     ScoreType past_eval = -MAX_SCORE;
@@ -360,7 +361,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     if (!stop_search(td)) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
-        ttentry->save(position.get_hash(), depth, best_move, best_score, position.get_game_ply(), bound);
+        ttentry->save(position.get_hash(), depth, best_move, best_score, td.tt.age(), bound);
         td.best_move = best_move;
     }
 
