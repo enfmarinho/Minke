@@ -27,10 +27,17 @@ class TTEntry {
     HashType hash() const { return m_hash; }
     IndexType depth() const { return m_depth; }
     Move best_move() const { return m_best_move; }
-    ScoreType score() const { return m_score; }
+    ScoreType score() const {
+        int score = m_score;
+        if (m_score > MATE_FOUND)
+            score -= m_depth;
+        else if (m_score < -MATE_FOUND)
+            score += m_depth;
+        return score;
+    }
     BoundType bound() const { return m_bound; }
     IndexType age() const { return m_age; }
-    void save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &evaluation,
+    void save(const HashType &hash, const IndexType &depth, const Move &best_move, ScoreType score,
               const IndexType &tt_age, const BoundType &bound);
     void reset();
 

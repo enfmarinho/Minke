@@ -16,12 +16,17 @@
 #include "position.h"
 #include "types.h"
 
-void TTEntry::save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &evaluation,
+void TTEntry::save(const HashType &hash, const IndexType &depth, const Move &best_move, ScoreType score,
                    const IndexType &tt_age, const BoundType &bound) {
+    if (score > MATE_FOUND)
+        score += depth;
+    else if (score < -MATE_FOUND)
+        score -= depth;
+
     m_hash = hash;
     m_depth = depth;
     m_best_move = best_move;
-    m_score = evaluation;
+    m_score = score;
     m_age = tt_age;
     m_bound = bound;
 }
