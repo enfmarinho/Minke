@@ -10,11 +10,11 @@
 #include <cstddef>
 #include <cstdlib>
 #include <iostream>
-#include <memory>
 
 #include "move.h"
 #include "position.h"
 #include "types.h"
+#include "utils.h"
 
 CounterType TTEntry::relative_age(const CounterType &half_move_counter) const {
     return half_move_counter - m_half_move_count;
@@ -66,14 +66,20 @@ void TranspositionTable::prefetch(const HashType &key) {
 }
 
 void TranspositionTable::resize(size_t MB) {
+    if (m_table != nullptr)
+        aligned_free(m_table);
+
     size_mb = MB;
     m_table_size = MB * 1024 * 1024 / sizeof(TTBucket);
     m_table_mask = m_table_size - 1;
-    m_table = std::make_unique<TTBucket[]>(m_table_size);
+    m_table = static_cast<TTBucket *>(aligned_malloc(sizeof(TTBucket), m_table_size * sizeof(TTBucket)));
+
     if (!m_table) {
         std::cerr << "Failed to allocated required memory for the transposition table" << std::endl;
         exit(EXIT_FAILURE);
     }
+
+    clear();
 }
 
 void TranspositionTable::clear() {

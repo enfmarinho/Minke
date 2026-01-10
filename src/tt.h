@@ -10,10 +10,10 @@
 
 #include <array>
 #include <cstddef>
-#include <memory>
 
 #include "position.h"
 #include "types.h"
+#include "utils.h"
 
 class TTEntry {
   public:
@@ -53,7 +53,7 @@ class TranspositionTable {
 
   public:
     TranspositionTable() = default;
-    ~TranspositionTable() = default;
+    ~TranspositionTable() { aligned_free(m_table); }
     TranspositionTable(const TranspositionTable &) = delete;
     TranspositionTable &operator=(const TranspositionTable &) = delete;
 
@@ -73,7 +73,7 @@ class TranspositionTable {
     size_t size_mb{0};
     size_t m_table_size{0};
     size_t m_table_mask{0};
-    std::unique_ptr<TTBucket[]> m_table;
+    TTBucket *m_table;
 };
 
 #endif // #ifndef TT_H
