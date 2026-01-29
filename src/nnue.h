@@ -10,6 +10,7 @@
 
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <span>
 #include <vector>
@@ -21,6 +22,7 @@ class Position;
 
 constexpr int INPUT_LAYER_SIZE = 64 * 12;
 constexpr int HIDDEN_LAYER_SIZE = 1024;
+constexpr int OUTPUT_BUCKETS = 8;
 
 constexpr int32_t CRELU_MIN = 0;
 constexpr int32_t CRELU_MAX = 255;
@@ -39,10 +41,10 @@ const vepi16 QONE = vepi16_set(QA);
 struct alignas(64) Network {
     std::array<int16_t, INPUT_LAYER_SIZE * HIDDEN_LAYER_SIZE> hidden_weights;
     std::array<int16_t, HIDDEN_LAYER_SIZE> hidden_bias;
-    std::array<int16_t, HIDDEN_LAYER_SIZE * 2> output_weights;
-    int16_t output_bias;
+    std::array<int16_t, HIDDEN_LAYER_SIZE * 2 * OUTPUT_BUCKETS> output_weights;
+    std::array<int16_t, OUTPUT_BUCKETS> output_bias;
 };
-extern Network network;
+extern const Network &network;
 
 // NOTE: NNUE must be initialized using reset().
 class NNUE {
@@ -61,7 +63,12 @@ class NNUE {
     void remove_feature(const Piece &piece, const Square &sq);
 
     void reset(const Position &position);
-    ScoreType eval(const Color &stm) const;
+    ScoreType eval(const int piece_count, const Color &stm) const;
+
+    static inline int output_bucket(const int piece_count) {
+        const int div = std::ceil(32 / static_cast<double>(OUTPUT_BUCKETS));
+        return (piece_count - 2) / div;
+    }
 
     Accumulator debug_func(const Position &position);
 
@@ -80,7 +87,8 @@ class NNUE {
     constexpr int32_t crelu(const int32_t &input) const;
     constexpr int32_t screlu(const int32_t &input) const;
     ScoreType flatten_screlu_and_affine(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
-                                        const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const;
+                                        const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary,
+                                        const int out_bucket) const;
 
     std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
 };
