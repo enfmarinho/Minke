@@ -26,12 +26,11 @@ INCBIN(NetParameters, EVALFILE);
 int LMR_TABLE[64][64];
 int LMP_TABLE[2][LMP_DEPTH];
 HashKeys hash_keys;
-Network network;
+const Network &network = *reinterpret_cast<const Network *>(gNetParametersData);
 Bitboard between_squares[64][64];
 
 void init_all() {
     init_search_params();
-    init_network_params();
     init_hash_keys();
     init_magic_attack_tables();
     init_between_squares();
@@ -51,22 +50,6 @@ void init_search_params() {
         LMP_TABLE[0][depth] = (lmp_base() / 100.0) + (lmp_scale() / 100.0) * depth * depth;
         LMP_TABLE[1][depth] = 2 * (lmp_base() / 100.0) + 2 * (lmp_scale() / 100.0) * depth * depth; // Improving
     }
-}
-
-void init_network_params() {
-    const int16_t *pointer = reinterpret_cast<const int16_t *>(gNetParametersData);
-
-    for (int i = 0; i < INPUT_LAYER_SIZE; ++i)
-        for (int j = 0; j < HIDDEN_LAYER_SIZE; ++j)
-            network.hidden_weights[i * HIDDEN_LAYER_SIZE + j] = *(pointer++);
-
-    for (int i = 0; i < HIDDEN_LAYER_SIZE; ++i)
-        network.hidden_bias[i] = *(pointer++);
-
-    for (int i = 0; i < HIDDEN_LAYER_SIZE * 2; ++i)
-        network.output_weights[i] = *(pointer++);
-
-    network.output_bias = *(pointer++);
 }
 
 void init_hash_keys() {
