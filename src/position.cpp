@@ -840,8 +840,7 @@ void Position::print() const {
         std::cout << "  " << rank_simbol << " ";
 
     std::cout << "\n\nFEN: " << get_fen();
-    std::cout << "\nHash: " << m_hash_key;
-    std::cout << "\nEval: " << eval() << "\n";
+    std::cout << "\nHash: " << m_hash_key << std::endl;
 }
 
 bool Position::insufficient_material() const {
