@@ -54,6 +54,7 @@ struct ThreadData {
     NodeData nodes[MAX_SEARCH_DEPTH];
     Move best_move;
 
+    bool nmp_disabled;
     SearchLimits search_limits;
     TimeManager time_manager;
     int64_t nodes_searched;

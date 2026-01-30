@@ -57,6 +57,7 @@ void ThreadData::reset_search_parameters() {
     stop = true;
     height = 0;
     nodes_searched = -1; // Avoid counting the root
+    nmp_disabled = false;
     time_manager.reset();
     search_limits.reset();
     // TODO i dont think this is necessary
@@ -227,7 +228,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         }
 
         // Null move pruning
-        if (!position.last_was_null() && depth >= nmp_min_depth() && eval >= beta && position.has_non_pawns()) {
+        if (!position.last_was_null() && depth >= nmp_min_depth() && eval >= beta && position.has_non_pawns() &&
+            !td.nmp_disabled) {
             // TODO check for advanced tweaks
             const int reduction =
                 nmp_base_reduction() + depth / nmp_depth_reduction_divisor() + std::clamp((eval - beta) / 300, -1, 3);
@@ -240,8 +242,20 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             position.unmake_null_move();
             --td.height;
 
-            if (null_score >= beta)
-                return null_score;
+            if (null_score >= beta) {
+                if (null_score > MATE_FOUND) // Don't return unproven mate scores
+                    null_score = beta;
+
+                if (depth <= 12)
+                    return null_score;
+
+                td.nmp_disabled = true;
+                ScoreType verification_score = negamax(-beta, -beta + 1, depth - reduction, !cutnode, td);
+                td.nmp_disabled = false;
+
+                if (verification_score >= beta)
+                    return verification_score;
+            }
         }
     }
 
