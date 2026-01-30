@@ -202,6 +202,7 @@ class DatagenThread {
     void init_pos_randomly() {
         td.position.set_fen<true>(book.random_fen());
         td.search_history.reset();
+        td.tt.clear();
 
         for (int i = 0; i < DATAGEN_OPENING_RANDOM_MOVES; ++i) {
             ScoredMove moves[MAX_MOVES_PER_POS];
