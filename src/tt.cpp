@@ -16,21 +16,12 @@
 #include "position.h"
 #include "types.h"
 
-CounterType TTEntry::relative_age(const CounterType &half_move_counter) const {
-    return half_move_counter - m_half_move_count;
-}
-
-CounterType TTEntry::replace_factor(const CounterType &half_move_counter) const {
-    return m_depth - relative_age(half_move_counter) * 2;
-}
-
 void TTEntry::save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &evaluation,
                    const CounterType &half_move_counter, const BoundType &bound) {
     m_hash = hash;
     m_depth = depth;
     m_best_move = best_move;
     m_score = evaluation;
-    m_half_move_count = half_move_counter;
     m_bound = bound;
 }
 
@@ -39,7 +30,6 @@ void TTEntry::reset() {
     m_depth = 0;
     m_best_move = MOVE_NONE;
     m_score = 0;
-    m_half_move_count = 0;
     m_bound = BOUND_EMPTY;
 }
 
@@ -53,8 +43,7 @@ TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
     TTBucket *bucket = &m_table[table_index];
     TTEntry *replace = &bucket->entry[0];
     for (IndexType index = 1; index < BUCKET_SIZE; ++index) {
-        if (replace->replace_factor(position.get_game_ply()) >
-            bucket->entry[index].replace_factor(position.get_game_ply()))
+        if (replace->depth() > bucket->entry[index].depth())
             replace = &bucket->entry[index];
     }
     return found = false, replace;
