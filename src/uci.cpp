@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <exception>
 #include <ios>
 #include <iostream>
