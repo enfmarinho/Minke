@@ -184,11 +184,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     // Extraction data from ttentry if tthit
     Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
 
-    // Internal Iterative Reductions
-    if (!tthit && depth >= iir_min_depth()) {
-        depth -= iir_depth_reduction();
-    }
-
     bool in_check = position.in_check();
     ScoreType eval;
     if (in_check) {
@@ -243,6 +238,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             if (null_score >= beta)
                 return null_score;
         }
+    }
+
+    // Internal Iterative Reductions
+    if (!tthit && depth >= iir_min_depth()) {
+        depth -= iir_depth_reduction();
     }
 
     Move move = MOVE_NONE;
