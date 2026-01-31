@@ -360,7 +360,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     if (!stop_search(td)) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
-        ttentry->save(position.get_hash(), depth, best_move, best_score, position.get_game_ply(), bound);
+        ttentry->save(position.get_hash(), depth, best_move, best_score, eval, bound);
         td.best_move = best_move;
     }
 
