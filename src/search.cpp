@@ -196,7 +196,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     } else if (singular_search) {
         eval = node.static_eval;
     } else if (tthit) {
-        eval = node.static_eval = position.eval();
+        eval = node.static_eval = ttentry->eval() != SCORE_NONE ? ttentry->eval() : position.eval();
         if (ttentry->score() != SCORE_NONE &&
             (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->score() < eval) ||
              (ttentry->bound() == LOWER && ttentry->score() > eval)))
