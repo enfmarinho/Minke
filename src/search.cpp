@@ -310,7 +310,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
         td.nodes[td.height].pv_list.clear();
         ScoreType score;
-        if (moves_searched == 1) {
+        if (pv_node && moves_searched == 1) {
             score = -negamax(-beta, -alpha, new_depth - 1, false, td);
         } else {
             int reduction = 1;
