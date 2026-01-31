@@ -393,7 +393,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         static_eval = node.static_eval = SCORE_NONE;
         best_score = -MAX_SCORE;
     } else if (tthit) {
-        static_eval = node.static_eval = position.eval();
+        static_eval = node.static_eval = tte->eval() != SCORE_NONE ? tte->eval() : position.eval();
 
         if (tte->score() != SCORE_NONE &&
             (tte->bound() == EXACT || (tte->bound() == UPPER && tte->score() < static_eval) ||
