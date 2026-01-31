@@ -309,27 +309,43 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         ++moves_searched;
 
         td.nodes[td.height].pv_list.clear();
-        ScoreType score;
-        if (pv_node && moves_searched == 1) {
-            score = -negamax(-beta, -alpha, new_depth - 1, false, td);
-        } else {
-            int reduction = 1;
-            // Late Move Reduction
-            if (moves_searched > 1 && depth > 2 && move.is_quiet()) {
-                reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
+        ScoreType score = -MAX_SCORE;
+        // Late Move Reduction
+        if (moves_searched > 1 && depth > 2) {
+            int R = 1;
+            if (move.is_quiet()) {
+                R = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
 
-                reduction -= in_check;   // Reduce less when in check
-                reduction += !improving; // Reduce more if not improving
+                R -= in_check;   // Reduce less when in check
+                R += !improving; // Reduce more if not improving
 
                 // Reduce less if move is killer or counter
-                reduction -= td.search_history.is_killer(move, depth);
-                reduction = std::clamp(reduction, 1, depth - 1);
+                R -= td.search_history.is_killer(move, depth);
+                R = std::clamp(R, 1, depth - 1);
             } else {
                 // reduce noisy
             }
-            score = -negamax(-alpha - 1, -alpha, new_depth - reduction, true, td);
-            if (score > alpha && score < beta)
-                score = -negamax(-beta, -alpha, new_depth - 1, !cutnode, td);
+
+            R = std::min(depth - 1, std::max(1, R));
+
+            const int lmr_depth = new_depth - R;
+
+            score = -negamax(-alpha - 1, -alpha, lmr_depth, true, td);
+            if (score > alpha && R > 1) {
+                new_depth += score > best_score + 35;
+                new_depth -= score < best_score + new_depth;
+
+                if (new_depth - 1 > lmr_depth) {
+                    score = -negamax(-alpha - 1, -alpha, new_depth - 1, !cutnode, td);
+                }
+            }
+        } else if (!pv_node || moves_searched > 1) {
+            score = -negamax(-alpha - 1, -alpha, new_depth - 1, !cutnode, td);
+        }
+
+        // Principal-Variation Search (PVS)
+        if (pv_node && (moves_searched == 1 || score > alpha)) {
+            score = -negamax(-beta, -alpha, new_depth - 1, false, td);
         }
 
         --td.height;
