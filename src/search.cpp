@@ -196,7 +196,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     } else if (singular_search) {
         eval = node.static_eval;
     } else if (tthit) {
-        eval = node.static_eval = position.eval();
+        eval = node.static_eval = ttentry->eval() != SCORE_NONE ? ttentry->eval() : position.eval();
         if (ttentry->score() != SCORE_NONE &&
             (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->score() < eval) ||
              (ttentry->bound() == LOWER && ttentry->score() > eval)))
@@ -360,7 +360,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     if (!stop_search(td)) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
-        ttentry->save(position.get_hash(), depth, best_move, best_score, position.get_game_ply(), bound);
+        ttentry->save(position.get_hash(), depth, best_move, best_score, eval, bound);
         td.best_move = best_move;
     }
 
@@ -393,7 +393,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         static_eval = node.static_eval = SCORE_NONE;
         best_score = -MAX_SCORE;
     } else if (tthit) {
-        static_eval = node.static_eval = position.eval();
+        static_eval = node.static_eval = tte->eval() != SCORE_NONE ? tte->eval() : position.eval();
 
         if (tte->score() != SCORE_NONE &&
             (tte->bound() == EXACT || (tte->bound() == UPPER && tte->score() < static_eval) ||

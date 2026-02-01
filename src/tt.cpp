@@ -16,12 +16,13 @@
 #include "position.h"
 #include "types.h"
 
-void TTEntry::save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &evaluation,
-                   const CounterType &half_move_counter, const BoundType &bound) {
+void TTEntry::save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
+                   const ScoreType &eval, const BoundType &bound) {
     m_hash = hash;
     m_depth = depth;
     m_best_move = best_move;
-    m_score = evaluation;
+    m_score = score;
+    m_eval = eval;
     m_bound = bound;
 }
 
@@ -29,7 +30,8 @@ void TTEntry::reset() {
     m_hash = 0;
     m_depth = 0;
     m_best_move = MOVE_NONE;
-    m_score = 0;
+    m_score = SCORE_NONE;
+    m_eval = SCORE_NONE;
     m_bound = BOUND_EMPTY;
 }
 
