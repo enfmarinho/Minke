@@ -43,6 +43,8 @@ void NNUE::add_feature(const Piece &piece, const Square &sq) {
 
     for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
         m_accumulators.back().white_neurons[column] += network.hidden_weights[white_index * HIDDEN_LAYER_SIZE + column];
+    }
+    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
         m_accumulators.back().black_neurons[column] += network.hidden_weights[black_index * HIDDEN_LAYER_SIZE + column];
     }
 }
@@ -52,6 +54,8 @@ void NNUE::remove_feature(const Piece &piece, const Square &sq) {
 
     for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
         m_accumulators.back().white_neurons[column] -= network.hidden_weights[white_index * HIDDEN_LAYER_SIZE + column];
+    }
+    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
         m_accumulators.back().black_neurons[column] -= network.hidden_weights[black_index * HIDDEN_LAYER_SIZE + column];
     }
 }
