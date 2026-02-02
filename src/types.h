@@ -100,6 +100,7 @@ enum BoundType : char {
 };
 
 using HashType = uint64_t;
+using KeyType = uint16_t;
 using IndexType = uint8_t;
 using CounterType = int;
 using ScoreType = int16_t;

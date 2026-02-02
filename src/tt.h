@@ -20,7 +20,7 @@ class TTEntry {
     TTEntry() = default;
     ~TTEntry() = default;
 
-    HashType hash() const { return m_hash; }
+    KeyType key() const { return m_key; }
     IndexType depth() const { return m_depth; }
     Move best_move() const { return m_best_move; }
     ScoreType score() const { return m_score; }
@@ -31,7 +31,7 @@ class TTEntry {
     void reset();
 
   private:
-    HashType m_hash;                 // 8 bytes
+    KeyType m_key;                   // 2 bytes
     Move m_best_move;                // 2 bytes
     ScoreType m_score;               // 2 bytes
     ScoreType m_eval;                // 2 bytes
@@ -40,15 +40,18 @@ class TTEntry {
 };
 
 class TranspositionTable {
-    constexpr static IndexType BUCKET_SIZE = 4;
+    constexpr static IndexType BUCKET_SIZE = 3;
     struct TTBucket {
         TTBucket() = default;
         ~TTBucket() = default;
         std::array<TTEntry, BUCKET_SIZE> entry;
+        char padding[2];
     };
 
-    static_assert(sizeof(TTEntry) == 16, "TTEntry is not 16 bytes");
-    static_assert(sizeof(TTBucket) == 64, "TTBucket is not 64 bytes");
+    static_assert(sizeof(TTEntry) == 10, "TTEntry is not 10 bytes");
+    static_assert(sizeof(TTBucket) == 32, "TTBucket is not 32 bytes");
+
+    int table_index_from_hash(const HashType hash);
 
   public:
     TranspositionTable() = default;

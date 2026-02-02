@@ -16,9 +16,11 @@
 #include "position.h"
 #include "types.h"
 
+inline static KeyType key_from_hash(const HashType &hash) { return static_cast<KeyType>(hash >> 48); }
+
 void TTEntry::save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
                    const ScoreType &eval, const BoundType &bound) {
-    m_hash = hash;
+    m_key = key_from_hash(hash);
     m_depth = depth;
     m_best_move = best_move;
     m_score = score;
@@ -27,7 +29,7 @@ void TTEntry::save(const HashType &hash, const IndexType &depth, const Move &bes
 }
 
 void TTEntry::reset() {
-    m_hash = 0;
+    m_key = 0;
     m_depth = 0;
     m_best_move = MOVE_NONE;
     m_score = SCORE_NONE;
@@ -35,10 +37,12 @@ void TTEntry::reset() {
     m_bound = BOUND_EMPTY;
 }
 
+int TranspositionTable::table_index_from_hash(const HashType hash) { return hash & m_table_mask; }
+
 TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
-    HashType table_index = position.get_hash() & m_table_mask;
+    HashType table_index = table_index_from_hash(position.get_hash());
     for (TTEntry &entry : m_table[table_index].entry) {
-        if (entry.hash() == position.get_hash())
+        if (entry.key() == key_from_hash(position.get_hash()))
             return found = true, &entry;
     }
 
@@ -52,7 +56,7 @@ TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
 }
 
 void TranspositionTable::prefetch(const HashType &key) {
-    HashType table_index = key & m_table_mask;
+    HashType table_index = table_index_from_hash(key);
     __builtin_prefetch(&m_table[table_index]);
 }
 
