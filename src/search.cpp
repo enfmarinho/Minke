@@ -182,7 +182,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         return ttentry->score();
     }
     // Extraction data from ttentry if tthit
-    Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
+    Move ttmove = (tthit ? ttentry->best_move(position) : MOVE_NONE);
 
     // Internal Iterative Reductions
     if (!tthit && depth >= iir_min_depth()) {
@@ -425,7 +425,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
 
     Move move = MOVE_NONE;
     Move best_move = MOVE_NONE;
-    MovePicker move_picker((tthit ? tte->best_move() : MOVE_NONE), &td, true);
+    MovePicker move_picker((tthit ? tte->best_move(position) : MOVE_NONE), &td, true);
     int moves_searched = 0;
     while ((move = move_picker.next_move(!in_check)) != MOVE_NONE) {
         if (!position.is_legal(move)) { // Avoid illegal moves

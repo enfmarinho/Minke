@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <memory>
 
+#include "move.h"
 #include "position.h"
 #include "types.h"
 
@@ -22,7 +23,7 @@ class TTEntry {
 
     HashType hash() const { return m_hash; }
     IndexType depth() const { return m_depth; }
-    Move best_move() const { return m_best_move; }
+    Move best_move(Position &position) const;
     ScoreType score() const { return m_score; }
     ScoreType eval() const { return m_eval; }
     BoundType bound() const { return m_bound; }
@@ -32,7 +33,7 @@ class TTEntry {
 
   private:
     HashType m_hash;                 // 8 bytes
-    Move m_best_move;                // 2 bytes
+    PackedMove m_best_move;          // 2 bytes
     ScoreType m_score;               // 2 bytes
     ScoreType m_eval;                // 2 bytes
     IndexType m_depth;               // 1 byte

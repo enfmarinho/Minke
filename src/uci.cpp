@@ -158,7 +158,7 @@ void UCI::print_debug_info() {
     auto entry = m_td.tt.probe(m_td.position, found);
     Move ttmove = MOVE_NONE;
     if (found) {
-        ttmove = entry->best_move();
+        ttmove = entry->best_move(m_td.position);
         std::cout << "Best move: " << ttmove.get_algebraic_notation(m_td.chess960, m_td.position.get_castle_rooks())
                   << std::endl;
     }

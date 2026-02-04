@@ -31,14 +31,14 @@ static inline ScoredMove* gen_pawn_captures(ScoredMove* moves, const Position& p
     Bitboard capture_no_promotions = captures & ~capture_promotions;
     while (capture_promotions) {
         Square to = poplsb(capture_promotions);
-        *moves++ = {Move(static_cast<Square>(to - capture_offset), to, PAWN_PROMOTION_QUEEN_CAPTURE), 0};
-        *moves++ = {Move(static_cast<Square>(to - capture_offset), to, PAWN_PROMOTION_KNIGHT_CAPTURE), 0};
-        *moves++ = {Move(static_cast<Square>(to - capture_offset), to, PAWN_PROMOTION_ROOK_CAPTURE), 0};
-        *moves++ = {Move(static_cast<Square>(to - capture_offset), to, PAWN_PROMOTION_BISHOP_CAPTURE), 0};
+        *moves++ = {Move(static_cast<Square>(to - capture_offset), to, PAWN_PROMOTION_QUEEN_CAPTURE, PAWN), 0};
+        *moves++ = {Move(static_cast<Square>(to - capture_offset), to, PAWN_PROMOTION_KNIGHT_CAPTURE, PAWN), 0};
+        *moves++ = {Move(static_cast<Square>(to - capture_offset), to, PAWN_PROMOTION_ROOK_CAPTURE, PAWN), 0};
+        *moves++ = {Move(static_cast<Square>(to - capture_offset), to, PAWN_PROMOTION_BISHOP_CAPTURE, PAWN), 0};
     }
     while (capture_no_promotions) {
         Square to = poplsb(capture_no_promotions);
-        *moves++ = {Move(static_cast<Square>(to - capture_offset), to, CAPTURE), 0};
+        *moves++ = {Move(static_cast<Square>(to - capture_offset), to, CAPTURE, PAWN), 0};
     }
     return moves;
 }
@@ -65,23 +65,23 @@ static inline ScoredMove* gen_pawn_moves(ScoredMove* moves, const Position& posi
         single_push_no_promotion &= destination;
         while (single_push_no_promotion) {
             Square to = poplsb(single_push_no_promotion);
-            *moves++ = {Move(static_cast<Square>(to - pawn_offset), to, REGULAR), 0};
+            *moves++ = {Move(static_cast<Square>(to - pawn_offset), to, REGULAR, PAWN), 0};
         }
 
         double_push &= destination;
         while (double_push) {
             Square to = poplsb(double_push);
-            *moves++ = {Move(static_cast<Square>(to - 2 * pawn_offset), to, REGULAR), 0};
+            *moves++ = {Move(static_cast<Square>(to - 2 * pawn_offset), to, REGULAR, PAWN), 0};
         }
     }
     if (gen_type & NOISY) {
         promotion &= destination;
         while (promotion) {
             Square to = poplsb(promotion);
-            *moves++ = {Move(static_cast<Square>(to - pawn_offset), to, PAWN_PROMOTION_QUEEN), 0};
-            *moves++ = {Move(static_cast<Square>(to - pawn_offset), to, PAWN_PROMOTION_KNIGHT), 0};
-            *moves++ = {Move(static_cast<Square>(to - pawn_offset), to, PAWN_PROMOTION_ROOK), 0};
-            *moves++ = {Move(static_cast<Square>(to - pawn_offset), to, PAWN_PROMOTION_BISHOP), 0};
+            *moves++ = {Move(static_cast<Square>(to - pawn_offset), to, PAWN_PROMOTION_QUEEN, PAWN), 0};
+            *moves++ = {Move(static_cast<Square>(to - pawn_offset), to, PAWN_PROMOTION_KNIGHT, PAWN), 0};
+            *moves++ = {Move(static_cast<Square>(to - pawn_offset), to, PAWN_PROMOTION_ROOK, PAWN), 0};
+            *moves++ = {Move(static_cast<Square>(to - pawn_offset), to, PAWN_PROMOTION_BISHOP, PAWN), 0};
         }
 
         moves = gen_pawn_captures(moves, position, destination, pawn_offset + WEST);
@@ -92,7 +92,7 @@ static inline ScoredMove* gen_pawn_moves(ScoredMove* moves, const Position& posi
             Bitboard attackers = pawns & pawn_attacks[adversary][en_passant];
             while (attackers) {
                 Square from = poplsb(attackers);
-                *moves++ = {Move(from, en_passant, EP), 0};
+                *moves++ = {Move(from, en_passant, EP, PAWN), 0};
             }
         }
     }
@@ -121,14 +121,14 @@ static inline ScoredMove* gen_piece_moves(ScoredMove* moves, const Position& pos
         Bitboard to_bb = attacks & empty_targets;
         while (to_bb) {
             Square to = poplsb(to_bb);
-            *moves++ = {Move(from, to, REGULAR), 0};
+            *moves++ = {Move(from, to, REGULAR, piece_type), 0};
         }
 
         // Noisy moves
         to_bb = attacks & enemy_targets;
         while (to_bb) {
             Square to = poplsb(to_bb);
-            *moves++ = {Move(from, to, CAPTURE), 0};
+            *moves++ = {Move(from, to, CAPTURE, piece_type), 0};
         }
     }
     return moves;
@@ -171,7 +171,7 @@ ScoredMove* gen_castling_moves(ScoredMove* moves, const Position& position) {
             continue;
         }
 
-        *moves++ = {Move(king_from, king_to, CASTLING), 0};
+        *moves++ = {Move(king_from, king_to, CASTLING, KING), 0};
     }
 
     return moves;
