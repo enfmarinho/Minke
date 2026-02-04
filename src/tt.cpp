@@ -19,13 +19,13 @@
 inline static KeyType key_from_hash(const HashType &hash) { return static_cast<KeyType>(hash >> 48); }
 
 void TTEntry::save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-                   const ScoreType &eval, const BoundType &bound) {
+                   const ScoreType &eval, const IndexType age, const BoundType &bound) {
     m_key = key_from_hash(hash);
     m_depth = depth;
     m_best_move = best_move;
     m_score = score;
     m_eval = eval;
-    m_bound = bound;
+    m_age_bound = (age << AGE_OFFSET) + bound;
 }
 
 void TTEntry::reset() {
@@ -34,7 +34,7 @@ void TTEntry::reset() {
     m_best_move = MOVE_NONE;
     m_score = SCORE_NONE;
     m_eval = SCORE_NONE;
-    m_bound = BOUND_EMPTY;
+    m_age_bound = 0;
 }
 
 int TranspositionTable::table_index_from_hash(const HashType hash) { return hash & m_table_mask; }
@@ -49,8 +49,10 @@ TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
     TTBucket *bucket = &m_table[table_index];
     TTEntry *replace = &bucket->entry[0];
     for (IndexType index = 1; index < BUCKET_SIZE; ++index) {
-        if (replace->depth() > bucket->entry[index].depth())
-            replace = &bucket->entry[index];
+        TTEntry *curr_entry = &bucket->entry[index];
+        if (replace->depth() - ((MAX_AGE + m_age - replace->age()) & AGE_MASK) * 4 >
+            curr_entry->depth() - ((MAX_AGE + m_age - curr_entry->age()) & AGE_MASK) * 4)
+            replace = curr_entry;
     }
     return found = false, replace;
 }
@@ -72,6 +74,7 @@ void TranspositionTable::resize(size_t MB) {
 }
 
 void TranspositionTable::clear() {
+    m_age = 0;
     for (size_t index = 0; index < m_table_size; ++index) {
         for (TTEntry &entry : m_table[index].entry) {
             entry.reset();

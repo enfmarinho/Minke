@@ -73,6 +73,8 @@ inline bool stop_search(const ThreadData &td) {
 ScoreType iterative_deepening(ThreadData &td) {
     td.stop = false;
 
+    td.tt.update_age();
+
     Move best_move = MOVE_NONE;
     ScoreType past_eval = -MAX_SCORE;
     for (CounterType depth = 1; depth <= td.search_limits.depth; ++depth) {
@@ -204,7 +206,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     } else {
         eval = node.static_eval = position.eval();
-        ttentry->save(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, eval, BOUND_EMPTY);
+        ttentry->save(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, eval, td.tt.age(), BOUND_EMPTY);
     }
 
     // Clean killer moves for the next ply
@@ -371,7 +373,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     if (!stop_search(td)) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
-        ttentry->save(position.get_hash(), depth, best_move, best_score, eval, bound);
+        ttentry->save(position.get_hash(), depth, best_move, best_score, eval, td.tt.age(), bound);
         td.best_move = best_move;
     }
 
@@ -415,7 +417,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
 
     } else {
         best_score = static_eval = node.static_eval = position.eval();
-        tte->save(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, static_eval, BOUND_EMPTY);
+        tte->save(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, static_eval, td.tt.age(), BOUND_EMPTY);
     }
 
     // Stand-pat
@@ -466,7 +468,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     }
 
     BoundType bound = best_score >= beta ? LOWER : UPPER;
-    tte->save(position.get_hash(), 0, best_move, best_score, static_eval, bound);
+    tte->save(position.get_hash(), 0, best_move, best_score, static_eval, td.tt.age(), bound);
 
     return best_score;
 }
