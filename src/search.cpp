@@ -230,9 +230,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
         // Null move pruning
         if (!position.last_was_null() && depth >= nmp_min_depth() && eval >= beta && position.has_non_pawns()) {
-            // TODO check for advanced tweaks
-            const int reduction =
-                nmp_base_reduction() + depth / nmp_depth_reduction_divisor() + std::clamp((eval - beta) / 300, -1, 3);
+            const int reduction = nmp_base_reduction() + depth / nmp_depth_reduction_divisor();
 
             position.make_null_move();
             td.tt.prefetch(position.get_hash());
