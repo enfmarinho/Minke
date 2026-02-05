@@ -326,6 +326,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 // Reduce less if move is killer or counter
                 reduction -= td.search_history.is_killer(move, depth);
                 reduction = std::clamp(reduction, 1, depth - 1);
+
+                // Reduce less if this move is or was a principal variation
+                reduction -= ttpv;
             } else {
                 // reduce noisy
             }
