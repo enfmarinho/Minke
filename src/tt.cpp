@@ -19,13 +19,13 @@
 inline static KeyType key_from_hash(const HashType &hash) { return static_cast<KeyType>(hash >> 48); }
 
 void TTEntry::save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-                   const ScoreType &eval, const BoundType &bound) {
+                   const ScoreType &eval, const BoundType &bound, const bool was_pv) {
     m_key = key_from_hash(hash);
     m_depth = depth;
     m_best_move = best_move;
     m_score = score;
     m_eval = eval;
-    m_bound = bound;
+    m_pv_bound = (was_pv << 2) + bound;
 }
 
 void TTEntry::reset() {
@@ -34,7 +34,7 @@ void TTEntry::reset() {
     m_best_move = MOVE_NONE;
     m_score = SCORE_NONE;
     m_eval = SCORE_NONE;
-    m_bound = BOUND_EMPTY;
+    m_pv_bound = 0;
 }
 
 int TranspositionTable::table_index_from_hash(const HashType hash) { return hash & m_table_mask; }

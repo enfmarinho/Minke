@@ -25,18 +25,22 @@ class TTEntry {
     Move best_move() const { return m_best_move; }
     ScoreType score() const { return m_score; }
     ScoreType eval() const { return m_eval; }
-    BoundType bound() const { return m_bound; }
+    IndexType bound() const { return m_pv_bound & BOUND_MASK; }
+    bool was_pv() const { return m_pv_bound & PV_MASK; }
     void save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-              const ScoreType &eval, const BoundType &bound);
+              const ScoreType &eval, const BoundType &bound, const bool was_pv);
     void reset();
 
   private:
-    KeyType m_key;                   // 2 bytes
-    Move m_best_move;                // 2 bytes
-    ScoreType m_score;               // 2 bytes
-    ScoreType m_eval;                // 2 bytes
-    IndexType m_depth;               // 1 byte
-    BoundType m_bound = BOUND_EMPTY; // 1 byte
+    static constexpr IndexType BOUND_MASK = 0b0000'0011;
+    static constexpr IndexType PV_MASK = 0b0000'0100;
+
+    KeyType m_key;        // 2 bytes
+    Move m_best_move;     // 2 bytes
+    ScoreType m_score;    // 2 bytes
+    ScoreType m_eval;     // 2 bytes
+    IndexType m_depth;    // 1 byte
+    IndexType m_pv_bound; // 1 byte
 };
 
 class TranspositionTable {
