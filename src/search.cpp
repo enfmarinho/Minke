@@ -245,6 +245,38 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             if (null_score >= beta)
                 return null_score;
         }
+
+        // Prob Cut
+        ScoreType pc_beta = std::min(beta + probcut_margin(), MATE_FOUND - 1);
+        if (depth >= probcut_min_depth() && std::abs(beta) < MATE_FOUND &&
+            (!tthit || ttentry->depth() < depth - 3 ||
+             (ttentry->score() != SCORE_NONE && ttentry->score() >= pc_beta))) {
+            MovePicker move_picker(ttmove, &td, true, pc_beta - node.static_eval);
+            Move move;
+            while ((move = move_picker.next_move(true)) != MOVE_NONE) {
+                if (!position.make_move<true>(move)) { // Avoid illegal moves
+                    position.unmake_move<true>(move);
+                    continue;
+                }
+
+                node.curr_move = move;
+                ++td.height;
+
+                td.tt.prefetch(position.get_hash());
+
+                int pc_score = -quiescence(-pc_beta, -pc_beta + 1, td);
+                if (pc_score >= pc_beta)
+                    pc_score = -negamax(-pc_beta, -pc_beta + 1, depth - 4, !cutnode, td);
+
+                --td.height;
+                position.unmake_move<true>(move);
+
+                if (pc_score >= pc_beta) {
+                    ttentry->save(position.get_hash(), depth - 3, move, pc_score, eval, LOWER, ttpv);
+                    return pc_score;
+                }
+            }
+        }
     }
 
     Move move = MOVE_NONE;
