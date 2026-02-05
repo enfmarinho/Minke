@@ -55,7 +55,7 @@ class TranspositionTable {
     static_assert(sizeof(TTEntry) == 10, "TTEntry is not 10 bytes");
     static_assert(sizeof(TTBucket) == 32, "TTBucket is not 32 bytes");
 
-    int table_index_from_hash(const HashType hash);
+    size_t table_index_from_hash(const HashType hash);
 
   public:
     TranspositionTable() = default;
@@ -78,7 +78,6 @@ class TranspositionTable {
   private:
     size_t size_mb{0};
     size_t m_table_size{0};
-    size_t m_table_mask{0};
     TTBucket *m_table{nullptr};
 };
 
