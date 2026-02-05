@@ -128,6 +128,9 @@ bool Position::set_fen(const std::string &fen) {
     }
     update_pin_and_checkers_bb();
 
+    if constexpr (UPDATE)
+        reset_nnue();
+
     return true;
 }
 
@@ -307,6 +310,10 @@ bool Position::make_move(const Move &move) {
 
     change_side();
     update_pin_and_checkers_bb();
+
+    if constexpr (UPDATE)
+        m_nnue.apply_updates();
+
     return legal;
 }
 

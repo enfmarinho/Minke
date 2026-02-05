@@ -10,6 +10,7 @@
 
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <span>
 #include <vector>
@@ -59,6 +60,7 @@ class NNUE {
 
     void add_feature(const Piece &piece, const Square &sq);
     void remove_feature(const Piece &piece, const Square &sq);
+    void apply_updates();
 
     void reset(const Position &position);
     ScoreType eval(const Color &stm) const;
@@ -66,9 +68,41 @@ class NNUE {
     Accumulator debug_func(const Position &position);
 
   private:
+    struct alignas(64) PovAccumulator {
+        std::array<int16_t, HIDDEN_LAYER_SIZE> neurons;
+        std::array<size_t, 32> add;
+        std::array<size_t, 32> sub;
+        size_t add_size;
+        size_t sub_size;
+
+        PovAccumulator() = delete;
+        PovAccumulator(std::span<const int16_t, HIDDEN_LAYER_SIZE> biasses) { reset(biasses); }
+        ~PovAccumulator() = default;
+
+        void reset(std::span<const int16_t, HIDDEN_LAYER_SIZE> biasses);
+        void accumulate();
+        void apply_updates();
+        inline void put_add(size_t idx) { add[add_size++] = idx; }
+        inline void put_sub(size_t idx) { sub[sub_size++] = idx; }
+
+        friend bool operator==(const PovAccumulator &lhs, const PovAccumulator &rhs) {
+            for (size_t index = 0; index < lhs.neurons.size(); ++index) {
+                if (lhs.neurons[index] != rhs.neurons[index]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+      private:
+        void addsubsub();
+        void addsub();
+        void addaddsubsub();
+    };
+
     struct alignas(64) Accumulator {
-        std::array<int16_t, HIDDEN_LAYER_SIZE> white_neurons;
-        std::array<int16_t, HIDDEN_LAYER_SIZE> black_neurons;
+        PovAccumulator white;
+        PovAccumulator black;
 
         Accumulator(std::span<const int16_t, HIDDEN_LAYER_SIZE> biasses);
         Accumulator() = delete;
