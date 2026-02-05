@@ -175,4 +175,29 @@ inline int64_t rand(int64_t min, int64_t max) {
     return dist(gen);
 }
 
+#if defined(__linux__)
+#include <sys/mman.h>
+#endif
+
+inline void *aligned_malloc(size_t alignment, size_t requiredBytes) {
+    void *ptr = nullptr;
+#if defined(_WIN32)
+    ptr = _aligned_malloc(requiredBytes, alignment);
+#elif defined(__APPLE__) || defined(__ANDROID__)
+    posix_memalign(&ptr, alignment, size);
+#else
+    ptr = std::aligned_alloc(alignment, requiredBytes);
+    madvise(ptr, requiredBytes, MADV_HUGEPAGE);
+#endif
+    return ptr;
+}
+
+inline void aligned_free(void *ptr) {
+#if defined(_WIN32)
+    _aligned_free(ptr);
+#else
+    std::free(ptr);
+#endif
+}
+
 #endif // #ifndef UTILS_H
