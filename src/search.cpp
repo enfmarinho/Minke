@@ -183,6 +183,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     }
     // Extraction data from ttentry if tthit
     Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
+    const bool ttpv = pv_node || (tthit && ttentry->was_pv());
 
     // Internal Iterative Reductions
     if (!tthit && depth >= iir_min_depth()) {
@@ -204,7 +205,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     } else {
         eval = node.static_eval = position.eval();
-        ttentry->save(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, eval, BOUND_EMPTY);
+        ttentry->save(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, eval, BOUND_EMPTY, ttpv);
     }
 
     // Clean killer moves for the next ply
@@ -326,6 +327,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 reduction -= td.search_history.is_killer(move, depth);
                 reduction -= td.search_history.is_counter(move, td.nodes[td.height - 2].curr_move);
                 reduction = std::clamp(reduction, 1, depth - 1);
+
+                // Reduce less if this move is or was a principal variation
+                reduction -= ttpv;
             } else {
                 // reduce noisy
             }
@@ -372,7 +376,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     if (!stop_search(td)) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
-        ttentry->save(position.get_hash(), depth, best_move, best_score, eval, bound);
+        ttentry->save(position.get_hash(), depth, best_move, best_score, eval, bound, ttpv);
         td.best_move = best_move;
     }
 
@@ -397,6 +401,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
          (tte->bound() == LOWER && tte->score() >= beta))) {
         return tte->score();
     }
+    const bool ttpv = pv_node || (tthit && tte->was_pv());
 
     NodeData &node = td.nodes[td.height];
     bool in_check = position.in_check();
@@ -416,7 +421,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
 
     } else {
         best_score = static_eval = node.static_eval = position.eval();
-        tte->save(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, static_eval, BOUND_EMPTY);
+        tte->save(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, static_eval, BOUND_EMPTY, ttpv);
     }
 
     // Stand-pat
@@ -467,7 +472,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     }
 
     BoundType bound = best_score >= beta ? LOWER : UPPER;
-    tte->save(position.get_hash(), 0, best_move, best_score, static_eval, bound);
+    tte->save(position.get_hash(), 0, best_move, best_score, static_eval, bound, ttpv);
 
     return best_score;
 }
