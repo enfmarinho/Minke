@@ -44,7 +44,7 @@ class History {
     }
     inline Move consult_killer1(const int &depth) const { return m_killer_moves[0][depth]; }
     inline Move consult_killer2(const int &depth) const { return m_killer_moves[1][depth]; }
-    inline Move consult_counter(const Move &past_move) {
+    inline Move consult_counter(const Move &past_move) const {
         // TODO try the usual indexing ([piece_type][to]), instead of butterfly
         if (past_move == MOVE_NONE)
             return MOVE_NONE;
@@ -53,6 +53,7 @@ class History {
     inline bool is_killer(const Move &move, const int &depth) const {
         return move == consult_killer1(depth) || move == consult_killer2(depth);
     }
+    inline bool is_counter(const Move &move, const Move &past_move) const { return move == consult_counter(past_move); }
 
   private:
     void update_capture_history_score(const Position &position, const Move &move, int bonus);

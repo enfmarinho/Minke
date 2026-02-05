@@ -324,6 +324,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
                 // Reduce less if move is killer or counter
                 reduction -= td.search_history.is_killer(move, depth);
+                reduction -= td.search_history.is_counter(move, td.nodes[td.height - 2].curr_move);
                 reduction = std::clamp(reduction, 1, depth - 1);
             } else {
                 // reduce noisy
