@@ -184,7 +184,7 @@ inline void *aligned_malloc(size_t alignment, size_t requiredBytes) {
 #if defined(_WIN32)
     ptr = _aligned_malloc(requiredBytes, alignment);
 #elif defined(__APPLE__) || defined(__ANDROID__)
-    posix_memalign(&ptr, alignment, size);
+    posix_memalign(&ptr, alignment, requiredBytes);
 #else
     ptr = std::aligned_alloc(alignment, requiredBytes);
     madvise(ptr, requiredBytes, MADV_HUGEPAGE);
