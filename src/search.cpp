@@ -265,8 +265,10 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
                 td.tt.prefetch(position.get_hash());
 
-                int pc_score = -quiescence(-pc_beta, -pc_beta + 1, td);
-                if (pc_score >= pc_beta)
+                ScoreType pc_score = -MAX_SCORE;
+                if (depth >= 2 * probcut_min_depth())
+                    pc_score = -quiescence(-pc_beta, -pc_beta + 1, td);
+                if (depth < 2 * probcut_min_depth() || pc_score >= pc_beta)
                     pc_score = -negamax(-pc_beta, -pc_beta + 1, depth - 4, !cutnode, td);
 
                 --td.height;
