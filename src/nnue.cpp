@@ -152,20 +152,51 @@ void NNUE::PovAccumulator::addsubsub() {
     size_t add1 = add[0];
     size_t sub1 = sub[0];
     size_t sub2 = sub[1];
+#ifdef USE_SIMD
+    for (int i{0}; i < HIDDEN_LAYER_SIZE; i += REGISTER_SIZE) {
+        vepi16 neurons_vec = vepi16_load(&neurons[i]);
+
+        vepi16 feature_weights_vec = vepi16_load(&network.hidden_weights[add1 * HIDDEN_LAYER_SIZE + i]);
+        neurons_vec = vepi16_add(neurons_vec, feature_weights_vec);
+
+        feature_weights_vec = vepi16_load(&network.hidden_weights[sub1 * HIDDEN_LAYER_SIZE + i]);
+        neurons_vec = vepi16_sub(neurons_vec, feature_weights_vec);
+
+        feature_weights_vec = vepi16_load(&network.hidden_weights[sub2 * HIDDEN_LAYER_SIZE + i]);
+        neurons_vec = vepi16_sub(neurons_vec, feature_weights_vec);
+
+        vepi16_store(&neurons[i], neurons_vec);
+    }
+#else
     for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
         neurons[column] += network.hidden_weights[add1 * HIDDEN_LAYER_SIZE + column];
         neurons[column] -= network.hidden_weights[sub1 * HIDDEN_LAYER_SIZE + column];
         neurons[column] -= network.hidden_weights[sub2 * HIDDEN_LAYER_SIZE + column];
     }
+#endif
 }
 
 void NNUE::PovAccumulator::addsub() {
     size_t add1 = add[0];
     size_t sub1 = sub[0];
+#ifdef USE_SIMD
+    for (int i{0}; i < HIDDEN_LAYER_SIZE; i += REGISTER_SIZE) {
+        vepi16 neurons_vec = vepi16_load(&neurons[i]);
+
+        vepi16 feature_weights_vec = vepi16_load(&network.hidden_weights[add1 * HIDDEN_LAYER_SIZE + i]);
+        neurons_vec = vepi16_add(neurons_vec, feature_weights_vec);
+
+        feature_weights_vec = vepi16_load(&network.hidden_weights[sub1 * HIDDEN_LAYER_SIZE + i]);
+        neurons_vec = vepi16_sub(neurons_vec, feature_weights_vec);
+
+        vepi16_store(&neurons[i], neurons_vec);
+    }
+#else
     for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
         neurons[column] += network.hidden_weights[add1 * HIDDEN_LAYER_SIZE + column];
         neurons[column] -= network.hidden_weights[sub1 * HIDDEN_LAYER_SIZE + column];
     }
+#endif
 }
 
 void NNUE::PovAccumulator::addaddsubsub() {
@@ -173,12 +204,32 @@ void NNUE::PovAccumulator::addaddsubsub() {
     size_t sub1 = sub[0];
     size_t add2 = add[1];
     size_t sub2 = sub[1];
+#ifdef USE_SIMD
+    for (int i{0}; i < HIDDEN_LAYER_SIZE; i += REGISTER_SIZE) {
+        vepi16 neurons_vec = vepi16_load(&neurons[i]);
+
+        vepi16 feature_weights_vec = vepi16_load(&network.hidden_weights[add1 * HIDDEN_LAYER_SIZE + i]);
+        neurons_vec = vepi16_add(neurons_vec, feature_weights_vec);
+
+        feature_weights_vec = vepi16_load(&network.hidden_weights[add2 * HIDDEN_LAYER_SIZE + i]);
+        neurons_vec = vepi16_add(neurons_vec, feature_weights_vec);
+
+        feature_weights_vec = vepi16_load(&network.hidden_weights[sub1 * HIDDEN_LAYER_SIZE + i]);
+        neurons_vec = vepi16_sub(neurons_vec, feature_weights_vec);
+
+        feature_weights_vec = vepi16_load(&network.hidden_weights[sub2 * HIDDEN_LAYER_SIZE + i]);
+        neurons_vec = vepi16_sub(neurons_vec, feature_weights_vec);
+
+        vepi16_store(&neurons[i], neurons_vec);
+    }
+#else
     for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
         neurons[column] += network.hidden_weights[add1 * HIDDEN_LAYER_SIZE + column];
         neurons[column] -= network.hidden_weights[sub1 * HIDDEN_LAYER_SIZE + column];
         neurons[column] += network.hidden_weights[add2 * HIDDEN_LAYER_SIZE + column];
         neurons[column] -= network.hidden_weights[sub2 * HIDDEN_LAYER_SIZE + column];
     }
+#endif
 }
 
 void NNUE::PovAccumulator::apply_updates() {
