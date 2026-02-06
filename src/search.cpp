@@ -330,6 +330,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
                 // Reduce less if this move is or was a principal variation
                 reduction -= ttpv;
+                reduction -= pv_node;
             } else {
                 // reduce noisy
             }
