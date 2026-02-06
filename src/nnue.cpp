@@ -39,25 +39,64 @@ void NNUE::pop() { m_accumulators.pop_back(); }
 void NNUE::push() { m_accumulators.push_back(m_accumulators.back()); }
 
 void NNUE::add_feature(const Piece &piece, const Square &sq) {
-    const auto [white_index, black_index] = feature_indices(piece, sq);
-
-    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
-        m_accumulators.back().white_neurons[column] += network.hidden_weights[white_index * HIDDEN_LAYER_SIZE + column];
-    }
-    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
-        m_accumulators.back().black_neurons[column] += network.hidden_weights[black_index * HIDDEN_LAYER_SIZE + column];
-    }
+    const auto [white_idx, black_idx] = feature_indices(piece, sq);
+    update_feature<Add>(white_idx, black_idx);
 }
 
 void NNUE::remove_feature(const Piece &piece, const Square &sq) {
-    const auto [white_index, black_index] = feature_indices(piece, sq);
+    const auto [white_idx, black_idx] = feature_indices(piece, sq);
+    update_feature<Sub>(white_idx, black_idx);
+}
 
+template <NNUE::Update sign>
+void NNUE::update_feature(int white_idx, int black_idx) {
+    static_assert(sign == Add || sign == Sub);
+
+    Accumulator &acc = m_accumulators.back();
+
+    const int16_t *white_weights_ptr = &network.hidden_weights[white_idx * HIDDEN_LAYER_SIZE];
+    const int16_t *black_weights_ptr = &network.hidden_weights[black_idx * HIDDEN_LAYER_SIZE];
+
+#ifdef USE_SIMD
+    for (int column = 0; column < HIDDEN_LAYER_SIZE; column += REGISTER_SIZE) {
+        vepi16 white_neurons = vepi16_load(&acc.white_neurons[column]);
+        vepi16 white_weights = vepi16_load(white_weights_ptr + column);
+        vepi16 white_acc_updated;
+        if constexpr (sign == Add) {
+            white_acc_updated = vepi16_add(white_neurons, white_weights);
+        } else {
+            white_acc_updated = vepi16_sub(white_neurons, white_weights);
+        }
+        vepi16_store(&acc.white_neurons[column], white_acc_updated);
+    }
+    for (int column = 0; column < HIDDEN_LAYER_SIZE; column += REGISTER_SIZE) {
+        vepi16 black_neurons = vepi16_load(&acc.black_neurons[column]);
+        vepi16 black_weights = vepi16_load(black_weights_ptr + column);
+        vepi16 black_acc_updated;
+        if constexpr (sign == Add) {
+            black_acc_updated = vepi16_add(black_neurons, black_weights);
+        } else {
+            black_acc_updated = vepi16_sub(black_neurons, black_weights);
+        }
+        vepi16_store(&acc.black_neurons[column], black_acc_updated);
+    }
+
+#else
     for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
-        m_accumulators.back().white_neurons[column] -= network.hidden_weights[white_index * HIDDEN_LAYER_SIZE + column];
+        if constexpr (sign == Add) {
+            acc.white_neurons[column] += white_weights_ptr[column];
+        } else {
+            acc.white_neurons[column] -= white_weights_ptr[column];
+        }
     }
     for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
-        m_accumulators.back().black_neurons[column] -= network.hidden_weights[black_index * HIDDEN_LAYER_SIZE + column];
+        if constexpr (sign == Add) {
+            acc.black_neurons[column] += black_weights_ptr[column];
+        } else {
+            acc.black_neurons[column] -= black_weights_ptr[column];
+        }
     }
+#endif
 }
 
 void NNUE::reset(const Position &position) {

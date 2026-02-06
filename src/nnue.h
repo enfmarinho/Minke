@@ -81,6 +81,13 @@ class NNUE {
     constexpr int32_t screlu(const int32_t &input) const;
     ScoreType flatten_screlu_and_affine(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
                                         const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const;
+    enum Update {
+        Add,
+        Sub,
+    };
+
+    template <Update sign>
+    void update_feature(int white_idx, int black_idx);
 
     std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
 };
