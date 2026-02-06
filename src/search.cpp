@@ -271,10 +271,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 --td.height;
                 position.unmake_move<true>(move);
 
-                if (pc_score >= pc_beta) {
+                if (pc_score >= pc_beta && (!tthit || ttentry->depth() < depth - 3))
                     ttentry->save(position.get_hash(), depth - 3, move, pc_score, eval, LOWER, ttpv);
+
+                if (pc_score >= pc_beta)
                     return pc_score;
-                }
             }
         }
     }
