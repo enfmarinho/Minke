@@ -92,7 +92,7 @@ struct MoveList {
 
 struct PieceMove {
     Move move;
-    Piece piece;
+    uint8_t piece;
 
     PieceMove() { PieceMove(MOVE_NONE, EMPTY); }
     PieceMove(const Move& move, const Piece& piece) : move(move), piece(piece) {}
