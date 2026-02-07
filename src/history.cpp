@@ -42,7 +42,7 @@ void History::update_history(const ThreadData &td, const Move &best_move, int de
     if (best_move.is_quiet()) {
         save_killer(best_move, depth);
         if (td.height > 0)
-            save_counter(td.nodes[td.height - 1].curr_move, best_move);
+            save_counter(td.position.get_stm(), td.nodes[td.height - 1].curr_move, best_move);
 
         // Increase the score of the move that caused the beta cutoff
         update_history_heuristic_score(td.position, best_move, quiet_bonus);
