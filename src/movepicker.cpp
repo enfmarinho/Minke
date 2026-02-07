@@ -14,12 +14,15 @@
 #include "search.h"
 #include "types.h"
 
-MovePicker::MovePicker(Move ttmove, ThreadData *td, bool qsearch) { init(ttmove, td, qsearch); }
+MovePicker::MovePicker(Move ttmove, ThreadData *td, bool qsearch, ScoreType threshold) {
+    init(ttmove, td, qsearch, threshold);
+}
 
-void MovePicker::init(Move ttmove, ThreadData *td, bool qsearch) {
+void MovePicker::init(Move ttmove, ThreadData *td, bool qsearch, ScoreType threshold) {
     m_td = td;
     m_ttmove = ttmove;
     m_qsearch = qsearch;
+    m_threshold = threshold;
 
     if (ttmove != MOVE_NONE)
         m_stage = PICK_TT;
@@ -57,7 +60,8 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
         case PICK_GOOD_NOISY:
             while (m_curr != m_end) {
                 sort_next_move();
-                if (!SEE(m_td->position, m_curr->move, 0) || m_curr->score == NON_QUEEN_PROMOTION_SCORE) // Bad noisy
+                if (!SEE(m_td->position, m_curr->move, m_threshold) ||
+                    m_curr->score == NON_QUEEN_PROMOTION_SCORE) // Bad noisy
                     *m_end_bad++ = *m_curr++;
                 else if (m_curr->move != m_ttmove)
                     return *m_curr++;
