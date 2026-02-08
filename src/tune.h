@@ -102,7 +102,7 @@ class TunableParamList {
 
 // Aspiration Windows
 TUNABLE_PARAM(aw_min_depth, 3, 1, 10, 0.5, 0.002)
-TUNABLE_PARAM(aw_first_window, 39, 5, 200, 10, 0.002)
+TUNABLE_PARAM(aw_first_window, 10, 5, 200, 10, 0.002)
 TUNABLE_PARAM(aw_widening_factor, 50, 1, 100, 5, 0.002)
 
 // Null move pruning

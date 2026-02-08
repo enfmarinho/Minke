@@ -129,10 +129,10 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, Threa
 
         if (curr_score <= alpha) {
             beta = (alpha + beta) / 2;
-            alpha = std::max(static_cast<int>(-MAX_SCORE), score - delta);
+            alpha = std::max(static_cast<int>(-MAX_SCORE), alpha - delta);
             curr_depth = depth;
         } else if (curr_score >= beta) {
-            beta = std::min(static_cast<int>(MAX_SCORE), score + delta);
+            beta = std::min(static_cast<int>(MAX_SCORE), beta + delta);
             curr_depth = std::max(1, curr_depth - 1);
         } else {
             break;
