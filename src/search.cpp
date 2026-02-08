@@ -174,16 +174,19 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     // Transposition table probe
     bool tthit;
-    TTEntry *ttentry = td.tt.probe(position, tthit);
+    TTEntry *tte = td.tt.probe(position, tthit);
     tthit = tthit && !singular_search; // Don't use ttentry result if in singular search
-    if (!pv_node && !singular_search && tthit && ttentry->depth() >= depth &&
-        (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->score() <= alpha) ||
-         (ttentry->bound() == LOWER && ttentry->score() >= beta))) {
-        return ttentry->score();
-    }
     // Extraction data from ttentry if tthit
-    Move ttmove = (tthit ? ttentry->best_move() : MOVE_NONE);
-    const bool ttpv = pv_node || (tthit && ttentry->was_pv());
+    Move ttmove = (tthit ? tte->best_move() : MOVE_NONE);
+    ScoreType ttscore = tthit ? tte->score() : SCORE_NONE;
+    ScoreType tteval = tthit ? tte->eval() : SCORE_NONE;
+    IndexType ttbound = tthit ? tte->bound() : BOUND_EMPTY;
+    IndexType ttdepth = tthit ? tte->depth() : 0;
+    const bool ttpv = pv_node || (tthit && tte->was_pv());
+    if (!pv_node && !singular_search && tthit && ttdepth >= depth &&
+        (ttbound == EXACT || (ttbound == UPPER && ttscore <= alpha) || (ttbound == LOWER && ttscore >= beta))) {
+        return ttscore;
+    }
 
     // Internal Iterative Reductions
     if (!tthit && depth >= iir_min_depth()) {
@@ -197,15 +200,14 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     } else if (singular_search) {
         eval = node.static_eval;
     } else if (tthit) {
-        eval = node.static_eval = ttentry->eval() != SCORE_NONE ? ttentry->eval() : position.eval();
-        if (ttentry->score() != SCORE_NONE &&
-            (ttentry->bound() == EXACT || (ttentry->bound() == UPPER && ttentry->score() < eval) ||
-             (ttentry->bound() == LOWER && ttentry->score() > eval)))
-            eval = ttentry->score();
+        eval = node.static_eval = tteval != SCORE_NONE ? tteval : position.eval();
+        if (ttscore != SCORE_NONE &&
+            (ttbound == EXACT || (ttbound == UPPER && ttscore < eval) || (ttbound == LOWER && ttscore > eval)))
+            eval = ttscore;
 
     } else {
         eval = node.static_eval = position.eval();
-        ttentry->save(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, eval, BOUND_EMPTY, ttpv);
+        tte->save(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, eval, BOUND_EMPTY, ttpv);
     }
 
     // Clean killer moves for the next ply
@@ -249,8 +251,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         // Prob Cut
         ScoreType pc_beta = std::min(beta + probcut_margin(), MATE_FOUND - 1);
         if (depth >= probcut_min_depth() && std::abs(beta) < MATE_FOUND &&
-            (!tthit || ttentry->depth() < depth - 3 ||
-             (ttentry->score() != SCORE_NONE && ttentry->score() >= pc_beta))) {
+            (!tthit || ttdepth < depth - 3 || (ttscore != SCORE_NONE && ttscore >= pc_beta))) {
             MovePicker move_picker(ttmove, &td, true, pc_beta - node.static_eval);
             Move move;
             while ((move = move_picker.next_move(true)) != MOVE_NONE) {
@@ -272,7 +273,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 position.unmake_move<true>(move);
 
                 if (pc_score >= pc_beta) {
-                    ttentry->save(position.get_hash(), depth - 3, move, pc_score, eval, LOWER, ttpv);
+                    tte->save(position.get_hash(), depth - 3, move, pc_score, eval, LOWER, ttpv);
                     return pc_score;
                 }
             }
@@ -306,9 +307,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
         // Extensions
         int extension = 0;
-        if (!root && depth > singular_extension_min_depth() && move == ttmove && ttentry->depth() > depth - 4 &&
-            move != td.nodes[td.height].excluded_move && ttentry->bound() == LOWER) {
-            ScoreType singular_beta = ttentry->score() - depth;
+        if (!root && depth > singular_extension_min_depth() && move == ttmove && ttdepth > depth - 4 &&
+            move != td.nodes[td.height].excluded_move && ttbound == LOWER) {
+            ScoreType singular_beta = ttscore - depth;
             ScoreType singular_depth = (depth - 1) / 2;
 
             position.unmake_move<true>(ttmove);
@@ -324,7 +325,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 // TODO double extension
             } else if (singular_score >= beta) { // Multi-Cut
                 return singular_score;
-                // } else if (ttentry->score() <= alpha && ttentry->score() >= beta) {
+                // } else if (ttscore <= alpha && ttscore >= beta) {
                 //     extension = -1;
             }
 
@@ -408,7 +409,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     if (!stop_search(td)) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
-        ttentry->save(position.get_hash(), depth, best_move, best_score, eval, bound, ttpv);
+        tte->save(position.get_hash(), depth, best_move, best_score, eval, bound, ttpv);
         td.best_move = best_move;
     }
 
@@ -428,12 +429,15 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     bool pv_node = alpha != beta - 1;
     bool tthit;
     TTEntry *tte = td.tt.probe(position, tthit);
-    if (!pv_node && tthit && tte->score() != SCORE_NONE &&
-        (tte->bound() == EXACT || (tte->bound() == UPPER && tte->score() <= alpha) ||
-         (tte->bound() == LOWER && tte->score() >= beta))) {
-        return tte->score();
-    }
+    Move ttmove = tthit ? tte->best_move() : MOVE_NONE;
+    ScoreType ttscore = tthit ? tte->score() : SCORE_NONE;
+    ScoreType tteval = tthit ? tte->eval() : SCORE_NONE;
+    IndexType ttbound = tthit ? tte->bound() : BOUND_EMPTY;
     const bool ttpv = pv_node || (tthit && tte->was_pv());
+    if (!pv_node && tthit && ttscore != SCORE_NONE &&
+        (ttbound == EXACT || (ttbound == UPPER && ttscore <= alpha) || (ttbound == LOWER && ttscore >= beta))) {
+        return ttscore;
+    }
 
     NodeData &node = td.nodes[td.height];
     bool in_check = position.in_check();
@@ -442,12 +446,11 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         static_eval = node.static_eval = SCORE_NONE;
         best_score = -MAX_SCORE;
     } else if (tthit) {
-        static_eval = node.static_eval = tte->eval() != SCORE_NONE ? tte->eval() : position.eval();
+        static_eval = node.static_eval = tteval != SCORE_NONE ? tteval : position.eval();
 
-        if (tte->score() != SCORE_NONE &&
-            (tte->bound() == EXACT || (tte->bound() == UPPER && tte->score() < static_eval) ||
-             (tte->bound() == LOWER && tte->score() > static_eval))) {
-            static_eval = tte->score();
+        if (ttscore != SCORE_NONE && (ttbound == EXACT || (ttbound == UPPER && ttscore < static_eval) ||
+                                      (ttbound == LOWER && ttscore > static_eval))) {
+            static_eval = ttscore;
         }
         best_score = static_eval;
 
@@ -463,7 +466,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
 
     Move move = MOVE_NONE;
     Move best_move = MOVE_NONE;
-    MovePicker move_picker((tthit ? tte->best_move() : MOVE_NONE), &td, true);
+    MovePicker move_picker((tthit ? ttmove : MOVE_NONE), &td, true);
     int moves_searched = 0;
     while ((move = move_picker.next_move(!in_check)) != MOVE_NONE) {
         if (!position.is_legal(move)) { // Avoid illegal moves
