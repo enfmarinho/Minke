@@ -93,7 +93,7 @@ void History::update_history_heuristic_score(const Position &position, const Mov
 
 void History::update_continuation_history_table(const ThreadData &td, const PieceMove &pmove, int bonus) {
     update_continuation_history_score(td, pmove, bonus, 1); // Counter Moves History
-    // update_continuation_history_score(td, pmove, bonus, 2); // Follow Up History
+    update_continuation_history_score(td, pmove, bonus, 2); // Follow Up History
     // update_continuation_history_score(td, pmove, bonus, 4);
 }
 
@@ -114,8 +114,8 @@ HistoryType History::get_history_heuristic_score(const Position &position, const
 }
 
 HistoryType History::get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const {
-    return get_continuation_history_entry(td, pmove, 1);
-    //+ get_continuation_history_ply(td, pmove, 2) + get_continuation_history_ply(td, pmove, 4);
+    return get_continuation_history_entry(td, pmove, 1) + get_continuation_history_entry(td, pmove, 2);
+    // + get_continuation_history_ply(td, pmove, 4);
 }
 
 HistoryType History::get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const {
