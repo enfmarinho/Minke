@@ -67,6 +67,7 @@ class Move {
     // 4 bits for move type | 6 bits for target square | 6 bits for origin square
     int16_t m_bytes;
 };
+const Move MOVE_NONE = Move();
 
 struct ScoredMove {
     Move move;
@@ -75,6 +76,7 @@ struct ScoredMove {
 inline bool operator==(const ScoredMove& lhs, const ScoredMove& rhs) {
     return lhs.move == rhs.move && lhs.score == rhs.score;
 }
+const ScoredMove SCORED_MOVE_NONE = {MOVE_NONE, 0};
 
 struct MoveList {
     Move moves[MAX_MOVES_PER_POS];
@@ -88,8 +90,29 @@ struct MoveList {
     }
 };
 
-const Move MOVE_NONE = Move();
-const ScoredMove SCORED_MOVE_NONE = {MOVE_NONE, 0};
+struct PieceMove {
+    Move move;
+    uint8_t piece;
+
+    PieceMove() { PieceMove(MOVE_NONE, EMPTY); }
+    PieceMove(const Move& move, const Piece& piece) : move(move), piece(piece) {}
+};
+inline bool operator==(const PieceMove& lhs, const PieceMove& rhs) {
+    return lhs.move == rhs.move && lhs.piece == rhs.piece;
+}
+const PieceMove PIECE_MOVE_NONE = {MOVE_NONE, EMPTY};
+
+struct PieceMoveList {
+    PieceMove list[MAX_MOVES_PER_POS];
+    int size{0};
+
+    void clear() { size = 0; }
+
+    void push(const PieceMove& pt_move) {
+        assert(size < MAX_MOVES_PER_POS);
+        list[size++] = pt_move;
+    }
+};
 
 inline bool operator==(const Move& lhs, const Move& rhs) { return lhs.internal() == rhs.internal(); }
 inline bool operator==(const Move& lhs, const int& rhs) { return lhs.internal() == rhs; }
