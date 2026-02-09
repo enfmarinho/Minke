@@ -34,7 +34,7 @@ void MovePicker::init(Move ttmove, ThreadData *td, bool qsearch, ScoreType thres
 
     m_counter = MOVE_NONE;
     if (m_td->height > 0)
-        m_counter = td->search_history.consult_counter(td->nodes[td->height - 1].curr_pmove.move);
+        m_counter = td->search_history.consult_counter(td->nodes[td->height - 1].curr_pmove);
     if (m_counter == m_killer1 || m_counter == m_killer2)
         m_counter = MOVE_NONE;
 
