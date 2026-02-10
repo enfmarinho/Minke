@@ -160,7 +160,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     bool root = td.height == 0;
     if (!root) {
         if (position.draw())
-            return 0;
+            return (td.nodes_searched & 2) - 1;
 
         if (td.height >= MAX_SEARCH_DEPTH - 1)
             return position.in_check() ? 0 : position.eval();
