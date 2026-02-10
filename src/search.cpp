@@ -423,8 +423,6 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     Position &position = td.position;
     if (stop_search(td))
         return -MAX_SCORE;
-    else if (position.draw())
-        return 0;
     else if (td.height >= MAX_SEARCH_DEPTH - 1)
         return position.in_check() ? 0 : position.eval();
 
