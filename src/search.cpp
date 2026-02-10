@@ -182,7 +182,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     ScoreType tteval = tthit ? tte->eval() : SCORE_NONE;
     IndexType ttbound = tthit ? tte->bound() : BOUND_EMPTY;
     IndexType ttdepth = tthit ? tte->depth() : 0;
-    const bool ttpv = pv_node || (tthit && tte->was_pv());
+    const bool was_pv = (tthit && tte->was_pv());
+    const bool ttpv = pv_node || was_pv;
     if (!pv_node && !singular_search && tthit && ttdepth >= depth &&
         (ttbound == EXACT || (ttbound == UPPER && ttscore <= alpha) || (ttbound == LOWER && ttscore >= beta))) {
         return ttscore;
@@ -363,7 +364,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 reduction = std::clamp(reduction, 1, depth - 1);
 
                 // Reduce less if this move is or was a principal variation
-                reduction -= ttpv;
+                reduction -= was_pv;
+                reduction -= pv_node;
             } else {
                 // reduce noisy
             }
