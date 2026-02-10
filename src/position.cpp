@@ -876,6 +876,18 @@ bool Position::repetition() const {
     return false;
 }
 
+bool Position::has_game_cycle() const {
+    int distance = std::min(m_curr_state.fifty_move_ply, m_curr_state.ply_from_null);
+    int start = m_history_ply;
+
+    for (int i = 4; i <= distance; i += 2) {
+        if (m_played_positions[start - i] == m_hash_key)
+            return true;
+    }
+
+    return false;
+}
+
 bool Position::fifty_move_draw() {
     if (m_curr_state.fifty_move_ply >= 100) {
         ScoredMove moves[MAX_MOVES_PER_POS];
