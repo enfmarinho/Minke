@@ -319,6 +319,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             td.nodes[td.height].excluded_move = ttmove;
             ScoreType singular_score = negamax(singular_beta - 1, singular_beta, singular_depth, cutnode, td);
             td.nodes[td.height].excluded_move = MOVE_NONE;
+            node.curr_pmove = curr_pmove; // reassign this, since singular search messed it up
 
             if (singular_score < singular_beta) {
                 extension = 1;
