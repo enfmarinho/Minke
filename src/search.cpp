@@ -165,6 +165,12 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         if (td.height >= MAX_SEARCH_DEPTH - 1)
             return position.in_check() ? 0 : position.eval();
 
+        if (alpha < 0 && position.has_game_cycle()) {
+            alpha = 0;
+            if (alpha >= beta)
+                return alpha;
+        }
+
         // Mate distance pruning
         alpha = std::max(alpha, static_cast<ScoreType>(-MATE_SCORE + td.height));
         beta = std::min(beta, static_cast<ScoreType>(MATE_SCORE - td.height - 1));
