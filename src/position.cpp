@@ -714,6 +714,8 @@ bool Position::is_pseudo_legal(const Move &move) const {
         return false;
     if (moved_piece_type != PAWN && (move.is_ep() || move.is_promotion()))
         return false;
+    if (moved_piece_type != KING && count_bits(m_curr_state.checkers) > 1)
+        return false;
 
     // get_piece_attacks can't be called when piece_type = PAWN, so this has to cause an early return clause
     if (moved_piece_type == PAWN) {
@@ -759,7 +761,7 @@ bool Position::pawn_pseudo_legal(const Square &from, const Square &to, const Mov
 }
 
 bool Position::castling_pseudo_legal(const Square &from, const Square &to, const PieceType &moved_piece_type) const {
-    if (moved_piece_type != KING)
+    if (moved_piece_type != KING || count_bits(m_curr_state.checkers) > 0)
         return false;
 
     bool castling_short = (from == e1 && to == g1) || (from == e8 && to == g8);
@@ -785,6 +787,20 @@ bool Position::castling_pseudo_legal(const Square &from, const Square &to, const
     }
     if (castling_long && (!(get_castling_rights() & long_right) || (get_occupancy() & long_castling_crossing_mask))) {
         return false;
+    }
+
+    int rank = get_stm() == WHITE ? 0 : 7;
+    Piece rook = get_piece(ROOK, get_stm());
+    Bitboard stm_castling_rooks = m_curr_state.castle_rooks & get_piece_bb(rook) & RANK_MASKS[rank];
+    if (!stm_castling_rooks)
+        return false;
+
+    Bitboard king_crossing = between_squares[from][to];
+    while (king_crossing) {
+        Square sq = poplsb(king_crossing);
+        if (is_attacked(sq)) {
+            return false;
+        }
     }
 
     return true;
