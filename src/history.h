@@ -45,7 +45,7 @@ class History {
     inline Move consult_counter(const PieceMove &past_pmove) const {
         if (past_pmove == PIECE_MOVE_NONE)
             return MOVE_NONE;
-        return m_counter_moves[past_pmove.piece][past_pmove.move.from_and_to()];
+        return m_counter_moves[past_pmove.piece][past_pmove.move.to()];
     }
     inline bool is_killer(const Move &move, const int &depth) const {
         return move == consult_killer1(depth) || move == consult_killer2(depth);
@@ -71,13 +71,13 @@ class History {
 
     inline void save_counter(const PieceMove &past_pmove, const Move &move) {
         if (past_pmove != PIECE_MOVE_NONE)
-            m_counter_moves[past_pmove.piece][past_pmove.move.from_and_to()] = move;
+            m_counter_moves[past_pmove.piece][past_pmove.move.to()] = move;
     }
 
     HistoryType m_capture_history[2][6][64][5];
     HistoryType m_search_history_table[COLOR_NB][64 * 64];
     HistoryType m_continuation_history[12 * 64][12 * 64];
-    Move m_counter_moves[12][64 * 64];
+    Move m_counter_moves[12][64];
     Move m_killer_moves[2][MAX_SEARCH_DEPTH];
 };
 
