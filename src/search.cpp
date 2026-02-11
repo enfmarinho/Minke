@@ -260,7 +260,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                     continue;
                 }
 
-                node.curr_pmove.move = move;
+                node.curr_pmove = {move, position.consult(move.to())};
                 ++td.height;
 
                 td.tt.prefetch(position.get_hash());
@@ -476,7 +476,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         if (!position.is_legal(move)) { // Avoid illegal moves
             continue;
         }
-        node.curr_pmove = {move, position.consult(move.to())};
+        node.curr_pmove = {move, position.consult(move.from())};
         ++moves_searched;
 
         if (best_score > -MATE_FOUND) {
