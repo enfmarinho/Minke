@@ -23,22 +23,16 @@ void MovePicker::init(Move ttmove, ThreadData *td, bool qsearch, ScoreType thres
     m_ttmove = ttmove;
     m_qsearch = qsearch;
     m_threshold = threshold;
-
-    if (ttmove != MOVE_NONE)
-        m_stage = PICK_TT;
-    else
-        m_stage = GEN_NOISY;
+    m_stage = PICK_TT;
+    m_curr = m_end = m_end_bad = m_moves;
 
     m_killer1 = td->search_history.consult_killer1(td->height);
     m_killer2 = td->search_history.consult_killer2(td->height);
-
-    m_counter = MOVE_NONE;
-    if (m_td->height > 0)
-        m_counter = td->search_history.consult_counter(td->nodes[td->height - 1].curr_pmove.move);
-    if (m_counter == m_killer1 || m_counter == m_killer2)
-        m_counter = MOVE_NONE;
-
-    m_curr = m_end = m_end_bad = m_moves;
+    m_counter = [&]() {
+        if (m_td->height > 0)
+            return td->search_history.consult_counter(td->nodes[td->height - 1].curr_pmove.move);
+        return MOVE_NONE;
+    }();
 }
 
 Move MovePicker::next_move(const bool &skip_quiets) { return next_move_scored(skip_quiets).move; }
@@ -77,8 +71,24 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
                 return next_move_scored(skip_quiets); // Work around to avoid the switch fall-through
             } else {
                 m_curr = m_end_bad;
-                m_stage = GEN_QUIET;
+                m_stage = PICK_KILLER1;
             }
+            // Fall-through
+        case PICK_KILLER1:
+            m_stage = PICK_KILLER2;
+            if (m_killer1 != m_ttmove && m_td->position.is_pseudo_legal(m_killer1))
+                return {m_killer1, KILLER_1_SCORE};
+            // Fall-through
+        case PICK_KILLER2:
+            m_stage = PICK_COUNTER;
+            if (m_killer2 != m_ttmove && m_killer2 != m_killer1 && m_td->position.is_pseudo_legal(m_killer2))
+                return {m_killer2, KILLER_2_SCORE};
+            // Fall-through
+        case PICK_COUNTER:
+            m_stage = GEN_QUIET;
+            if (m_counter != m_ttmove && m_counter != m_killer1 && m_counter != m_killer2 &&
+                m_td->position.is_pseudo_legal(m_counter))
+                return {m_counter, COUNTER_SCORE};
             // Fall-through
         case GEN_QUIET:
             m_end = gen_moves(m_curr, m_td->position, QUIET);
@@ -88,7 +98,8 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
         case PICK_QUIET:
             while (m_curr != m_end) {
                 sort_next_move();
-                if (m_curr->move != m_ttmove)
+                if (m_curr->move != m_ttmove && m_curr->move != m_killer1 && m_curr->move != m_killer2 &&
+                    m_curr->move != m_counter)
                     return *m_curr++;
                 else
                     ++m_curr;
