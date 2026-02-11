@@ -30,8 +30,7 @@ void History::reset() {
     std::memset(m_search_history_table, 0, sizeof(m_search_history_table));
     std::memset(m_continuation_history, 0, sizeof(m_continuation_history));
     std::memset(m_killer_moves, MOVE_NONE.internal(), sizeof(m_killer_moves));
-    for (Move &move : m_counter_moves)
-        move = MOVE_NONE;
+    std::memset(m_counter_moves, MOVE_NONE.internal(), sizeof(m_counter_moves));
 };
 
 HistoryType History::get_history(const ThreadData &td, const Move &move) const {
@@ -52,7 +51,7 @@ void History::update_history(const ThreadData &td, const Move &best_move, int de
     if (best_move.is_quiet()) {
         save_killer(best_move, depth);
         if (td.height > 0)
-            save_counter(td.nodes[td.height - 1].curr_pmove.move, best_move);
+            save_counter(td.nodes[td.height - 1].curr_pmove, best_move);
 
         // Increase the score of the move that caused the beta cutoff
         update_history_heuristic_score(td.position, best_move, quiet_bonus);

@@ -42,16 +42,17 @@ class History {
     }
     inline Move consult_killer1(const int &depth) const { return m_killer_moves[0][depth]; }
     inline Move consult_killer2(const int &depth) const { return m_killer_moves[1][depth]; }
-    inline Move consult_counter(const Move &past_move) const {
-        // TODO try the usual indexing ([piece_type][to]), instead of butterfly
-        if (past_move == MOVE_NONE)
+    inline Move consult_counter(const PieceMove &past_pmove) const {
+        if (past_pmove == PIECE_MOVE_NONE)
             return MOVE_NONE;
-        return m_counter_moves[past_move.from_and_to()];
+        return m_counter_moves[past_pmove.piece][past_pmove.move.from_and_to()];
     }
     inline bool is_killer(const Move &move, const int &depth) const {
         return move == consult_killer1(depth) || move == consult_killer2(depth);
     }
-    inline bool is_counter(const Move &move, const Move &past_move) const { return move == consult_counter(past_move); }
+    inline bool is_counter(const Move &move, const PieceMove &past_pmove) const {
+        return move == consult_counter(past_pmove);
+    }
 
   private:
     void update_capture_history_score(const Position &position, const Move &move, int bonus);
@@ -68,15 +69,15 @@ class History {
         m_killer_moves[0][depth] = move;
     }
 
-    inline void save_counter(const Move &past_move, const Move &move) {
-        if (past_move != MOVE_NONE)
-            m_counter_moves[past_move.from_and_to()] = move;
+    inline void save_counter(const PieceMove &past_pmove, const Move &move) {
+        if (past_pmove != PIECE_MOVE_NONE)
+            m_counter_moves[past_pmove.piece][past_pmove.move.from_and_to()] = move;
     }
 
     HistoryType m_capture_history[2][6][64][5];
     HistoryType m_search_history_table[COLOR_NB][64 * 64];
     HistoryType m_continuation_history[12 * 64][12 * 64];
-    Move m_counter_moves[64 * 64];
+    Move m_counter_moves[12][64 * 64];
     Move m_killer_moves[2][MAX_SEARCH_DEPTH];
 };
 
