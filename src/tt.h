@@ -28,7 +28,7 @@ class TTEntry {
     IndexType bound() const { return m_pv_bound & BOUND_MASK; }
     bool was_pv() const { return m_pv_bound & PV_MASK; }
     void save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-              const ScoreType &eval, const BoundType &bound, const bool was_pv);
+              const ScoreType &eval, const BoundType &bound, const bool was_pv, const bool &tthit);
     void reset();
 
   private:
