@@ -58,7 +58,11 @@ void TimeManager::update() {
 
 bool TimeManager::stop_early() const { return m_can_stop && now() > m_optimum_time; }
 
-bool TimeManager::time_over() const { return m_can_stop && now() > m_maximum_time; }
+bool TimeManager::time_over() const {
+    // if (!m_can_stop)
+    // std::cout << "cannot stop\n";
+    return m_can_stop && now() > m_maximum_time;
+}
 
 TimeType TimeManager::time_passed() const { return now() - m_start_time; }
 

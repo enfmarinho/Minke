@@ -21,9 +21,9 @@ constexpr CounterType BENCH_DEPTH = 12;
 static constexpr CounterType HASH_DEFAULT = 16;
 static constexpr CounterType HASH_MIN = 1;
 static constexpr CounterType HASH_MAX = 2097152;
-static constexpr CounterType THREADS_DEFAULT = 1;
+static constexpr CounterType THREADS_DEFAULT = 4;
 static constexpr CounterType THREADS_MIN = 1;
-static constexpr CounterType THREADS_MAX = 1;
+static constexpr CounterType THREADS_MAX = 1024;
 void print();
 } // namespace EngineOptions
 
@@ -50,6 +50,7 @@ class UCI {
     void bench(int depth);
     void eval();
 
+    int m_num_threads; //!< Number of searcher threads to use
     std::thread m_thread;
     ThreadData m_td;
 };

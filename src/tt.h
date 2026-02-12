@@ -27,8 +27,8 @@ class TTEntry {
     ScoreType eval() const { return m_eval; }
     IndexType bound() const { return m_pv_bound & BOUND_MASK; }
     bool was_pv() const { return m_pv_bound & PV_MASK; }
-    void save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-              const ScoreType &eval, const BoundType &bound, const bool was_pv);
+    void store(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
+               const ScoreType &eval, const BoundType &bound, const bool was_pv);
     void reset();
 
   private:
@@ -44,18 +44,18 @@ class TTEntry {
 };
 
 class TranspositionTable {
-    constexpr static IndexType BUCKET_SIZE = 3;
+    constexpr static IndexType BUCKET_SIZE = 6;
     struct TTBucket {
         TTBucket() = default;
         ~TTBucket() = default;
         std::array<TTEntry, BUCKET_SIZE> entry;
-        char padding[2];
+        char padding[4];
     };
 
     static_assert(sizeof(TTEntry) == 10, "TTEntry is not 10 bytes");
-    static_assert(sizeof(TTBucket) == 32, "TTBucket is not 32 bytes");
+    static_assert(sizeof(TTBucket) == 64, "TTBucket is not 64 bytes");
 
-    int table_index_from_hash(const HashType hash);
+    size_t table_index_from_hash(const HashType hash);
 
   public:
     TranspositionTable() = default;
@@ -63,13 +63,9 @@ class TranspositionTable {
     TranspositionTable(const TranspositionTable &) = delete;
     TranspositionTable &operator=(const TranspositionTable &) = delete;
 
-    /*!
-     * Search the transposition table for the TTEntry with position hash and sets
-     * "found" to true if it was found, otherwise sets "found" to false and
-     * returns a pointer to the TTEntry with the least value, i.e. the one that
-     * should be replaced.
-     */
-    TTEntry *probe(const Position &position, bool &found);
+    bool probe(const Position &position, TTEntry &tte);
+    void save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
+              const ScoreType &eval, const BoundType &bound, const bool was_pv);
     void prefetch(const HashType &key);
     void resize(size_t MB);
     void clear();
@@ -78,7 +74,6 @@ class TranspositionTable {
   private:
     size_t size_mb{0};
     size_t m_table_size{0};
-    size_t m_table_mask{0};
     TTBucket *m_table{nullptr};
 };
 
