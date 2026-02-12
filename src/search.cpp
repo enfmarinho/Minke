@@ -207,7 +207,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     } else {
         eval = node.static_eval = position.eval();
-        tte->save(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, eval, BOUND_EMPTY, ttpv);
+        tte->save(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, eval, BOUND_EMPTY, ttpv, tthit);
     }
 
     // Clean killer moves for the next ply
@@ -273,7 +273,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 position.unmake_move<true>(move);
 
                 if (pc_score >= pc_beta) {
-                    tte->save(position.get_hash(), depth - 3, move, pc_score, eval, LOWER, ttpv);
+                    tte->save(position.get_hash(), depth - 3, move, pc_score, eval, LOWER, ttpv, tthit);
                     return pc_score;
                 }
             }
@@ -413,7 +413,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     if (!stop_search(td)) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
-        tte->save(position.get_hash(), depth, best_move, best_score, eval, bound, ttpv);
+        tte->save(position.get_hash(), depth, best_move, best_score, eval, bound, ttpv, tthit);
         td.best_move = best_move;
     }
 
@@ -460,7 +460,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
 
     } else {
         best_score = static_eval = node.static_eval = position.eval();
-        tte->save(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, static_eval, BOUND_EMPTY, ttpv);
+        tte->save(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, static_eval, BOUND_EMPTY, ttpv, tthit);
     }
 
     // Stand-pat
@@ -512,7 +512,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     }
 
     BoundType bound = best_score >= beta ? LOWER : UPPER;
-    tte->save(position.get_hash(), 0, best_move, best_score, static_eval, bound, ttpv);
+    tte->save(position.get_hash(), 0, best_move, best_score, static_eval, bound, ttpv, tthit);
 
     return best_score;
 }

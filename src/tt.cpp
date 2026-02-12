@@ -19,10 +19,12 @@
 inline static KeyType key_from_hash(const HashType &hash) { return static_cast<KeyType>(hash >> 48); }
 
 void TTEntry::save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-                   const ScoreType &eval, const BoundType &bound, const bool was_pv) {
+                   const ScoreType &eval, const BoundType &bound, const bool was_pv, const bool &tthit) {
+    if (best_move != MOVE_NONE || !tthit)
+        m_best_move = best_move;
+
     m_key = key_from_hash(hash);
     m_depth = depth;
-    m_best_move = best_move;
     m_score = score;
     m_eval = eval;
     m_pv_bound = (was_pv << 2) + bound;
