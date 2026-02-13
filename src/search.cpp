@@ -252,7 +252,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         ScoreType pc_beta = std::min(beta + probcut_margin(), MATE_FOUND - 1);
         if (depth >= probcut_min_depth() && std::abs(beta) < MATE_FOUND &&
             (!tthit || ttdepth < depth - 3 || (ttscore != SCORE_NONE && ttscore >= pc_beta))) {
-            MovePicker move_picker(ttmove, &td, true, pc_beta - node.static_eval);
+            MovePicker move_picker(ttmove, td, true, pc_beta - node.static_eval);
             Move move;
             while ((move = move_picker.next_move(true)) != MOVE_NONE) {
                 if (!position.make_move<true>(move)) { // Avoid illegal moves
@@ -287,7 +287,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     int moves_searched = 0;
 
     bool skip_quiets = false;
-    MovePicker move_picker(ttmove, &td, false);
+    MovePicker move_picker(ttmove, td, false);
     PieceMoveList quiets_tried, tacticals_tried;
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
         if (move == td.nodes[td.height].excluded_move) // Skip excluded moves
@@ -470,7 +470,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
 
     Move move = MOVE_NONE;
     Move best_move = MOVE_NONE;
-    MovePicker move_picker((tthit ? ttmove : MOVE_NONE), &td, true);
+    MovePicker move_picker((tthit ? ttmove : MOVE_NONE), td, true);
     int moves_searched = 0;
     while ((move = move_picker.next_move(!in_check)) != MOVE_NONE) {
         if (!position.is_legal(move)) { // Avoid illegal moves
