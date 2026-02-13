@@ -10,6 +10,7 @@
 
 #include <bit>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <random>
@@ -179,15 +180,17 @@ inline int64_t rand(int64_t min, int64_t max) {
 #include <sys/mman.h>
 #endif
 
-inline void *aligned_malloc(size_t alignment, size_t requiredBytes) {
+inline void *aligned_malloc(size_t alignment, size_t required_bytes) {
     void *ptr = nullptr;
+    size_t remainder = required_bytes % alignment;
+    size_t aligned_size = (remainder == 0) ? required_bytes : (required_bytes + alignment - remainder);
 #if defined(_WIN32)
-    ptr = _aligned_malloc(requiredBytes, alignment);
+    ptr = _aligned_malloc(aligned_size, alignment);
 #elif defined(__APPLE__) || defined(__ANDROID__)
-    posix_memalign(&ptr, alignment, requiredBytes);
+    posix_memalign(&ptr, alignment, aligned_size);
 #else
-    ptr = std::aligned_alloc(alignment, requiredBytes);
-    madvise(ptr, requiredBytes, MADV_HUGEPAGE);
+    ptr = std::aligned_alloc(alignment, aligned_size);
+    madvise(ptr, aligned_size, MADV_HUGEPAGE);
 #endif
     return ptr;
 }
