@@ -30,7 +30,13 @@
 #include "utils.h"
 
 UCI::UCI(int argc, char *argv[]) {
-    m_td = static_cast<ThreadData *>(aligned_malloc(64, sizeof(ThreadData)));
+    void *mem = aligned_malloc(64, sizeof(ThreadData));
+    if (!mem) {
+        std::cerr << "Fatal: Failed to allocate memory for ThreadData." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+
+    m_td = new (mem) ThreadData();
     m_td->tt.resize(EngineOptions::HASH_DEFAULT);
     m_td->reset_search_parameters();
     m_td->report = true;
@@ -80,6 +86,7 @@ UCI::UCI(int argc, char *argv[]) {
 
 UCI::~UCI() {
     if (m_td != nullptr) {
+        m_td->~ThreadData();
         aligned_free(m_td);
         m_td = nullptr;
     }
