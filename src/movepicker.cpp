@@ -14,12 +14,12 @@
 #include "search.h"
 #include "types.h"
 
-MovePicker::MovePicker(Move ttmove, ThreadData *td, bool qsearch, ScoreType threshold) {
+MovePicker::MovePicker(Move ttmove, ThreadData &td, bool qsearch, ScoreType threshold) {
     init(ttmove, td, qsearch, threshold);
 }
 
-void MovePicker::init(Move ttmove, ThreadData *td, bool qsearch, ScoreType threshold) {
-    m_td = td;
+void MovePicker::init(Move ttmove, ThreadData &td, bool qsearch, ScoreType threshold) {
+    m_td = &td;
     m_ttmove = ttmove;
     m_qsearch = qsearch;
     m_threshold = threshold;
@@ -29,12 +29,12 @@ void MovePicker::init(Move ttmove, ThreadData *td, bool qsearch, ScoreType thres
     else
         m_stage = GEN_NOISY;
 
-    m_killer1 = td->search_history.consult_killer1(td->height);
-    m_killer2 = td->search_history.consult_killer2(td->height);
+    m_killer1 = m_td->search_history.consult_killer1(m_td->height);
+    m_killer2 = m_td->search_history.consult_killer2(m_td->height);
 
     m_counter = MOVE_NONE;
     if (m_td->height > 0)
-        m_counter = td->search_history.consult_counter(td->nodes[td->height - 1].curr_pmove.move);
+        m_counter = m_td->search_history.consult_counter(m_td->nodes[m_td->height - 1].curr_pmove.move);
     if (m_counter == m_killer1 || m_counter == m_killer2)
         m_counter = MOVE_NONE;
 

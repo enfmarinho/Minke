@@ -31,7 +31,7 @@ class UCI {
   public:
     UCI() = delete;
     UCI(int argc, char *argv[]);
-    ~UCI() = default;
+    ~UCI();
     void loop();
 
   private:
@@ -51,7 +51,7 @@ class UCI {
     void eval();
 
     std::thread m_thread;
-    ThreadData m_td;
+    ThreadData *m_td;
 };
 
 #endif // #ifndef UCI_H
