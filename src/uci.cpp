@@ -47,6 +47,7 @@ UCI::UCI(int argc, char *argv[]) {
             depth = std::stoi(argv[2]);
 
         bench(depth);
+        this->~UCI();
         exit(0);
     }
 
@@ -79,6 +80,7 @@ UCI::UCI(int argc, char *argv[]) {
         DatagenEngine dt_engine;
         dt_engine.datagen_loop(search_limits, book_path, concurrency, tt_size_mb);
 
+        this->~UCI();
         exit(0);
     }
 #endif // DATAGEN_BUILD
