@@ -9,6 +9,7 @@
 #define HASH_H
 
 #include <cassert>
+#include <limits>
 #include <random>
 
 #include "types.h"
@@ -64,15 +65,10 @@ class SeedGenerator {
 // For further analysis see
 //   <http://vigna.di.unimi.it/ftp/papers/xorshift.pdf>
 class PRNG {
-    HashType s;
-
-    HashType rand64() {
-        s ^= s >> 12, s ^= s << 25, s ^= s >> 27;
-        return s * 2685821657736338717LL;
-    }
-
   public:
-    PRNG(HashType seed) : s(seed) { assert(seed); }
+    using result_type = uint64_t;
+
+    PRNG(result_type seed) : s(seed) { assert(seed); }
 
     template <typename T>
     T rand() {
@@ -84,6 +80,18 @@ class PRNG {
     template <typename T>
     T sparse_rand() {
         return T(rand64() & rand64() & rand64());
+    }
+
+    result_type operator()() { return rand64(); }
+    static constexpr result_type min() { return std::numeric_limits<result_type>::min(); }
+    static constexpr result_type max() { return std::numeric_limits<result_type>::max(); }
+
+  public:
+    result_type s;
+
+    result_type rand64() {
+        s ^= s >> 12, s ^= s << 25, s ^= s >> 27;
+        return s * 2685821657736338717LL;
     }
 };
 
