@@ -299,10 +299,19 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         PieceMove curr_pmove = {move, position.consult(move.to())}; // move.to() because move has already been made
         node.curr_pmove = curr_pmove;
 
-        if (!root && best_score >= -MATE_FOUND && !skip_quiets) {
-            // Late Move Pruning
-            if (moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
-                skip_quiets = true;
+        if (!root && best_score >= -MATE_FOUND) {
+            if (!skip_quiets) {
+                // Late Move Pruning
+                if (moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
+                    skip_quiets = true;
+                }
+            }
+
+            // SEE pruning
+            int see_margin = move.is_quiet() ? see_quiet_factor() * depth : see_noisy_factor() * depth * depth;
+            if (depth <= see_pruning_depth() && move_picker.picker_stage() > PICK_GOOD_NOISY &&
+                !SEE(position, move, see_margin)) {
+                continue;
             }
         }
 

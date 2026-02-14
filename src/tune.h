@@ -122,6 +122,11 @@ TUNABLE_PARAM(lmr_divisor, 207, 150, 350, 10, 0.002)
 TUNABLE_PARAM(lmp_base, 120, 100, 200, 5, 0.002)
 TUNABLE_PARAM(lmp_scale, 30, 20, 120, 5, 0.002)
 
+// SEE Pruning
+TUNABLE_PARAM(see_quiet_factor, -60, -150, -50, 10, 0.002)
+TUNABLE_PARAM(see_noisy_factor, -20, -150, -50, 10, 0.002)
+TUNABLE_PARAM(see_pruning_depth, 10, 8, 15, 0.2, 0.002)
+
 // Singular Extension
 TUNABLE_PARAM(singular_extension_min_depth, 7, 4, 10, 0.5, 0.002)
 
