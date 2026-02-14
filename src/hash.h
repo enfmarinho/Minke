@@ -9,6 +9,7 @@
 #define HASH_H
 
 #include <cassert>
+#include <random>
 
 #include "types.h"
 
@@ -20,6 +21,32 @@ struct HashKeys {
     HashType side;
 };
 extern HashKeys hash_keys;
+
+// Implements the Splitmix64 algorithm to generate seeds for the xorshift64star PRNG
+class SeedGenerator {
+  public:
+    static uint64_t master_seed() {
+        // This is not portable considering that random_device may be pseudo-random depending on hardware
+        // but this shouldn't be a problem
+        std::random_device rd{};
+        return static_cast<uint64_t>(rd()) << 32 | static_cast<uint64_t>(rd());
+    }
+
+    SeedGenerator() = delete;
+    SeedGenerator(uint64_t seed = master_seed()) : m_state(seed) {}
+
+    uint64_t next() {
+        m_state += 0x9e3779b97f4a7c15ULL;
+
+        uint64_t z = m_state;
+        z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
+        z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
+        return z ^ (z >> 31);
+    }
+
+  private:
+    uint64_t m_state;
+};
 
 //==== Taken from stockfish
 // xorshift64star Pseudo-Random Number Generator
