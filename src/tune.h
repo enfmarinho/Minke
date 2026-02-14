@@ -134,7 +134,10 @@ TUNABLE_PARAM(razoring_max_depth, 5, 2, 6, 0.5, 0.002)
 TUNABLE_PARAM(razoring_mult, 250, 150, 300, 7.5, 0.002)
 
 // Futility Pruning
-TUNABLE_PARAM(qsFutilityMargin, 200, 0, 500, 25, 0.002)
+TUNABLE_PARAM(qs_futility_margin, 200, 0, 500, 25, 0.002)
+
+// Quiescence search SEE
+TUNABLE_PARAM(qs_see_threshold, 0, -200, 200, 20, 0.002)
 
 // Prob Cut
 TUNABLE_PARAM(probcut_margin, 300, 100, 400, 15, 0.002)

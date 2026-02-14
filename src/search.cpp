@@ -480,11 +480,13 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         ++moves_searched;
 
         if (best_score > -MATE_FOUND) {
-            ScoreType futility = static_eval + qsFutilityMargin();
+            ScoreType futility = static_eval + qs_futility_margin();
             if (!in_check && futility <= alpha && !SEE(position, move, 1)) {
                 best_score = std::max(best_score, futility);
                 continue;
             }
+            if (!SEE(position, move, qs_see_threshold()))
+                continue;
         }
         position.make_move<true>(move);
         td.tt.prefetch(position.get_hash());
