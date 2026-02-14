@@ -21,13 +21,18 @@
 #include "tune.h"
 #include "types.h"
 
+ScoreType normalize_score(ScoreType score) {
+    // TODO scores should be normalize such that +100/-100 means 50% chance of wining or losing
+    return score / 2;
+}
+
 static void print_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
                               const ThreadData &td) {
     std::cout << "info depth " << depth;
     if (std::abs(eval) > MATE_FOUND) {
         std::cout << " score mate " << (eval < 0 ? "-" : "") << (MATE_SCORE - std::abs(eval) + 1) / 2;
     } else {
-        std::cout << " score cp " << eval / 2;
+        std::cout << " score cp " << normalize_score(eval);
     }
     // Add 1 to time_passed() to avoid division by 0
     std::cout << " time " << td.time_manager.time_passed() << " nodes " << td.nodes_searched << " nps "

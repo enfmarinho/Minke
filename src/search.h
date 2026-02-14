@@ -67,6 +67,8 @@ struct ThreadData {
     void set_search_limits(const SearchLimits sl);
 };
 
+ScoreType normalize_score(ScoreType score);
+
 ScoreType iterative_deepening(ThreadData &td);
 ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);
 ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool cutnode, ThreadData &td);
