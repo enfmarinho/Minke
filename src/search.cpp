@@ -53,6 +53,7 @@ inline void SearchLimits::reset() {
 }
 
 ThreadData::ThreadData() {
+    datagen = false;
     report = true;
     reset_search_parameters();
 }
