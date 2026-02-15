@@ -5,7 +5,6 @@
  *  See the LICENSE file in the project root for more information.
  */
 
-#ifdef DATAGEN_BUILD
 #ifndef DATAGEN_H
 #define DATAGEN_H
 
@@ -323,4 +322,3 @@ class DatagenEngine {
 };
 
 #endif // !DATAGEN_H
-#endif // DATAGEN_BUILD
