@@ -273,7 +273,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 position.unmake_move<true>(move);
 
                 if (pc_score >= pc_beta) {
-                    tte->save(position.get_hash(), depth - 3, move, pc_score, eval, LOWER, ttpv, tthit);
                     return pc_score;
                 }
             }
