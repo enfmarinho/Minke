@@ -17,7 +17,6 @@
 #include <vector>
 
 #include "benchmark.h"
-#include "datagen.h"
 #include "init.h"
 #include "move.h"
 #include "movegen.h"
@@ -29,7 +28,7 @@
 #include "types.h"
 #include "utils.h"
 
-UCI::UCI(int argc, char *argv[]) {
+UCI::UCI() {
     void *mem = aligned_malloc(64, sizeof(ThreadData));
     if (!mem) {
         std::cerr << "Fatal: Failed to allocate memory for ThreadData." << std::endl;
@@ -40,48 +39,6 @@ UCI::UCI(int argc, char *argv[]) {
     m_td->tt.resize(EngineOptions::HASH_DEFAULT);
     m_td->reset_search_parameters();
     m_td->report = true;
-
-    if (argc > 1 && std::string(argv[1]) == "bench") {
-        int depth = EngineOptions::BENCH_DEPTH;
-        if (argc > 2)
-            depth = std::stoi(argv[2]);
-
-        bench(depth);
-        exit(0);
-    }
-
-#ifdef DATAGEN_BUILD
-    if (argc > 1 && std::string(argv[1]) == "datagen") {
-        int concurrency = 1;
-        int tt_size_mb = EngineOptions::HASH_DEFAULT;
-        std::string book_path;
-        SearchLimits search_limits(DATAGEN_DEFAULT_MAX_DEPTH, DATAGEN_DEFAULT_OPTIMUM_NODE_LIMIT,
-                                   DATAGEN_DEFAULT_MAXIMUM_NODE_LIMIT);
-
-        auto read_command_line_opt = [&](int idx) {
-            if (strcmp(argv[idx], "--book") == 0)
-                book_path = argv[idx + 1];
-            else if (strcmp(argv[idx], "--concurrency") == 0)
-                concurrency = std::stoi(argv[idx + 1]);
-            else if (strcmp(argv[idx], "--tt-size") == 0)
-                tt_size_mb = std::stoi(argv[idx + 1]);
-            else if (strcmp(argv[idx], "--depth") == 0)
-                search_limits.depth = std::stoi(argv[idx + 1]);
-            else if (strcmp(argv[idx], "--node-optimum-limit") == 0)
-                search_limits.depth = std::stoi(argv[idx + 1]);
-            else if (strcmp(argv[idx], "--node-maximum-limit") == 0)
-                search_limits.depth = std::stoi(argv[idx + 1]);
-        };
-
-        for (int curr = 2; argc > curr + 1; curr += 2)
-            read_command_line_opt(curr);
-
-        DatagenEngine dt_engine;
-        dt_engine.datagen_loop(search_limits, book_path, concurrency, tt_size_mb);
-
-        exit(0);
-    }
-#endif // DATAGEN_BUILD
 }
 
 UCI::~UCI() {
