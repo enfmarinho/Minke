@@ -75,7 +75,7 @@ ScoreType iterative_deepening(ThreadData &td) {
 
     Move best_move = MOVE_NONE;
     ScoreType past_eval = -MAX_SCORE;
-    for (CounterType depth = 1; depth <= td.search_limits.depth; ++depth) {
+    for (CounterType depth = 1; depth <= std::min(td.search_limits.depth, MAX_SEARCH_DEPTH - 1); ++depth) {
         ScoreType eval = aspiration(depth, past_eval, td);
         if (stop_search(td)) // Search did not finished completely
             break;
