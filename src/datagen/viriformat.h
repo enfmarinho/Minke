@@ -46,26 +46,26 @@ class Viriformat {
     }
 
     void write(std::ofstream &file_out, GameResult result) {
-        constexpr char null_terminator[sizeof(ScoredMove)] = {};
+        constexpr char null_terminator[sizeof(ScoreMove)] = {};
 
         m_initial_pos.set_result(result);
         file_out.write(reinterpret_cast<const char *>(&m_initial_pos), sizeof(PackedPosition));
         file_out.write(reinterpret_cast<const char *>(m_moves_scores.data()),
-                       sizeof(ScoredMove) * m_moves_scores.size());
-        file_out.write(reinterpret_cast<const char *>(null_terminator), sizeof(ScoredMove));
+                       sizeof(ScoreMove) * m_moves_scores.size());
+        file_out.write(reinterpret_cast<const char *>(null_terminator), sizeof(ScoreMove));
     }
 
   private:
-    struct MoveScore {
+    struct ScoreMove {
         uint16_t score;
         int16_t packed_move;
 
-        MoveScore(uint16_t _score, int16_t _packed_move) : score(_score), packed_move(_packed_move) {}
+        ScoreMove(uint16_t _score, int16_t _packed_move) : score(_score), packed_move(_packed_move) {}
     };
-    static_assert(sizeof(MoveScore) == 4, "MoveScore struct is not 4 bytes");
+    static_assert(sizeof(ScoreMove) == 4, "MoveScore struct is not 4 bytes");
 
     PackedPosition m_initial_pos;
-    std::vector<MoveScore> m_moves_scores; // move and score for this ply
+    std::vector<ScoreMove> m_moves_scores; // move and score for this ply
 };
 
 #endif // #ifndef VIRIFORMAT_H
