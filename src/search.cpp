@@ -359,7 +359,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 reduction += !improving; // Reduce more if not improving
 
                 // Reduce less if move is killer or counter
-                reduction -= td.search_history.is_killer(move, td.height - 1);
+                reduction -= move_picker.is_killer(move);
                 if (td.height >= 2)
                     reduction -= td.search_history.is_counter(move, td.nodes[td.height - 2].curr_pmove.move);
 
