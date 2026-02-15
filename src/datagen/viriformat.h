@@ -60,7 +60,7 @@ class Viriformat {
         uint16_t score;
         int16_t packed_move;
 
-        MoveScore(uint16_t score, int16_t packed_move) : score(score), packed_move(packed_move) {}
+        MoveScore(uint16_t _score, int16_t _packed_move) : score(_score), packed_move(_packed_move) {}
     };
     static_assert(sizeof(MoveScore) == 4, "MoveScore struct is not 4 bytes");
 

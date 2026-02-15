@@ -99,7 +99,7 @@ class DatagenThread {
             return;
         }
 
-        GameResult result;
+        GameResult result = NO_RESULT;
         int win_count = 0;
         int draw_count = 0;
         int position_count = 0;
@@ -108,7 +108,7 @@ class DatagenThread {
             m_td->reset_search_parameters();
             m_td->set_search_limits({MAX_SEARCH_DEPTH, SOFT_NODE_LIMIT, HARD_NODE_LIMIT});
 
-            ScoreType score = iterative_deepening(*m_td);
+            score = iterative_deepening(*m_td);
             ScoreType normalized_score = normalize_score(score);
             ++position_count;
 
@@ -172,8 +172,8 @@ class DatagenThread {
     void init_pos_randomly() {
         m_td->position.set_fen<true>(START_FEN);
 
-        int moves = rand(8, 12);
-        for (int i = 0; i < moves; ++i) {
+        int move_count = rand(8, 12);
+        for (int i = 0; i < move_count; ++i) {
             ScoredMove moves[MAX_MOVES_PER_POS];
             ScoredMove* end = gen_moves(moves, m_td->position, MoveGenType::GEN_ALL);
 

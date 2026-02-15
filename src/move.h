@@ -95,7 +95,7 @@ struct PieceMove {
     uint8_t piece;
 
     PieceMove() { PieceMove(MOVE_NONE, EMPTY); }
-    PieceMove(const Move& move, const Piece& piece) : move(move), piece(piece) {}
+    PieceMove(const Move& _move, const Piece& _piece) : move(_move), piece(_piece) {}
 };
 inline bool operator==(const PieceMove& lhs, const PieceMove& rhs) {
     return lhs.move == rhs.move && lhs.piece == rhs.piece;
