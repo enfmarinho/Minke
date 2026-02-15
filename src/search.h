@@ -59,6 +59,7 @@ struct ThreadData {
     int64_t nodes_searched;
     int height;
     bool stop;
+    bool datagen;
     bool report;
     bool chess960;
 
