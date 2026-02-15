@@ -50,7 +50,7 @@ void History::update_history(const ThreadData &td, const Move &best_move, int de
     HistoryType capture_penalty =
         calculate_score(depth, capt_hist_penalty_mult(), capt_hist_penalty_offset(), capt_hist_penalty_max());
     if (best_move.is_quiet()) {
-        save_killer(best_move, depth);
+        save_killer(best_move, td.height);
         if (td.height > 0)
             save_counter(td.nodes[td.height - 1].curr_pmove.move, best_move);
 

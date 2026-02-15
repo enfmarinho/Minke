@@ -36,20 +36,20 @@ class History {
         return m_capture_history[position.get_stm()][moved_pt][to][captured_pt];
     }
 
-    inline void clear_killers(const int &depth) {
-        m_killer_moves[0][depth] = MOVE_NONE;
-        m_killer_moves[1][depth] = MOVE_NONE;
+    inline void clear_killers(const int &height) {
+        m_killer_moves[0][height] = MOVE_NONE;
+        m_killer_moves[1][height] = MOVE_NONE;
     }
-    inline Move consult_killer1(const int &depth) const { return m_killer_moves[0][depth]; }
-    inline Move consult_killer2(const int &depth) const { return m_killer_moves[1][depth]; }
+    inline Move consult_killer1(const int &height) const { return m_killer_moves[0][height]; }
+    inline Move consult_killer2(const int &height) const { return m_killer_moves[1][height]; }
     inline Move consult_counter(const Move &past_move) const {
         // TODO try the usual indexing ([piece_type][to]), instead of butterfly
         if (past_move == MOVE_NONE)
             return MOVE_NONE;
         return m_counter_moves[past_move.from_and_to()];
     }
-    inline bool is_killer(const Move &move, const int &depth) const {
-        return move == consult_killer1(depth) || move == consult_killer2(depth);
+    inline bool is_killer(const Move &move, const int &height) const {
+        return move == consult_killer1(height) || move == consult_killer2(height);
     }
     inline bool is_counter(const Move &move, const Move &past_move) const { return move == consult_counter(past_move); }
 
@@ -63,9 +63,9 @@ class History {
     HistoryType get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const;
     HistoryType get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const;
 
-    inline void save_killer(const Move &move, const int depth) {
-        m_killer_moves[1][depth] = m_killer_moves[0][depth];
-        m_killer_moves[0][depth] = move;
+    inline void save_killer(const Move &move, const int height) {
+        m_killer_moves[1][height] = m_killer_moves[0][height];
+        m_killer_moves[0][height] = move;
     }
 
     inline void save_counter(const Move &past_move, const Move &move) {
