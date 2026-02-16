@@ -92,6 +92,7 @@ class DatagenThread {
         init_pos_randomly();
 
         // Search deeper to verify position before generating data from it
+        m_td->reset_search_parameters();
         m_td->set_search_limits({VERIFICATION_MAX_DEPTH, VERIFICATION_SOFT_NODE_LIMIT, VERIFICATION_HARD_NODE_LIMIT});
 
         ScoreType score = iterative_deepening(*m_td);
@@ -102,7 +103,7 @@ class DatagenThread {
         GameResult result = NO_RESULT;
         int win_count = 0;
         int draw_count = 0;
-        int position_count = 0;
+        uint64_t position_count = 0;
 
         while (!m_stop_flag) {
             m_td->reset_search_parameters();
@@ -170,7 +171,7 @@ class DatagenThread {
     }
 
     void init_pos_randomly() {
-        m_td->position.set_fen<true>(START_FEN);
+        m_td->position.set_fen<false>(START_FEN);
 
         int move_count = rand(8, 12);
         for (int i = 0; i < move_count; ++i) {
@@ -190,11 +191,12 @@ class DatagenThread {
             }
 
             if (!legal_found) {
-                m_td->position.set_fen<true>(START_FEN);
+                m_td->position.set_fen<false>(START_FEN);
                 i = -1; // increment is happening after the loop, so this will be 0
             }
         }
 
+        m_td->position.reset_nnue();
         m_td->search_history.reset();
         m_td->tt.clear();
         m_games.reset(m_td->position);
@@ -252,7 +254,7 @@ class DatagenEngine {
 
         TimeType elapsed_time = now() - m_start_time + 1; // plus 1 to avoid divisions by 0
 
-        auto print_info_line = [elapsed_time](std::string id, int game_count, int fen_count) {
+        auto print_info_line = [elapsed_time](std::string id, uint64_t game_count, uint64_t fen_count) {
             std::cout << "|";
             std::cout << std::setw(11) << std::right << id << " |";
             std::cout << std::setw(11) << std::right << game_count << " |";
@@ -266,8 +268,8 @@ class DatagenEngine {
         std::cout << "| thread id  | game count | fen count  |  games/s   |   fens/s   |\n";
         std::cout << line;
 
-        int game_count = 0;
-        int position_count = 0;
+        uint64_t game_count = 0;
+        uint64_t position_count = 0;
         for (const std::unique_ptr<DatagenThread>& dt_ptr : m_datagen_thread_ptrs) {
             print_info_line(std::to_string(dt_ptr->get_id()), dt_ptr->get_game_count(), dt_ptr->get_positions_count());
 
