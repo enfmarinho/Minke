@@ -37,11 +37,11 @@ class History {
     }
 
     inline void clear_killers(const int &height) {
-        m_killer_moves[0][height] = MOVE_NONE;
-        m_killer_moves[1][height] = MOVE_NONE;
+        m_killer_moves[height][0] = MOVE_NONE;
+        m_killer_moves[height][1] = MOVE_NONE;
     }
-    inline Move consult_killer1(const int &height) const { return m_killer_moves[0][height]; }
-    inline Move consult_killer2(const int &height) const { return m_killer_moves[1][height]; }
+    inline Move consult_killer1(const int &height) const { return m_killer_moves[height][0]; }
+    inline Move consult_killer2(const int &height) const { return m_killer_moves[height][1]; }
     inline Move consult_counter(const Move &past_move) const {
         // TODO try the usual indexing ([piece_type][to]), instead of butterfly
         if (past_move == MOVE_NONE)
@@ -64,8 +64,8 @@ class History {
     HistoryType get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const;
 
     inline void save_killer(const Move &move, const int height) {
-        m_killer_moves[1][height] = m_killer_moves[0][height];
-        m_killer_moves[0][height] = move;
+        m_killer_moves[height][1] = m_killer_moves[height][0];
+        m_killer_moves[height][0] = move;
     }
 
     inline void save_counter(const Move &past_move, const Move &move) {
@@ -77,7 +77,7 @@ class History {
     HistoryType m_search_history_table[COLOR_NB][64 * 64];
     HistoryType m_continuation_history[12 * 64][12 * 64];
     Move m_counter_moves[64 * 64];
-    Move m_killer_moves[2][MAX_SEARCH_DEPTH];
+    Move m_killer_moves[MAX_SEARCH_DEPTH][2];
 };
 
 #endif // #ifndef HISTORY_H
