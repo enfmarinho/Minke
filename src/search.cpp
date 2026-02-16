@@ -357,6 +357,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
                 reduction -= in_check;   // Reduce less when in check
                 reduction += !improving; // Reduce more if not improving
+                reduction += cutnode;    // Reduce cutnodes more
 
                 // Reduce less if move is killer or counter
                 reduction -= td.search_history.is_killer(move, td.height - 1);
