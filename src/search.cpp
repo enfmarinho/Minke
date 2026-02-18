@@ -376,7 +376,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
             if (score > alpha && reduction > 1) {
                 new_depth += score > best_score + 35;
-                new_depth -= score < best_score + new_depth;
+                new_depth -= score < best_score + new_depth - 1;
 
                 score = -negamax(-alpha - 1, -alpha, new_depth - 1, !cutnode, td);
             }
