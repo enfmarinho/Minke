@@ -41,6 +41,9 @@ class MovePicker {
     Move next_move(const bool &skip_quiets);
     ScoredMove next_move_scored(const bool &skip_quiets);
 
+    bool is_killer(const Move &move) const { return move == m_killer1 || move == m_killer2; }
+    bool is_counter(const Move &move) const { return move == m_counter; }
+
     MovePickerStage picker_stage() const { return m_stage; }
 
   private:
