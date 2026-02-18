@@ -364,10 +364,10 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 if (td.height >= 2)
                     reduction -= td.search_history.is_counter(move, td.nodes[td.height - 2].curr_pmove.move);
 
-                reduction = std::clamp(reduction, 1, depth - 1);
-
                 // Reduce less if this move is or was a principal variation
                 reduction -= ttpv;
+
+                reduction = std::clamp(reduction, 1 - ttpv, depth - 1);
             } else {
                 // reduce noisy
             }
