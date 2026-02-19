@@ -334,7 +334,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             position.make_move<true>(ttmove);
         }
         td.tt.prefetch(position.get_hash());
-        int new_depth = depth + extension;
+        int new_depth = depth + extension - 1;
 
         // Add move to tried list
         if (move.is_quiet())
@@ -348,9 +348,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         td.nodes[td.height].pv_list.clear();
         ScoreType score;
         if (moves_searched == 1) {
-            score = -negamax(-beta, -alpha, new_depth - 1, false, td);
+            score = -negamax(-beta, -alpha, new_depth, false, td);
         } else {
-            int reduction = 1;
+            int reduction = 0;
             // Late Move Reduction
             if (moves_searched > 1 && depth > 2 && move.is_quiet()) {
                 reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
@@ -369,18 +369,18 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             } else {
                 // reduce noisy
             }
-            const int lmr_depth = std::clamp(new_depth - reduction, 1, new_depth - 1);
+            const int lmr_depth = std::clamp(new_depth - reduction, 1, new_depth);
             score = -negamax(-alpha - 1, -alpha, lmr_depth, true, td);
 
-            if (score > alpha && reduction > 1) {
+            if (score > alpha && reduction > 0) {
                 new_depth += score > best_score + 35;
-                new_depth -= score < best_score + new_depth;
+                new_depth -= score < best_score + new_depth + 1;
 
-                score = -negamax(-alpha - 1, -alpha, new_depth - 1, !cutnode, td);
+                score = -negamax(-alpha - 1, -alpha, new_depth, !cutnode, td);
             }
 
             if (pv_node && score > alpha) {
-                score = -negamax(-beta, -alpha, new_depth - 1, false, td);
+                score = -negamax(-beta, -alpha, new_depth, false, td);
             }
         }
 
