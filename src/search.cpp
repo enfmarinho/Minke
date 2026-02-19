@@ -374,7 +374,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             const int lmr_depth = depth + extension - reduction;
             score = -negamax(-alpha - 1, -alpha, lmr_depth, true, td);
 
-            if (score > alpha && reduction > 1) {
+            if (score > alpha && new_depth > lmr_depth) {
                 new_depth += score > best_score + 35;
                 new_depth -= score < best_score + new_depth + 1;
 
