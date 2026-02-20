@@ -180,7 +180,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     Move ttmove = (tthit ? tte->best_move() : MOVE_NONE);
     ScoreType ttscore = tthit ? tte->score() : SCORE_NONE;
     ScoreType tteval = tthit ? tte->eval() : SCORE_NONE;
-    IndexType ttbound = tthit ? tte->bound() : BOUND_EMPTY;
+    IndexType ttbound = tthit ? tte->bound() : static_cast<IndexType>(BOUND_EMPTY);
     IndexType ttdepth = tthit ? tte->depth() : 0;
     const bool ttpv = pv_node || (tthit && tte->was_pv());
     if (!pv_node && !singular_search && tthit && ttdepth >= depth &&
@@ -436,7 +436,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     Move ttmove = tthit ? tte->best_move() : MOVE_NONE;
     ScoreType ttscore = tthit ? tte->score() : SCORE_NONE;
     ScoreType tteval = tthit ? tte->eval() : SCORE_NONE;
-    IndexType ttbound = tthit ? tte->bound() : BOUND_EMPTY;
+    IndexType ttbound = tthit ? tte->bound() : static_cast<IndexType>(BOUND_EMPTY);
     const bool ttpv = pv_node || (tthit && tte->was_pv());
     if (!pv_node && tthit && ttscore != SCORE_NONE &&
         (ttbound == EXACT || (ttbound == UPPER && ttscore <= alpha) || (ttbound == LOWER && ttscore >= beta))) {
