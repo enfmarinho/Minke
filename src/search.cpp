@@ -352,23 +352,26 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         } else {
             int reduction = 1;
             // Late Move Reduction
-            if (moves_searched > 1 && depth > 2 && move.is_quiet()) {
-                reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
+            if (moves_searched > 1 && depth > 2) {
+                if (move.is_quiet()) {
+                    reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
 
-                reduction -= in_check;   // Reduce less when in check
-                reduction += !improving; // Reduce more if not improving
-                reduction += cutnode;    // Reduce cutnodes more
+                    reduction -= in_check;   // Reduce less when in check
+                    reduction += !improving; // Reduce more if not improving
+                    reduction += cutnode;    // Reduce cutnodes more
 
-                // Reduce less if move is killer or counter
-                reduction -= td.search_history.is_killer(move, td.height - 1);
-                if (td.height >= 2)
-                    reduction -= td.search_history.is_counter(move, td.nodes[td.height - 2].curr_pmove.move);
+                    // Reduce less if move is killer or counter
+                    reduction -= td.search_history.is_killer(move, td.height - 1);
+                    if (td.height >= 2)
+                        reduction -= td.search_history.is_counter(move, td.nodes[td.height - 2].curr_pmove.move);
 
-                // Reduce less if this move is or was a principal variation
-                reduction -= ttpv;
-            } else {
-                // reduce noisy
+                    // Reduce less if this move is or was a principal variation
+                    reduction -= ttpv;
+                } else if (!ttpv) {
+                    reduction += cutnode;
+                }
             }
+
             const int lmr_depth = std::clamp(new_depth - reduction, 1, new_depth - 1);
             score = -negamax(-alpha - 1, -alpha, lmr_depth, true, td);
 
