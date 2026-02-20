@@ -59,7 +59,7 @@ class TranspositionTable {
 
   public:
     TranspositionTable() = default;
-    ~TranspositionTable() { aligned_free(m_table); }
+    ~TranspositionTable();
     TranspositionTable(const TranspositionTable &) = delete;
     TranspositionTable &operator=(const TranspositionTable &) = delete;
 
