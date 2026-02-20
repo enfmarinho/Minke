@@ -369,7 +369,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             } else {
                 // reduce noisy
             }
-            const int lmr_depth = std::clamp(new_depth - reduction, 1, new_depth - 1);
+            const int lmr_depth = std::min(std::max(new_depth - reduction, 1), new_depth - 1);
             score = -negamax(-alpha - 1, -alpha, lmr_depth, true, td);
 
             if (score > alpha && reduction > 1) {
