@@ -115,8 +115,10 @@ TUNABLE_PARAM(rfp_margin, 105, 50, 150, 5, 0.002)
 TUNABLE_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)
 
 // Late Move Reductions
-TUNABLE_PARAM(lmr_base, 107, 50, 150, 5, 0.002)
-TUNABLE_PARAM(lmr_divisor, 207, 150, 350, 10, 0.002)
+TUNABLE_PARAM(lmr_noisy_base, -50, -100, 100, 10, 0.002)
+TUNABLE_PARAM(lmr_noisy_divisor, 207, 150, 350, 10, 0.002)
+TUNABLE_PARAM(lmr_quiet_base, 107, 50, 150, 5, 0.002)
+TUNABLE_PARAM(lmr_quiet_divisor, 207, 150, 350, 10, 0.002)
 
 // Late Moves Pruning
 TUNABLE_PARAM(lmp_base, 120, 100, 200, 5, 0.002)

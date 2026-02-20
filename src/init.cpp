@@ -23,7 +23,7 @@
 
 INCBIN(NetParameters, EVALFILE);
 
-int LMR_TABLE[64][64];
+int LMR_TABLE[2][64][64];
 int LMP_TABLE[2][LMP_DEPTH];
 HashKeys hash_keys;
 Network network;
@@ -40,12 +40,14 @@ void init_all() {
 void init_search_params() {
     for (int depth = 1; depth < 64; ++depth) {
         for (int move_counter = 1; move_counter < 64; ++move_counter) {
-            LMR_TABLE[depth][move_counter] =
-                (lmr_base() / 100.0) + std::log(depth) * std::log(move_counter) / (lmr_divisor() / 100.0);
-            assert(LMR_TABLE[depth][move_counter] > 0);
+            LMR_TABLE[0][depth][move_counter] =
+                (lmr_noisy_base() / 100.0) + std::log(depth) * std::log(move_counter) / (lmr_noisy_divisor() / 100.0);
+            LMR_TABLE[1][depth][move_counter] =
+                (lmr_quiet_base() / 100.0) + std::log(depth) * std::log(move_counter) / (lmr_quiet_divisor() / 100.0);
         }
     }
-    LMR_TABLE[0][0] = 0;
+    LMR_TABLE[0][0][0] = 0;
+    LMR_TABLE[1][0][0] = 0;
 
     for (int depth = 0; depth < LMP_DEPTH; ++depth) {
         LMP_TABLE[0][depth] = (lmp_base() / 100.0) + (lmp_scale() / 100.0) * depth * depth;
