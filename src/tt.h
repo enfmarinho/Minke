@@ -13,7 +13,6 @@
 
 #include "position.h"
 #include "types.h"
-#include "utils.h"
 
 class TTEntry {
   public:
@@ -55,7 +54,7 @@ class TranspositionTable {
     static_assert(sizeof(TTEntry) == 10, "TTEntry is not 10 bytes");
     static_assert(sizeof(TTBucket) == 32, "TTBucket is not 32 bytes");
 
-    int table_index_from_hash(const HashType hash);
+    size_t table_index_from_hash(const HashType hash);
 
   public:
     TranspositionTable() = default;
@@ -69,7 +68,7 @@ class TranspositionTable {
     void prefetch(const HashType &key);
     void resize(size_t MB);
     void clear();
-    int tt_size_mb() const { return size_mb; }
+    size_t tt_size_mb() const { return size_mb; }
 
   private:
     size_t size_mb{0};

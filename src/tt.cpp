@@ -39,10 +39,10 @@ void TTEntry::reset() {
     m_pv_bound = 0;
 }
 
-int TranspositionTable::table_index_from_hash(const HashType hash) { return hash & m_table_mask; }
+size_t TranspositionTable::table_index_from_hash(const HashType hash) { return hash & m_table_mask; }
 
 bool TranspositionTable::probe(const Position &position, TTEntry &tte) {
-    HashType table_index = table_index_from_hash(position.get_hash());
+    size_t table_index = table_index_from_hash(position.get_hash());
     for (TTEntry &entry : m_table[table_index].entry) {
         tte = entry;
         if (entry.key() == key_from_hash(position.get_hash()))
@@ -54,7 +54,7 @@ bool TranspositionTable::probe(const Position &position, TTEntry &tte) {
 void TranspositionTable::store(const HashType &hash, const IndexType &depth, const Move &best_move,
                                const ScoreType &score, const ScoreType &eval, const BoundType &bound, const bool was_pv,
                                const bool &tthit) {
-    HashType table_index = table_index_from_hash(hash);
+    size_t table_index = table_index_from_hash(hash);
     KeyType target_key = key_from_hash(hash);
     TTBucket *bucket = &m_table[table_index];
     TTEntry *replace = &bucket->entry[0];
@@ -68,7 +68,7 @@ void TranspositionTable::store(const HashType &hash, const IndexType &depth, con
 }
 
 void TranspositionTable::prefetch(const HashType &key) {
-    HashType table_index = table_index_from_hash(key);
+    size_t table_index = table_index_from_hash(key);
     __builtin_prefetch(&m_table[table_index]);
 }
 
