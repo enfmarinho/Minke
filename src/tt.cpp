@@ -59,8 +59,10 @@ void TranspositionTable::store(const HashType &hash, const IndexType &depth, con
     TTBucket *bucket = &m_table[table_index];
     TTEntry *replace = &bucket->entry[0];
     for (IndexType index = 0; index < BUCKET_SIZE; ++index) {
-        if (replace->key() == target_key)
+        if (bucket->entry[index].key() == target_key) {
+            replace = &bucket->entry[index];
             break;
+        }
         if (replace->depth() > bucket->entry[index].depth())
             replace = &bucket->entry[index];
     }
