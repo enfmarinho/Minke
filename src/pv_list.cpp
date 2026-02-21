@@ -21,11 +21,5 @@ void PvList::print(const bool chess960, const Bitboard castle_rooks) const {
         std::cout << m_pv[i].get_algebraic_notation(chess960, castle_rooks) << ' ';
     }
 }
+
 void PvList::clear() { m_size = 0; }
-
-PvList &PvList::operator=(const PvList &other) {
-    std::copy(other.m_pv.begin(), other.m_pv.begin() + other.m_size, m_pv.begin());
-    m_size = other.m_size;
-
-    return *this;
-}

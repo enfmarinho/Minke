@@ -18,8 +18,8 @@
 
 inline static KeyType key_from_hash(const HashType &hash) { return static_cast<KeyType>(hash >> 48); }
 
-void TTEntry::save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-                   const ScoreType &eval, const BoundType &bound, const bool was_pv, const bool &tthit) {
+void TTEntry::store(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
+                    const ScoreType &eval, const BoundType &bound, const bool was_pv, const bool &tthit) {
     if (best_move != MOVE_NONE || !tthit)
         m_best_move = best_move;
 
@@ -39,26 +39,36 @@ void TTEntry::reset() {
     m_pv_bound = 0;
 }
 
-int TranspositionTable::table_index_from_hash(const HashType hash) { return hash & m_table_mask; }
+size_t TranspositionTable::table_index_from_hash(const HashType hash) { return hash & m_table_mask; }
 
-TTEntry *TranspositionTable::probe(const Position &position, bool &found) {
-    HashType table_index = table_index_from_hash(position.get_hash());
+bool TranspositionTable::probe(const Position &position, TTEntry &tte) {
+    size_t table_index = table_index_from_hash(position.get_hash());
     for (TTEntry &entry : m_table[table_index].entry) {
+        tte = entry;
         if (entry.key() == key_from_hash(position.get_hash()))
-            return found = true, &entry;
+            return true;
     }
+    return false;
+}
 
+void TranspositionTable::store(const HashType &hash, const IndexType &depth, const Move &best_move,
+                               const ScoreType &score, const ScoreType &eval, const BoundType &bound, const bool was_pv,
+                               const bool &tthit) {
+    size_t table_index = table_index_from_hash(hash);
+    KeyType target_key = key_from_hash(hash);
     TTBucket *bucket = &m_table[table_index];
     TTEntry *replace = &bucket->entry[0];
-    for (IndexType index = 1; index < BUCKET_SIZE; ++index) {
+    for (IndexType index = 0; index < BUCKET_SIZE; ++index) {
+        if (replace->key() == target_key)
+            break;
         if (replace->depth() > bucket->entry[index].depth())
             replace = &bucket->entry[index];
     }
-    return found = false, replace;
+    replace->store(hash, depth, best_move, score, eval, bound, was_pv, tthit);
 }
 
 void TranspositionTable::prefetch(const HashType &key) {
-    HashType table_index = table_index_from_hash(key);
+    size_t table_index = table_index_from_hash(key);
     __builtin_prefetch(&m_table[table_index]);
 }
 
