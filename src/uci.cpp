@@ -169,11 +169,11 @@ void UCI::loop() {
 
 void UCI::print_debug_info() {
     m_td->position.print();
-    bool found;
-    auto entry = m_td->tt.probe(m_td->position, found);
+    TTEntry tte;
+    bool tthit = m_td->tt.probe(m_td->position, tte);
     Move ttmove = MOVE_NONE;
-    if (found) {
-        ttmove = entry->best_move();
+    if (tthit) {
+        ttmove = tte.best_move();
         std::cout << "Best move: " << ttmove.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks())
                   << std::endl;
     }

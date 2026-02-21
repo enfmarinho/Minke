@@ -27,8 +27,8 @@ class TTEntry {
     ScoreType eval() const { return m_eval; }
     IndexType bound() const { return m_pv_bound & BOUND_MASK; }
     bool was_pv() const { return m_pv_bound & PV_MASK; }
-    void save(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-              const ScoreType &eval, const BoundType &bound, const bool was_pv, const bool &tthit);
+    void store(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
+               const ScoreType &eval, const BoundType &bound, const bool was_pv, const bool &tthit);
     void reset();
 
   private:
@@ -63,13 +63,9 @@ class TranspositionTable {
     TranspositionTable(const TranspositionTable &) = delete;
     TranspositionTable &operator=(const TranspositionTable &) = delete;
 
-    /*!
-     * Search the transposition table for the TTEntry with position hash and sets
-     * "found" to true if it was found, otherwise sets "found" to false and
-     * returns a pointer to the TTEntry with the least value, i.e. the one that
-     * should be replaced.
-     */
-    TTEntry *probe(const Position &position, bool &found);
+    bool probe(const Position &position, TTEntry &found);
+    void store(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
+               const ScoreType &eval, const BoundType &bound, const bool was_pv, const bool &tthit);
     void prefetch(const HashType &key);
     void resize(size_t MB);
     void clear();
