@@ -44,7 +44,7 @@ class TTEntry {
 
 class TranspositionTable {
     constexpr static IndexType BUCKET_SIZE = 3;
-    struct TTBucket {
+    struct alignas(32) TTBucket {
         TTBucket() = default;
         ~TTBucket() = default;
         std::array<TTEntry, BUCKET_SIZE> entry;
