@@ -179,15 +179,19 @@ inline int64_t rand(int64_t min, int64_t max) {
 #include <sys/mman.h>
 #endif
 
-inline void *aligned_malloc(size_t alignment, size_t requiredBytes) {
+inline void *aligned_malloc(size_t alignment, size_t required_bytes) {
     void *ptr = nullptr;
+    size_t remainder = required_bytes % alignment;
+    if (remainder != 0)
+        required_bytes += (alignment - remainder);
+
 #if defined(_WIN32)
-    ptr = _aligned_malloc(requiredBytes, alignment);
+    ptr = _aligned_malloc(required_bytes, alignment);
 #elif defined(__APPLE__) || defined(__ANDROID__)
-    posix_memalign(&ptr, alignment, requiredBytes);
+    posix_memalign(&ptr, alignment, required_bytes);
 #else
-    ptr = std::aligned_alloc(alignment, requiredBytes);
-    madvise(ptr, requiredBytes, MADV_HUGEPAGE);
+    ptr = std::aligned_alloc(alignment, required_bytes);
+    madvise(ptr, required_bytes, MADV_HUGEPAGE);
 #endif
     return ptr;
 }

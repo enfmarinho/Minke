@@ -62,6 +62,13 @@ void TranspositionTable::prefetch(const HashType &key) {
     __builtin_prefetch(&m_table[table_index]);
 }
 
+TranspositionTable::~TranspositionTable() {
+    if (m_table != nullptr)
+        aligned_free(m_table);
+
+    m_table = nullptr;
+}
+
 void TranspositionTable::resize(size_t MB) {
     if (m_table != nullptr)
         aligned_free(m_table);
