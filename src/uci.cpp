@@ -7,6 +7,7 @@
 
 #include "uci.h"
 
+#include <atomic>
 #include <cassert>
 #include <cstdint>
 #include <exception>
@@ -36,8 +37,9 @@ UCI::UCI(int argc, char *argv[]) {
         std::exit(EXIT_FAILURE);
     }
 
+    m_num_threads = EngineOptions::THREADS_DEFAULT;
     m_td = new (mem) ThreadData();
-    m_td->tt.resize(EngineOptions::HASH_DEFAULT);
+    m_td->tt->resize(EngineOptions::HASH_DEFAULT);
     m_td->reset_search_parameters();
     m_td->report = true;
 
@@ -104,7 +106,7 @@ void UCI::loop() {
         token.clear();
         iss >> std::skipws >> token;
         if (token == "quit" || token == "stop") {
-            m_td->stop = true;
+            m_td->stop->store(true, std::memory_order_relaxed);
         } else if (token == "go") {
 #ifdef TUNE
             init_search_params();
@@ -170,7 +172,7 @@ void UCI::loop() {
 void UCI::print_debug_info() {
     m_td->position.print();
     TTEntry tte;
-    bool tthit = m_td->tt.probe(m_td->position, tte);
+    bool tthit = m_td->tt->probe(m_td->position, tte);
     Move ttmove = MOVE_NONE;
     if (tthit) {
         ttmove = tte.best_move();
@@ -240,7 +242,7 @@ void UCI::ucinewgame() {
     m_td->time_manager.reset();
     m_td->position.set_fen<true>(START_FEN);
     m_td->reset_search_parameters();
-    m_td->tt.clear();
+    m_td->tt->clear();
 }
 
 void UCI::set_option(std::istringstream &iss) {
@@ -272,11 +274,14 @@ void UCI::set_option(std::istringstream &iss) {
     iss >> garbage; // Consume the "value" token.
     iss >> value;
     if (token == "Hash" && valid_int_value(EngineOptions::HASH_MIN, EngineOptions::HASH_MAX)) {
-        m_td->tt.resize(value_int);
+        m_td->tt->resize(value_int);
+        std::cout << "set Hash to " << value_int << std::endl;
     } else if (token == "Threads" && valid_int_value(EngineOptions::THREADS_MIN, EngineOptions::THREADS_MAX)) {
-        // For now this is only for compatibility with OpenBench
+        m_num_threads = value_int;
+        std::cout << "set Threads to " << value_int << std::endl;
     } else if (token == "UCI_Chess960" && valid_bool_value()) {
         m_td->chess960 = value_bool;
+        std::cout << "set chess960 to " << value_bool << std::endl;
     }
 #ifdef TUNE
     else if (TunableParam *param_ptr = TunableParamList::get().find(token)) {
@@ -284,7 +289,7 @@ void UCI::set_option(std::istringstream &iss) {
     }
 #endif
     else {
-        std::cout << "Trying to set unknown option: " << token << "\n";
+        std::cout << "Attempted to set an unknown option or invalid argument.\n";
     }
 }
 
@@ -297,7 +302,7 @@ void UCI::bench(int depth) {
         m_td->position.set_fen<true>(fen);
         m_td->reset_search_parameters();
         m_td->search_limits.depth = depth;
-        m_td->tt.clear();
+        m_td->tt->clear();
         TimeType start_time = now();
         go();
         m_thread.join();
@@ -384,7 +389,7 @@ bool UCI::parse_go(std::istringstream &iss, bool bench) {
     return false;
 }
 
-void UCI::go() { m_thread = std::thread(iterative_deepening, std::ref(*m_td)); }
+void UCI::go() { m_thread = std::thread(search, std::ref(*m_td), m_num_threads); }
 
 void EngineOptions::print() {
     std::cout << "option name Hash type spin default " << HASH_DEFAULT << " min " << HASH_MIN << " max " << HASH_MAX

@@ -8,7 +8,9 @@
 #ifndef SEARCH_H
 #define SEARCH_H
 
+#include <atomic>
 #include <cstdint>
+#include <memory>
 
 #include "history.h"
 #include "move.h"
@@ -47,7 +49,9 @@ struct NodeData {
 };
 
 struct ThreadData {
-    TranspositionTable tt;
+    int id;
+    std::shared_ptr<TranspositionTable> tt;
+    std::shared_ptr<std::atomic<bool>> stop;
 
     Position position;
     History search_history;
@@ -58,15 +62,25 @@ struct ThreadData {
     TimeManager time_manager;
     int64_t nodes_searched;
     int height;
-    bool stop;
     bool report;
     bool chess960;
 
     ThreadData();
     void reset_search_parameters();
     void set_search_limits(const SearchLimits sl);
+    bool main_thread() const { return id == 0; }
+    bool stop_search() {
+        if (stop->load(std::memory_order_relaxed))
+            return true;
+        if (main_thread() && (time_manager.time_over() || nodes_searched > search_limits.maximum_node)) {
+            stop->store(true);
+            return true;
+        }
+        return false;
+    }
 };
 
+void search(ThreadData &main_td, int n_threads);
 ScoreType iterative_deepening(ThreadData &td);
 ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);
 ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool cutnode, ThreadData &td);
