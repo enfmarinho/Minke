@@ -18,7 +18,6 @@ class PvList {
     void update(Move new_move, const PvList &list);
     void print(const bool chess960, const Bitboard castle_rooks) const;
     void clear();
-    PvList &operator=(const PvList &other);
 
   private:
     std::array<Move, MAX_SEARCH_DEPTH> m_pv;
