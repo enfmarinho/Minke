@@ -73,7 +73,6 @@ class TranspositionTable {
   private:
     size_t size_mb{0};
     size_t m_table_size{0};
-    size_t m_table_mask{0};
     TTBucket *m_table{nullptr};
 };
 
