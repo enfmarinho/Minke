@@ -23,11 +23,13 @@ void TTEntry::store(const HashType &hash, const IndexType &depth, const Move &be
     if (best_move != MOVE_NONE || !tthit)
         m_best_move = best_move;
 
-    m_key = key_from_hash(hash);
-    m_depth = depth;
-    m_score = score;
-    m_eval = eval;
-    m_pv_bound = (was_pv << 2) + bound;
+    if (!tthit || bound == EXACT || depth + 4 > m_depth) {
+        m_key = key_from_hash(hash);
+        m_depth = depth;
+        m_score = score;
+        m_eval = eval;
+        m_pv_bound = (was_pv << 2) + bound;
+    }
 }
 
 void TTEntry::reset() {
