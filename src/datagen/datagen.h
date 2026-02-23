@@ -72,8 +72,11 @@ class DatagenThread {
 
     void run() {
         m_stop_flag = false;
-        while (!m_stop_flag)
+        while (!m_stop_flag) {
             play_game();
+            if (m_position_count % 10'000 == 0)
+                m_file_out.flush();
+        }
 
         m_file_out.flush();
     }
@@ -92,6 +95,7 @@ class DatagenThread {
         init_pos_randomly();
 
         // Search deeper to verify position before generating data from it
+        m_td->reset_search_parameters();
         m_td->set_search_limits({VERIFICATION_MAX_DEPTH, VERIFICATION_SOFT_NODE_LIMIT, VERIFICATION_HARD_NODE_LIMIT});
 
         ScoreType verification_score = iterative_deepening(*m_td);
@@ -99,7 +103,7 @@ class DatagenThread {
             return;
         }
 
-        GameResult result;
+        GameResult result = NO_RESULT;
         int win_count = 0;
         int draw_count = 0;
         int position_count = 0;
@@ -159,6 +163,7 @@ class DatagenThread {
                 break;
 
             m_td->position.make_move<true>(move);
+            m_td->position.update_game_history();
         }
 
         if (result != NO_RESULT) {

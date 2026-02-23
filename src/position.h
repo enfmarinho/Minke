@@ -10,6 +10,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <string>
 
 #include "move.h"
@@ -93,6 +94,17 @@ class Position {
     inline Bitboard get_pins() const { return m_curr_state.pins; }
     inline Bitboard get_castle_rooks() const { return m_curr_state.castle_rooks; }
     inline void reset_history() { m_history_ply = 0; }
+
+    // if there is more that 100 positions in the game history stacks, clean up the first ones by shift the array
+    void update_game_history() {
+        if (m_history_ply <= 100) // nothing to do
+            return;
+
+        memmove(m_history_stack, m_history_stack + m_history_ply - 100, sizeof(BoardState) * 100);
+        memmove(m_played_positions, m_played_positions + m_history_ply - 100, sizeof(HashType) * 100);
+
+        m_history_ply = 100;
+    }
 
   private:
     template <bool UPDATE>
