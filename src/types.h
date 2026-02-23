@@ -113,6 +113,7 @@ constexpr int MAX_MOVES_PER_POS = 256;
 constexpr int MAX_SEARCH_DEPTH = 256;
 constexpr int MAX_PLY = MAX_SEARCH_DEPTH + 100 + 5; // Plus 100 because of fifty move rule and plus 5 just to be safe
 
+constexpr ScoreType TB_WIN_SCORE = 31000;
 constexpr ScoreType MATE_SCORE = 32000;
 constexpr ScoreType MATE_FOUND = MATE_SCORE - MAX_SEARCH_DEPTH;
 constexpr ScoreType MAX_SCORE = 32500;

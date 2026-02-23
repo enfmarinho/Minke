@@ -112,7 +112,7 @@ ScoreType NNUE::flatten_screlu_and_affine(const std::array<int16_t, HIDDEN_LAYER
 #endif
 
     sum = (sum / QA + network.output_bias) * SCALE / QAB;
-    return std::clamp(sum, -MATE_FOUND + 1, MATE_FOUND - 1);
+    return std::clamp(sum, -TB_WIN_SCORE + 1, TB_WIN_SCORE - 1);
 }
 
 ScoreType NNUE::eval(const Color &stm) const {
