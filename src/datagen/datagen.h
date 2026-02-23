@@ -18,6 +18,7 @@
 #include <ios>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -28,6 +29,7 @@
 #include "../movegen.h"
 #include "../position.h"
 #include "../search.h"
+#include "../tb.h"
 #include "../types.h"
 #include "packed_position.h"
 #include "viriformat.h"
@@ -157,6 +159,25 @@ class DatagenThread {
                 score = 0;
             }
 
+            if (count_bits(m_td->position.get_occupancy()) < TB_LARGEST && m_td->position.get_fifty_move_ply() == 0 &&
+                m_td->position.get_castling_rights() == NO_CASTLING) {
+                const ProbeResult tb_result = probe_tb(m_td->position);
+
+                switch (tb_result) {
+                    case ProbeResult::WIN:
+                        score = TB_WIN_SCORE, result = m_td->position.get_stm() == WHITE ? WIN : LOSS;
+                        break;
+                    case ProbeResult::LOSS:
+                        score = -TB_WIN_SCORE, result = m_td->position.get_stm() == WHITE ? LOSS : WIN;
+                        break;
+                    case ProbeResult::DRAW:
+                        score = 0, result = DRAW;
+                        break;
+                    case ProbeResult::FAILED:
+                        break;
+                }
+            }
+
             m_games.push(move, score);
 
             if (result != NO_RESULT)
@@ -219,9 +240,16 @@ class DatagenThread {
 
 class DatagenEngine {
   public:
-    void datagen_loop(int thread_count, int tt_size_mb, std::string& dir_path) {
+    void datagen_loop(int thread_count, int tt_size_mb, std::string& dir_path,
+                      const std::optional<std::string>& syzygy_path) {
         uint64_t master_seed = SeedGenerator::master_seed();
         std::cout << "Datagen started with " << thread_count << " thread(s) and " << master_seed << " seed\n";
+
+        bool syzygy_failure = syzygy_path && (!tb_init(syzygy_path.value().c_str()) || TB_LARGEST == 0);
+        if (syzygy_failure) {
+            std::cerr << "Error: failed to initialize syzygy tablebases" << std::endl;
+        }
+
         start(thread_count, tt_size_mb, dir_path, master_seed);
 
         m_start_time = now();
@@ -247,6 +275,10 @@ class DatagenEngine {
 
         stop();
         report();
+
+        if (!syzygy_failure && syzygy_path) {
+            tb_free();
+        }
 
         std::cout << "Datagen ran successfully!\n";
     }
