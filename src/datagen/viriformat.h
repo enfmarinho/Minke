@@ -31,36 +31,36 @@ class Viriformat {
     }
 
     void push(const Move &move, const ScoreType &score) {
-        uint16_t encoded_move = 0;
-        encoded_move = move.from_and_to();
+        uint16_t packed_move = 0;
+        packed_move = move.from_and_to();
         if (move.is_ep()) {
-            encoded_move |= 0b01 << 14;
+            packed_move |= 0b01 << 14;
         } else if (move.is_castle()) {
-            encoded_move |= 0b10 << 14;
+            packed_move |= 0b10 << 14;
         } else if (move.is_promotion()) {
-            encoded_move |= (move.promotee() - 1) << 12;
-            encoded_move |= 0b11 << 14;
+            packed_move |= (move.promotee() - 1) << 12;
+            packed_move |= 0b11 << 14;
         }
 
-        m_moves_scores.emplace_back(encoded_move, score);
+        m_moves_scores.emplace_back(packed_move, score);
     }
 
     void write(std::ofstream &file_out, GameResult result) {
-        constexpr char null_terminator[sizeof(ScoredMove)] = {};
+        constexpr char null_terminator[sizeof(MoveScore)] = {};
 
         m_initial_pos.set_result(result);
         file_out.write(reinterpret_cast<const char *>(&m_initial_pos), sizeof(PackedPosition));
         file_out.write(reinterpret_cast<const char *>(m_moves_scores.data()),
-                       sizeof(ScoredMove) * m_moves_scores.size());
-        file_out.write(reinterpret_cast<const char *>(null_terminator), sizeof(ScoredMove));
+                       sizeof(MoveScore) * m_moves_scores.size());
+        file_out.write(reinterpret_cast<const char *>(null_terminator), sizeof(MoveScore));
     }
 
   private:
     struct MoveScore {
-        uint16_t score;
-        int16_t packed_move;
+        uint16_t packed_move;
+        int16_t score;
 
-        MoveScore(uint16_t _score, int16_t _packed_move) : score(_score), packed_move(_packed_move) {}
+        MoveScore(uint16_t _packed_move, int16_t _score) : packed_move(_packed_move), score(_score) {}
     };
     static_assert(sizeof(MoveScore) == 4, "MoveScore struct is not 4 bytes");
 
