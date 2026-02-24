@@ -29,6 +29,7 @@
 #include "../position.h"
 #include "../search.h"
 #include "../types.h"
+#include "../wdl.h"
 #include "packed_position.h"
 #include "viriformat.h"
 
@@ -99,7 +100,8 @@ class DatagenThread {
         m_td->set_search_limits({VERIFICATION_MAX_DEPTH, VERIFICATION_SOFT_NODE_LIMIT, VERIFICATION_HARD_NODE_LIMIT});
 
         ScoreType verification_score = iterative_deepening(*m_td);
-        ScoreType normalized_verification_score = normalize_score(verification_score);
+        ScoreType normalized_verification_score =
+            normalize_score(verification_score, m_td->position.get_material_count());
         if (std::abs(normalized_verification_score) > VERIFICATION_MAX_SCORE) {
             return;
         }
@@ -114,7 +116,7 @@ class DatagenThread {
             m_td->set_search_limits({MAX_SEARCH_DEPTH, SOFT_NODE_LIMIT, HARD_NODE_LIMIT});
 
             ScoreType score = iterative_deepening(*m_td);
-            ScoreType normalized_score = normalize_score(score);
+            ScoreType normalized_score = normalize_score(score, m_td->position.get_material_count());
             ++position_count;
 
             Move move = m_td->best_move;
