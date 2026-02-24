@@ -59,6 +59,7 @@ struct ThreadData {
     int64_t nodes_searched;
     int height;
     bool stop;
+    bool datagen;
     bool report;
     bool chess960;
 
@@ -66,6 +67,8 @@ struct ThreadData {
     void reset_search_parameters();
     void set_search_limits(const SearchLimits sl);
 };
+
+ScoreType normalize_score(ScoreType score);
 
 ScoreType iterative_deepening(ThreadData &td);
 ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);

@@ -29,10 +29,10 @@ void print();
 
 class UCI {
   public:
-    UCI() = delete;
-    UCI(int argc, char *argv[]);
+    UCI();
     ~UCI();
     void loop();
+    void bench(int depth);
 
   private:
     void position(std::istringstream &);
@@ -47,7 +47,6 @@ class UCI {
     void go();
 
     void print_debug_info();
-    void bench(int depth);
     void eval();
 
     std::thread m_thread;
