@@ -251,8 +251,9 @@ void UCI::set_option(std::istringstream &iss) {
         std::cout << "set SyzygyProbeLimit to " << value_int << "\n";
         m_td->syzygy_probe_limit = value_int;
     } else if (token == "SyzygyPath") {
-        bool init_success = m_td->syzygy_enabled = m_tb_initialized = tb_init(value.c_str());
-        std::cout << (init_success ? "set SyzygyPath to " + value : "Failed to initialize syzygy table bases") << "\n";
+        m_td->syzygy_enabled = m_tb_initialized = tb_init(value.c_str());
+        std::cout << "info string Found " << TB_NUM_WDL << " WDL and " << TB_NUM_DTZ << " DTZ tablebase files up to "
+                  << TB_LARGEST << "-man\n";
     }
 #ifdef TUNE
     else if (TunableParam *param_ptr = TunableParamList::get().find(token)) {
