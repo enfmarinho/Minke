@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 # Sources files
 file(GLOB SOURCES src/*.cpp)
+list(APPEND SOURCES src/pyrrhic/tbprobe.cpp)
 
 add_executable(minke ${SOURCES})
 
