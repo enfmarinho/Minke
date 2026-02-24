@@ -159,7 +159,7 @@ class DatagenThread {
                 score = 0;
             }
 
-            if (count_bits(m_td->position.get_occupancy()) < TB_LARGEST && m_td->position.get_fifty_move_ply() == 0 &&
+            if (count_bits(m_td->position.get_occupancy()) <= TB_LARGEST && m_td->position.get_fifty_move_ply() == 0 &&
                 m_td->position.get_castling_rights() == NO_CASTLING) {
                 const ProbeResult tb_result = probe_tb(m_td->position);
 
