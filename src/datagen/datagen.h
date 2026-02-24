@@ -99,7 +99,8 @@ class DatagenThread {
         m_td->set_search_limits({VERIFICATION_MAX_DEPTH, VERIFICATION_SOFT_NODE_LIMIT, VERIFICATION_HARD_NODE_LIMIT});
 
         ScoreType verification_score = iterative_deepening(*m_td);
-        if (std::abs(verification_score) > VERIFICATION_MAX_SCORE) {
+        ScoreType normalized_verification_score = normalize_score(verification_score);
+        if (std::abs(normalized_verification_score) > VERIFICATION_MAX_SCORE) {
             return;
         }
 
