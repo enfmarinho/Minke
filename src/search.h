@@ -57,11 +57,15 @@ struct ThreadData {
     SearchLimits search_limits;
     TimeManager time_manager;
     int64_t nodes_searched;
+    int64_t tb_hits;
     int height;
     bool stop;
     bool datagen;
     bool report;
     bool chess960;
+    int syzygy_probe_limit;
+    int syzygy_probe_depth;
+    bool syzygy_enabled;
 
     ThreadData();
     void reset_search_parameters();

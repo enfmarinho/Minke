@@ -24,6 +24,14 @@ static constexpr CounterType HASH_MAX = 2097152;
 static constexpr CounterType THREADS_DEFAULT = 1;
 static constexpr CounterType THREADS_MIN = 1;
 static constexpr CounterType THREADS_MAX = 1;
+
+static constexpr CounterType SYZYGY_PROBE_LIMIT_DEFAULT = 7;
+static constexpr CounterType SYZYGY_PROBE_LIMIT_MIN = 0;
+static constexpr CounterType SYZYGY_PROBE_LIMIT_MAX = 7;
+
+static constexpr CounterType SYZYGY_PROBE_DEPTH_DEFAULT = 1;
+static constexpr CounterType SYZYGY_PROBE_DEPTH_MIN = 1;
+static constexpr CounterType SYZYGY_PROBE_DEPTH_MAX = 255;
 void print();
 } // namespace EngineOptions
 
@@ -49,6 +57,7 @@ class UCI {
     void print_debug_info();
     void eval();
 
+    bool m_tb_initialized;
     std::thread m_thread;
     ThreadData *m_td;
 };

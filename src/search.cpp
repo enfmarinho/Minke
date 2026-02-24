@@ -17,9 +17,12 @@
 #include "move.h"
 #include "movepicker.h"
 #include "position.h"
+#include "pyrrhic/tbprobe.h"
+#include "tb.h"
 #include "tt.h"
 #include "tune.h"
 #include "types.h"
+#include "uci.h"
 
 ScoreType normalize_score(ScoreType score) {
     // TODO scores should be normalize such that +100/-100 means 50% chance of wining or losing
@@ -36,7 +39,7 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
     }
     // Add 1 to time_passed() to avoid division by 0
     std::cout << " time " << td.time_manager.time_passed() << " nodes " << td.nodes_searched << " nps "
-              << td.nodes_searched * 1000 / (td.time_manager.time_passed() + 1) << " pv ";
+              << td.nodes_searched * 1000 / (td.time_manager.time_passed() + 1) << " tbhits " << td.tb_hits << " pv ";
     pv_list.print(td.chess960, td.position.get_castle_rooks());
     std::cout << std::endl;
 }
@@ -56,6 +59,9 @@ ThreadData::ThreadData() {
     datagen = false;
     report = true;
     reset_search_parameters();
+    syzygy_probe_limit = EngineOptions::SYZYGY_PROBE_LIMIT_DEFAULT;
+    syzygy_probe_depth = EngineOptions::SYZYGY_PROBE_DEPTH_DEFAULT;
+    syzygy_enabled = false;
 }
 
 void ThreadData::reset_search_parameters() {
@@ -63,6 +69,7 @@ void ThreadData::reset_search_parameters() {
     stop = true;
     height = 0;
     nodes_searched = -1; // Avoid counting the root
+    tb_hits = 0;
     time_manager.reset();
     search_limits.reset();
     // TODO i dont think this is necessary
@@ -193,6 +200,51 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     if (!pv_node && !singular_search && tthit && ttdepth >= depth &&
         (ttbound == EXACT || (ttbound == UPPER && ttscore <= alpha) || (ttbound == LOWER && ttscore >= beta))) {
         return ttscore;
+    }
+
+    ScoreType syzygy_min = -MAX_SCORE;
+    ScoreType syzygy_max = MAX_SCORE;
+    int material_count = position.get_material_count();
+    int syzygy_material_limit = std::min(td.syzygy_probe_limit, TB_LARGEST);
+
+    // Probe the syzygy tablebases
+    if (!root && !singular_search && td.syzygy_enabled && position.get_castling_rights() == NO_CASTLING &&
+        position.get_fifty_move_ply() == 0 && material_count <= syzygy_material_limit &&
+        (material_count < syzygy_material_limit || depth >= td.syzygy_probe_depth)) {
+        const ProbeResult tb_result = probe_tb(position);
+
+        if (tb_result != ProbeResult::FAILED) {
+            ++td.tb_hits;
+            BoundType bound = BOUND_EMPTY;
+            ScoreType tb_score = SCORE_NONE;
+
+            switch (tb_result) {
+                case ProbeResult::WIN:
+                    bound = LOWER, tb_score = TB_WIN_SCORE - td.height;
+                    break;
+                case ProbeResult::LOSS:
+                    bound = UPPER, tb_score = -TB_WIN_SCORE + td.height;
+                    break;
+                case ProbeResult::DRAW:
+                    bound = EXACT, tb_score = 0;
+                    break;
+                case ProbeResult::FAILED:
+                    __builtin_unreachable();
+            }
+
+            if (bound == EXACT || (bound == LOWER && tb_score >= beta) || (bound == UPPER && tb_score <= alpha)) {
+                td.tt.store(position.get_hash(), depth, MOVE_NONE, tb_score, SCORE_NONE, bound, ttpv, td.tt.age(),
+                            tthit);
+                return tb_score;
+            }
+
+            if (pv_node && bound == LOWER) {
+                alpha = std::max(alpha, tb_score);
+                syzygy_min = tb_score;
+            } else if (pv_node && bound == UPPER) {
+                syzygy_max = tb_score;
+            }
+        }
     }
 
     // Internal Iterative Reductions
@@ -417,6 +469,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         return position.in_check() ? -MATE_SCORE + td.height : 0;
     }
 
+    best_score = std::clamp(best_score, syzygy_min, syzygy_max);
     if (!stop_search(td)) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
         td.tt.store(position.get_hash(), depth, best_move, best_score, eval, bound, ttpv, td.tt.age(), tthit);

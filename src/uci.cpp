@@ -22,6 +22,7 @@
 #include "movegen.h"
 #include "movepicker.h"
 #include "position.h"
+#include "pyrrhic/tbprobe.h"
 #include "search.h"
 #include "tt.h"
 #include "tune.h"
@@ -35,6 +36,7 @@ UCI::UCI() {
         std::exit(EXIT_FAILURE);
     }
 
+    m_tb_initialized = false;
     m_td = new (mem) ThreadData();
     m_td->tt.resize(EngineOptions::HASH_DEFAULT);
     m_td->reset_search_parameters();
@@ -46,6 +48,10 @@ UCI::~UCI() {
         m_td->~ThreadData();
         aligned_free(m_td);
         m_td = nullptr;
+    }
+
+    if (m_tb_initialized) {
+        tb_free();
     }
 }
 
@@ -229,11 +235,24 @@ void UCI::set_option(std::istringstream &iss) {
     iss >> garbage; // Consume the "value" token.
     iss >> value;
     if (token == "Hash" && valid_int_value(EngineOptions::HASH_MIN, EngineOptions::HASH_MAX)) {
+        std::cout << "set Hash to " << value_int << "\n";
         m_td->tt.resize(value_int);
     } else if (token == "Threads" && valid_int_value(EngineOptions::THREADS_MIN, EngineOptions::THREADS_MAX)) {
         // For now this is only for compatibility with OpenBench
     } else if (token == "UCI_Chess960" && valid_bool_value()) {
+        std::cout << "set chess960 to " << value_bool << "\n";
         m_td->chess960 = value_bool;
+    } else if (token == "SyzygyProbeDepth" &&
+               valid_int_value(EngineOptions::SYZYGY_PROBE_DEPTH_MIN, EngineOptions::SYZYGY_PROBE_DEPTH_MAX)) {
+        std::cout << "set SyzygyProbeDepth to " << value_int << "\n";
+        m_td->syzygy_probe_depth = value_int;
+    } else if (token == "SyzygyProbeLimit" &&
+               valid_int_value(EngineOptions::SYZYGY_PROBE_LIMIT_MIN, EngineOptions::SYZYGY_PROBE_LIMIT_MAX)) {
+        std::cout << "set SyzygyProbeLimit to " << value_int << "\n";
+        m_td->syzygy_probe_limit = value_int;
+    } else if (token == "SyzygyPath") {
+        bool init_success = m_td->syzygy_enabled = m_tb_initialized = tb_init(value.c_str());
+        std::cout << (init_success ? "set SyzygyPath to " + value : "Failed to initialize syzygy table bases") << "\n";
     }
 #ifdef TUNE
     else if (TunableParam *param_ptr = TunableParamList::get().find(token)) {
@@ -349,6 +368,11 @@ void EngineOptions::print() {
     std::cout << "option name Threads type spin default " << THREADS_DEFAULT << " min " << THREADS_MIN << " max "
               << THREADS_MAX << "\n";
     std::cout << "option name UCI_Chess960 type check default false\n";
+    std::cout << "option name SyzygyPath type string default <empty>\n";
+    std::cout << "option name SyzygyProbeLimit type spin default " << SYZYGY_PROBE_LIMIT_DEFAULT << " min "
+              << SYZYGY_PROBE_LIMIT_MIN << " max " << SYZYGY_PROBE_LIMIT_MAX << "\n";
+    std::cout << "option name SyzygyProbeDepth type spin default " << SYZYGY_PROBE_DEPTH_DEFAULT << " min "
+              << SYZYGY_PROBE_DEPTH_MIN << " max " << SYZYGY_PROBE_DEPTH_MAX << "\n";
 
 #ifdef TUNE
     for (const TunableParam &tunable_param : TunableParamList::get()) {
