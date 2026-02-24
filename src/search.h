@@ -62,6 +62,7 @@ struct ThreadData {
     bool datagen;
     bool report;
     bool chess960;
+    bool show_wdl;
 
     ThreadData();
     void reset_search_parameters();

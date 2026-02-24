@@ -30,6 +30,12 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
     } else {
         std::cout << " score cp " << normalize_score(eval, td.position.get_material_count());
     }
+    if (td.show_wdl) {
+        ScoreType w = win_rate_model(eval, td.position.get_material_count());
+        ScoreType l = win_rate_model(-eval, td.position.get_material_count());
+        ScoreType d = 1000 - w - l;
+        std::cout << " wdl " << w << " " << d << " " << l;
+    }
     // Add 1 to time_passed() to avoid division by 0
     std::cout << " time " << td.time_manager.time_passed() << " nodes " << td.nodes_searched << " nps "
               << td.nodes_searched * 1000 / (td.time_manager.time_passed() + 1) << " pv ";
@@ -51,6 +57,7 @@ inline void SearchLimits::reset() {
 ThreadData::ThreadData() {
     datagen = false;
     report = true;
+    show_wdl = false;
     reset_search_parameters();
 }
 

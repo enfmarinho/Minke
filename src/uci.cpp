@@ -234,6 +234,8 @@ void UCI::set_option(std::istringstream &iss) {
         // For now this is only for compatibility with OpenBench
     } else if (token == "UCI_Chess960" && valid_bool_value()) {
         m_td->chess960 = value_bool;
+    } else if (token == "UCI_ShowWDL" && valid_bool_value()) {
+        m_td->show_wdl = value_bool;
     }
 #ifdef TUNE
     else if (TunableParam *param_ptr = TunableParamList::get().find(token)) {
@@ -349,6 +351,7 @@ void EngineOptions::print() {
     std::cout << "option name Threads type spin default " << THREADS_DEFAULT << " min " << THREADS_MIN << " max "
               << THREADS_MAX << "\n";
     std::cout << "option name UCI_Chess960 type check default false\n";
+    std::cout << "option name UCI_ShowWDL type check default false\n";
 
 #ifdef TUNE
     for (const TunableParam &tunable_param : TunableParamList::get()) {
