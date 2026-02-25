@@ -227,7 +227,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     // Forward pruning methods
     if (!in_check && !pv_node && !root && !singular_search) {
         // Reverse futility pruning
-        if (depth < rfp_max_depth() && eval - rfp_margin() * (depth - improving) >= beta)
+        if (depth < rfp_max_depth() && (ttmove == MOVE_NONE || ttmove.is_noisy()) &&
+            eval - rfp_margin() * (depth - improving) >= beta)
             return eval;
 
         // Razoring heuristic
