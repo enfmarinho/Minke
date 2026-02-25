@@ -110,3 +110,16 @@ void TranspositionTable::clear() {
         }
     }
 }
+
+size_t TranspositionTable::hashfull() const {
+    size_t hit = 0;
+    for (size_t i = 0; i < 1000; i++) {
+        const TTBucket &bucket = m_table[i];
+        for (size_t idx = 0; idx < BUCKET_SIZE; idx++) {
+            const TTEntry &tte = bucket.entry[idx];
+            if (tte.key() != 0 && tte.age() == m_age)
+                hit++;
+        }
+    }
+    return hit / (2 * BUCKET_SIZE);
+}

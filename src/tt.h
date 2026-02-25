@@ -77,6 +77,7 @@ class TranspositionTable {
     void resize(size_t MB);
     void clear();
     size_t tt_size_mb() const { return size_mb; }
+    size_t hashfull() const;
 
   private:
     static constexpr IndexType MAX_AGE = 1 << 5;

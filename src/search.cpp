@@ -38,7 +38,8 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
     }
     // Add 1 to time_passed() to avoid division by 0
     std::cout << " time " << td.time_manager.time_passed() << " nodes " << td.nodes_searched << " nps "
-              << td.nodes_searched * 1000 / (td.time_manager.time_passed() + 1) << " pv ";
+              << td.nodes_searched * 1000 / (td.time_manager.time_passed() + 1) << " hashfull " << td.tt.hashfull()
+              << " pv ";
     pv_list.print(td.chess960, td.position.get_castle_rooks());
     std::cout << std::endl;
 }
