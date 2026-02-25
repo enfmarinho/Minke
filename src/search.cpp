@@ -221,8 +221,14 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     td.nodes[td.height + 1].excluded_move = MOVE_NONE;
     td.search_history.clear_killers(td.height + 1);
 
-    bool improving = td.height >= 2 && (node.static_eval > td.nodes[td.height - 2].static_eval ||
-                                        td.nodes[td.height - 2].static_eval == SCORE_NONE);
+    bool improving = true;
+    if (in_check) {
+        improving = false;
+    } else if (td.height >= 2 && td.nodes[td.height - 2].static_eval != SCORE_NONE) {
+        improving = node.static_eval > td.nodes[td.height - 2].static_eval;
+    } else if (td.height >= 4 && td.nodes[td.height - 4].static_eval != SCORE_NONE) {
+        improving = node.static_eval > td.nodes[td.height - 4].static_eval;
+    }
 
     // Forward pruning methods
     if (!in_check && !pv_node && !root && !singular_search) {
