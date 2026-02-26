@@ -100,8 +100,11 @@ class TunableParamList {
 
 #endif // #ifdef TUNE
 
+#define FIXED_PARAM(name, default, min, max, cend, rend) \
+    constexpr int name() { return default; }
+
 // Aspiration Windows
-TUNABLE_PARAM(aw_min_depth, 3, 1, 10, 0.5, 0.002)
+FIXED_PARAM(aw_min_depth, 3, 1, 10, 0.5, 0.002)
 TUNABLE_PARAM(aw_first_window, 10, 5, 200, 10, 0.002)
 TUNABLE_PARAM(aw_widening_factor, 50, 1, 100, 5, 0.002)
 
@@ -126,8 +129,8 @@ TUNABLE_PARAM(lmp_scale, 30, 20, 120, 5, 0.002)
 TUNABLE_PARAM(singular_extension_min_depth, 7, 4, 10, 0.5, 0.002)
 
 // Interval Iterative Reduction
-TUNABLE_PARAM(iir_min_depth, 3, 3, 8, 0.5, 0.002)
-TUNABLE_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
+FIXED_PARAM(iir_min_depth, 3, 3, 8, 0.5, 0.002)
+FIXED_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
 
 // Razoring
 TUNABLE_PARAM(razoring_max_depth, 5, 2, 6, 0.5, 0.002)
@@ -138,7 +141,7 @@ TUNABLE_PARAM(qsFutilityMargin, 200, 0, 500, 25, 0.002)
 
 // Prob Cut
 TUNABLE_PARAM(probcut_margin, 300, 100, 400, 15, 0.002)
-TUNABLE_PARAM(probcut_min_depth, 5, 4, 8, 0.5, 0.002)
+FIXED_PARAM(probcut_min_depth, 5, 4, 8, 0.5, 0.002)
 
 // History Formulas Parameters
 TUNABLE_PARAM(hist_bonus_mult, 224, 1, 1024, 50, 0.002)
