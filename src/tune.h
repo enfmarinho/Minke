@@ -129,7 +129,7 @@ TUNABLE_PARAM(lmp_scale, 30, 20, 120, 5, 0.002)
 TUNABLE_PARAM(singular_extension_min_depth, 7, 4, 10, 0.5, 0.002)
 
 // Interval Iterative Reduction
-FIXED_PARAM(iir_min_depth, 3, 3, 8, 0.5, 0.002)
+FIXED_PARAM(iir_min_depth, 4, 3, 8, 0.5, 0.002)
 FIXED_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
 
 // Razoring
