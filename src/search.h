@@ -57,6 +57,7 @@ struct ThreadData {
     SearchLimits search_limits;
     TimeManager time_manager;
     int64_t nodes_searched;
+    bool nmp_disabled;
     int height;
     bool stop;
     bool datagen;
