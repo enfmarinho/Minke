@@ -36,6 +36,20 @@ class Viriformat {
         if (move.is_ep()) {
             packed_move |= 0b01 << 14;
         } else if (move.is_castle()) {
+            packed_move = move.from();
+            // TODO this won't work for FRC
+            // Viriformat expects that a castling move destiny is the rook source sq
+            if (move.to() == g1) {
+                packed_move |= h1 << 6;
+            } else if (move.to() == c1) {
+                packed_move |= a1 << 6;
+            } else if (move.to() == g8) {
+                packed_move |= h8 << 6;
+            } else if (move.to() == c8) {
+                packed_move |= a8 << 6;
+            } else {
+                assert(false);
+            }
             packed_move |= 0b10 << 14;
         } else if (move.is_promotion()) {
             packed_move |= (move.promotee() - 1) << 12;
