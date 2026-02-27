@@ -74,7 +74,7 @@ class History {
     }
 
     HistoryType m_capture_history[2][6][64][5];
-    HistoryType m_search_history_table[COLOR_NB][64 * 64];
+    HistoryType m_search_history_table[2][64 * 64][2][2];
     HistoryType m_continuation_history[12 * 64][12 * 64];
     Move m_counter_moves[64 * 64];
     Move m_killer_moves[MAX_SEARCH_DEPTH][2];

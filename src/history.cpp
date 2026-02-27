@@ -87,7 +87,8 @@ void History::update_capture_history_score(const Position &position, const Move 
 }
 
 void History::update_history_heuristic_score(const Position &position, const Move &move, int bonus) {
-    HistoryType *ptr = &m_search_history_table[position.get_stm()][move.from_and_to()];
+    HistoryType *ptr = &m_search_history_table[position.get_stm()][move.from_and_to()]
+                                              [position.is_threaded(move.from())][position.is_threaded(move.to())];
     update_score(ptr, bonus);
 }
 
@@ -110,7 +111,8 @@ void History::update_continuation_history_score(const ThreadData &td, const Piec
 }
 
 HistoryType History::get_history_heuristic_score(const Position &position, const Move &move) const {
-    return m_search_history_table[position.get_stm()][move.from_and_to()];
+    return m_search_history_table[position.get_stm()][move.from_and_to()][position.is_threaded(move.from())]
+                                 [position.is_threaded(move.to())];
 }
 
 HistoryType History::get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const {
