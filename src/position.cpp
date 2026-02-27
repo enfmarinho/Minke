@@ -223,14 +223,14 @@ void Position::reset() {
     std::memset(m_occupancies, 0ULL, sizeof(m_occupancies));
     std::memset(m_pieces, 0ULL, sizeof(m_pieces));
 
+    m_stm = WHITE;
     m_hash_key = 0ULL;
+    m_game_clock_ply = 0;
     m_history_ply = 0;
     m_curr_state.reset();
 
     if constexpr (UPDATE)
         reset_nnue();
-    update_pin_and_checkers_bb();
-    update_threats_bb();
 }
 
 template <bool UPDATE>
