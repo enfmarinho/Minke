@@ -151,15 +151,17 @@ struct BoardState {
     Square en_passant;
     Bitboard checkers;
     Bitboard pins;
+    Bitboard threats;
     Bitboard castle_rooks;
     void reset() {
-        checkers = 0;
-        pins = 0;
         captured = EMPTY;
         fifty_move_ply = 0;
         ply_from_null = 0;
         castling_rights = NO_CASTLING;
         en_passant = NO_SQ;
+        checkers = 0;
+        pins = 0;
+        threats = 0;
         castle_rooks = 0;
     }
 };

@@ -40,6 +40,7 @@ class Position {
     void unmake_null_move();
 
     inline bool in_check() const { return m_curr_state.checkers; }
+    inline bool is_threaded(const Square &sq) const { return m_curr_state.threats & (1ULL << sq); }
     bool is_attacked(const Square &sq) const;
     bool is_legal(const Move &move);
     bool is_pseudo_legal(const Move &move) const;
@@ -126,6 +127,7 @@ class Position {
     void make_en_passant(const Move &move);
     void update_castling_rights(const Move &move);
     void update_pin_and_checkers_bb();
+    void update_threats_bb();
 
     bool insufficient_material() const;
     bool repetition() const;
