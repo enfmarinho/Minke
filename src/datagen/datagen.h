@@ -106,7 +106,7 @@ class DatagenThread {
         GameResult result = NO_RESULT;
         int win_count = 0;
         int draw_count = 0;
-        int position_count = 0;
+        uint64_t position_count = 0;
 
         while (!m_stop_flag) {
             m_td->reset_search_parameters();
@@ -257,7 +257,7 @@ class DatagenEngine {
 
         TimeType elapsed_time = now() - m_start_time + 1; // plus 1 to avoid divisions by 0
 
-        auto print_info_line = [elapsed_time](std::string id, int game_count, int fen_count) {
+        auto print_info_line = [elapsed_time](std::string id, uint64_t game_count, uint64_t fen_count) {
             std::cout << "|";
             std::cout << std::setw(11) << std::right << id << " |";
             std::cout << std::setw(11) << std::right << game_count << " |";
@@ -271,8 +271,8 @@ class DatagenEngine {
         std::cout << "| thread id  | game count | fen count  |  games/s   |   fens/s   |\n";
         std::cout << line;
 
-        int game_count = 0;
-        int position_count = 0;
+        uint64_t game_count = 0;
+        uint64_t position_count = 0;
         for (const std::unique_ptr<DatagenThread>& dt_ptr : m_datagen_thread_ptrs) {
             print_info_line(std::to_string(dt_ptr->get_id()), dt_ptr->get_game_count(), dt_ptr->get_positions_count());
 
