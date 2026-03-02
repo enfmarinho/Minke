@@ -262,13 +262,13 @@ class DatagenEngine {
             std::cout << std::setw(11) << std::right << id << " |";
             std::cout << std::setw(11) << std::right << game_count << " |";
             std::cout << std::setw(11) << std::right << fen_count << " |";
-            std::cout << std::setw(11) << std::right << game_count * 1000 / elapsed_time << " |";
-            std::cout << std::setw(11) << std::right << fen_count * 1000 / elapsed_time << " |";
+            std::cout << std::setw(11) << std::right << 3600 * game_count * 1000 / elapsed_time << " |";
+            std::cout << std::setw(11) << std::right << 3600 * fen_count * 1000 / elapsed_time << " |";
             std::cout << "\n";
         };
 
         std::cout << line;
-        std::cout << "| thread id  | game count | fen count  |  games/s   |   fens/s   |\n";
+        std::cout << "| thread id  | game count | fen count  |  games/h   |   fens/h   |\n";
         std::cout << line;
 
         uint64_t game_count = 0;
