@@ -10,6 +10,8 @@
 
 #include "types.h"
 
+struct ThreadData;
+
 class TimeManager {
   public:
     TimeManager();
@@ -17,7 +19,7 @@ class TimeManager {
 
     void reset(CounterType inc, CounterType time, CounterType movestogo, CounterType movetime, bool infinite);
     void reset();
-    void update();
+    void update(const ThreadData &td);
     bool stop_early() const;
     bool time_over() const;
     TimeType time_passed() const;
@@ -28,6 +30,7 @@ class TimeManager {
     TimeType m_optimum_time;
     TimeType m_maximum_time;
 
+    double m_scale;
     bool m_movetime;
     bool m_time_set;
     bool m_can_stop;
