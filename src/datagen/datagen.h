@@ -36,11 +36,11 @@ class DatagenThread {
   private:
     static constexpr int VERIFICATION_MAX_SCORE = 800;
     static constexpr int VERIFICATION_SOFT_NODE_LIMIT = 80'000;
-    static constexpr int VERIFICATION_HARD_NODE_LIMIT = 500'000;
+    static constexpr int VERIFICATION_HARD_NODE_LIMIT = 200'000;
     static constexpr int VERIFICATION_MAX_DEPTH = 14;
 
-    static constexpr int SOFT_NODE_LIMIT = 25'000;
-    static constexpr int HARD_NODE_LIMIT = 100'000;
+    static constexpr int SOFT_NODE_LIMIT = 20'000;
+    static constexpr int HARD_NODE_LIMIT = 40'000;
 
     static constexpr int WIN_ADJ_PLY = 4;
     static constexpr int DRAW_ADJ_PLY = 12;
@@ -106,7 +106,7 @@ class DatagenThread {
         GameResult result = NO_RESULT;
         int win_count = 0;
         int draw_count = 0;
-        int position_count = 0;
+        uint64_t position_count = 0;
 
         while (!m_stop_flag) {
             m_td->reset_search_parameters();
@@ -257,22 +257,22 @@ class DatagenEngine {
 
         TimeType elapsed_time = now() - m_start_time + 1; // plus 1 to avoid divisions by 0
 
-        auto print_info_line = [elapsed_time](std::string id, int game_count, int fen_count) {
+        auto print_info_line = [elapsed_time](std::string id, uint64_t game_count, uint64_t fen_count) {
             std::cout << "|";
             std::cout << std::setw(11) << std::right << id << " |";
             std::cout << std::setw(11) << std::right << game_count << " |";
             std::cout << std::setw(11) << std::right << fen_count << " |";
-            std::cout << std::setw(11) << std::right << game_count * 1000 / elapsed_time << " |";
-            std::cout << std::setw(11) << std::right << fen_count * 1000 / elapsed_time << " |";
+            std::cout << std::setw(11) << std::right << 3600 * game_count * 1000 / elapsed_time << " |";
+            std::cout << std::setw(11) << std::right << 3600 * fen_count * 1000 / elapsed_time << " |";
             std::cout << "\n";
         };
 
         std::cout << line;
-        std::cout << "| thread id  | game count | fen count  |  games/s   |   fens/s   |\n";
+        std::cout << "| thread id  | game count | fen count  |  games/h   |   fens/h   |\n";
         std::cout << line;
 
-        int game_count = 0;
-        int position_count = 0;
+        uint64_t game_count = 0;
+        uint64_t position_count = 0;
         for (const std::unique_ptr<DatagenThread>& dt_ptr : m_datagen_thread_ptrs) {
             print_info_line(std::to_string(dt_ptr->get_id()), dt_ptr->get_game_count(), dt_ptr->get_positions_count());
 

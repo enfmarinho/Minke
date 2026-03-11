@@ -51,9 +51,11 @@ class __attribute__((packed)) PackedPosition {
             high_nibble = !high_nibble;
         }
 
-        m_stm_ep_sq = position.get_stm() == WHITE ? 0 : 0x80;
+        m_stm_ep_sq = position.get_stm() == WHITE ? 0 : 1 << 7;
         if (position.get_en_passant() != NO_SQ)
             m_stm_ep_sq |= static_cast<uint8_t>(position.get_en_passant());
+        else
+            m_stm_ep_sq |= 1 << 6; // No ep square
 
         m_half_move_counter = position.get_fifty_move_ply();
         m_game_clock = static_cast<uint16_t>((position.get_game_ply() / 2) + 1);
