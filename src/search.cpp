@@ -96,7 +96,7 @@ ScoreType iterative_deepening(ThreadData &td) {
 
         if (depth > 5)
             td.time_manager.update();
-        if (td.time_manager.stop_early())
+        if (td.time_manager.stop_early() || td.nodes_searched >= td.search_limits.optimum_node)
             break;
 
         td.time_manager.can_stop(); // Avoids stopping before depth 1 has been searched through
