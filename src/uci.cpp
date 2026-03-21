@@ -144,7 +144,7 @@ void UCI::print_debug_info() {
         std::cout << scored_move.move.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks()) << "("
                   << scored_move.score << ") ";
     }
-    std::cout << "\nNNUE eval: " << m_td->position.eval() << std::endl;
+    std::cout << "\nNNUE eval: " << m_td->nnue.eval(m_td->position) << std::endl;
 }
 
 void UCI::position(std::istringstream &iss) {
@@ -189,13 +189,14 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
             }
         }
     }
-    m_td->position.reset_nnue();
+    m_td->nnue.reset();
 }
 
 void UCI::ucinewgame() {
     m_td->search_history.reset();
     m_td->time_manager.reset();
     m_td->position.set_fen<true>(START_FEN);
+    m_td->nnue.reset();
     m_td->reset_search_parameters();
     m_td->tt.clear();
 }
@@ -252,6 +253,7 @@ void UCI::bench(int depth) {
     for (const std::string &fen : BENCHMARK_FEN_LIST) {
         ucinewgame();
         m_td->position.set_fen<true>(fen);
+        m_td->nnue.reset();
         m_td->reset_search_parameters();
         m_td->search_limits.depth = depth;
         m_td->tt.clear();
@@ -297,7 +299,7 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
     return nodes;
 }
 
-void UCI::eval() { std::cout << "The position evaluation is " << m_td->position.eval() << std::endl; }
+void UCI::eval() { std::cout << "The position static evaluation is " << m_td->nnue.eval(m_td->position) << std::endl; }
 
 bool UCI::parse_go(std::istringstream &iss, bool bench) {
     std::string token;

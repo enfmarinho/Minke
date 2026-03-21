@@ -12,13 +12,12 @@
 #include "attacks.h"
 #include "hash.h"
 #include "incbin.h"
-#include "nnue.h"
 #include "search.h"
 #include "tune.h"
 #include "types.h"
 
 #ifndef EVALFILE
-#define EVALFILE "../src/minke.bin"
+#error "EVALFILE not defined! Cannot compile without it!\n"
 #endif // !EVALFILE
 
 INCBIN(NetParameters, EVALFILE);

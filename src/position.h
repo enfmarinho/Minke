@@ -14,7 +14,6 @@
 #include <string>
 
 #include "move.h"
-#include "nnue.h"
 #include "types.h"
 #include "utils.h"
 
@@ -29,7 +28,6 @@ class Position {
 
     template <bool UPDATE>
     void reset();
-    void reset_nnue();
 
     template <bool UPDATE>
     bool make_move(const Move &move);
@@ -50,7 +48,6 @@ class Position {
         return get_piece_bb(KNIGHT) || get_piece_bb(BISHOP) || get_piece_bb(ROOK) || get_piece_bb(QUEEN);
     }
     inline bool draw() { return insufficient_material() || repetition() || fifty_move_draw(); }
-    inline ScoreType eval() const { return m_nnue.eval(m_stm); }
 
     int legal_move_amount();
     bool no_legal_moves();
@@ -153,8 +150,6 @@ class Position {
     BoardState m_curr_state;
     BoardState m_history_stack[MAX_PLY];
     HashType m_played_positions[MAX_PLY];
-
-    NNUE m_nnue;
 };
 
 #endif // #ifndef POSITION_H

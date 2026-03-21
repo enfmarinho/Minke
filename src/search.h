@@ -10,6 +10,7 @@
 
 #include <cstdint>
 
+#include "eval/nnue.h"
 #include "history.h"
 #include "move.h"
 #include "pv_list.h"
@@ -50,6 +51,7 @@ struct ThreadData {
     TranspositionTable tt;
 
     Position position;
+    NNUE nnue;
     History search_history;
     NodeData nodes[MAX_SEARCH_DEPTH];
     Move best_move;

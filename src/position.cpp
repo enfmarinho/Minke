@@ -213,8 +213,6 @@ std::string Position::get_fen() const {
     return fen;
 }
 
-void Position::reset_nnue() { m_nnue.reset(*this); }
-
 template <bool UPDATE>
 void Position::reset() {
     for (int sqi = a1; sqi <= h8; ++sqi)
@@ -225,9 +223,6 @@ void Position::reset() {
     m_hash_key = 0ULL;
     m_history_ply = 0;
     m_curr_state.reset();
-
-    if constexpr (UPDATE)
-        reset_nnue();
 }
 
 template <bool UPDATE>
@@ -241,9 +236,6 @@ void Position::add_piece(const Piece &piece, const Square &sq) {
     m_board[sq] = piece;
 
     hash_piece_key(piece, sq);
-
-    if constexpr (UPDATE)
-        m_nnue.add_feature(piece, sq);
 }
 
 template <bool UPDATE>
@@ -257,9 +249,6 @@ void Position::remove_piece(const Piece &piece, const Square &sq) {
     m_board[sq] = EMPTY;
 
     hash_piece_key(piece, sq);
-
-    if constexpr (UPDATE)
-        m_nnue.remove_feature(piece, sq);
 }
 
 template <bool UPDATE>
@@ -270,9 +259,6 @@ void Position::move_piece(const Piece &piece, const Square &from, const Square &
 
 template <bool UPDATE>
 bool Position::make_move(const Move &move) {
-    if constexpr (UPDATE)
-        m_nnue.push();
-
     m_played_positions[m_history_ply] = m_hash_key;
     m_history_stack[m_history_ply] = m_curr_state;
     ++m_history_ply;
@@ -459,8 +445,6 @@ void Position::update_castling_rights(const Move &move) {
 template <bool UPDATE>
 void Position::unmake_move(const Move &move) {
     assert(m_history_ply > 0); // check if there is a move to unmake
-    if constexpr (UPDATE)
-        m_nnue.pop();
 
     --m_game_clock_ply;
 
@@ -841,7 +825,6 @@ void Position::print() const {
 
     std::cout << "\n\nFEN: " << get_fen();
     std::cout << "\nHash: " << m_hash_key;
-    std::cout << "\nEval: " << eval() << "\n";
 }
 
 bool Position::insufficient_material() const {

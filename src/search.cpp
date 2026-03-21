@@ -170,7 +170,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             return 0;
 
         if (td.height >= MAX_SEARCH_DEPTH - 1)
-            return position.in_check() ? 0 : position.eval();
+            return position.in_check() ? 0 : td.nnue.eval(position);
 
         // Mate distance pruning
         alpha = std::max(alpha, static_cast<ScoreType>(-MATE_SCORE + td.height));
@@ -207,13 +207,13 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     } else if (singular_search) {
         eval = node.static_eval;
     } else if (tthit) {
-        eval = node.static_eval = tteval != SCORE_NONE ? tteval : position.eval();
+        eval = node.static_eval = tteval != SCORE_NONE ? tteval : td.nnue.eval(position);
         if (ttscore != SCORE_NONE &&
             (ttbound == EXACT || (ttbound == UPPER && ttscore < eval) || (ttbound == LOWER && ttscore > eval)))
             eval = ttscore;
 
     } else {
-        eval = node.static_eval = position.eval();
+        eval = node.static_eval = td.nnue.eval(position);
         td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, eval, BOUND_EMPTY, ttpv, td.tt.age(), tthit);
     }
 
@@ -434,7 +434,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     else if (position.draw())
         return 0;
     else if (td.height >= MAX_SEARCH_DEPTH - 1)
-        return position.in_check() ? 0 : position.eval();
+        return position.in_check() ? 0 : td.nnue.eval(position);
 
     bool pv_node = alpha != beta - 1;
     NodeData &node = td.nodes[td.height];
@@ -456,7 +456,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         static_eval = node.static_eval = SCORE_NONE;
         best_score = -MAX_SCORE;
     } else if (tthit) {
-        static_eval = node.static_eval = tteval != SCORE_NONE ? tteval : position.eval();
+        static_eval = node.static_eval = tteval != SCORE_NONE ? tteval : td.nnue.eval(position);
 
         if (ttscore != SCORE_NONE && (ttbound == EXACT || (ttbound == UPPER && ttscore < static_eval) ||
                                       (ttbound == LOWER && ttscore > static_eval))) {
@@ -465,7 +465,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         best_score = static_eval;
 
     } else {
-        best_score = static_eval = node.static_eval = position.eval();
+        best_score = static_eval = node.static_eval = td.nnue.eval(position);
         td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, static_eval, BOUND_EMPTY, ttpv, td.tt.age(), tthit);
     }
 
