@@ -10,6 +10,7 @@
 #include <cmath>
 
 #include "attacks.h"
+#include "eval/arch.h"
 #include "hash.h"
 #include "incbin.h"
 #include "search.h"
@@ -55,9 +56,10 @@ void init_search_params() {
 void init_network_params() {
     const int16_t *pointer = reinterpret_cast<const int16_t *>(gNetParametersData);
 
-    for (int i = 0; i < INPUT_LAYER_SIZE; ++i)
-        for (int j = 0; j < HIDDEN_LAYER_SIZE; ++j)
-            network.hidden_weights[i * HIDDEN_LAYER_SIZE + j] = *(pointer++);
+    for (int bucket = 0; bucket < NUM_KING_BUCKETS; ++bucket)
+        for (int i = 0; i < INPUT_LAYER_SIZE; ++i)
+            for (int j = 0; j < HIDDEN_LAYER_SIZE; ++j)
+                network.hidden_weights[bucket * INPUT_LAYER_SIZE + i * HIDDEN_LAYER_SIZE + j] = *(pointer++);
 
     for (int i = 0; i < HIDDEN_LAYER_SIZE; ++i)
         network.hidden_bias[i] = *(pointer++);

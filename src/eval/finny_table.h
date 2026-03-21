@@ -47,9 +47,9 @@ class FinnyTable {
         void reset();
     };
 
-    FinnyTableCache &get_cache(Square king_sq, Color side);
+    FinnyTableCache &get_cache(const Color side, const bool flip, const size_t king_bucket);
 
-    std::array<std::array<std::array<FinnyTableCache, INPUT_BUCKETS>, 2>, 2> cache; // [stm][flip][bucket_idx]
+    std::array<std::array<std::array<FinnyTableCache, NUM_KING_BUCKETS>, 2>, 2> cache; // [side][flip][king_bucket_idx]
 };
 
 #endif // #ifndef FINNY_TABLE_H

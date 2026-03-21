@@ -10,17 +10,8 @@
 #include "../position.h"
 #include "arch.h"
 
-static size_t king_bucket(const Square king_sq, const Color side) {
-    const size_t pov_king_sq = side == WHITE ? king_sq : king_sq ^ 56;
-    return KING_BUCKETS[pov_king_sq];
-}
-
-static bool should_flip(const Square king_sq) {
-    return false; // STUB
-    return get_file(king_sq) > 3;
-}
-
-static size_t feature_idx(const Piece piece, const Square sq, const Color stm, const Square king_sq, const bool flip) {
+static size_t feature_idx(const Piece piece, const Square sq, const Color stm, const size_t king_bucket,
+                          const bool flip) {
     constexpr size_t COLOR_STRIDE = 64 * 6;
     constexpr size_t PIECE_STRIDE = 64;
 
@@ -31,10 +22,10 @@ static size_t feature_idx(const Piece piece, const Square sq, const Color stm, c
     if (flip) // Flip file
         pov_sq = pov_sq ^ 7;
 
-    size_t idx = king_bucket(king_sq, stm) * INPUT_LAYER_SIZE +      // Input bucket offset
-                 (piece_color != stm) * COLOR_STRIDE +               // Perspective offset
-                 get_piece_type(piece, piece_color) * PIECE_STRIDE + // Piece type offset
-                 pov_sq;
+    const size_t idx = king_bucket * INPUT_LAYER_SIZE +                    // Input bucket offset
+                       (piece_color != stm) * COLOR_STRIDE +               // Perspective offset
+                       get_piece_type(piece, piece_color) * PIECE_STRIDE + // Piece type offset
+                       pov_sq;
     return idx * HIDDEN_LAYER_SIZE;
 }
 
@@ -48,9 +39,11 @@ void FinnyTable::reset() {
 
 PovAccumulator FinnyTable::update(const Position &pos, const Color side) {
     const Square king_sq = pos.get_king_placement(side);
-    const bool flip = should_flip(king_sq);
+    const Square king_pov_sq = static_cast<Square>(side == WHITE ? king_sq : king_sq ^ 56);
+    const size_t king_bucket = KING_BUCKETS_LAYOUT[king_pov_sq];
+    const bool flip = get_file(king_pov_sq) > 3;
 
-    FinnyTableCache &cached_entry = get_cache(king_sq, side);
+    FinnyTableCache &cached_entry = get_cache(side, flip, king_bucket);
 
     size_t add[32], sub[32];
     size_t add_count = 0, sub_count = 0;
@@ -59,13 +52,13 @@ PovAccumulator FinnyTable::update(const Position &pos, const Color side) {
         Bitboard added = pos.get_piece_bb(piece) & ~cached_entry.occupancies[piece_idx];
         Bitboard removed = cached_entry.occupancies[piece_idx] & ~pos.get_piece_bb(piece);
         while (added) {
-            Square sq = poplsb(added);
-            add[add_count++] = feature_idx(piece, sq, side, king_sq, flip);
+            const Square sq = poplsb(added);
+            add[add_count++] = feature_idx(piece, sq, side, king_bucket, flip);
         }
 
         while (removed) {
-            Square sq = poplsb(removed);
-            sub[sub_count++] = feature_idx(piece, sq, side, king_sq, flip);
+            const Square sq = poplsb(removed);
+            sub[sub_count++] = feature_idx(piece, sq, side, king_bucket, flip);
         }
 
         cached_entry.occupancies[piece_idx] = pos.get_piece_bb(piece);
@@ -93,6 +86,6 @@ void FinnyTable::FinnyTableCache::reset() {
     accumulator.reset(network.hidden_bias);
 }
 
-FinnyTable::FinnyTableCache &FinnyTable::get_cache(Square king_sq, Color side) {
-    return cache[side][should_flip(king_sq)][king_bucket(king_sq, side)];
+FinnyTable::FinnyTableCache &FinnyTable::get_cache(const Color side, const bool flip, const size_t king_bucket) {
+    return cache[side][flip][king_bucket];
 }
