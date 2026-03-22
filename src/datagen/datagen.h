@@ -177,7 +177,7 @@ class DatagenThread {
     void init_pos_randomly() {
         m_td->position.set_fen<true>(START_FEN);
 
-        int move_count = rand(8, 12);
+        int move_count = 8 + (prng.rand<uint32_t>() % 5);
         for (int i = 0; i < move_count; ++i) {
             ScoredMove moves[MAX_MOVES_PER_POS];
             ScoredMove* end = gen_moves(moves, m_td->position, MoveGenType::GEN_ALL);
@@ -262,8 +262,8 @@ class DatagenEngine {
             std::cout << std::setw(11) << std::right << id << " |";
             std::cout << std::setw(11) << std::right << game_count << " |";
             std::cout << std::setw(11) << std::right << fen_count << " |";
-            std::cout << std::setw(11) << std::right << 3600 * game_count * 1000 / elapsed_time << " |";
-            std::cout << std::setw(11) << std::right << 3600 * fen_count * 1000 / elapsed_time << " |";
+            std::cout << std::setw(11) << std::right << 3600ull * game_count * 1000ull / elapsed_time << " |";
+            std::cout << std::setw(11) << std::right << 3600ull * fen_count * 1000ull / elapsed_time << " |";
             std::cout << "\n";
         };
 

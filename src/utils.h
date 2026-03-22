@@ -168,13 +168,6 @@ inline int get_pawn_promotion_rank(const Color &color) { return color == WHITE ?
 
 inline Direction get_pawn_offset(const Color &color) { return color == WHITE ? NORTH : SOUTH; }
 
-inline int64_t rand(int64_t min, int64_t max) {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    std::uniform_int_distribution<int64_t> dist(min, max);
-    return dist(gen);
-}
-
 #if defined(__linux__)
 #include <sys/mman.h>
 #endif
