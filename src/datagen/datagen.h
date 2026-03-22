@@ -177,7 +177,7 @@ class DatagenThread {
     void init_pos_randomly() {
         m_td->position.set_fen<true>(START_FEN);
 
-        int move_count = rand(8, 12);
+        int move_count = 8 + (prng.rand<uint32_t>() % 5);
         for (int i = 0; i < move_count; ++i) {
             ScoredMove moves[MAX_MOVES_PER_POS];
             ScoredMove* end = gen_moves(moves, m_td->position, MoveGenType::GEN_ALL);
