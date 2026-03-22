@@ -11,6 +11,7 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <span>
 
 #include "../types.h"
 #include "arch.h"
