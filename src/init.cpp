@@ -59,7 +59,8 @@ void init_network_params() {
     for (int bucket = 0; bucket < NUM_KING_BUCKETS; ++bucket)
         for (int i = 0; i < INPUT_LAYER_SIZE; ++i)
             for (int j = 0; j < HIDDEN_LAYER_SIZE; ++j)
-                network.hidden_weights[bucket * INPUT_LAYER_SIZE + i * HIDDEN_LAYER_SIZE + j] = *(pointer++);
+                network.hidden_weights[bucket * INPUT_LAYER_SIZE * HIDDEN_LAYER_SIZE + i * HIDDEN_LAYER_SIZE + j] =
+                    *(pointer++);
 
     for (int i = 0; i < HIDDEN_LAYER_SIZE; ++i)
         network.hidden_bias[i] = *(pointer++);
