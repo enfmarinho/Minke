@@ -22,6 +22,7 @@ using vepi32 = __m256i;
 inline vepi16 vepi16_zero() { return _mm256_setzero_si256(); }
 inline vepi32 vepi32_zero() { return _mm256_setzero_si256(); }
 inline vepi16 vepi16_set(const int16_t v) { return _mm256_set1_epi16(v); }
+inline void vepi16_store(vepi16* dst, const vepi16 vec) { _mm256_store_si256(dst, vec); }
 inline vepi16 vepi16_load(const int16_t* data) { return _mm256_load_si256(reinterpret_cast<const vepi16*>(data)); }
 inline vepi16 vepi16_add(const vepi16 a, const vepi16 b) { return _mm256_add_epi16(a, b); }
 inline vepi16 vepi16_sub(const vepi16 a, const vepi16 b) { return _mm256_sub_epi16(a, b); }
@@ -57,6 +58,7 @@ using vepi32 = __m512i;
 inline vepi16 vepi16_zero() { return _mm512_setzero_si512(); }
 inline vepi32 vepi32_zero() { return _mm512_setzero_si512(); }
 inline vepi16 vepi16_set(const int16_t v) { return _mm512_set1_epi16(v); }
+inline void vepi16_store(vepi16* dst, const vepi16 vec) { _mm512_store_si512(dst, vec); }
 inline vepi16 vepi16_load(const int16_t* data) { return _mm512_load_si512(reinterpret_cast<const vepi16*>(data)); }
 inline vepi16 vepi16_add(const vepi16 a, const vepi16 b) { return _mm512_add_epi16(a, b); }
 inline vepi16 vepi16_sub(const vepi16 a, const vepi16 b) { return _mm512_sub_epi16(a, b); }
@@ -82,6 +84,7 @@ using vepi32 = int32x4_t;
 inline vepi16 vepi16_zero() { return vdupq_n_s16(0); }
 inline vepi32 vepi32_zero() { return vdupq_n_s32(0); }
 inline vepi16 vepi16_set(const int16_t v) { return vdupq_n_s16(v); }
+inline void vepi16_store(vepi16* dst, const vepi16 vec) { vst1q_s16((int16_t*)dst, vec); }
 inline vepi16 vepi16_load(const int16_t* data) { return vld1q_s16(data); }
 inline vepi16 vepi16_add(const vepi16 a, const vepi16 b) { return vaddq_s16(a, b); }
 inline vepi16 vepi16_sub(const vepi16 a, const vepi16 b) { return vsubq_s16(a, b); }
