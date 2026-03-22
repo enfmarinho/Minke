@@ -34,7 +34,7 @@ class FinnyTable {
     FinnyTable() { reset(); };
 
     void reset();
-    PovAccumulator update(const Position &pos, const Color side);
+    int32_t accumulate_activate_affine(const Position &pos, const Color side, const int16_t *output_weights);
 
   private:
     struct FinnyTableCache {

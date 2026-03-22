@@ -22,8 +22,6 @@ class NNUE {
 
     void reset();
     ScoreType eval(const Position &stm);
-    ScoreType flatten_screlu_and_affine(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
-                                        const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const;
 
   private:
     FinnyTable finny_table;
