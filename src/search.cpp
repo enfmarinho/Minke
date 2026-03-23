@@ -10,7 +10,9 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 #include "attacks.h"
@@ -63,6 +65,7 @@ void ThreadData::reset_search_parameters() {
     stop = true;
     height = 0;
     nodes_searched = -1; // Avoid counting the root
+    std::memset(node_table, 0, sizeof(node_table));
     time_manager.reset();
     search_limits.reset();
     // TODO i dont think this is necessary
@@ -95,7 +98,7 @@ ScoreType iterative_deepening(ThreadData &td) {
             print_search_info(depth, eval, td.nodes[0].pv_list, td);
 
         if (depth > 5)
-            td.time_manager.update();
+            td.time_manager.update(td);
         if (td.time_manager.stop_early() || td.nodes_searched >= td.search_limits.optimum_node)
             break;
 
@@ -352,6 +355,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         ++td.height;
         ++moves_searched;
 
+        int64_t nodes_before_search = td.nodes_searched;
         td.nodes[td.height].pv_list.clear();
         ScoreType score;
         if (moves_searched == 1) {
@@ -394,6 +398,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         --td.height;
         position.unmake_move<true>(move);
         assert(score >= -MAX_SCORE);
+        td.node_table[move.from_and_to()] += td.nodes_searched - nodes_before_search;
 
         if (score > best_score) {
             best_score = score;
