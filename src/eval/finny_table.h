@@ -9,48 +9,42 @@
 #define FINNY_TABLE_H
 
 #include <array>
-#include <cstdint>
 #include <cstring>
-#include <span>
 
 #include "../types.h"
+#include "accumulator.h"
 #include "arch.h"
 
 class Position;
 
-struct alignas(64) PovAccumulator {
-    std::array<int16_t, HIDDEN_LAYER_SIZE> neurons;
-
-    PovAccumulator(std::span<const int16_t, HIDDEN_LAYER_SIZE> bias) { reset(bias); }
-    PovAccumulator() = delete;
-    ~PovAccumulator() = default;
-
-    inline void reset(std::span<const int16_t, HIDDEN_LAYER_SIZE> bias) {
-        memcpy(neurons.data(), bias.data(), bias.size_bytes());
-    }
-};
-
 class FinnyTable {
   public:
     FinnyTable() { reset(); };
+    ~FinnyTable() = default;
 
     void reset();
-    PovAccumulator update(const Position &pos, const Color side);
+
+    const PovAccumulator &update(const Position &pos, const Color side);
+
+    inline const PovAccumulator &consult(const Color side, const Square king_sq) {
+        const Square king_pov_sq = static_cast<Square>(side == WHITE ? king_sq : king_sq ^ 56);
+        return get_cache(should_flip(king_pov_sq), KING_BUCKETS_LAYOUT[king_pov_sq], side).pov_accumulator;
+    };
 
   private:
     struct FinnyTableCache {
-        std::array<Bitboard, 12> occupancies;
-        PovAccumulator accumulator;
+        std::array<Bitboard, 12> bbs; // [piece_type]
+        PovAccumulator pov_accumulator;
 
-        FinnyTableCache() : accumulator(network.hidden_bias) { reset(); };
+        FinnyTableCache() { reset(); };
         ~FinnyTableCache() = default;
 
         void reset();
     };
 
-    FinnyTableCache &get_cache(const Color side, const bool flip, const size_t king_bucket);
+    FinnyTableCache &get_cache(const bool flip, const size_t king_bucket, const Color side);
 
-    std::array<std::array<std::array<FinnyTableCache, NUM_KING_BUCKETS>, 2>, 2> cache; // [side][flip][king_bucket_idx]
+    std::array<std::array<std::array<FinnyTableCache, 2>, NUM_KING_BUCKETS>, 2> cache; // [flip][king_bucket_idx][side]
 };
 
 #endif // #ifndef FINNY_TABLE_H

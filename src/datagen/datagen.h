@@ -162,7 +162,10 @@ class DatagenThread {
             if (result != NO_RESULT)
                 break;
 
-            m_td->position.make_move<true>(move);
+            DirtyPiece dp;
+            m_td->position.make_move(move, dp);
+            m_td->nnue.apply_move(dp, m_td->position.get_king_placement(WHITE),
+                                  m_td->position.get_king_placement(BLACK));
             m_td->position.update_game_history();
         }
 
@@ -175,7 +178,7 @@ class DatagenThread {
     }
 
     void init_pos_randomly() {
-        m_td->position.set_fen<true>(START_FEN);
+        m_td->position.set_fen(START_FEN);
 
         int move_count = rand(8, 12);
         for (int i = 0; i < move_count; ++i) {
@@ -186,8 +189,9 @@ class DatagenThread {
 
             bool legal_found = false;
             for (auto curr = moves; curr != end; ++curr) {
-                if (!m_td->position.make_move<false>(curr->move)) {
-                    m_td->position.unmake_move<false>(curr->move);
+                DirtyPiece dp;
+                if (!m_td->position.make_move(curr->move, dp)) {
+                    m_td->position.unmake_move(curr->move);
                 } else {
                     legal_found = true;
                     break;
@@ -195,11 +199,12 @@ class DatagenThread {
             }
 
             if (!legal_found) {
-                m_td->position.set_fen<true>(START_FEN);
+                m_td->position.set_fen(START_FEN);
                 i = -1; // increment is happening after the loop, so this will be 0
             }
         }
 
+        m_td->nnue.init(m_td->position);
         m_td->search_history.reset();
         m_td->tt.clear();
         m_games.reset(m_td->position);

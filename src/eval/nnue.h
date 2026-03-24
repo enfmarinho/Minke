@@ -8,25 +8,37 @@
 #ifndef NNUE_H
 #define NNUE_H
 
+#include <array>
 #include <cassert>
 
 #include "../types.h"
+#include "accumulator.h"
+#include "arch.h"
 #include "finny_table.h"
 
 class Position;
 
 class NNUE {
   public:
-    NNUE() { finny_table.reset(); }
+    NNUE();
     ~NNUE() = default;
 
-    void reset();
+    void init(const Position &pos);
+
+    void apply_move(const DirtyPiece dp, const Square white_king_sq, const Square black_king_sq);
+    void unapply_move();
+
     ScoreType eval(const Position &stm);
+
+  private:
+    void update(const Position &pos);
+    void side_relative_update(const Color &side, const Position &pos);
+
     ScoreType flatten_screlu_and_affine(const std::array<int16_t, HIDDEN_LAYER_SIZE> &player,
                                         const std::array<int16_t, HIDDEN_LAYER_SIZE> &adversary) const;
 
-  private:
-    FinnyTable finny_table;
+    std::vector<Accumulator> m_acc_stack;
+    FinnyTable m_finny_table;
 };
 
 #endif // #ifndef NNUE_H

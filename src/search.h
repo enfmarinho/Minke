@@ -68,6 +68,8 @@ struct ThreadData {
     ThreadData();
     void reset_search_parameters();
     void set_search_limits(const SearchLimits sl);
+    bool make_move(const Move &move);
+    void unmake_move(const Move &move);
 };
 
 ScoreType normalize_score(ScoreType score);

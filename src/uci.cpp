@@ -138,9 +138,10 @@ void UCI::print_debug_info() {
     std::cout << "Move list: ";
     ScoredMove scored_move;
     while ((scored_move = move_picker.next_move_scored(false)) != SCORED_MOVE_NONE) {
-        if (!m_td->position.make_move<false>(scored_move.move))
+        DirtyPiece dp;
+        if (!m_td->position.make_move(scored_move.move, dp))
             std::cout << "*";
-        m_td->position.unmake_move<false>(scored_move.move);
+        m_td->position.unmake_move(scored_move.move);
         std::cout << scored_move.move.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks()) << "("
                   << scored_move.score << ") ";
     }
@@ -167,7 +168,7 @@ void UCI::position(std::istringstream &iss) {
 }
 
 void UCI::set_position(const std::string &fen, const std::vector<std::string> &move_list) {
-    if (!m_td->position.set_fen<true>(fen)) {
+    if (!m_td->position.set_fen(fen)) {
         std::cerr << "Invalid FEN!" << std::endl;
         return;
     }
@@ -184,19 +185,21 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
         for (ScoredMove *curr = moves; curr != end; ++curr) {
             if (move_list[index] ==
                 curr->move.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks())) {
-                m_td->position.make_move<false>(curr->move);
+                DirtyPiece dp;
+                m_td->position.make_move(curr->move, dp);
                 break;
             }
         }
     }
-    m_td->nnue.reset();
+
+    m_td->nnue.init(m_td->position);
 }
 
 void UCI::ucinewgame() {
     m_td->search_history.reset();
     m_td->time_manager.reset();
-    m_td->position.set_fen<true>(START_FEN);
-    m_td->nnue.reset();
+    m_td->position.set_fen(START_FEN);
+    m_td->nnue.init(m_td->position);
     m_td->reset_search_parameters();
     m_td->tt.clear();
 }
@@ -252,8 +255,8 @@ void UCI::bench(int depth) {
     m_td->report = false;
     for (const std::string &fen : BENCHMARK_FEN_LIST) {
         ucinewgame();
-        m_td->position.set_fen<true>(fen);
-        m_td->nnue.reset();
+        m_td->position.set_fen(fen);
+        m_td->nnue.init(m_td->position);
         m_td->reset_search_parameters();
         m_td->search_limits.depth = depth;
         m_td->tt.clear();
@@ -276,8 +279,9 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
     ScoredMove *end = gen_moves(moves, m_td->position, GEN_ALL);
     for (ScoredMove *begin = moves; begin != end; ++begin) {
         Move move = begin->move;
-        if (!position.make_move<false>(move)) {
-            position.unmake_move<false>(move);
+        DirtyPiece dp;
+        if (!position.make_move(move, dp)) {
+            position.unmake_move(move);
             continue;
         }
 
@@ -287,7 +291,7 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
             count = is_leaf ? position.legal_move_amount() : perft(position, depth - 1, false);
             nodes += count;
         }
-        position.unmake_move<false>(move);
+        position.unmake_move(move);
 
         if (root)
             std::cout << move.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks()) << ": " << count

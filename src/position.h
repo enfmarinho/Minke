@@ -13,6 +13,7 @@
 #include <cstring>
 #include <string>
 
+#include "eval/accumulator.h"
 #include "move.h"
 #include "types.h"
 #include "utils.h"
@@ -22,16 +23,12 @@ class Position {
     Position();
     ~Position() = default;
 
-    template <bool UPDATE>
     bool set_fen(const std::string &fen);
     std::string get_fen() const;
 
-    template <bool UPDATE>
     void reset();
 
-    template <bool UPDATE>
-    bool make_move(const Move &move);
-    template <bool UPDATE>
+    bool make_move(const Move &move, DirtyPiece &dp);
     void unmake_move(const Move &move);
 
     void make_null_move();
@@ -104,23 +101,16 @@ class Position {
     }
 
   private:
-    template <bool UPDATE>
-    void add_piece(const Piece &piece, const Square &sq);
-    template <bool UPDATE>
-    void remove_piece(const Piece &piece, const Square &sq);
-    template <bool UPDATE>
+    void add_piece(SquarePiece sp);
+    void remove_piece(SquarePiece sp);
+    void move_piece(SquarePiece sp0, SquarePiece sp1);
     void move_piece(const Piece &piece, const Square &from, const Square &to);
 
-    template <bool UPDATE>
-    void make_regular(const Move &move);
-    template <bool UPDATE>
-    void make_capture(const Move &move);
-    template <bool UPDATE>
-    void make_castle(const Move &move);
-    template <bool UPDATE>
-    void make_promotion(const Move &move);
-    template <bool UPDATE>
-    void make_en_passant(const Move &move);
+    void make_regular(const Move &move, DirtyPiece &dp);
+    void make_capture(const Move &move, DirtyPiece &dp);
+    void make_castle(const Move &move, DirtyPiece &dp);
+    void make_promotion(const Move &move, DirtyPiece &dp);
+    void make_en_passant(const Move &move, DirtyPiece &dp);
     void update_castling_rights(const Move &move);
     void update_pin_and_checkers_bb();
 
