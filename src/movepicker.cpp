@@ -86,7 +86,7 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
             m_stage = PICK_QUIET;
             // Fall-through
         case PICK_QUIET:
-            while (m_curr != m_end) {
+            while (m_curr != m_end && !skip_quiets) {
                 sort_next_move();
                 if (m_curr->move != m_ttmove)
                     return *m_curr++;
