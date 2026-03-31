@@ -162,29 +162,29 @@ TUNABLE_PARAM(probcut_margin, 300, 100, 400, 15, 0.002)
 FIXED_PARAM(probcut_min_depth, 5, 4, 8, 0.5, 0.002)
 
 // History Formulas Parameters
-TUNABLE_PARAM(hist_bonus_mult, 224, 1, 1024, 50, 0.002)
-TUNABLE_PARAM(hist_bonus_offset, 340, -512, 512, 50, 0.002)
+TUNABLE_PARAM(hist_bonus_mult, 230, 1, 1024, 50, 0.002)
+TUNABLE_PARAM(hist_bonus_offset, 336, -512, 512, 50, 0.002)
 TUNABLE_PARAM(hist_bonus_max, 2329, 1500, 3500, 100, 0.002)
 
 TUNABLE_PARAM(hist_penalty_mult, -69, -1024, -1, 50, 0.002)
-TUNABLE_PARAM(hist_penalty_offset, -58, -512, 512, 50, 0.002)
-TUNABLE_PARAM(hist_penalty_max, -1089, -3500, -500, 150, 0.002)
+TUNABLE_PARAM(hist_penalty_offset, -55, -512, 512, 50, 0.002)
+TUNABLE_PARAM(hist_penalty_max, -1110, -3500, -500, 150, 0.002)
 
-TUNABLE_PARAM(cont_bonus_mult, 224, 1, 1024, 50, 0.002)
-TUNABLE_PARAM(cont_bonus_offset, 340, -512, 512, 50, 0.002)
-TUNABLE_PARAM(cont_bonus_max, 2329, 1500, 3500, 100, 0.002)
+TUNABLE_PARAM(cont_bonus_mult, 229, 1, 1024, 50, 0.002)
+TUNABLE_PARAM(cont_bonus_offset, 348, -512, 512, 50, 0.002)
+TUNABLE_PARAM(cont_bonus_max, 2322, 1500, 3500, 100, 0.002)
 
-TUNABLE_PARAM(cont_penalty_mult, -69, -1024, -1, 50, 0.002)
-TUNABLE_PARAM(cont_penalty_offset, -58, -512, 512, 50, 0.002)
-TUNABLE_PARAM(cont_penalty_max, -1089, -3500, -500, 150, 0.002)
+TUNABLE_PARAM(cont_penalty_mult, -71, -1024, -1, 50, 0.002)
+TUNABLE_PARAM(cont_penalty_offset, -65, -512, 512, 50, 0.002)
+TUNABLE_PARAM(cont_penalty_max, -1112, -3500, -500, 150, 0.002)
 
-TUNABLE_PARAM(capt_hist_bonus_mult, 220, 1, 1024, 50, 0.002)
-TUNABLE_PARAM(capt_hist_bonus_offset, -35, -512, 512, 50, 0.002)
-TUNABLE_PARAM(capt_hist_bonus_max, 1449, 500, 3500, 150, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_mult, 206, 1, 1024, 50, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_offset, -47, -512, 512, 50, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_max, 1447, 500, 3500, 150, 0.002)
 
-TUNABLE_PARAM(capt_hist_penalty_mult, -342, -1024, -1, 50, 0.002)
-TUNABLE_PARAM(capt_hist_penalty_offset, -5, -512, 512, 50, 0.002)
-TUNABLE_PARAM(capt_hist_penalty_max, -1072, -3500, -500, 150, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_mult, -347, -1024, -1, 50, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_offset, 1, -512, 512, 50, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_max, -1091, -3500, -500, 150, 0.002)
 
 // Time Manager
 TUNABLE_PARAM(node_tm_base, 200, 150, 300, 7, 0.002)
