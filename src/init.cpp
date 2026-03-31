@@ -29,7 +29,7 @@
 #include "types.h"
 
 #ifndef EVALFILE
-#define EVALFILE "../src/minke.bin"
+#error "Cannot compile: EVALFILE must be defined as a string representing the path to the nnue file"
 #endif // !EVALFILE
 
 INCBIN(NetParameters, EVALFILE);
