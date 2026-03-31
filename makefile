@@ -11,7 +11,9 @@ endif
 
 BASE_BUILD_DIR := build
 
-SOURCES := $(wildcard src/*.cpp)
+SRC_DIRS := src src/eval
+SOURCES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
+
 OBJECTS := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(notdir $(SOURCES)))
 
 CXXSTD := -std=c++20
@@ -109,7 +111,9 @@ apple-silicon:
 build: evalfile $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(ARCH_FLAGS) $(LDFLAGS) -o $(EXE) $(OBJECTS)
 
-$(BUILD_DIR)/%.o: src/%.cpp | $(BUILD_DIR)
+vpath %.cpp $(SRC_DIRS)
+
+$(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(ARCH_FLAGS) -c $< -o $@ -MMD -MP
 
 $(BUILD_DIR):

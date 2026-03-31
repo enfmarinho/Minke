@@ -173,7 +173,7 @@ class DatagenThread {
             if (result != NO_RESULT)
                 break;
 
-            m_td->position.make_move<true>(move);
+            m_td->position.make_move(move);
             m_td->position.update_game_history();
         }
 
@@ -186,7 +186,7 @@ class DatagenThread {
     }
 
     void init_pos_randomly() {
-        m_td->position.set_fen<true>(START_FEN);
+        m_td->position.set_fen(START_FEN);
 
         int move_count = 8 + (prng.rand<uint32_t>() % 5);
         for (int i = 0; i < move_count; ++i) {
@@ -197,8 +197,8 @@ class DatagenThread {
 
             bool legal_found = false;
             for (auto curr = moves; curr != end; ++curr) {
-                if (!m_td->position.make_move<false>(curr->move)) {
-                    m_td->position.unmake_move<false>(curr->move);
+                if (!m_td->position.make_move(curr->move)) {
+                    m_td->position.unmake_move(curr->move);
                 } else {
                     legal_found = true;
                     break;
@@ -206,7 +206,7 @@ class DatagenThread {
             }
 
             if (!legal_found) {
-                m_td->position.set_fen<true>(START_FEN);
+                m_td->position.set_fen(START_FEN);
                 i = -1; // increment is happening after the loop, so this will be 0
             }
         }

@@ -24,8 +24,9 @@
 #include <cstring>
 #include <string>
 
+#include "eval/nnue.h"
+#include "eval/pov_accumulator.h"
 #include "move.h"
-#include "nnue.h"
 #include "types.h"
 #include "utils.h"
 
@@ -34,17 +35,13 @@ class Position {
     Position();
     ~Position() = default;
 
-    template <bool UPDATE>
     bool set_fen(const std::string &fen);
     std::string get_fen() const;
 
-    template <bool UPDATE>
     void reset();
     void reset_nnue();
 
-    template <bool UPDATE>
     bool make_move(const Move &move);
-    template <bool UPDATE>
     void unmake_move(const Move &move);
 
     void make_null_move();
@@ -61,7 +58,7 @@ class Position {
         return get_piece_bb(KNIGHT) || get_piece_bb(BISHOP) || get_piece_bb(ROOK) || get_piece_bb(QUEEN);
     }
     inline bool draw() { return insufficient_material() || repetition() || fifty_move_draw(); }
-    inline ScoreType eval() const { return m_nnue.eval(m_stm); }
+    inline ScoreType eval() { return m_nnue.eval(*this); }
 
     int legal_move_amount();
     bool no_legal_moves();
@@ -118,23 +115,14 @@ class Position {
     }
 
   private:
-    template <bool UPDATE>
-    void add_piece(const Piece &piece, const Square &sq);
-    template <bool UPDATE>
-    void remove_piece(const Piece &piece, const Square &sq);
-    template <bool UPDATE>
-    void move_piece(const Piece &piece, const Square &from, const Square &to);
+    void add_piece(const PieceSquare ps);
+    void remove_piece(const PieceSquare ps);
 
-    template <bool UPDATE>
-    void make_regular(const Move &move);
-    template <bool UPDATE>
-    void make_capture(const Move &move);
-    template <bool UPDATE>
-    void make_castle(const Move &move);
-    template <bool UPDATE>
-    void make_promotion(const Move &move);
-    template <bool UPDATE>
-    void make_en_passant(const Move &move);
+    void make_regular(const Move &move, DirtyPiece &dp);
+    void make_capture(const Move &move, DirtyPiece &dp);
+    void make_castle(const Move &move, DirtyPiece &dp);
+    void make_promotion(const Move &move, DirtyPiece &dp);
+    void make_en_passant(const Move &move, DirtyPiece &dp);
     void update_castling_rights(const Move &move);
     void update_pin_and_checkers_bb();
 

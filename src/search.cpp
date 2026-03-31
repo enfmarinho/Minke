@@ -276,8 +276,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             MovePicker move_picker(ttmove, td, true, pc_beta - node.static_eval);
             Move move;
             while ((move = move_picker.next_move(true)) != MOVE_NONE) {
-                if (!position.make_move<true>(move)) { // Avoid illegal moves
-                    position.unmake_move<true>(move);
+                if (!position.make_move(move)) { // Avoid illegal moves
+                    position.unmake_move(move);
                     continue;
                 }
 
@@ -291,7 +291,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                     pc_score = -negamax(-pc_beta, -pc_beta + 1, depth - 4, !cutnode, td);
 
                 --td.height;
-                position.unmake_move<true>(move);
+                position.unmake_move(move);
 
                 if (pc_score >= pc_beta) {
                     td.tt.store(position.get_hash(), depth - 3, move, pc_score, eval, LOWER, ttpv, td.tt.age(), tthit);
@@ -313,8 +313,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
         if (move == td.nodes[td.height].excluded_move) // Skip excluded moves
             continue;
-        if (!position.make_move<true>(move)) { // Avoid illegal moves
-            position.unmake_move<true>(move);
+        if (!position.make_move(move)) { // Avoid illegal moves
+            position.unmake_move(move);
             continue;
         }
         PieceMove curr_pmove = {move, position.consult(move.to())}; // move.to() because move has already been made
@@ -334,7 +334,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             ScoreType singular_beta = ttscore - depth;
             ScoreType singular_depth = (depth - 1) / 2;
 
-            position.unmake_move<true>(ttmove);
+            position.unmake_move(ttmove);
             td.tt.prefetch(position.get_hash());
 
             td.nodes[td.height].excluded_move = ttmove;
@@ -352,7 +352,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 //     extension = -1;
             }
 
-            position.make_move<true>(ttmove);
+            position.make_move(ttmove);
         }
         td.tt.prefetch(position.get_hash());
         int new_depth = depth + extension;
@@ -409,7 +409,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         }
 
         --td.height;
-        position.unmake_move<true>(move);
+        position.unmake_move(move);
         assert(score >= -MAX_SCORE);
         td.node_table[move.from_and_to()] += td.nodes_searched - nodes_before_search;
 
@@ -510,14 +510,14 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
                 continue;
             }
         }
-        position.make_move<true>(move);
+        position.make_move(move);
         td.tt.prefetch(position.get_hash());
 
         ++td.height;
         ScoreType score = -quiescence(-beta, -alpha, td);
         --td.height;
 
-        position.unmake_move<true>(move);
+        position.unmake_move(move);
 
         if (score > best_score) {
             best_score = score;
