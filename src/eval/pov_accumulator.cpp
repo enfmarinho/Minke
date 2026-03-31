@@ -21,6 +21,7 @@
 #include <cstddef>
 
 #include "../utils.h"
+#include "arch.h"
 
 size_t PieceSquare::feature_idx(const Color pov) {
     constexpr size_t COLOR_STRIDE = 64 * 6;
@@ -65,26 +66,56 @@ void PovAccumulator::sub(const PovAccumulator &input, const size_t feature_idx) 
 #endif
 }
 
-// TODO implement fused updates
 void PovAccumulator::add_sub(const PovAccumulator &input, const size_t add0, const size_t sub0) {
-    add(input, add0);
-    self_sub(sub0);
+#ifdef USE_SIMD
+    for (int i = 0; i < HIDDEN_LAYER_SIZE; i += REGISTER_SIZE) {
+        vepi16 add0_vec = vepi16_load(&network.hidden_weights[add0 + i]);
+        vepi16 sub0_vec = vepi16_load(&network.hidden_weights[sub0 + i]);
+        vepi16 input_vec = vepi16_load(&input.m_neurons[i]);
+        vepi16_store(&m_neurons[i], vepi16_add(vepi16_sub(input_vec, sub0_vec), add0_vec));
+    }
+#else
+    for (int i = 0; i < HIDDEN_LAYER_SIZE; ++i) {
+        m_neurons[i] = input.neurons()[i] + network.hidden_weights[add0 + i] - network.hidden_weights[sub0 + i];
+    }
+#endif
 }
 
-// TODO implement fused updates
 void PovAccumulator::add_sub2(const PovAccumulator &input, const size_t add0, const size_t sub0, const size_t sub1) {
-    add(input, add0);
-    self_sub(sub0);
-    self_sub(sub1);
+#ifdef USE_SIMD
+    for (int i = 0; i < HIDDEN_LAYER_SIZE; i += REGISTER_SIZE) {
+        vepi16 add0_vec = vepi16_load(&network.hidden_weights[add0 + i]);
+        vepi16 sub0_vec = vepi16_load(&network.hidden_weights[sub0 + i]);
+        vepi16 sub1_vec = vepi16_load(&network.hidden_weights[sub1 + i]);
+        vepi16 input_vec = vepi16_load(&input.m_neurons[i]);
+        vepi16_store(&m_neurons[i], vepi16_add(vepi16_sub(vepi16_sub(input_vec, sub0_vec), sub1_vec), add0_vec));
+    }
+#else
+    for (int i = 0; i < HIDDEN_LAYER_SIZE; ++i) {
+        m_neurons[i] = input.neurons()[i] + network.hidden_weights[add0 + i] - network.hidden_weights[sub0 + i] -
+                       network.hidden_weights[sub1 + i];
+    }
+#endif
 }
 
-// TODO implement fused updates
 void PovAccumulator::add2_sub2(const PovAccumulator &input, const size_t add0, const size_t add1, const size_t sub0,
                                const size_t sub1) {
-    add(input, add0);
-    self_add(add1);
-    self_sub(sub0);
-    self_sub(sub1);
+#ifdef USE_SIMD
+    for (int i = 0; i < HIDDEN_LAYER_SIZE; i += REGISTER_SIZE) {
+        vepi16 add0_vec = vepi16_load(&network.hidden_weights[add0 + i]);
+        vepi16 add1_vec = vepi16_load(&network.hidden_weights[add1 + i]);
+        vepi16 sub0_vec = vepi16_load(&network.hidden_weights[sub0 + i]);
+        vepi16 sub1_vec = vepi16_load(&network.hidden_weights[sub1 + i]);
+        vepi16 input_vec = vepi16_load(&input.m_neurons[i]);
+        vepi16_store(&m_neurons[i],
+                     vepi16_add(vepi16_add(vepi16_sub(vepi16_sub(input_vec, sub0_vec), sub1_vec), add0_vec), add1_vec));
+    }
+#else
+    for (int i = 0; i < HIDDEN_LAYER_SIZE; ++i) {
+        m_neurons[i] = input.neurons()[i] + network.hidden_weights[add0 + i] + network.hidden_weights[add1 + i] -
+                       network.hidden_weights[sub0 + i] - network.hidden_weights[sub1 + i];
+    }
+#endif
 }
 
 void PovAccumulator::self_add(const size_t feature_idx) { add(*this, feature_idx); }
