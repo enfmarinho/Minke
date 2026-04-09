@@ -317,8 +317,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             position.unmake_move<true>(move);
             continue;
         }
-        PieceMove curr_pmove = {move, position.consult(move.to())}; // move.to() because move has already been made
-        node.curr_pmove = curr_pmove;
 
         if (!root && best_score >= -MATE_FOUND && !skip_quiets) {
             // Late Move Pruning
@@ -340,7 +338,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             td.nodes[td.height].excluded_move = ttmove;
             ScoreType singular_score = negamax(singular_beta - 1, singular_beta, singular_depth, cutnode, td);
             td.nodes[td.height].excluded_move = MOVE_NONE;
-            node.curr_pmove = curr_pmove; // reassign this, since singular search messed it up
 
             if (singular_score < singular_beta) {
                 extension = 1;
@@ -354,14 +351,15 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
             position.make_move<true>(ttmove);
         }
+        node.curr_pmove = {move, position.consult(move.to())}; // move.to() because move has already been made
         td.tt.prefetch(position.get_hash());
         int new_depth = depth + extension;
 
         // Add move to tried list
         if (move.is_quiet())
-            quiets_tried.push(curr_pmove);
+            quiets_tried.push(node.curr_pmove);
         else
-            tacticals_tried.push(curr_pmove);
+            tacticals_tried.push(node.curr_pmove);
 
         ++td.height;
         ++moves_searched;
