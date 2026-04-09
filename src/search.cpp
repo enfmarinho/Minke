@@ -313,8 +313,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
         if (move == td.nodes[td.height].excluded_move) // Skip excluded moves
             continue;
-        if (!position.make_move<true>(move)) { // Avoid illegal moves
-            position.unmake_move<true>(move);
+        if (!position.is_legal(move)) { // Avoid illegal moves
             continue;
         }
 
@@ -332,7 +331,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             ScoreType singular_beta = ttscore - depth;
             ScoreType singular_depth = (depth - 1) / 2;
 
-            position.unmake_move<true>(ttmove);
             td.tt.prefetch(position.get_hash());
 
             td.nodes[td.height].excluded_move = ttmove;
@@ -348,10 +346,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 // } else if (ttscore <= alpha && ttscore >= beta) {
                 //     extension = -1;
             }
-
-            position.make_move<true>(ttmove);
         }
+
+        position.make_move<true>(move);
         node.curr_pmove = {move, position.consult(move.to())}; // move.to() because move has already been made
+
         td.tt.prefetch(position.get_hash());
         int new_depth = depth + extension;
 
