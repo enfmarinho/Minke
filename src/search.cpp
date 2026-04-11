@@ -313,12 +313,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
         if (move == td.nodes[td.height].excluded_move) // Skip excluded moves
             continue;
-        if (!position.make_move<true>(move)) { // Avoid illegal moves
-            position.unmake_move<true>(move);
+        if (!position.is_legal(move)) { // Avoid illegal moves
             continue;
         }
-        PieceMove curr_pmove = {move, position.consult(move.to())}; // move.to() because move has already been made
-        node.curr_pmove = curr_pmove;
 
         if (!root && best_score >= -MATE_FOUND && !skip_quiets) {
             // Late Move Pruning
@@ -334,13 +331,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             ScoreType singular_beta = ttscore - depth;
             ScoreType singular_depth = (depth - 1) / 2;
 
-            position.unmake_move<true>(ttmove);
             td.tt.prefetch(position.get_hash());
 
             td.nodes[td.height].excluded_move = ttmove;
             ScoreType singular_score = negamax(singular_beta - 1, singular_beta, singular_depth, cutnode, td);
             td.nodes[td.height].excluded_move = MOVE_NONE;
-            node.curr_pmove = curr_pmove; // reassign this, since singular search messed it up
 
             if (singular_score < singular_beta) {
                 extension = 1;
@@ -351,17 +346,19 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 // } else if (ttscore <= alpha && ttscore >= beta) {
                 //     extension = -1;
             }
-
-            position.make_move<true>(ttmove);
         }
+
+        position.make_move<true>(move);
+        node.curr_pmove = {move, position.consult(move.to())}; // move.to() because move has already been made
+
         td.tt.prefetch(position.get_hash());
         int new_depth = depth + extension;
 
         // Add move to tried list
         if (move.is_quiet())
-            quiets_tried.push(curr_pmove);
+            quiets_tried.push(node.curr_pmove);
         else
-            tacticals_tried.push(curr_pmove);
+            tacticals_tried.push(node.curr_pmove);
 
         ++td.height;
         ++moves_searched;
