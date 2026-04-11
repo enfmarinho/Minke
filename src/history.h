@@ -19,8 +19,8 @@
 #ifndef HISTORY_H
 #define HISTORY_H
 
+#include "game_state.h"
 #include "move.h"
-#include "position.h"
 #include "types.h"
 
 struct ThreadData;
@@ -40,7 +40,7 @@ class History {
 
     HistoryType get_history(const ThreadData &td, const Move &move) const;
 
-    inline HistoryType get_capture_history(const Position &position, const Move &move) {
+    inline HistoryType get_capture_history(const GameState &position, const Move &move) {
         Square to = move.to();
         PieceType moved_pt = get_piece_type(position.consult(move.from()));
         PieceType captured_pt = move.is_ep() ? PAWN : get_piece_type(position.consult(to));
@@ -65,12 +65,12 @@ class History {
     inline bool is_counter(const Move &move, const Move &past_move) const { return move == consult_counter(past_move); }
 
   private:
-    void update_capture_history_score(const Position &position, const Move &move, int bonus);
-    void update_history_heuristic_score(const Position &position, const Move &move, int bonus);
+    void update_capture_history_score(const GameState &position, const Move &move, int bonus);
+    void update_history_heuristic_score(const GameState &position, const Move &move, int bonus);
     void update_continuation_history_table(const ThreadData &td, const PieceMove &pmove, int bonus);
 
     void update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int offset);
-    HistoryType get_history_heuristic_score(const Position &position, const Move &move) const;
+    HistoryType get_history_heuristic_score(const GameState &position, const Move &move) const;
     HistoryType get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const;
     HistoryType get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const;
 

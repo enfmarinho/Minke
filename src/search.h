@@ -60,7 +60,7 @@ struct NodeData {
 struct ThreadData {
     TranspositionTable tt;
 
-    Position position;
+    GameState position;
     History search_history;
     NodeData nodes[MAX_SEARCH_DEPTH];
     Move best_move;
@@ -86,6 +86,6 @@ ScoreType iterative_deepening(ThreadData &td);
 ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);
 ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool cutnode, ThreadData &td);
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td);
-bool SEE(Position &position, const Move &move, int threshold);
+bool SEE(GameState &position, const Move &move, int threshold);
 
 #endif // #ifndef SEARCH_H

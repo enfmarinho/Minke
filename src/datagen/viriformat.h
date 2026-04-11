@@ -28,15 +28,15 @@
 
 class Viriformat {
   public:
-    Viriformat() : m_initial_pos(PackedPosition(Position(), 0)) { m_moves_scores.reserve(MAX_MOVES_PER_POS); }
+    Viriformat() : m_initial_pos(PackedPosition(GameState(), 0)) { m_moves_scores.reserve(MAX_MOVES_PER_POS); }
 
-    Viriformat(const Position &pos) : m_initial_pos(PackedPosition(pos, 0)) {
+    Viriformat(const GameState &pos) : m_initial_pos(PackedPosition(pos, 0)) {
         m_moves_scores.reserve(MAX_MOVES_PER_POS);
     }
 
     ~Viriformat() = default;
 
-    void reset(const Position &pos) {
+    void reset(const GameState &pos) {
         m_initial_pos = PackedPosition(pos, 0);
         m_moves_scores.clear();
     }

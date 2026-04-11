@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "position.h"
+#include "game_state.h"
 
 #include <algorithm>
 #include <cassert>
@@ -33,10 +33,10 @@
 #include "types.h"
 #include "utils.h"
 
-Position::Position() { set_fen<true>(START_FEN); }
+GameState::GameState() { set_fen<true>(START_FEN); }
 
 template <bool UPDATE>
-bool Position::set_fen(const std::string &fen) {
+bool GameState::set_fen(const std::string &fen) {
     reset<UPDATE>();
 
     std::stringstream iss(fen);
@@ -142,10 +142,10 @@ bool Position::set_fen(const std::string &fen) {
     return true;
 }
 
-template bool Position::set_fen<true>(const std::string &fen);
-template bool Position::set_fen<false>(const std::string &fen);
+template bool GameState::set_fen<true>(const std::string &fen);
+template bool GameState::set_fen<false>(const std::string &fen);
 
-std::string Position::get_fen() const {
+std::string GameState::get_fen() const {
     std::string fen;
     for (int rank = 7; rank >= 0; --rank) {
         int counter = 0;
@@ -224,10 +224,10 @@ std::string Position::get_fen() const {
     return fen;
 }
 
-void Position::reset_nnue() { m_nnue.reset(*this); }
+void GameState::reset_nnue() { m_nnue.reset(*this); }
 
 template <bool UPDATE>
-void Position::reset() {
+void GameState::reset() {
     for (int sqi = a1; sqi <= h8; ++sqi)
         m_board[sqi] = EMPTY;
     std::memset(m_occupancies, 0ULL, sizeof(m_occupancies));
@@ -242,7 +242,7 @@ void Position::reset() {
 }
 
 template <bool UPDATE>
-void Position::add_piece(const Piece &piece, const Square &sq) {
+void GameState::add_piece(const Piece &piece, const Square &sq) {
     assert(piece >= WHITE_PAWN && piece <= BLACK_KING);
     assert(sq >= a1 && sq <= h8);
 
@@ -258,7 +258,7 @@ void Position::add_piece(const Piece &piece, const Square &sq) {
 }
 
 template <bool UPDATE>
-void Position::remove_piece(const Piece &piece, const Square &sq) {
+void GameState::remove_piece(const Piece &piece, const Square &sq) {
     assert(piece >= WHITE_PAWN && piece <= BLACK_KING);
     assert(sq >= a1 && sq <= h8);
 
@@ -274,13 +274,13 @@ void Position::remove_piece(const Piece &piece, const Square &sq) {
 }
 
 template <bool UPDATE>
-void Position::move_piece(const Piece &piece, const Square &from, const Square &to) {
+void GameState::move_piece(const Piece &piece, const Square &from, const Square &to) {
     remove_piece<UPDATE>(piece, from);
     add_piece<UPDATE>(piece, to);
 }
 
 template <bool UPDATE>
-bool Position::make_move(const Move &move) {
+bool GameState::make_move(const Move &move) {
     if constexpr (UPDATE)
         m_nnue.push();
 
@@ -321,11 +321,11 @@ bool Position::make_move(const Move &move) {
     return legal;
 }
 
-template bool Position::make_move<true>(const Move &move);
-template bool Position::make_move<false>(const Move &move);
+template bool GameState::make_move<true>(const Move &move);
+template bool GameState::make_move<false>(const Move &move);
 
 template <bool UPDATE>
-void Position::make_regular(const Move &move) {
+void GameState::make_regular(const Move &move) {
     Square from = move.from();
     Square to = move.to();
     Piece piece = consult(from);
@@ -344,7 +344,7 @@ void Position::make_regular(const Move &move) {
 }
 
 template <bool UPDATE>
-void Position::make_capture(const Move &move) {
+void GameState::make_capture(const Move &move) {
     Square from = move.from();
     Square to = move.to();
     Piece piece = consult(from);
@@ -363,7 +363,7 @@ void Position::make_capture(const Move &move) {
 }
 
 template <bool UPDATE>
-void Position::make_castle(const Move &move) {
+void GameState::make_castle(const Move &move) {
     Square from = move.from();
     Square to = move.to();
     Piece piece = consult(from);
@@ -398,7 +398,7 @@ void Position::make_castle(const Move &move) {
 }
 
 template <bool UPDATE>
-void Position::make_promotion(const Move &move) {
+void GameState::make_promotion(const Move &move) {
     Square from = move.from();
     Square to = move.to();
     Piece piece = consult(from);
@@ -408,7 +408,7 @@ void Position::make_promotion(const Move &move) {
 }
 
 template <bool UPDATE>
-void Position::make_en_passant(const Move &move) {
+void GameState::make_en_passant(const Move &move) {
     m_curr_state.fifty_move_ply = 0;
     Square from = move.from();
     Square to = move.to();
@@ -420,7 +420,7 @@ void Position::make_en_passant(const Move &move) {
     move_piece<UPDATE>(piece, from, to);
 }
 
-void Position::update_castling_rights(const Move &move) {
+void GameState::update_castling_rights(const Move &move) {
     Square from = move.from();
     Square to = move.to();
     PieceType moved_piece_type = get_piece_type(consult(to), m_stm); // Piece has already been moved
@@ -468,7 +468,7 @@ void Position::update_castling_rights(const Move &move) {
 }
 
 template <bool UPDATE>
-void Position::unmake_move(const Move &move) {
+void GameState::unmake_move(const Move &move) {
     assert(m_history_ply > 0); // check if there is a move to unmake
     if constexpr (UPDATE)
         m_nnue.pop();
@@ -537,10 +537,10 @@ void Position::unmake_move(const Move &move) {
     hash_side_key();
 }
 
-template void Position::unmake_move<true>(const Move &move);
-template void Position::unmake_move<false>(const Move &move);
+template void GameState::unmake_move<true>(const Move &move);
+template void GameState::unmake_move<false>(const Move &move);
 
-void Position::make_null_move() {
+void GameState::make_null_move() {
     m_history_stack[m_history_ply] = m_curr_state;
     m_played_positions[m_history_ply] = m_hash_key;
     ++m_history_ply;
@@ -558,7 +558,7 @@ void Position::make_null_move() {
     update_pin_and_checkers_bb();
 }
 
-void Position::unmake_null_move() {
+void GameState::unmake_null_move() {
     --m_history_ply;
     m_curr_state = m_history_stack[m_history_ply];
     m_hash_key = m_played_positions[m_history_ply];
@@ -566,7 +566,7 @@ void Position::unmake_null_move() {
     change_side();
 }
 
-void Position::update_pin_and_checkers_bb() {
+void GameState::update_pin_and_checkers_bb() {
     Color adversary = get_adversary();
     Square king_sq = get_king_placement(m_stm);
     m_curr_state.pins = 0;
@@ -588,7 +588,7 @@ void Position::update_pin_and_checkers_bb() {
     }
 }
 
-bool Position::is_attacked(const Square &sq) const {
+bool GameState::is_attacked(const Square &sq) const {
     Color opponent = get_adversary();
     Bitboard occupancy = get_occupancy();
     unset_bit(occupancy, sq); // square to be checked has to be unset on occupancy bitboard
@@ -616,7 +616,7 @@ bool Position::is_attacked(const Square &sq) const {
     return false;
 }
 
-Bitboard Position::attackers(const Square &sq) const {
+Bitboard GameState::attackers(const Square &sq) const {
     Bitboard attackers = 0ULL;
     Bitboard occupancy = get_occupancy();
 
@@ -630,7 +630,7 @@ Bitboard Position::attackers(const Square &sq) const {
     return attackers;
 }
 
-int Position::legal_move_amount() {
+int GameState::legal_move_amount() {
     ScoredMove moves[MAX_MOVES_PER_POS];
     ScoredMove *end = gen_moves(moves, *this, GEN_ALL);
     int legal_amount = 0;
@@ -642,7 +642,7 @@ int Position::legal_move_amount() {
     return legal_amount;
 }
 
-bool Position::no_legal_moves() {
+bool GameState::no_legal_moves() {
     ScoredMove moves[MAX_MOVES_PER_POS];
     ScoredMove *end = gen_moves(moves, *this, GEN_ALL);
     for (ScoredMove *curr = moves; curr != end; ++curr) {
@@ -655,7 +655,7 @@ bool Position::no_legal_moves() {
     return true;
 }
 
-bool Position::is_legal(const Move &move) {
+bool GameState::is_legal(const Move &move) {
     Square king_sq = get_king_placement(m_stm);
     Square from = move.from();
     Square to = move.to();
@@ -705,7 +705,7 @@ bool Position::is_legal(const Move &move) {
 }
 
 // TODO if the moved piece and/or the capture piece is present in the move itself this could be way faster
-bool Position::is_pseudo_legal(const Move &move) const {
+bool GameState::is_pseudo_legal(const Move &move) const {
     if (move == MOVE_NONE)
         return false;
 
@@ -740,7 +740,7 @@ bool Position::is_pseudo_legal(const Move &move) const {
     return moved_piece_attacks & (1ULL << to);
 }
 
-bool Position::pawn_pseudo_legal(const Square &from, const Square &to, const Move &move) const {
+bool GameState::pawn_pseudo_legal(const Square &from, const Square &to, const Move &move) const {
     int pawn_offset = get_pawn_offset(m_stm);
     if (move.is_ep()) {
         if (m_curr_state.en_passant != to || !(get_piece_bb(PAWN, get_adversary()) & (1ULL << (to - pawn_offset))))
@@ -769,7 +769,7 @@ bool Position::pawn_pseudo_legal(const Square &from, const Square &to, const Mov
     return true;
 }
 
-bool Position::castling_pseudo_legal(const Square &from, const Square &to, const PieceType &moved_piece_type) const {
+bool GameState::castling_pseudo_legal(const Square &from, const Square &to, const PieceType &moved_piece_type) const {
     if (moved_piece_type != KING)
         return false;
 
@@ -801,7 +801,7 @@ bool Position::castling_pseudo_legal(const Square &from, const Square &to, const
     return true;
 }
 
-void Position::print() const {
+void GameState::print() const {
     auto print_line = []() -> void {
         for (IndexType i = 0; i < 8; ++i) {
             std::cout << "+";
@@ -855,7 +855,7 @@ void Position::print() const {
     std::cout << "\nEval: " << eval() << "\n";
 }
 
-bool Position::insufficient_material() const {
+bool GameState::insufficient_material() const {
     int piece_amount = get_material_count();
     if (piece_amount == 2) {
         return true;
@@ -869,7 +869,7 @@ bool Position::insufficient_material() const {
     return false;
 }
 
-bool Position::repetition() const {
+bool GameState::repetition() const {
     int counter = 0;
     int distance = std::min(m_curr_state.fifty_move_ply, m_curr_state.ply_from_null);
     int starting_index = m_history_ply;
@@ -887,7 +887,7 @@ bool Position::repetition() const {
     return false;
 }
 
-bool Position::fifty_move_draw() {
+bool GameState::fifty_move_draw() {
     if (m_curr_state.fifty_move_ply >= 100) {
         ScoredMove moves[MAX_MOVES_PER_POS];
         ScoredMove *end = gen_moves(moves, *this, GEN_ALL);
@@ -901,20 +901,20 @@ bool Position::fifty_move_draw() {
     return false;
 }
 
-void Position::hash_piece_key(const Piece &piece, const Square &sq) {
+void GameState::hash_piece_key(const Piece &piece, const Square &sq) {
     assert(piece >= WHITE_PAWN && piece <= BLACK_KING);
     assert(sq >= a1 && sq <= h8);
     m_hash_key ^= hash_keys.pieces[piece][sq];
 }
 
-void Position::hash_castle_key() {
+void GameState::hash_castle_key() {
     assert(m_curr_state.castling_rights >= 0 && m_curr_state.castling_rights <= ANY_CASTLING);
     m_hash_key ^= hash_keys.castle[m_curr_state.castling_rights];
 }
 
-void Position::hash_ep_key() {
+void GameState::hash_ep_key() {
     assert(get_file(m_curr_state.en_passant) >= 0 && get_file(m_curr_state.en_passant) < 8);
     m_hash_key ^= hash_keys.en_passant[get_file(m_curr_state.en_passant)];
 }
 
-void Position::hash_side_key() { m_hash_key ^= hash_keys.side; }
+void GameState::hash_side_key() { m_hash_key ^= hash_keys.side; }

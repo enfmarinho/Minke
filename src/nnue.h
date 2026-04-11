@@ -28,7 +28,7 @@
 #include "simd.h"
 #include "types.h"
 
-class Position;
+class GameState;
 
 constexpr int INPUT_LAYER_SIZE = 64 * 12;
 constexpr int HIDDEN_LAYER_SIZE = 1024;
@@ -71,10 +71,10 @@ class NNUE {
     void add_feature(const Piece &piece, const Square &sq);
     void remove_feature(const Piece &piece, const Square &sq);
 
-    void reset(const Position &position);
+    void reset(const GameState &position);
     ScoreType eval(const Color &stm) const;
 
-    Accumulator debug_func(const Position &position);
+    Accumulator debug_func(const GameState &position);
 
   private:
     struct alignas(64) Accumulator {

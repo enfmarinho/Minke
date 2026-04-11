@@ -23,7 +23,7 @@
 #include <sstream>
 #include <thread>
 
-#include "position.h"
+#include "game_state.h"
 #include "search.h"
 #include "types.h"
 
@@ -54,7 +54,7 @@ class UCI {
 
     /// Returns true if perft argument was passed and false otherwise.
     bool parse_go(std::istringstream &, bool bench = false);
-    int64_t perft(Position &position, CounterType depth, bool root = true);
+    int64_t perft(GameState &position, CounterType depth, bool root = true);
     void go();
 
     void print_debug_info();

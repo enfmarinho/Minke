@@ -16,12 +16,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "history.h"
-
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
 
+#include "game_state.h"
 #include "move.h"
 #include "search.h"
 #include "tune.h"
@@ -87,7 +86,7 @@ void History::update_history(const ThreadData &td, const Move &best_move, int de
     }
 }
 
-void History::update_capture_history_score(const Position &position, const Move &move, int bonus) {
+void History::update_capture_history_score(const GameState &position, const Move &move, int bonus) {
     Square to = move.to();
     PieceType moved_pt = get_piece_type(position.consult(move.from()));
     PieceType captured_pt = get_piece_type(position.consult(to));
@@ -97,7 +96,7 @@ void History::update_capture_history_score(const Position &position, const Move 
     update_score(ptr, bonus);
 }
 
-void History::update_history_heuristic_score(const Position &position, const Move &move, int bonus) {
+void History::update_history_heuristic_score(const GameState &position, const Move &move, int bonus) {
     HistoryType *ptr = &m_search_history_table[position.get_stm()][move.from_and_to()];
     update_score(ptr, bonus);
 }
@@ -120,7 +119,7 @@ void History::update_continuation_history_score(const ThreadData &td, const Piec
     }
 }
 
-HistoryType History::get_history_heuristic_score(const Position &position, const Move &move) const {
+HistoryType History::get_history_heuristic_score(const GameState &position, const Move &move) const {
     return m_search_history_table[position.get_stm()][move.from_and_to()];
 }
 

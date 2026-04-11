@@ -34,7 +34,7 @@ enum GameResult : uint8_t {
 
 class __attribute__((packed)) PackedPosition {
   public:
-    PackedPosition(const Position &position, ScoreType score) {
+    PackedPosition(const GameState &position, ScoreType score) {
         m_occupancy = position.get_occupancy();
 
         Bitboard occ = m_occupancy;

@@ -26,7 +26,7 @@
 #include "types.h"
 #include "utils.h"
 
-static inline ScoredMove* gen_pawn_captures(ScoredMove* moves, const Position& position, const Bitboard& destination,
+static inline ScoredMove* gen_pawn_captures(ScoredMove* moves, const GameState& position, const Bitboard& destination,
                                             const int& capture_offset) {
     assert(capture_offset == NORTH_WEST || capture_offset == NORTH_EAST || capture_offset == SOUTH_WEST ||
            capture_offset == SOUTH_EAST);
@@ -54,7 +54,7 @@ static inline ScoredMove* gen_pawn_captures(ScoredMove* moves, const Position& p
     return moves;
 }
 
-static inline ScoredMove* gen_pawn_moves(ScoredMove* moves, const Position& position, const Bitboard& destination,
+static inline ScoredMove* gen_pawn_moves(ScoredMove* moves, const GameState& position, const Bitboard& destination,
                                          const MoveGenType gen_type) {
     Color stm = position.get_stm();
     Color adversary = position.get_adversary();
@@ -111,7 +111,7 @@ static inline ScoredMove* gen_pawn_moves(ScoredMove* moves, const Position& posi
     return moves;
 }
 
-static inline ScoredMove* gen_piece_moves(ScoredMove* moves, const Position& position, const PieceType piece_type,
+static inline ScoredMove* gen_piece_moves(ScoredMove* moves, const GameState& position, const PieceType piece_type,
                                           const Bitboard& destination, const MoveGenType gen_type) {
     assert(piece_type >= KNIGHT && piece_type <= KING);
 
@@ -145,7 +145,7 @@ static inline ScoredMove* gen_piece_moves(ScoredMove* moves, const Position& pos
     return moves;
 }
 
-ScoredMove* gen_castling_moves(ScoredMove* moves, const Position& position) {
+ScoredMove* gen_castling_moves(ScoredMove* moves, const GameState& position) {
     Bitboard castle_rooks_stm = position.get_castle_rooks() & position.get_occupancy(position.get_stm());
     Square king_from = position.get_king_placement(position.get_stm());
     while (castle_rooks_stm) {
@@ -188,7 +188,7 @@ ScoredMove* gen_castling_moves(ScoredMove* moves, const Position& position) {
     return moves;
 }
 
-ScoredMove* gen_moves(ScoredMove* moves, const Position& position, const MoveGenType gen_type) {
+ScoredMove* gen_moves(ScoredMove* moves, const GameState& position, const MoveGenType gen_type) {
     Bitboard destination =
         !position.in_check()
             ? ALL_BITS

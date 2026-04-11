@@ -27,9 +27,9 @@
 #include <iostream>
 
 #include "attacks.h"
+#include "game_state.h"
 #include "move.h"
 #include "movepicker.h"
-#include "position.h"
 #include "tt.h"
 #include "tune.h"
 #include "types.h"
@@ -174,7 +174,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     bool pv_node = alpha != beta - 1;
     bool singular_search = td.nodes[td.height].excluded_move != MOVE_NONE;
-    Position &position = td.position;
+    GameState &position = td.position;
     NodeData &node = td.nodes[td.height];
 
     // Early return conditions
@@ -446,7 +446,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     ++td.nodes_searched;
-    Position &position = td.position;
+    GameState &position = td.position;
     if (stop_search(td))
         return -MAX_SCORE;
     else if (position.draw())
@@ -541,7 +541,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     return best_score;
 }
 
-bool SEE(Position &position, const Move &move, int threshold) {
+bool SEE(GameState &position, const Move &move, int threshold) {
     if (move.is_castle()) // Cannot win or lose material by castling
         return threshold <= 0;
 

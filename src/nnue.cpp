@@ -71,7 +71,7 @@ void NNUE::remove_feature(const Piece &piece, const Square &sq) {
     }
 }
 
-void NNUE::reset(const Position &position) {
+void NNUE::reset(const GameState &position) {
     m_accumulators.clear();
     m_accumulators.emplace_back(network.hidden_bias);
 
@@ -155,7 +155,7 @@ bool operator==(const NNUE::Accumulator &lhs, const NNUE::Accumulator &rhs) {
     return true;
 }
 
-NNUE::Accumulator NNUE::debug_func(const Position &position) {
+NNUE::Accumulator NNUE::debug_func(const GameState &position) {
     Accumulator accumulator(network.hidden_bias);
     for (int sqi = a1; sqi <= h8; ++sqi) {
         Square sq = static_cast<Square>(sqi);

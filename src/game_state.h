@@ -16,8 +16,8 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef POSITION_H
-#define POSITION_H
+#ifndef GAME_STATE_H
+#define GAME_STATE_H
 
 #include <cassert>
 #include <cstdint>
@@ -29,10 +29,10 @@
 #include "types.h"
 #include "utils.h"
 
-class Position {
+class GameState {
   public:
-    Position();
-    ~Position() = default;
+    GameState();
+    ~GameState() = default;
 
     template <bool UPDATE>
     bool set_fen(const std::string &fen);
@@ -168,4 +168,4 @@ class Position {
     NNUE m_nnue;
 };
 
-#endif // #ifndef POSITION_H
+#endif // #ifndef GAME_STATE_H

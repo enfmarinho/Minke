@@ -58,7 +58,7 @@ size_t TranspositionTable::table_index_from_hash(const HashType hash) {
     return static_cast<uint64_t>((static_cast<u128>(hash) * static_cast<u128>(m_table_size)) >> 64);
 }
 
-bool TranspositionTable::probe(const Position &position, TTEntry &tte) {
+bool TranspositionTable::probe(const GameState &position, TTEntry &tte) {
     size_t table_index = table_index_from_hash(position.get_hash());
     for (TTEntry &entry : m_table[table_index].entry) {
         tte = entry;

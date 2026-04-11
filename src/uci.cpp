@@ -28,11 +28,11 @@
 #include <vector>
 
 #include "benchmark.h"
+#include "game_state.h"
 #include "init.h"
 #include "move.h"
 #include "movegen.h"
 #include "movepicker.h"
-#include "position.h"
 #include "search.h"
 #include "tt.h"
 #include "tune.h"
@@ -277,7 +277,7 @@ void UCI::bench(int depth) {
     std::cout << nodes_searched << " nodes " << nodes_searched * 1000 / total_time << " nps\n";
 }
 
-int64_t UCI::perft(Position &position, CounterType depth, bool root) {
+int64_t UCI::perft(GameState &position, CounterType depth, bool root) {
     bool is_leaf = (depth == 2);
     int64_t count = 0, nodes = 0;
 

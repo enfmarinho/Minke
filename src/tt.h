@@ -22,7 +22,7 @@
 #include <array>
 #include <cstddef>
 
-#include "position.h"
+#include "game_state.h"
 #include "types.h"
 
 class TTEntry {
@@ -78,7 +78,7 @@ class TranspositionTable {
     TranspositionTable(const TranspositionTable &) = delete;
     TranspositionTable &operator=(const TranspositionTable &) = delete;
 
-    bool probe(const Position &position, TTEntry &found);
+    bool probe(const GameState &position, TTEntry &found);
     void store(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
                const ScoreType &eval, const BoundType &bound, const bool was_pv, const IndexType age,
                const bool &tthit);

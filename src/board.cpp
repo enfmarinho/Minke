@@ -15,19 +15,3 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-#ifndef MOVEGEN_H
-#define MOVEGEN_H
-
-#include "move.h"
-#include "position.h"
-
-enum MoveGenType {
-    QUIET = 1,
-    NOISY = QUIET << 1,
-    GEN_ALL = QUIET | NOISY
-};
-
-ScoredMove* gen_moves(ScoredMove* moves, const GameState& position, const MoveGenType type);
-
-#endif // #ifndef MOVEGEN_H
