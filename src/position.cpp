@@ -233,7 +233,11 @@ void Position::reset() {
     std::memset(m_occupancies, 0ULL, sizeof(m_occupancies));
     std::memset(m_pieces, 0ULL, sizeof(m_pieces));
 
-    m_hash_key = 0ULL;
+    m_position_hash = 0ULL;
+    m_pawn_hash = 0ULL;
+    m_white_non_pawn_hash = 0ULL;
+    m_black_non_pawn_hash = 0ULL;
+
     m_history_ply = 0;
     m_curr_state.reset();
 
@@ -284,7 +288,7 @@ bool Position::make_move(const Move &move) {
     if constexpr (UPDATE)
         m_nnue.push();
 
-    m_played_positions[m_history_ply] = m_hash_key;
+    m_played_positions[m_history_ply] = m_position_hash;
     m_history_stack[m_history_ply] = m_curr_state;
     ++m_history_ply;
     ++m_game_clock_ply;
@@ -542,7 +546,7 @@ template void Position::unmake_move<false>(const Move &move);
 
 void Position::make_null_move() {
     m_history_stack[m_history_ply] = m_curr_state;
-    m_played_positions[m_history_ply] = m_hash_key;
+    m_played_positions[m_history_ply] = m_position_hash;
     ++m_history_ply;
 
     m_curr_state.ply_from_null = 0;
@@ -561,7 +565,7 @@ void Position::make_null_move() {
 void Position::unmake_null_move() {
     --m_history_ply;
     m_curr_state = m_history_stack[m_history_ply];
-    m_hash_key = m_played_positions[m_history_ply];
+    m_position_hash = m_played_positions[m_history_ply];
     --m_game_clock_ply;
     change_side();
 }
@@ -851,7 +855,7 @@ void Position::print() const {
         std::cout << "  " << rank_simbol << " ";
 
     std::cout << "\n\nFEN: " << get_fen();
-    std::cout << "\nHash: " << m_hash_key;
+    std::cout << "\nHash: " << m_position_hash;
     std::cout << "\nEval: " << eval() << "\n";
 }
 
@@ -875,7 +879,7 @@ bool Position::repetition() const {
     int starting_index = m_history_ply;
 
     for (int index = 4; index <= distance; index += 2)
-        if (m_played_positions[starting_index - index] == m_hash_key) {
+        if (m_played_positions[starting_index - index] == m_position_hash) {
             if (index < m_history_ply) // 2-fold repetition within the search tree, this avoids cycles
                 return true;
 
@@ -904,17 +908,25 @@ bool Position::fifty_move_draw() {
 void Position::hash_piece_key(const Piece &piece, const Square &sq) {
     assert(piece >= WHITE_PAWN && piece <= BLACK_KING);
     assert(sq >= a1 && sq <= h8);
-    m_hash_key ^= hash_keys.pieces[piece][sq];
+    m_position_hash ^= hash_keys.pieces[piece][sq];
+    if (piece == WHITE_PAWN || piece == BLACK_PAWN) {
+        m_pawn_hash ^= hash_keys.pieces[piece][sq];
+    } else if (get_color(piece) == WHITE) {
+        m_white_non_pawn_hash ^= hash_keys.pieces[piece][sq];
+    } else {
+        assert(get_color(piece) == BLACK);
+        m_white_non_pawn_hash ^= hash_keys.pieces[piece][sq];
+    }
 }
 
 void Position::hash_castle_key() {
     assert(m_curr_state.castling_rights >= 0 && m_curr_state.castling_rights <= ANY_CASTLING);
-    m_hash_key ^= hash_keys.castle[m_curr_state.castling_rights];
+    m_position_hash ^= hash_keys.castle[m_curr_state.castling_rights];
 }
 
 void Position::hash_ep_key() {
     assert(get_file(m_curr_state.en_passant) >= 0 && get_file(m_curr_state.en_passant) < 8);
-    m_hash_key ^= hash_keys.en_passant[get_file(m_curr_state.en_passant)];
+    m_position_hash ^= hash_keys.en_passant[get_file(m_curr_state.en_passant)];
 }
 
-void Position::hash_side_key() { m_hash_key ^= hash_keys.side; }
+void Position::hash_side_key() { m_position_hash ^= hash_keys.side; }

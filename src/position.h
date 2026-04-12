@@ -87,7 +87,10 @@ class Position {
     inline Color get_stm() const { return m_stm; }
     inline Color get_adversary() const { return static_cast<Color>(m_stm ^ 1); }
     inline Square get_en_passant() const { return m_curr_state.en_passant; }
-    inline HashType get_hash() const { return m_hash_key; }
+    inline HashType get_hash() const { return m_position_hash; }
+    inline HashType get_pawn_hash() const { return m_pawn_hash; }
+    inline HashType get_white_non_pawn_hash() const { return m_white_non_pawn_hash; }
+    inline HashType get_black_non_pawn_hash() const { return m_black_non_pawn_hash; }
     inline int get_game_ply() const { return m_game_clock_ply; }
     inline int get_fifty_move_ply() const { return m_curr_state.fifty_move_ply; }
     inline int get_material_count(const Piece &piece) const { return count_bits(get_piece_bb(piece)); }
@@ -157,7 +160,10 @@ class Position {
     Bitboard m_pieces[12];
 
     Color m_stm;
-    HashType m_hash_key;
+    HashType m_position_hash;
+    HashType m_pawn_hash;
+    HashType m_white_non_pawn_hash;
+    HashType m_black_non_pawn_hash;
     int m_game_clock_ply;
 
     int m_history_ply;
