@@ -186,6 +186,8 @@ TUNABLE_PARAM(capt_hist_penalty_mult, -375, -1024, -1, 50, 0.002)
 TUNABLE_PARAM(capt_hist_penalty_offset, 20, -512, 512, 50, 0.002)
 TUNABLE_PARAM(capt_hist_penalty_max, -1210, -3500, -500, 150, 0.002)
 
+TUNABLE_PARAM(pawn_corr_factor, 40, 1, 300, 15, 0.002)
+
 // Time Manager
 TUNABLE_PARAM(node_tm_base, 193, 150, 300, 7, 0.002)
 TUNABLE_PARAM(node_tm_scale, 164, 100, 250, 7, 0.002)

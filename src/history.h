@@ -26,7 +26,10 @@
 struct ThreadData;
 
 using HistoryType = int;
-constexpr HistoryType HistoryDivisor = 16384;
+constexpr HistoryType HISTORY_DIVISOR = 16384;
+constexpr HistoryType CORRHIST_SIZE = 16384; // must be a power of 2
+constexpr HistoryType CORRHIST_MASK = CORRHIST_SIZE - 1;
+constexpr HistoryType CORRHIST_MAX = 1024;
 
 class History {
   public:
@@ -37,8 +40,12 @@ class History {
 
     void update_history(const ThreadData &td, const Move &best_move, int depth, const PieceMoveList &quiets_tried,
                         const PieceMoveList &tacticals_tried);
+    void update_corr_history(const ThreadData &td, int depth, int diff);
 
     HistoryType get_history(const ThreadData &td, const Move &move) const;
+    HistoryType get_corr_history(const Position &position) const;
+
+    ScoreType correct_eval(const Position &position, const ScoreType &static_eval) const;
 
     inline HistoryType get_capture_history(const Position &position, const Move &move) {
         Square to = move.to();
@@ -74,6 +81,13 @@ class History {
     HistoryType get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const;
     HistoryType get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const;
 
+    inline HistoryType &get_pawn_corr_hist(const Position &pos) {
+        return m_pawn_corr_hist[pos.get_stm()][pos.get_pawn_hash() & CORRHIST_MASK];
+    }
+    inline HistoryType get_pawn_corr_hist(const Position &pos) const {
+        return m_pawn_corr_hist[pos.get_stm()][pos.get_pawn_hash() & CORRHIST_MASK];
+    }
+
     inline void save_killer(const Move &move, const int height) {
         m_killer_moves[height][1] = m_killer_moves[height][0];
         m_killer_moves[height][0] = move;
@@ -87,6 +101,7 @@ class History {
     HistoryType m_capture_history[2][6][64][5];
     HistoryType m_search_history_table[COLOR_NB][64 * 64];
     HistoryType m_continuation_history[12 * 64][12 * 64];
+    HistoryType m_pawn_corr_hist[2][CORRHIST_SIZE];
     Move m_counter_moves[64 * 64];
     Move m_killer_moves[MAX_SEARCH_DEPTH][2];
 };
