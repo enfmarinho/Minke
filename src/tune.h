@@ -1,3 +1,21 @@
+/*
+ *  Minke is a UCI chess engine
+ *  Copyright (C) 2026 Eduardo Marinho <eduardomarinho@pm.me>
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef TUNE_H
 #define TUNE_H
 
@@ -100,8 +118,11 @@ class TunableParamList {
 
 #endif // #ifdef TUNE
 
+#define FIXED_PARAM(name, default, min, max, cend, rend) \
+    constexpr int name() { return default; }
+
 // Aspiration Windows
-TUNABLE_PARAM(aw_min_depth, 3, 1, 10, 0.5, 0.002)
+FIXED_PARAM(aw_min_depth, 3, 1, 10, 0.5, 0.002)
 TUNABLE_PARAM(aw_first_window, 10, 5, 200, 10, 0.002)
 TUNABLE_PARAM(aw_widening_factor, 50, 1, 100, 5, 0.002)
 
@@ -126,8 +147,8 @@ TUNABLE_PARAM(lmp_scale, 30, 20, 120, 5, 0.002)
 TUNABLE_PARAM(singular_extension_min_depth, 7, 4, 10, 0.5, 0.002)
 
 // Interval Iterative Reduction
-TUNABLE_PARAM(iir_min_depth, 3, 3, 8, 0.5, 0.002)
-TUNABLE_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
+FIXED_PARAM(iir_min_depth, 3, 3, 8, 0.5, 0.002)
+FIXED_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
 
 // Razoring
 TUNABLE_PARAM(razoring_max_depth, 5, 2, 6, 0.5, 0.002)
@@ -138,7 +159,7 @@ TUNABLE_PARAM(qsFutilityMargin, 200, 0, 500, 25, 0.002)
 
 // Prob Cut
 TUNABLE_PARAM(probcut_margin, 300, 100, 400, 15, 0.002)
-TUNABLE_PARAM(probcut_min_depth, 5, 4, 8, 0.5, 0.002)
+FIXED_PARAM(probcut_min_depth, 5, 4, 8, 0.5, 0.002)
 
 // History Formulas Parameters
 TUNABLE_PARAM(hist_bonus_mult, 224, 1, 1024, 50, 0.002)
@@ -164,5 +185,11 @@ TUNABLE_PARAM(capt_hist_bonus_max, 1449, 500, 3500, 150, 0.002)
 TUNABLE_PARAM(capt_hist_penalty_mult, -342, -1024, -1, 50, 0.002)
 TUNABLE_PARAM(capt_hist_penalty_offset, -5, -512, 512, 50, 0.002)
 TUNABLE_PARAM(capt_hist_penalty_max, -1072, -3500, -500, 150, 0.002)
+
+// Time Manager
+TUNABLE_PARAM(node_tm_base, 200, 150, 300, 7, 0.002)
+TUNABLE_PARAM(node_tm_scale, 170, 100, 250, 7, 0.002)
+TUNABLE_PARAM(tm_min_scale, 50, 10, 100, 7, 0.002)
+TUNABLE_PARAM(tm_max_scale, 170, 100, 250, 7, 0.002)
 
 #endif // #ifndef TUNE_H

@@ -1,8 +1,19 @@
 /*
- *  Copyright (c) 2024 Eduardo Marinho <eduardo.nestor.marinho@proton.me>
+ *  Minke is a UCI chess engine
+ *  Copyright (C) 2026 Eduardo Marinho <eduardomarinho@pm.me>
  *
- *  Licensed under the MIT License.
- *  See the LICENSE file in the project root for more information.
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "search.h"
@@ -11,7 +22,9 @@
 #include <atomic>
 #include <cassert>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <thread>
 
@@ -23,13 +36,18 @@
 #include "tune.h"
 #include "types.h"
 
+ScoreType normalize_score(ScoreType score) {
+    // TODO scores should be normalize such that +100/-100 means 50% chance of wining or losing
+    return score / 2;
+}
+
 static void print_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
                               const ThreadData &td) {
     std::cout << "info depth " << depth;
     if (std::abs(eval) > MATE_FOUND) {
         std::cout << " score mate " << (eval < 0 ? "-" : "") << (MATE_SCORE - std::abs(eval) + 1) / 2;
     } else {
-        std::cout << " score cp " << eval / 2;
+        std::cout << " score cp " << normalize_score(eval);
     }
     // Add 1 to time_passed() to avoid division by 0
     std::cout << " time " << td.time_manager.time_passed() << " nodes " << td.nodes_searched << " nps "
@@ -53,6 +71,7 @@ ThreadData::ThreadData() {
     id = 0;
     tt = std::make_shared<TranspositionTable>();
     stop = std::make_shared<std::atomic<bool>>(true);
+    datagen = false;
     report = true;
     reset_search_parameters();
 }
@@ -62,6 +81,7 @@ void ThreadData::reset_search_parameters() {
     stop->store(true, std::memory_order_relaxed);
     height = 0;
     nodes_searched = -1; // Avoid counting the root
+    std::memset(node_table, 0, sizeof(node_table));
     time_manager.reset();
     search_limits.reset();
     // TODO i dont think this is necessary
@@ -114,8 +134,8 @@ ScoreType iterative_deepening(ThreadData &td) {
                 print_search_info(depth, eval, td.nodes[0].pv_list, td);
 
             if (depth > 5)
-                td.time_manager.update();
-            if (td.time_manager.stop_early())
+                td.time_manager.update(td);
+            if (td.time_manager.stop_early() || td.nodes_searched >= td.search_limits.optimum_node)
                 break;
 
             td.time_manager.can_stop(); // Avoids stopping before depth 1 has been searched through
@@ -132,6 +152,7 @@ ScoreType iterative_deepening(ThreadData &td) {
 
         td.stop->store(true, std::memory_order_relaxed);
         td.best_move = best_move; // A partial search would mess this up
+        td.tt->update_age();      // Update tt age
     }
 
     return past_eval;
@@ -218,7 +239,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     }
 
     // Internal Iterative Reductions
-    if (!tthit && depth >= iir_min_depth()) {
+    if ((!tthit || ttdepth + 4 < depth) && depth >= iir_min_depth()) {
         depth -= iir_depth_reduction();
     }
 
@@ -236,7 +257,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     } else {
         eval = node.static_eval = position.eval();
-        td.tt->store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, eval, BOUND_EMPTY, ttpv, tthit);
+        td.tt->store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, eval, BOUND_EMPTY, ttpv, td.tt->age(), tthit);
     }
 
     // Clean killer moves for the next ply
@@ -302,7 +323,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 position.unmake_move<true>(move);
 
                 if (pc_score >= pc_beta) {
-                    td.tt->store(position.get_hash(), depth - 3, move, pc_score, eval, LOWER, ttpv, tthit);
+                    td.tt->store(position.get_hash(), depth - 3, move, pc_score, eval, LOWER, ttpv, td.tt->age(),
+                                 tthit);
                     return pc_score;
                 }
             }
@@ -321,12 +343,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     while ((move = move_picker.next_move(skip_quiets)) != MOVE_NONE) {
         if (move == td.nodes[td.height].excluded_move) // Skip excluded moves
             continue;
-        if (!position.make_move<true>(move)) { // Avoid illegal moves
-            position.unmake_move<true>(move);
+        if (!position.is_legal(move)) { // Avoid illegal moves
             continue;
         }
-        PieceMove curr_pmove = {move, position.consult(move.to())}; // move.to() because move has already been made
-        node.curr_pmove = curr_pmove;
 
         if (!root && best_score >= -MATE_FOUND && !skip_quiets) {
             // Late Move Pruning
@@ -342,13 +361,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             ScoreType singular_beta = ttscore - depth;
             ScoreType singular_depth = (depth - 1) / 2;
 
-            position.unmake_move<true>(ttmove);
             td.tt->prefetch(position.get_hash());
 
             td.nodes[td.height].excluded_move = ttmove;
             ScoreType singular_score = negamax(singular_beta - 1, singular_beta, singular_depth, cutnode, td);
             td.nodes[td.height].excluded_move = MOVE_NONE;
-            node.curr_pmove = curr_pmove; // reassign this, since singular search messed it up
 
             if (singular_score < singular_beta) {
                 extension = 1;
@@ -359,21 +376,24 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 // } else if (ttscore <= alpha && ttscore >= beta) {
                 //     extension = -1;
             }
-
-            position.make_move<true>(ttmove);
         }
+
+        position.make_move<true>(move);
+        node.curr_pmove = {move, position.consult(move.to())}; // move.to() because move has already been made
+
         td.tt->prefetch(position.get_hash());
         int new_depth = depth + extension;
 
         // Add move to tried list
         if (move.is_quiet())
-            quiets_tried.push(curr_pmove);
+            quiets_tried.push(node.curr_pmove);
         else
-            tacticals_tried.push(curr_pmove);
+            tacticals_tried.push(node.curr_pmove);
 
         ++td.height;
         ++moves_searched;
 
+        int64_t nodes_before_search = td.nodes_searched;
         td.nodes[td.height].pv_list.clear();
         ScoreType score;
         if (moves_searched == 1) {
@@ -384,7 +404,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             if (moves_searched > 1 && depth > 2 && move.is_quiet()) {
                 reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
 
-                reduction -= in_check;   // Reduce less when in check
+                if (position.get_checkers()) // Reduce less when in check
+                    reduction -= 1;
+
                 reduction += !improving; // Reduce more if not improving
                 reduction += cutnode;    // Reduce cutnodes more
 
@@ -416,6 +438,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         --td.height;
         position.unmake_move<true>(move);
         assert(score >= -MAX_SCORE);
+        td.node_table[move.from_and_to()] += td.nodes_searched - nodes_before_search;
 
         if (score > best_score) {
             best_score = score;
@@ -441,7 +464,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     if (!td.stop_search()) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
-        td.tt->store(position.get_hash(), depth, best_move, best_score, eval, bound, ttpv, tthit);
+        td.tt->store(position.get_hash(), depth, best_move, best_score, eval, bound, ttpv, td.tt->age(), tthit);
         td.best_move = best_move;
     }
 
@@ -488,7 +511,8 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
 
     } else {
         best_score = static_eval = node.static_eval = position.eval();
-        td.tt->store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, static_eval, BOUND_EMPTY, ttpv, tthit);
+        td.tt->store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, static_eval, BOUND_EMPTY, ttpv, td.tt->age(),
+                     tthit);
     }
 
     // Stand-pat
@@ -540,7 +564,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     }
 
     BoundType bound = best_score >= beta ? LOWER : UPPER;
-    td.tt->store(position.get_hash(), 0, best_move, best_score, static_eval, bound, ttpv, tthit);
+    td.tt->store(position.get_hash(), 0, best_move, best_score, static_eval, bound, ttpv, td.tt->age(), tthit);
 
     return best_score;
 }

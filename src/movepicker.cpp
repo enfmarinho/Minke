@@ -1,8 +1,19 @@
 /*
- *  Copyright (c) 2024 Eduardo Marinho <eduardo.nestor.marinho@proton.me>
+ *  Minke is a UCI chess engine
+ *  Copyright (C) 2026 Eduardo Marinho <eduardomarinho@pm.me>
  *
- *  Licensed under the MIT License.
- *  See the LICENSE file in the project root for more information.
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "movepicker.h"
@@ -86,7 +97,7 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
             m_stage = PICK_QUIET;
             // Fall-through
         case PICK_QUIET:
-            while (m_curr != m_end) {
+            while (m_curr != m_end && !skip_quiets) {
                 sort_next_move();
                 if (m_curr->move != m_ttmove)
                     return *m_curr++;

@@ -1,8 +1,19 @@
 /*
- *  Copyright (c) 2024 Eduardo Marinho <eduardo.nestor.marinho@proton.me>
+ *  Minke is a UCI chess engine
+ *  Copyright (C) 2026 Eduardo Marinho <eduardomarinho@pm.me>
  *
- *  Licensed under the MIT License.
- *  See the LICENSE file in the project root for more information.
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #ifndef SEARCH_H
@@ -61,7 +72,9 @@ struct ThreadData {
     SearchLimits search_limits;
     TimeManager time_manager;
     int64_t nodes_searched;
+    int64_t node_table[64 * 64];
     int height;
+    bool datagen;
     bool report;
     bool chess960;
 
@@ -79,6 +92,8 @@ struct ThreadData {
         return false;
     }
 };
+
+ScoreType normalize_score(ScoreType score);
 
 void search(ThreadData &main_td, int n_threads);
 ScoreType iterative_deepening(ThreadData &td);

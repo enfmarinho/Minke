@@ -1,8 +1,19 @@
 /*
- *  Copyright (c) 2024 Eduardo Marinho <eduardo.nestor.marinho@proton.me>
+ *  Minke is a UCI chess engine
+ *  Copyright (C) 2026 Eduardo Marinho <eduardomarinho@pm.me>
  *
- *  Licensed under the MIT License.
- *  See the LICENSE file in the project root for more information.
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #ifndef UTILS_H
@@ -167,13 +178,6 @@ inline int get_pawn_start_rank(const Color &color) { return color == WHITE ? 1 :
 inline int get_pawn_promotion_rank(const Color &color) { return color == WHITE ? 7 : 0; }
 
 inline Direction get_pawn_offset(const Color &color) { return color == WHITE ? NORTH : SOUTH; }
-
-inline int64_t rand(int64_t min, int64_t max) {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    std::uniform_int_distribution<int64_t> dist(min, max);
-    return dist(gen);
-}
 
 #if defined(__linux__)
 #include <sys/mman.h>
