@@ -101,7 +101,7 @@ void UCI::loop() {
         } else if (token == "eval") {
             eval();
         } else if (token == "uci") {
-            std::cout << "id name Minke 5.0.0 \n"
+            std::cout << "id name Minke 6.0.0 \n"
                       << "id author Eduardo Marinho \n";
             EngineOptions::print();
             std::cout << "uciok" << std::endl;
