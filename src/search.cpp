@@ -369,31 +369,32 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         if (moves_searched == 1) {
             score = -negamax(-beta, -alpha, new_depth - 1, false, td);
         } else {
-            int reduction = 1;
+            int scaled_reduction = 1024;
             // Late Move Reduction
             if (moves_searched > 1 && depth > 2 && move.is_quiet()) {
-                reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
+                scaled_reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
 
-                if (position.get_checkers()) // Reduce less when in check
-                    reduction -= 1;
+                if (position.get_checkers()) // Reduce less for moves that give check
+                    scaled_reduction -= lmr_gives_check_delta();
 
-                reduction += !improving; // Reduce more if not improving
-                reduction += cutnode;    // Reduce cutnodes more
+                scaled_reduction += !improving * lmr_non_improving_delta(); // Reduce more if not improving
+                scaled_reduction += cutnode * lmr_cutnode_delta();          // Reduce cutnodes more
 
                 // Reduce less if move is killer or counter
-                reduction -= td.search_history.is_killer(move, td.height - 1);
+                scaled_reduction -= td.search_history.is_killer(move, td.height - 1) * lmr_killer_delta();
                 if (td.height >= 2)
-                    reduction -= td.search_history.is_counter(move, td.nodes[td.height - 2].curr_pmove.move);
+                    scaled_reduction -= td.search_history.is_counter(move, td.nodes[td.height - 2].curr_pmove.move) *
+                                        lmr_counter_delta();
 
                 // Reduce less if this move is or was a principal variation
-                reduction -= ttpv;
+                scaled_reduction -= ttpv * lmr_ttpv_delta();
             } else {
                 // reduce noisy
             }
-            const int lmr_depth = std::min(std::max(new_depth - reduction, 1), new_depth - 1);
+            const int lmr_depth = std::min(std::max(new_depth - scaled_reduction / 1024, 1), new_depth - 1);
             score = -negamax(-alpha - 1, -alpha, lmr_depth, true, td);
 
-            if (score > alpha && reduction > 1) {
+            if (score > alpha && scaled_reduction > 1024) {
                 new_depth += score > best_score + 35;
                 new_depth -= score < best_score + new_depth;
 

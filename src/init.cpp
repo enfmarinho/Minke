@@ -51,9 +51,7 @@ void init_all() {
 void init_search_params() {
     for (int depth = 1; depth < 64; ++depth) {
         for (int move_counter = 1; move_counter < 64; ++move_counter) {
-            LMR_TABLE[depth][move_counter] =
-                (lmr_base() / 100.0) + std::log(depth) * std::log(move_counter) / (lmr_divisor() / 100.0);
-            assert(LMR_TABLE[depth][move_counter] > 0);
+            LMR_TABLE[depth][move_counter] = lmr_base() + lmr_scale() * std::log(depth) * std::log(move_counter);
         }
     }
     LMR_TABLE[0][0] = 0;

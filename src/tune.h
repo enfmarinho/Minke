@@ -136,8 +136,14 @@ TUNABLE_PARAM(rfp_margin, 105, 50, 150, 5, 0.002)
 TUNABLE_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)
 
 // Late Move Reductions
-TUNABLE_PARAM(lmr_base, 108, 50, 150, 5, 0.002)
-TUNABLE_PARAM(lmr_divisor, 200, 150, 350, 10, 0.002)
+TUNABLE_PARAM(lmr_base, 1106, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_scale, 512, 256, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_gives_check_delta, 1024, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_non_improving_delta, 1024, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_cutnode_delta, 1024, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_killer_delta, 1024, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_counter_delta, 1024, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_ttpv_delta, 1024, 512, 2048, 128, 0.002)
 
 // Late Moves Pruning
 TUNABLE_PARAM(lmp_base, 125, 100, 200, 5, 0.002)
