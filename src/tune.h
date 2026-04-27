@@ -123,7 +123,7 @@ class TunableParamList {
 
 // Aspiration Windows
 FIXED_PARAM(aw_min_depth, 3, 1, 10, 0.5, 0.002)
-TUNABLE_PARAM(aw_first_window, 11, 5, 200, 10, 0.002)
+TUNABLE_PARAM(aw_first_window, 13, 5, 200, 10, 0.002)
 TUNABLE_PARAM(aw_widening_factor, 49, 1, 100, 5, 0.002)
 
 // Null move pruning
@@ -132,16 +132,16 @@ TUNABLE_PARAM(nmp_depth_reduction_divisor, 3, 2, 8, 0.5, 0.002)
 TUNABLE_PARAM(nmp_min_depth, 2, 2, 8, 0.5, 0.002)
 
 // Reverse Futility Pruning
-TUNABLE_PARAM(rfp_margin, 105, 50, 150, 5, 0.002)
+TUNABLE_PARAM(rfp_margin, 106, 50, 150, 5, 0.002)
 TUNABLE_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)
 
 // Late Move Reductions
-TUNABLE_PARAM(lmr_base, 108, 50, 150, 5, 0.002)
-TUNABLE_PARAM(lmr_divisor, 200, 150, 350, 10, 0.002)
+TUNABLE_PARAM(lmr_base, 109, 50, 150, 5, 0.002)
+TUNABLE_PARAM(lmr_divisor, 190, 150, 350, 10, 0.002)
 
 // Late Moves Pruning
-TUNABLE_PARAM(lmp_base, 125, 100, 200, 5, 0.002)
-TUNABLE_PARAM(lmp_scale, 35, 20, 120, 5, 0.002)
+TUNABLE_PARAM(lmp_base, 122, 100, 200, 5, 0.002)
+TUNABLE_PARAM(lmp_scale, 38, 20, 120, 5, 0.002)
 
 // Singular Extension
 TUNABLE_PARAM(singular_extension_min_depth, 7, 4, 10, 0.5, 0.002)
@@ -151,45 +151,45 @@ FIXED_PARAM(iir_min_depth, 3, 3, 8, 0.5, 0.002)
 FIXED_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
 
 // Razoring
-TUNABLE_PARAM(razoring_max_depth, 5, 2, 6, 0.5, 0.002)
-TUNABLE_PARAM(razoring_mult, 244, 150, 300, 7.5, 0.002)
+TUNABLE_PARAM(razoring_max_depth, 4, 2, 6, 0.5, 0.002)
+TUNABLE_PARAM(razoring_mult, 246, 150, 300, 7.5, 0.002)
 
 // Futility Pruning
-TUNABLE_PARAM(qs_futility_margin, 213, 0, 500, 25, 0.002)
+TUNABLE_PARAM(qs_futility_margin, 225, 0, 500, 25, 0.002)
 
 // Prob Cut
-TUNABLE_PARAM(probcut_margin, 299, 100, 400, 15, 0.002)
+TUNABLE_PARAM(probcut_margin, 305, 100, 400, 15, 0.002)
 FIXED_PARAM(probcut_min_depth, 5, 4, 8, 0.5, 0.002)
 
 // History Formulas Parameters
-TUNABLE_PARAM(hist_bonus_mult, 219, 1, 1024, 50, 0.002)
-TUNABLE_PARAM(hist_bonus_offset, 367, -512, 512, 50, 0.002)
-TUNABLE_PARAM(hist_bonus_max, 2269, 1500, 3500, 100, 0.002)
+TUNABLE_PARAM(hist_bonus_mult, 223, 1, 1024, 50, 0.002)
+TUNABLE_PARAM(hist_bonus_offset, 375, -512, 512, 50, 0.002)
+TUNABLE_PARAM(hist_bonus_max, 2257, 1500, 3500, 100, 0.002)
 
-TUNABLE_PARAM(hist_penalty_mult, -57, -1024, -1, 50, 0.002)
-TUNABLE_PARAM(hist_penalty_offset, -21, -512, 512, 50, 0.002)
-TUNABLE_PARAM(hist_penalty_max, -1059, -3500, -500, 150, 0.002)
+TUNABLE_PARAM(hist_penalty_mult, -82, -1024, -1, 50, 0.002)
+TUNABLE_PARAM(hist_penalty_offset, -18, -512, 512, 50, 0.002)
+TUNABLE_PARAM(hist_penalty_max, -981, -3500, -500, 150, 0.002)
 
-TUNABLE_PARAM(cont_bonus_mult, 153, 1, 1024, 50, 0.002)
-TUNABLE_PARAM(cont_bonus_offset, 387, -512, 512, 50, 0.002)
-TUNABLE_PARAM(cont_bonus_max, 2381, 1500, 3500, 100, 0.002)
+TUNABLE_PARAM(cont_bonus_mult, 155, 1, 1024, 50, 0.002)
+TUNABLE_PARAM(cont_bonus_offset, 405, -512, 512, 50, 0.002)
+TUNABLE_PARAM(cont_bonus_max, 2358, 1500, 3500, 100, 0.002)
 
-TUNABLE_PARAM(cont_penalty_mult, -103, -1024, -1, 50, 0.002)
-TUNABLE_PARAM(cont_penalty_offset, -61, -512, 512, 50, 0.002)
-TUNABLE_PARAM(cont_penalty_max, -1154, -3500, -500, 150, 0.002)
+TUNABLE_PARAM(cont_penalty_mult, -91, -1024, -1, 50, 0.002)
+TUNABLE_PARAM(cont_penalty_offset, -84, -512, 512, 50, 0.002)
+TUNABLE_PARAM(cont_penalty_max, -1165, -3500, -500, 150, 0.002)
 
-TUNABLE_PARAM(capt_hist_bonus_mult, 217, 1, 1024, 50, 0.002)
-TUNABLE_PARAM(capt_hist_bonus_offset, -55, -512, 512, 50, 0.002)
-TUNABLE_PARAM(capt_hist_bonus_max, 1415, 500, 3500, 150, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_mult, 209, 1, 1024, 50, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_offset, -52, -512, 512, 50, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_max, 1445, 500, 3500, 150, 0.002)
 
-TUNABLE_PARAM(capt_hist_penalty_mult, -375, -1024, -1, 50, 0.002)
-TUNABLE_PARAM(capt_hist_penalty_offset, 20, -512, 512, 50, 0.002)
-TUNABLE_PARAM(capt_hist_penalty_max, -1210, -3500, -500, 150, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_mult, -364, -1024, -1, 50, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_offset, 23, -512, 512, 50, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_max, -1218, -3500, -500, 150, 0.002)
 
 // Time Manager
-TUNABLE_PARAM(node_tm_base, 193, 150, 300, 7, 0.002)
-TUNABLE_PARAM(node_tm_scale, 164, 100, 250, 7, 0.002)
-TUNABLE_PARAM(tm_min_scale, 48, 10, 100, 7, 0.002)
-TUNABLE_PARAM(tm_max_scale, 166, 100, 250, 7, 0.002)
+TUNABLE_PARAM(node_tm_base, 192, 150, 300, 7, 0.002)
+TUNABLE_PARAM(node_tm_scale, 166, 100, 250, 7, 0.002)
+TUNABLE_PARAM(tm_min_scale, 49, 10, 100, 7, 0.002)
+TUNABLE_PARAM(tm_max_scale, 167, 100, 250, 7, 0.002)
 
 #endif // #ifndef TUNE_H
