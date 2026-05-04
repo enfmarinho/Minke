@@ -62,7 +62,7 @@ struct PieceSquare {
 
     inline PieceSquare() : piece(EMPTY), sq(NO_SQ) {}
     inline PieceSquare(Piece _piece, Square _sq) : piece(_piece), sq(_sq) {}
-    size_t feature_idx(const Color pov);
+    size_t feature_idx(const Color pov) const;
 };
 
 struct DirtyPiece {
@@ -100,8 +100,11 @@ class NNUE {
     };
     friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
 
-    void add_feature(const PieceSquare &ps);
-    void remove_feature(const PieceSquare &ps);
+    void add(const PieceSquare &ps);
+    void sub(const PieceSquare &ps);
+    void add_sub(const PieceSquare &add0, const PieceSquare &sub0);
+    void add_sub2(const PieceSquare &add0, const PieceSquare &sub0, const PieceSquare &sub1);
+    void add2_sub2(const PieceSquare &add0, const PieceSquare &add1, const PieceSquare &sub0, const PieceSquare &sub1);
 
     constexpr int32_t crelu(const int32_t &input) const;
     constexpr int32_t screlu(const int32_t &input) const;
