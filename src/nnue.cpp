@@ -28,6 +28,7 @@
 #include <span>
 
 #include "incbin.h"
+#include "move.h"
 #include "position.h"
 #include "simd.h"
 #include "types.h"
@@ -47,10 +48,31 @@ static const std::pair<size_t, size_t> feature_indices(const Piece &piece, const
 
 void NNUE::pop() { m_accumulators.pop_back(); }
 
-void NNUE::push() { m_accumulators.push_back(m_accumulators.back()); }
+void NNUE::push(const DirtyPiece &dp) {
+    m_accumulators.push_back(m_accumulators.back());
+    switch (dp.move_type) {
+        case REGULAR:
+            remove_feature(dp.sub0);
+            add_feature(dp.add0);
+            break;
+        case CAPTURE:
+            remove_feature(dp.sub0);
+            remove_feature(dp.sub1);
+            add_feature(dp.add0);
+            break;
+        case CASTLING:
+            remove_feature(dp.sub0);
+            remove_feature(dp.sub1);
+            add_feature(dp.add0);
+            add_feature(dp.add1);
+            break;
+        default:
+            __builtin_unreachable();
+    }
+}
 
-void NNUE::add_feature(const Piece &piece, const Square &sq) {
-    const auto [white_index, black_index] = feature_indices(piece, sq);
+void NNUE::add_feature(const PieceSquare &ps) {
+    const auto [white_index, black_index] = feature_indices(ps.piece, ps.sq);
 
     for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
         m_accumulators.back().white_neurons[column] += network.hidden_weights[white_index * HIDDEN_LAYER_SIZE + column];
@@ -60,8 +82,8 @@ void NNUE::add_feature(const Piece &piece, const Square &sq) {
     }
 }
 
-void NNUE::remove_feature(const Piece &piece, const Square &sq) {
-    const auto [white_index, black_index] = feature_indices(piece, sq);
+void NNUE::remove_feature(const PieceSquare &ps) {
+    const auto [white_index, black_index] = feature_indices(ps.piece, ps.sq);
 
     for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
         m_accumulators.back().white_neurons[column] -= network.hidden_weights[white_index * HIDDEN_LAYER_SIZE + column];
@@ -79,7 +101,7 @@ void NNUE::reset(const Position &position) {
         Square sq = static_cast<Square>(sqi);
         Piece piece = position.consult(sq);
         if (piece != EMPTY)
-            add_feature(piece, sq);
+            add_feature({piece, sq});
     }
 }
 

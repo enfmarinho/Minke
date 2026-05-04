@@ -119,22 +119,21 @@ class Position {
 
   private:
     template <bool UPDATE>
-    void add_piece(const Piece &piece, const Square &sq);
+    void add_piece(const PieceSquare &ps);
     template <bool UPDATE>
-    void remove_piece(const Piece &piece, const Square &sq);
-    template <bool UPDATE>
-    void move_piece(const Piece &piece, const Square &from, const Square &to);
+    void remove_piece(const PieceSquare &ps);
 
     template <bool UPDATE>
-    void make_regular(const Move &move);
+    DirtyPiece make_regular(const Move &move);
     template <bool UPDATE>
-    void make_capture(const Move &move);
+    DirtyPiece make_capture(const Move &move);
     template <bool UPDATE>
-    void make_castle(const Move &move);
+    DirtyPiece make_castle(const Move &move);
     template <bool UPDATE>
-    void make_promotion(const Move &move);
+    DirtyPiece make_promotion(const Move &move);
     template <bool UPDATE>
-    void make_en_passant(const Move &move);
+    DirtyPiece make_en_passant(const Move &move);
+
     void update_castling_rights(const Move &move);
     void update_pin_and_checkers_bb();
 
@@ -145,7 +144,7 @@ class Position {
     bool pawn_pseudo_legal(const Square &from, const Square &to, const Move &move) const;
     bool castling_pseudo_legal(const Square &from, const Square &to, const PieceType &moved_piece_type) const;
 
-    void hash_piece_key(const Piece &piece, const Square &sq);
+    void hash_piece_key(const PieceSquare &ps);
     void hash_castle_key();
     void hash_ep_key();
     void hash_side_key();
