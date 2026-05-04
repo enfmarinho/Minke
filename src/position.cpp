@@ -27,10 +27,10 @@
 #include <string>
 
 #include "attacks.h"
+#include "eval/nnue.h"
 #include "hash.h"
 #include "move.h"
 #include "movegen.h"
-#include "nnue.h"
 #include "types.h"
 #include "utils.h"
 
@@ -234,7 +234,7 @@ std::string Position::get_fen() const {
     return fen;
 }
 
-void Position::reset_nnue() { m_nnue.reset(*this); }
+void Position::reset_nnue() { m_nnue.refresh(*this); }
 
 template <bool UPDATE>
 void Position::reset() {
@@ -847,7 +847,7 @@ bool Position::castling_pseudo_legal(const Square &from, const Square &to, const
     return true;
 }
 
-void Position::print() const {
+void Position::print() {
     auto print_line = []() -> void {
         for (IndexType i = 0; i < 8; ++i) {
             std::cout << "+";
