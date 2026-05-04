@@ -8,7 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 
 # Sources files
-file(GLOB SOURCES src/*.cpp)
+file(GLOB SOURCES src/*.cpp src/eval/*.cpp src/eval/nnue/*.cpp)
 
 add_executable(minke ${SOURCES})
 
