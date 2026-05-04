@@ -28,46 +28,126 @@
 #include <span>
 
 #include "incbin.h"
+#include "move.h"
 #include "position.h"
 #include "simd.h"
 #include "types.h"
 #include "utils.h"
 
-static const std::pair<size_t, size_t> feature_indices(const Piece &piece, const Square &sq) {
-    constexpr size_t ColorStride = 64 * 6;
-    constexpr size_t PieceStride = 64;
+size_t PieceSquare::feature_idx(const Color pov) const {
+    constexpr size_t COLOR_STRIDE = 64 * 6;
+    constexpr size_t PIECE_STRIDE = 64;
 
-    Color color = get_color(piece);
-    PieceType piece_type = get_piece_type(piece, color);
+    const Color piece_color = get_color(piece);
+    int pov_sq = sq;
+    if (pov == BLACK) // Convert square to pov, i.e. flip rank if stm is black
+        pov_sq = pov_sq ^ 56;
 
-    size_t white_index = color * ColorStride + piece_type * PieceStride + sq;
-    size_t black_index = !color * ColorStride + piece_type * PieceStride + (sq ^ 56);
-    return {white_index, black_index};
+    const size_t idx = (piece_color != pov) * COLOR_STRIDE +               // Perspective offset
+                       get_piece_type(piece, piece_color) * PIECE_STRIDE + // Piece type offset
+                       pov_sq;
+    return idx * HIDDEN_LAYER_SIZE;
 }
 
 void NNUE::pop() { m_accumulators.pop_back(); }
 
-void NNUE::push() { m_accumulators.push_back(m_accumulators.back()); }
-
-void NNUE::add_feature(const Piece &piece, const Square &sq) {
-    const auto [white_index, black_index] = feature_indices(piece, sq);
-
-    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
-        m_accumulators.back().white_neurons[column] += network.hidden_weights[white_index * HIDDEN_LAYER_SIZE + column];
-    }
-    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
-        m_accumulators.back().black_neurons[column] += network.hidden_weights[black_index * HIDDEN_LAYER_SIZE + column];
+void NNUE::push(const DirtyPiece &dp) {
+    m_accumulators.push_back(m_accumulators.back());
+    switch (dp.move_type) {
+        case REGULAR:
+            add_sub(dp.add0, dp.sub0);
+            break;
+        case CAPTURE:
+            add_sub2(dp.add0, dp.sub0, dp.sub1);
+            break;
+        case CASTLING:
+            add2_sub2(dp.add0, dp.add1, dp.sub0, dp.sub1);
+            break;
+        default:
+            __builtin_unreachable();
     }
 }
 
-void NNUE::remove_feature(const Piece &piece, const Square &sq) {
-    const auto [white_index, black_index] = feature_indices(piece, sq);
-
+void NNUE::add(const PieceSquare &ps) {
+    const size_t white_index = ps.feature_idx(WHITE);
     for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
-        m_accumulators.back().white_neurons[column] -= network.hidden_weights[white_index * HIDDEN_LAYER_SIZE + column];
+        m_accumulators.back().white_neurons[column] += network.hidden_weights[white_index + column];
     }
+
+    const size_t black_index = ps.feature_idx(BLACK);
     for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
-        m_accumulators.back().black_neurons[column] -= network.hidden_weights[black_index * HIDDEN_LAYER_SIZE + column];
+        m_accumulators.back().black_neurons[column] += network.hidden_weights[black_index + column];
+    }
+}
+
+void NNUE::sub(const PieceSquare &ps) {
+    const size_t white_index = ps.feature_idx(WHITE);
+    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
+        m_accumulators.back().white_neurons[column] -= network.hidden_weights[white_index + column];
+    }
+
+    const size_t black_index = ps.feature_idx(BLACK);
+    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
+        m_accumulators.back().black_neurons[column] -= network.hidden_weights[black_index + column];
+    }
+}
+
+void NNUE::add_sub(const PieceSquare &add0, const PieceSquare &sub0) {
+    const size_t white_add0_index = add0.feature_idx(WHITE);
+    const size_t white_sub0_index = sub0.feature_idx(WHITE);
+    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
+        m_accumulators.back().white_neurons[column] +=
+            network.hidden_weights[white_add0_index + column] - network.hidden_weights[white_sub0_index + column];
+    }
+
+    const size_t black_add0_index = add0.feature_idx(BLACK);
+    const size_t black_sub0_index = sub0.feature_idx(BLACK);
+    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
+        m_accumulators.back().black_neurons[column] +=
+            network.hidden_weights[black_add0_index + column] - network.hidden_weights[black_sub0_index + column];
+    }
+}
+
+void NNUE::add_sub2(const PieceSquare &add0, const PieceSquare &sub0, const PieceSquare &sub1) {
+    const size_t white_add0_index = add0.feature_idx(WHITE);
+    const size_t white_sub0_index = sub0.feature_idx(WHITE);
+    const size_t white_sub1_index = sub1.feature_idx(WHITE);
+    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
+        m_accumulators.back().white_neurons[column] += network.hidden_weights[white_add0_index + column] -
+                                                       network.hidden_weights[white_sub0_index + column] -
+                                                       network.hidden_weights[white_sub1_index + column];
+    }
+
+    const size_t black_add0_index = add0.feature_idx(BLACK);
+    const size_t black_sub0_index = sub0.feature_idx(BLACK);
+    const size_t black_sub1_index = sub1.feature_idx(BLACK);
+    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
+        m_accumulators.back().black_neurons[column] += network.hidden_weights[black_add0_index + column] -
+                                                       network.hidden_weights[black_sub0_index + column] -
+                                                       network.hidden_weights[black_sub1_index + column];
+    }
+}
+
+void NNUE::add2_sub2(const PieceSquare &add0, const PieceSquare &add1, const PieceSquare &sub0,
+                     const PieceSquare &sub1) {
+    const size_t white_add0_index = add0.feature_idx(WHITE);
+    const size_t white_add1_index = add1.feature_idx(WHITE);
+    const size_t white_sub0_index = sub0.feature_idx(WHITE);
+    const size_t white_sub1_index = sub1.feature_idx(WHITE);
+    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
+        m_accumulators.back().white_neurons[column] +=
+            network.hidden_weights[white_add0_index + column] + network.hidden_weights[white_add1_index + column] -
+            network.hidden_weights[white_sub0_index + column] - network.hidden_weights[white_sub1_index + column];
+    }
+
+    const size_t black_add0_index = add0.feature_idx(BLACK);
+    const size_t black_add1_index = add1.feature_idx(BLACK);
+    const size_t black_sub0_index = sub0.feature_idx(BLACK);
+    const size_t black_sub1_index = sub1.feature_idx(BLACK);
+    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
+        m_accumulators.back().black_neurons[column] +=
+            network.hidden_weights[black_add0_index + column] + network.hidden_weights[black_add1_index + column] -
+            network.hidden_weights[black_sub0_index + column] - network.hidden_weights[black_sub1_index + column];
     }
 }
 
@@ -79,7 +159,7 @@ void NNUE::reset(const Position &position) {
         Square sq = static_cast<Square>(sqi);
         Piece piece = position.consult(sq);
         if (piece != EMPTY)
-            add_feature(piece, sq);
+            add({piece, sq});
     }
 }
 
@@ -160,8 +240,10 @@ NNUE::Accumulator NNUE::debug_func(const Position &position) {
     for (int sqi = a1; sqi <= h8; ++sqi) {
         Square sq = static_cast<Square>(sqi);
         Piece piece = position.consult(sq);
+        PieceSquare ps = {piece, sq};
         if (piece != EMPTY) {
-            const auto [white_index, black_index] = feature_indices(piece, sq);
+            const size_t white_index = ps.feature_idx(WHITE);
+            const size_t black_index = ps.feature_idx(BLACK);
 
             for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
                 accumulator.white_neurons[column] += network.hidden_weights[white_index * HIDDEN_LAYER_SIZE + column];

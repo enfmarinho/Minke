@@ -25,6 +25,7 @@
 #include <span>
 #include <vector>
 
+#include "move.h"
 #include "simd.h"
 #include "types.h"
 
@@ -55,6 +56,20 @@ struct alignas(64) Network {
 };
 extern Network network;
 
+struct PieceSquare {
+    Piece piece;
+    Square sq;
+
+    inline PieceSquare() : piece(EMPTY), sq(NO_SQ) {}
+    inline PieceSquare(Piece _piece, Square _sq) : piece(_piece), sq(_sq) {}
+    size_t feature_idx(const Color pov) const;
+};
+
+struct DirtyPiece {
+    PieceSquare add0, add1, sub0, sub1;
+    MoveType move_type;
+};
+
 // NOTE: NNUE must be initialized using reset().
 class NNUE {
   private:
@@ -65,11 +80,8 @@ class NNUE {
     ~NNUE() = default;
 
     void pop();
-    void push();
+    void push(const DirtyPiece &dp);
     const Accumulator &top() const;
-
-    void add_feature(const Piece &piece, const Square &sq);
-    void remove_feature(const Piece &piece, const Square &sq);
 
     void reset(const Position &position);
     ScoreType eval(const Color &stm) const;
@@ -87,6 +99,12 @@ class NNUE {
         inline void reset(std::span<const int16_t, HIDDEN_LAYER_SIZE> biasses);
     };
     friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
+
+    void add(const PieceSquare &ps);
+    void sub(const PieceSquare &ps);
+    void add_sub(const PieceSquare &add0, const PieceSquare &sub0);
+    void add_sub2(const PieceSquare &add0, const PieceSquare &sub0, const PieceSquare &sub1);
+    void add2_sub2(const PieceSquare &add0, const PieceSquare &add1, const PieceSquare &sub0, const PieceSquare &sub1);
 
     constexpr int32_t crelu(const int32_t &input) const;
     constexpr int32_t screlu(const int32_t &input) const;
