@@ -21,9 +21,9 @@
 #include <cmath>
 
 #include "attacks.h"
+#include "eval/nnue/arch.h"
 #include "hash.h"
 #include "incbin.h"
-#include "nnue.h"
 #include "search.h"
 #include "tune.h"
 #include "types.h"

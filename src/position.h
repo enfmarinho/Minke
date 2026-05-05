@@ -24,8 +24,8 @@
 #include <cstring>
 #include <string>
 
+#include "eval/nnue.h"
 #include "move.h"
-#include "nnue.h"
 #include "types.h"
 #include "utils.h"
 
@@ -61,11 +61,11 @@ class Position {
         return get_piece_bb(KNIGHT) || get_piece_bb(BISHOP) || get_piece_bb(ROOK) || get_piece_bb(QUEEN);
     }
     inline bool draw() { return insufficient_material() || repetition() || fifty_move_draw(); }
-    inline ScoreType eval() const { return m_nnue.eval(m_stm); }
+    inline ScoreType eval() { return m_nnue.eval(m_stm); }
 
     int legal_move_amount();
     bool no_legal_moves();
-    void print() const;
+    void print();
 
     inline Bitboard get_occupancy() const { return m_occupancies[WHITE] | m_occupancies[BLACK]; }
     inline Bitboard get_occupancy(const Color &color) const {
