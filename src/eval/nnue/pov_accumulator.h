@@ -19,6 +19,7 @@
 #ifndef POV_ACCUMULATOR_H
 #define POV_ACCUMULATOR_H
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <cstring>
@@ -64,7 +65,7 @@ class alignas(64) PovAccumulator {
     PovAccumulator() = default;
     ~PovAccumulator() = default;
 
-    inline void reset() { memcpy(m_neurons.data(), network.hidden_bias.data(), sizeof(network.hidden_bias)); }
+    inline void reset() { std::ranges::copy(network.hidden_bias, m_neurons.data()); }
 
     const std::span<const int16_t> neurons() const { return m_neurons; }
 
