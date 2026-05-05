@@ -39,30 +39,27 @@ void Accumulator::update(const Color pov, const PovAccumulator &prev_pov_acc) {
     if (m_updated[pov])
         return;
 
-    // clang-format off
     switch (m_dirty_piece.move_type) {
         case REGULAR:
-            m_pov_accumulators[pov].add_sub(prev_pov_acc, 
-                                            m_dirty_piece.add0.feature_idx(pov),
-                                            m_dirty_piece.sub0.feature_idx(pov));
+            m_pov_accumulators[pov].update<1, 1>(prev_pov_acc,                           //
+                                                 {m_dirty_piece.add0.feature_idx(pov)},  //
+                                                 {m_dirty_piece.sub0.feature_idx(pov)}); //
             break;
         case CAPTURE:
-            m_pov_accumulators[pov].add_sub2(prev_pov_acc, 
-                                             m_dirty_piece.add0.feature_idx(pov),
-                                             m_dirty_piece.sub0.feature_idx(pov),
-                                             m_dirty_piece.sub1.feature_idx(pov));
+            m_pov_accumulators[pov].update<1, 2>(
+                prev_pov_acc,                                                                //
+                {m_dirty_piece.add0.feature_idx(pov)},                                       //
+                {m_dirty_piece.sub0.feature_idx(pov), m_dirty_piece.sub1.feature_idx(pov)}); //
             break;
         case CASTLING:
-            m_pov_accumulators[pov].add2_sub2(prev_pov_acc, 
-                                              m_dirty_piece.add0.feature_idx(pov), 
-                                              m_dirty_piece.add1.feature_idx(pov),
-                                              m_dirty_piece.sub0.feature_idx(pov), 
-                                              m_dirty_piece.sub1.feature_idx(pov));
+            m_pov_accumulators[pov].update<2, 2>(
+                prev_pov_acc,                                                                //
+                {m_dirty_piece.add0.feature_idx(pov), m_dirty_piece.add1.feature_idx(pov)},  //
+                {m_dirty_piece.sub0.feature_idx(pov), m_dirty_piece.sub1.feature_idx(pov)}); //
             break;
         default:
             __builtin_unreachable();
     }
-    // clang-format on
 
     m_updated[pov] = true;
 }
@@ -75,7 +72,7 @@ void Accumulator::refresh_pov(const Color pov, const Position &pos) {
         const Square sq = static_cast<Square>(sqi);
         const Piece piece = pos.consult(sq);
         if (piece != EMPTY) {
-            m_pov_accumulators[pov].self_add(PieceSquare(piece, sq).feature_idx(pov));
+            m_pov_accumulators[pov].self_update<1, 0>({PieceSquare::feature_idx(piece, sq, pov)}, {});
         }
     }
 
@@ -86,8 +83,10 @@ void Accumulator::refresh_pov(const Color pov, const Position &pos) {
 bool operator==(const Accumulator &lhs, const Accumulator &rhs) {
     for (int color_i = 0; color_i <= 1; ++color_i) {
         Color color = static_cast<Color>(color_i);
-        if (lhs.pov(color).neurons() != rhs.pov(color).neurons())
-            return false;
+        for (int i = 0; i < lhs.pov(color).neurons().size(); ++i) {
+            if (lhs.pov(color).neurons()[i] != rhs.pov(color).neurons()[i])
+                return false;
+        }
 
         if (lhs.m_updated[color] != rhs.m_updated[color])
             return false;

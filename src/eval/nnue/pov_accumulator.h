@@ -22,9 +22,11 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <span>
 
 #include "../../move.h"
 #include "../../types.h"
+#include "../../utils.h"
 #include "arch.h"
 
 struct PieceSquare {
@@ -33,7 +35,22 @@ struct PieceSquare {
 
     inline PieceSquare() : piece(EMPTY), sq(NO_SQ) {}
     inline PieceSquare(Piece _piece, Square _sq) : piece(_piece), sq(_sq) {}
-    size_t feature_idx(const Color pov) const;
+
+    inline size_t feature_idx(const Color pov) const { return feature_idx(piece, sq, pov); }
+    static size_t feature_idx(Piece piece, Square sq, const Color pov) {
+        constexpr size_t COLOR_STRIDE = 64 * 6;
+        constexpr size_t PIECE_STRIDE = 64;
+
+        const Color piece_color = get_color(piece);
+        int pov_sq = sq;
+        if (pov == BLACK) // Convert square to pov, i.e. flip rank if stm is black
+            pov_sq = pov_sq ^ 56;
+
+        const size_t idx = (piece_color != pov) * COLOR_STRIDE +               // Perspective offset
+                           get_piece_type(piece, piece_color) * PIECE_STRIDE + // Piece type offset
+                           pov_sq;
+        return idx * HIDDEN_LAYER_SIZE;
+    }
 };
 
 struct DirtyPiece {
@@ -49,15 +66,14 @@ class alignas(64) PovAccumulator {
 
     inline void reset() { memcpy(m_neurons.data(), network.hidden_bias.data(), sizeof(network.hidden_bias)); }
 
-    const std::array<int16_t, HIDDEN_LAYER_SIZE> &neurons() const { return m_neurons; }
+    const std::span<const int16_t> neurons() const { return m_neurons; }
 
-    void add(const PovAccumulator &input, const size_t feature_idx);
-    void add_sub(const PovAccumulator &input, const size_t add0, const size_t sub0);
-    void add_sub2(const PovAccumulator &input, const size_t add0, const size_t sub0, const size_t sub1);
-    void add2_sub2(const PovAccumulator &input, const size_t add0, const size_t add1, const size_t sub0,
-                   const size_t sub1);
+    template <size_t NumAdds, size_t NumSubs>
+    void update(const PovAccumulator &input, const std::array<size_t, NumAdds> &adds,
+                const std::array<size_t, NumSubs> &subs);
 
-    void self_add(const size_t feature_idx);
+    template <size_t NumAdds, size_t NumSubs>
+    void self_update(const std::array<size_t, NumAdds> &adds, const std::array<size_t, NumSubs> &subs);
 
   private:
     std::array<int16_t, HIDDEN_LAYER_SIZE> m_neurons;
