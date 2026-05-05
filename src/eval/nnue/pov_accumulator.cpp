@@ -21,9 +21,28 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "arch.h"
+#include "simd.h"
+
 template <size_t NumAdds, size_t NumSubs>
 void PovAccumulator::update(const PovAccumulator &input, const std::array<size_t, NumAdds> &adds,
                             const std::array<size_t, NumSubs> &subs) {
+#ifdef USE_SIMD
+    for (int column = 0; column < HIDDEN_LAYER_SIZE; column += REGISTER_SIZE) {
+        vepi16 acc = vepi16_load(&input.m_neurons[column]);
+
+        for (size_t add_idx : adds) {
+            vepi16 weights_vec = vepi16_load(&network.hidden_weights[add_idx + column]);
+            acc = vepi16_add(acc, weights_vec);
+        }
+        for (size_t sub_idx : subs) {
+            vepi16 weights_vec = vepi16_load(&network.hidden_weights[sub_idx + column]);
+            acc = vepi16_sub(acc, weights_vec);
+        }
+
+        vepi16_store(&m_neurons[column], acc);
+    }
+#else
     for (int column = 0; column < HIDDEN_LAYER_SIZE; ++column) {
         int16_t sum = input.m_neurons[column];
 
@@ -36,6 +55,7 @@ void PovAccumulator::update(const PovAccumulator &input, const std::array<size_t
 
         m_neurons[column] = sum;
     }
+#endif
 }
 
 // add-sub
