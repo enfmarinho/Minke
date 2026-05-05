@@ -83,7 +83,7 @@ void Accumulator::refresh_pov(const Color pov, const Position &pos) {
 bool operator==(const Accumulator &lhs, const Accumulator &rhs) {
     for (int color_i = 0; color_i <= 1; ++color_i) {
         Color color = static_cast<Color>(color_i);
-        for (int i = 0; i < lhs.pov(color).neurons().size(); ++i) {
+        for (size_t i = 0; i < lhs.pov(color).neurons().size(); ++i) {
             if (lhs.pov(color).neurons()[i] != rhs.pov(color).neurons()[i])
                 return false;
         }
