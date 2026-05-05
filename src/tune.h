@@ -198,4 +198,12 @@ TUNABLE_PARAM(node_tm_scale, 164, 100, 250, 7, 0.002)
 TUNABLE_PARAM(tm_min_scale, 48, 10, 100, 7, 0.002)
 TUNABLE_PARAM(tm_max_scale, 166, 100, 250, 7, 0.002)
 
+// Material scale
+TUNABLE_PARAM(pawn_scaling_factor, 100, 64, 128, 5, 0.002)
+TUNABLE_PARAM(knight_scaling_factor, 300, 128, 512, 20, 0.002)
+TUNABLE_PARAM(bishop_scaling_factor, 330, 128, 512, 20, 0.002)
+TUNABLE_PARAM(rook_scaling_factor, 512, 384, 768, 20, 0.002)
+TUNABLE_PARAM(queen_scaling_factor, 1024, 768, 1280, 20, 0.002)
+TUNABLE_PARAM(material_scaling_base, 25000, 16384, 32768, 800, 0.002)
+
 #endif // #ifndef TUNE_H
