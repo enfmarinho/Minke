@@ -223,14 +223,14 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         eval = raw_eval = node.static_eval;
     } else if (tthit) {
         raw_eval = tteval != SCORE_NONE ? tteval : position.eval();
-        eval = node.static_eval = adjust_eval(position, raw_eval);
+        eval = node.static_eval = adjust_eval(position, td.search_history.get_corr_history(position), raw_eval);
         if (ttscore != SCORE_NONE &&
             (ttbound == EXACT || (ttbound == UPPER && ttscore < eval) || (ttbound == LOWER && ttscore > eval)))
             eval = ttscore;
 
     } else {
         raw_eval = position.eval();
-        eval = node.static_eval = adjust_eval(position, raw_eval);
+        eval = node.static_eval = adjust_eval(position, td.search_history.get_corr_history(position), raw_eval);
         td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age(), tthit);
     }
 
@@ -435,8 +435,13 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         return position.in_check() ? -MATE_SCORE + td.height : 0;
     }
 
+    const BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
+    if (!in_check && best_move != MOVE_NONE && best_move.is_quiet() && !(bound == LOWER && best_score <= eval) &&
+        !(bound == UPPER && best_score >= eval)) {
+        td.search_history.update_corr_history(td, depth, best_score - eval);
+    }
+
     if (!stop_search(td)) { // Save on TT if search was completed
-        BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
         td.tt.store(position.get_hash(), depth, best_move, best_score, raw_eval, bound, ttpv, td.tt.age(), tthit);
         td.best_move = best_move;
     }
@@ -475,7 +480,8 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         best_score = -MAX_SCORE;
     } else if (tthit) {
         raw_eval = tteval != SCORE_NONE ? tteval : position.eval();
-        best_score = static_eval = node.static_eval = adjust_eval(position, raw_eval);
+        best_score = static_eval = node.static_eval =
+            adjust_eval(position, td.search_history.get_corr_history(position), raw_eval);
 
         if (ttscore != SCORE_NONE && (ttbound == EXACT || (ttbound == UPPER && ttscore < static_eval) ||
                                       (ttbound == LOWER && ttscore > static_eval))) {
@@ -484,7 +490,8 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
 
     } else {
         raw_eval = position.eval();
-        best_score = static_eval = node.static_eval = adjust_eval(position, raw_eval);
+        best_score = static_eval = node.static_eval =
+            adjust_eval(position, td.search_history.get_corr_history(position), raw_eval);
         td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age(), tthit);
     }
 

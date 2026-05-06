@@ -36,8 +36,8 @@ static inline int apply_material_scaling(const Position& pos, ScoreType raw_eval
     return raw_eval * material_scale / 32768;
 }
 
-inline ScoreType adjust_eval(const Position& pos, const ScoreType raw_eval) {
-    int adjusted_eval = apply_material_scaling(pos, raw_eval);
+inline ScoreType adjust_eval(const Position& pos, const int correction, const ScoreType raw_eval) {
+    int adjusted_eval = apply_material_scaling(pos, raw_eval) + correction;
 
     return std::clamp(adjusted_eval, -MATE_FOUND + 1, MATE_FOUND - 1);
 }
