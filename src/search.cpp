@@ -328,7 +328,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
         // Extensions
         int extension = 0;
-        if (!root && depth > singular_extension_min_depth() && move == ttmove && ttdepth > depth - 4 &&
+        if (!root && depth >= singular_extension_min_depth() && move == ttmove && ttdepth > depth - 4 &&
             move != td.nodes[td.height].excluded_move && ttbound == LOWER) {
             ScoreType singular_beta = ttscore - depth * singular_extension_depth_factor() / 16;
             ScoreType singular_depth = (depth - 1) / 2;
@@ -373,7 +373,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         } else {
             int scaled_reduction = 1024;
             // Late Move Reduction
-            if (moves_searched > 1 && depth > 2 && move.is_quiet()) {
+            if (moves_searched > 1 && depth >= 3 && move.is_quiet()) {
                 scaled_reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
 
                 if (position.get_checkers()) // Reduce less for moves that give check
