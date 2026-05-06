@@ -123,17 +123,17 @@ class TunableParamList {
 
 // Aspiration Windows
 FIXED_PARAM(aw_min_depth, 3, 1, 10, 0.5, 0.002)
-TUNABLE_PARAM(aw_first_window, 11, 5, 200, 10, 0.002)
+TUNABLE_PARAM(aw_first_window, 11, 5, 25, 2, 0.002)
 TUNABLE_PARAM(aw_widening_factor, 49, 1, 100, 5, 0.002)
 
 // Null move pruning
-TUNABLE_PARAM(nmp_base_reduction, 4, 1, 5, 0.5, 0.002)
-TUNABLE_PARAM(nmp_depth_reduction_divisor, 3, 2, 8, 0.5, 0.002)
-TUNABLE_PARAM(nmp_min_depth, 2, 2, 8, 0.5, 0.002)
+TUNABLE_PARAM(nmp_base_reduction, 256, 128, 384, 15, 0.002)
+TUNABLE_PARAM(nmp_depth_factor, 21, 16, 63, 0.5, 0.002)
+FIXED_PARAM(nmp_min_depth, 2, 2, 8, 0.5, 0.002)
 
 // Reverse Futility Pruning
-TUNABLE_PARAM(rfp_margin, 105, 50, 150, 5, 0.002)
-TUNABLE_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)
+TUNABLE_PARAM(rfp_margin, 105, 50, 150, 10, 0.002)
+FIXED_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)
 
 // Late Move Reductions
 TUNABLE_PARAM(lmr_base, 1087, 512, 2048, 128, 0.002)
@@ -148,13 +148,12 @@ TUNABLE_PARAM(lmr_ttpv_delta, 971, 512, 2048, 128, 0.002)
 // Late Moves Pruning
 TUNABLE_PARAM(lmp_base, 125, 100, 200, 5, 0.002)
 TUNABLE_PARAM(lmp_scale, 35, 20, 120, 5, 0.002)
+TUNABLE_PARAM(lmp_improving_base, 250, 200, 400, 5, 0.002)
+TUNABLE_PARAM(lmp_improving_scale, 70, 40, 240, 5, 0.002)
 
 // Singular Extension
-TUNABLE_PARAM(singular_extension_min_depth, 7, 4, 10, 0.5, 0.002)
-
-// Interval Iterative Reduction
-FIXED_PARAM(iir_min_depth, 3, 3, 8, 0.5, 0.002)
-FIXED_PARAM(iir_depth_reduction, 1, 1, 4, 0.5, 0.002)
+FIXED_PARAM(singular_extension_min_depth, 8, 4, 10, 0.5, 0.002)
+TUNABLE_PARAM(singular_extension_depth_factor, 16, 10, 20, 1, 0.002)
 
 // Razoring
 TUNABLE_PARAM(razoring_max_depth, 5, 2, 6, 0.5, 0.002)
@@ -199,11 +198,11 @@ TUNABLE_PARAM(tm_min_scale, 48, 10, 100, 7, 0.002)
 TUNABLE_PARAM(tm_max_scale, 166, 100, 250, 7, 0.002)
 
 // Material scale
-TUNABLE_PARAM(pawn_scaling_factor, 100, 64, 128, 5, 0.002)
-TUNABLE_PARAM(knight_scaling_factor, 300, 128, 512, 20, 0.002)
-TUNABLE_PARAM(bishop_scaling_factor, 330, 128, 512, 20, 0.002)
-TUNABLE_PARAM(rook_scaling_factor, 512, 384, 768, 20, 0.002)
-TUNABLE_PARAM(queen_scaling_factor, 1024, 768, 1280, 20, 0.002)
-TUNABLE_PARAM(material_scaling_base, 25000, 16384, 32768, 800, 0.002)
+TUNABLE_PARAM(pawn_scaling_factor, 100, 20, 160, 5, 0.002)
+TUNABLE_PARAM(knight_scaling_factor, 300, 200, 600, 20, 0.002)
+TUNABLE_PARAM(bishop_scaling_factor, 330, 200, 600, 20, 0.002)
+TUNABLE_PARAM(rook_scaling_factor, 512, 400, 800, 20, 0.002)
+TUNABLE_PARAM(queen_scaling_factor, 1024, 800, 1400, 30, 0.002)
+TUNABLE_PARAM(material_scaling_base, 25000, 20000, 40000, 1000, 0.002)
 
 #endif // #ifndef TUNE_H

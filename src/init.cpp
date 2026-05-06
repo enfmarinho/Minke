@@ -58,7 +58,7 @@ void init_search_params() {
 
     for (int depth = 0; depth < LMP_DEPTH; ++depth) {
         LMP_TABLE[0][depth] = (lmp_base() / 100.0) + (lmp_scale() / 100.0) * depth * depth;
-        LMP_TABLE[1][depth] = 2 * (lmp_base() / 100.0) + 2 * (lmp_scale() / 100.0) * depth * depth; // Improving
+        LMP_TABLE[1][depth] = (lmp_improving_base() / 100.0) + (lmp_improving_scale() / 100.0) * depth * depth;
     }
 }
 

@@ -211,8 +211,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     }
 
     // Internal Iterative Reductions
-    if ((!tthit || ttdepth + 4 < depth) && depth >= iir_min_depth()) {
-        depth -= iir_depth_reduction();
+    if ((!tthit || ttdepth + 4 < depth) && depth >= 3) {
+        depth -= 1;
     }
 
     bool in_check = position.in_check();
@@ -256,7 +256,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
         // Null move pruning
         if (!position.last_was_null() && depth >= nmp_min_depth() && eval >= beta && position.has_non_pawns()) {
-            const int reduction = nmp_base_reduction() + depth / nmp_depth_reduction_divisor();
+            const int reduction = (nmp_base_reduction() + depth * nmp_depth_factor()) / 64;
 
             position.make_null_move();
             td.tt.prefetch(position.get_hash());
@@ -330,7 +330,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         int extension = 0;
         if (!root && depth > singular_extension_min_depth() && move == ttmove && ttdepth > depth - 4 &&
             move != td.nodes[td.height].excluded_move && ttbound == LOWER) {
-            ScoreType singular_beta = ttscore - depth;
+            ScoreType singular_beta = ttscore - depth * singular_extension_depth_factor() / 16;
             ScoreType singular_depth = (depth - 1) / 2;
 
             td.tt.prefetch(position.get_hash());
