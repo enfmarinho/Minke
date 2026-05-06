@@ -31,14 +31,14 @@ static inline ScoredMove* gen_pawn_captures(ScoredMove* moves, const Position& p
     assert(capture_offset == NORTH_WEST || capture_offset == NORTH_EAST || capture_offset == SOUTH_WEST ||
            capture_offset == SOUTH_EAST);
 
-    Bitboard pawns = position.get_piece_bb(PAWN, position.get_stm()) &
-                     (capture_offset - get_pawn_offset(position.get_stm()) == WEST ? NOT_A_FILE : NOT_H_FILE);
+    Bitboard pawns = position.piece_bb(PAWN, position.stm()) &
+                     (capture_offset - get_pawn_offset(position.stm()) == WEST ? NOT_A_FILE : NOT_H_FILE);
     if (!pawns) // No pawns can capture
         return moves;
 
-    Bitboard enemy_targets = position.get_occupancy(position.get_adversary()) & destination;
+    Bitboard enemy_targets = position.occupancy(position.ntm()) & destination;
     Bitboard captures = shift(pawns, capture_offset) & enemy_targets;
-    Bitboard capture_promotions = captures & RANK_MASKS[get_pawn_promotion_rank(position.get_stm())];
+    Bitboard capture_promotions = captures & RANK_MASKS[get_pawn_promotion_rank(position.stm())];
     Bitboard capture_no_promotions = captures & ~capture_promotions;
     while (capture_promotions) {
         Square to = poplsb(capture_promotions);
@@ -56,15 +56,15 @@ static inline ScoredMove* gen_pawn_captures(ScoredMove* moves, const Position& p
 
 static inline ScoredMove* gen_pawn_moves(ScoredMove* moves, const Position& position, const Bitboard& destination,
                                          const MoveGenType gen_type) {
-    Color stm = position.get_stm();
-    Color adversary = position.get_adversary();
+    Color stm = position.stm();
+    Color adversary = position.ntm();
     int pawn_offset = get_pawn_offset(stm);
 
-    Bitboard pawns = position.get_piece_bb(PAWN, stm);
+    Bitboard pawns = position.piece_bb(PAWN, stm);
     if (!pawns) // No pawns
         return moves;
 
-    Bitboard empty_targets = ~position.get_occupancy();
+    Bitboard empty_targets = ~position.occupancy();
     Bitboard single_push = shift(pawns, pawn_offset) & empty_targets;
     Bitboard promotion = single_push & RANK_MASKS[get_pawn_promotion_rank(stm)];
 
@@ -98,7 +98,7 @@ static inline ScoredMove* gen_pawn_moves(ScoredMove* moves, const Position& posi
         moves = gen_pawn_captures(moves, position, destination, pawn_offset + WEST);
         moves = gen_pawn_captures(moves, position, destination, pawn_offset + EAST);
 
-        Square en_passant = position.get_en_passant();
+        Square en_passant = position.en_passant();
         if (en_passant != NO_SQ) {
             Bitboard attackers = pawns & pawn_attacks[adversary][en_passant];
             while (attackers) {
@@ -118,12 +118,12 @@ static inline ScoredMove* gen_piece_moves(ScoredMove* moves, const Position& pos
     Bitboard empty_targets = 0ULL;
     Bitboard enemy_targets = 0ULL;
     if (gen_type & QUIET)
-        empty_targets = ~position.get_occupancy() & destination;
+        empty_targets = ~position.occupancy() & destination;
     if (gen_type & NOISY)
-        enemy_targets = position.get_occupancy(position.get_adversary()) & destination;
+        enemy_targets = position.occupancy(position.ntm()) & destination;
 
-    Bitboard pieces = position.get_piece_bb(piece_type, position.get_stm());
-    Bitboard occupancy = position.get_occupancy();
+    Bitboard pieces = position.piece_bb(piece_type, position.stm());
+    Bitboard occupancy = position.occupancy();
     while (pieces) {
         Square from = poplsb(pieces);
         Bitboard attacks = get_piece_attacks(from, occupancy, piece_type);
@@ -146,8 +146,8 @@ static inline ScoredMove* gen_piece_moves(ScoredMove* moves, const Position& pos
 }
 
 ScoredMove* gen_castling_moves(ScoredMove* moves, const Position& position) {
-    Bitboard castle_rooks_stm = position.get_castle_rooks() & position.get_occupancy(position.get_stm());
-    Square king_from = position.get_king_placement(position.get_stm());
+    Bitboard castle_rooks_stm = position.castle_rooks() & position.occupancy(position.stm());
+    Square king_from = position.king_placement(position.stm());
     while (castle_rooks_stm) {
         Square rook_from = poplsb(castle_rooks_stm);
         Square king_to, rook_to;
@@ -156,7 +156,7 @@ ScoredMove* gen_castling_moves(ScoredMove* moves, const Position& position) {
         } else {
             king_to = c1, rook_to = d1;
         }
-        if (position.get_stm() == BLACK) {
+        if (position.stm() == BLACK) {
             king_to = static_cast<Square>(king_to ^ 56);
             rook_to = static_cast<Square>(rook_to ^ 56);
         }
@@ -165,7 +165,7 @@ ScoredMove* gen_castling_moves(ScoredMove* moves, const Position& position) {
                                  (1ULL << king_to) | (1ULL << rook_to);
         crossing_mask &= ~((1ULL << king_from) | (1ULL << rook_from));
 
-        if (crossing_mask & position.get_occupancy()) // There is a blocker
+        if (crossing_mask & position.occupancy()) // There is a blocker
             continue;
 
         Bitboard king_crossing = between_squares[king_from][king_to];
@@ -192,10 +192,9 @@ ScoredMove* gen_moves(ScoredMove* moves, const Position& position, const MoveGen
     Bitboard destination =
         !position.in_check()
             ? ALL_BITS
-            : between_squares[position.get_king_placement(position.get_stm())][lsb(position.get_checkers())] |
-                  position.get_checkers();
+            : between_squares[position.king_placement(position.stm())][lsb(position.checkers())] | position.checkers();
 
-    if (count_bits(position.get_checkers()) < 2) {
+    if (count_bits(position.checkers()) < 2) {
         moves = gen_pawn_moves(moves, position, destination, gen_type);
         moves = gen_piece_moves(moves, position, KNIGHT, destination, gen_type);
         moves = gen_piece_moves(moves, position, BISHOP, destination, gen_type);

@@ -35,7 +35,7 @@ enum GameResult : uint8_t {
 class __attribute__((packed)) PackedPosition {
   public:
     PackedPosition(const Position &position, ScoreType score) {
-        m_occupancy = position.get_occupancy();
+        m_occupancy = position.occupancy();
 
         Bitboard occ = m_occupancy;
         int idx = 0;
@@ -47,7 +47,7 @@ class __attribute__((packed)) PackedPosition {
             Piece pc = position.consult(sq);
             uint8_t piece_type = get_piece_type(pc);
 
-            if (piece_type == ROOK && (position.get_castle_rooks() & (1ULL << sq)))
+            if (piece_type == ROOK && (position.castle_rooks() & (1ULL << sq)))
                 piece_type = 6; // special "unmoved rook" id
 
             uint8_t color = (get_color(pc) == BLACK);
@@ -62,14 +62,14 @@ class __attribute__((packed)) PackedPosition {
             high_nibble = !high_nibble;
         }
 
-        m_stm_ep_sq = position.get_stm() == WHITE ? 0 : 1 << 7;
-        if (position.get_en_passant() != NO_SQ)
-            m_stm_ep_sq |= static_cast<uint8_t>(position.get_en_passant());
+        m_stm_ep_sq = position.stm() == WHITE ? 0 : 1 << 7;
+        if (position.en_passant() != NO_SQ)
+            m_stm_ep_sq |= static_cast<uint8_t>(position.en_passant());
         else
             m_stm_ep_sq |= 1 << 6; // No ep square
 
-        m_half_move_counter = position.get_fifty_move_ply();
-        m_game_clock = static_cast<uint16_t>((position.get_game_ply() / 2) + 1);
+        m_half_move_counter = position.fifty_move_ply();
+        m_game_clock = static_cast<uint16_t>((position.game_ply() / 2) + 1);
         m_score = score;
         m_result = DRAW; // should be given later
         m_padding = 0;

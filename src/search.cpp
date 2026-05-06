@@ -51,7 +51,7 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
     // Add 1 to time_passed() to avoid division by 0
     std::cout << " time " << td.time_manager.time_passed() << " nodes " << td.nodes_searched << " nps "
               << td.nodes_searched * 1000 / (td.time_manager.time_passed() + 1) << " pv ";
-    pv_list.print(td.chess960, td.position.get_castle_rooks());
+    pv_list.print(td.chess960, td.position.castle_rooks());
     std::cout << std::endl;
 }
 
@@ -121,7 +121,7 @@ ScoreType iterative_deepening(ThreadData &td) {
         std::cout << "bestmove "
                   << (best_move == MOVE_NONE
                           ? "none"
-                          : best_move.get_algebraic_notation(td.chess960, td.position.get_castle_rooks()))
+                          : best_move.get_algebraic_notation(td.chess960, td.position.castle_rooks()))
                   << std::endl;
 
     td.stop = true;
@@ -231,7 +231,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     } else {
         raw_eval = position.eval();
         eval = node.static_eval = adjust_eval(position, raw_eval);
-        td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age(), tthit);
+        td.tt.store(position.hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age(), tthit);
     }
 
     // Clean killer moves for the next ply
@@ -259,7 +259,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             const int reduction = nmp_base_reduction() + depth / nmp_depth_reduction_divisor();
 
             position.make_null_move();
-            td.tt.prefetch(position.get_hash());
+            td.tt.prefetch(position.hash());
             ++td.height;
             node.curr_pmove = PIECE_MOVE_NONE;
             ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, !cutnode, td);
@@ -278,25 +278,24 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             Move move;
             while ((move = move_picker.next_move(true)) != MOVE_NONE) {
                 if (!position.make_move<true>(move)) { // Avoid illegal moves
-                    position.unmake_move<true>(move);
+                    position.unmake_move<true>();
                     continue;
                 }
 
                 node.curr_pmove.move = move;
                 ++td.height;
 
-                td.tt.prefetch(position.get_hash());
+                td.tt.prefetch(position.hash());
 
                 int pc_score = -quiescence(-pc_beta, -pc_beta + 1, td);
                 if (pc_score >= pc_beta)
                     pc_score = -negamax(-pc_beta, -pc_beta + 1, depth - 4, !cutnode, td);
 
                 --td.height;
-                position.unmake_move<true>(move);
+                position.unmake_move<true>();
 
                 if (pc_score >= pc_beta) {
-                    td.tt.store(position.get_hash(), depth - 3, move, pc_score, raw_eval, LOWER, ttpv, td.tt.age(),
-                                tthit);
+                    td.tt.store(position.hash(), depth - 3, move, pc_score, raw_eval, LOWER, ttpv, td.tt.age(), tthit);
                     return pc_score;
                 }
             }
@@ -333,7 +332,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             ScoreType singular_beta = ttscore - depth;
             ScoreType singular_depth = (depth - 1) / 2;
 
-            td.tt.prefetch(position.get_hash());
+            td.tt.prefetch(position.hash());
 
             td.nodes[td.height].excluded_move = ttmove;
             ScoreType singular_score = negamax(singular_beta - 1, singular_beta, singular_depth, cutnode, td);
@@ -353,7 +352,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         position.make_move<true>(move);
         node.curr_pmove = {move, position.consult(move.to())}; // move.to() because move has already been made
 
-        td.tt.prefetch(position.get_hash());
+        td.tt.prefetch(position.hash());
         int new_depth = depth + extension;
 
         // Add move to tried list
@@ -376,7 +375,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             if (moves_searched > 1 && depth > 2 && move.is_quiet()) {
                 scaled_reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
 
-                if (position.get_checkers()) // Reduce less for moves that give check
+                if (position.checkers()) // Reduce less for moves that give check
                     scaled_reduction -= lmr_gives_check_delta();
 
                 scaled_reduction += !improving * lmr_non_improving_delta(); // Reduce more if not improving
@@ -409,7 +408,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         }
 
         --td.height;
-        position.unmake_move<true>(move);
+        position.unmake_move<true>();
         assert(score >= -MAX_SCORE);
         td.node_table[move.from_and_to()] += td.nodes_searched - nodes_before_search;
 
@@ -437,7 +436,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     if (!stop_search(td)) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
-        td.tt.store(position.get_hash(), depth, best_move, best_score, raw_eval, bound, ttpv, td.tt.age(), tthit);
+        td.tt.store(position.hash(), depth, best_move, best_score, raw_eval, bound, ttpv, td.tt.age(), tthit);
         td.best_move = best_move;
     }
 
@@ -485,7 +484,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     } else {
         raw_eval = position.eval();
         best_score = static_eval = node.static_eval = adjust_eval(position, raw_eval);
-        td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age(), tthit);
+        td.tt.store(position.hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age(), tthit);
     }
 
     // Stand-pat
@@ -512,13 +511,13 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
             }
         }
         position.make_move<true>(move);
-        td.tt.prefetch(position.get_hash());
+        td.tt.prefetch(position.hash());
 
         ++td.height;
         ScoreType score = -quiescence(-beta, -alpha, td);
         --td.height;
 
-        position.unmake_move<true>(move);
+        position.unmake_move<true>();
 
         if (score > best_score) {
             best_score = score;
@@ -537,7 +536,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     }
 
     BoundType bound = best_score >= beta ? LOWER : UPPER;
-    td.tt.store(position.get_hash(), 0, best_move, best_score, raw_eval, bound, ttpv, td.tt.age(), tthit);
+    td.tt.store(position.hash(), 0, best_move, best_score, raw_eval, bound, ttpv, td.tt.age(), tthit);
 
     return best_score;
 }
@@ -562,22 +561,22 @@ bool SEE(Position &position, const Move &move, int threshold) {
         return true;
 
     Bitboard attackers = position.attackers(to);
-    Bitboard occupancy = position.get_occupancy() ^ (1ULL << from); // Removed already used attacker
-    Bitboard diagonal_attackers = position.get_piece_bb(BISHOP) | position.get_piece_bb(QUEEN);
-    Bitboard line_attackers = position.get_piece_bb(ROOK) | position.get_piece_bb(QUEEN);
-    Color stm = static_cast<Color>(!position.get_stm());
+    Bitboard occupancy = position.occupancy() ^ (1ULL << from); // Removed already used attacker
+    Bitboard diagonal_attackers = position.piece_bb(BISHOP) | position.piece_bb(QUEEN);
+    Bitboard line_attackers = position.piece_bb(ROOK) | position.piece_bb(QUEEN);
+    Color stm = static_cast<Color>(!position.stm());
 
     while (true) {
         attackers &= occupancy; // Remove used piece from attackers bitboard
 
-        Bitboard my_attackers = attackers & position.get_occupancy(static_cast<Color>(stm));
+        Bitboard my_attackers = attackers & position.occupancy(static_cast<Color>(stm));
         if (!my_attackers) // There is no attacker from stm
             break;
 
         // Get cheapest attacker
         int cheapest_attacker;
         for (cheapest_attacker = PAWN; cheapest_attacker <= KING; ++cheapest_attacker) {
-            if ((my_attackers = attackers & position.get_piece_bb(static_cast<PieceType>(cheapest_attacker), stm)))
+            if ((my_attackers = attackers & position.piece_bb(static_cast<PieceType>(cheapest_attacker), stm)))
                 break;
         }
         stm = static_cast<Color>(!stm);
@@ -585,7 +584,7 @@ bool SEE(Position &position, const Move &move, int threshold) {
         score = -score - SEE_VALUES[cheapest_attacker] - 1; // Updating negamaxed score
 
         if (score >= 0) { // Score beats threshold
-            if (cheapest_attacker == KING && (attackers & position.get_occupancy(static_cast<Color>(!stm))))
+            if (cheapest_attacker == KING && (attackers & position.occupancy(static_cast<Color>(!stm))))
                 // King is the only attacker and square is still attacked by opponent, so we don't have a valid attacker
                 stm = static_cast<Color>(!stm);
             break;
@@ -612,5 +611,5 @@ bool SEE(Position &position, const Move &move, int threshold) {
         }
     }
 
-    return stm != position.get_stm();
+    return stm != position.stm();
 }

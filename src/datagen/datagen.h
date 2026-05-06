@@ -131,14 +131,14 @@ class DatagenThread {
 
             if (move == MOVE_NONE) {
                 if (m_td->position.in_check())
-                    result = m_td->position.get_stm() == WHITE ? LOSS : WIN;
+                    result = m_td->position.stm() == WHITE ? LOSS : WIN;
                 else
                     result = DRAW;
 
                 break;
             }
 
-            if (m_td->position.get_stm() == BLACK)
+            if (m_td->position.stm() == BLACK)
                 score *= -1;
 
             if (std::abs(score) >= MATE_FOUND) {
@@ -148,7 +148,7 @@ class DatagenThread {
                     ++win_count;
                     draw_count = 0;
                 } else if (std::abs(normalized_score) < DRAW_ADJ_SCORE &&
-                           m_td->position.get_game_ply() >= DRAW_ADJ_MIN_PLY) {
+                           m_td->position.game_ply() >= DRAW_ADJ_MIN_PLY) {
                     win_count = 0;
                     ++draw_count;
                 } else {
@@ -174,7 +174,7 @@ class DatagenThread {
                 break;
 
             m_td->position.make_move<true>(move);
-            m_td->position.update_game_history();
+            // m_td->position.update_game_history(); // TODO this is necessary for data generation
         }
 
         if (result != NO_RESULT) {
@@ -198,7 +198,7 @@ class DatagenThread {
             bool legal_found = false;
             for (auto curr = moves; curr != end; ++curr) {
                 if (!m_td->position.make_move<false>(curr->move)) {
-                    m_td->position.unmake_move<false>(curr->move);
+                    m_td->position.unmake_move<false>();
                 } else {
                     legal_found = true;
                     break;

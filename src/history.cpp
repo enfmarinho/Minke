@@ -93,12 +93,12 @@ void History::update_capture_history_score(const Position &position, const Move 
     PieceType captured_pt = get_piece_type(position.consult(to));
     if (move.is_ep() || move.is_promotion())
         captured_pt = PAWN;
-    HistoryType *ptr = &m_capture_history[position.get_stm()][moved_pt][to][captured_pt];
+    HistoryType *ptr = &m_capture_history[position.stm()][moved_pt][to][captured_pt];
     update_score(ptr, bonus);
 }
 
 void History::update_history_heuristic_score(const Position &position, const Move &move, int bonus) {
-    HistoryType *ptr = &m_search_history_table[position.get_stm()][move.from_and_to()];
+    HistoryType *ptr = &m_search_history_table[position.stm()][move.from_and_to()];
     update_score(ptr, bonus);
 }
 
@@ -121,7 +121,7 @@ void History::update_continuation_history_score(const ThreadData &td, const Piec
 }
 
 HistoryType History::get_history_heuristic_score(const Position &position, const Move &move) const {
-    return m_search_history_table[position.get_stm()][move.from_and_to()];
+    return m_search_history_table[position.stm()][move.from_and_to()];
 }
 
 HistoryType History::get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const {

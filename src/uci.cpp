@@ -142,7 +142,7 @@ void UCI::print_debug_info() {
     Move ttmove = MOVE_NONE;
     if (tthit) {
         ttmove = tte.best_move();
-        std::cout << "Best move: " << ttmove.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks())
+        std::cout << "Best move: " << ttmove.get_algebraic_notation(m_td->chess960, m_td->position.castle_rooks())
                   << std::endl;
     }
     MovePicker move_picker(ttmove, *m_td, false);
@@ -151,8 +151,8 @@ void UCI::print_debug_info() {
     while ((scored_move = move_picker.next_move_scored(false)) != SCORED_MOVE_NONE) {
         if (!m_td->position.make_move<false>(scored_move.move))
             std::cout << "*";
-        m_td->position.unmake_move<false>(scored_move.move);
-        std::cout << scored_move.move.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks()) << "("
+        m_td->position.unmake_move<false>();
+        std::cout << scored_move.move.get_algebraic_notation(m_td->chess960, m_td->position.castle_rooks()) << "("
                   << scored_move.score << ") ";
     }
     std::cout << "\nNNUE eval: " << m_td->position.eval() << std::endl;
@@ -186,21 +186,21 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
     for (unsigned int index = 0; index < move_list.size(); ++index) {
         // Make sure to only save the game history for the last 100 positions, more than that is completely unnecessary
         // Moreover, the second conditional assures that the history stacks don't overflow
-        if (move_list.size() - index == 100 || m_td->position.get_history_ply() > 100)
-            m_td->position.reset_history();
+        if (move_list.size() - index == 100 || m_td->position.history_ply() > 100)
+            m_td->position.reset_game_history();
 
         ScoredMove moves[MAX_MOVES_PER_POS];
         ScoredMove *end = gen_moves(moves, m_td->position, GEN_ALL);
 
         for (ScoredMove *curr = moves; curr != end; ++curr) {
-            if (move_list[index] ==
-                curr->move.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks())) {
+            if (move_list[index] == curr->move.get_algebraic_notation(m_td->chess960, m_td->position.castle_rooks())) {
                 m_td->position.make_move<false>(curr->move);
                 break;
             }
         }
     }
     m_td->position.reset_nnue();
+    m_td->position.reset_board_history();
 }
 
 void UCI::ucinewgame() {
@@ -286,7 +286,7 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
     for (ScoredMove *begin = moves; begin != end; ++begin) {
         Move move = begin->move;
         if (!position.make_move<false>(move)) {
-            position.unmake_move<false>(move);
+            position.unmake_move<false>();
             continue;
         }
 
@@ -296,10 +296,10 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
             count = is_leaf ? position.legal_move_amount() : perft(position, depth - 1, false);
             nodes += count;
         }
-        position.unmake_move<false>(move);
+        position.unmake_move<false>();
 
         if (root)
-            std::cout << move.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks()) << ": " << count
+            std::cout << move.get_algebraic_notation(m_td->chess960, m_td->position.castle_rooks()) << ": " << count
                       << std::endl;
     }
 
@@ -335,13 +335,13 @@ bool UCI::parse_go(std::istringstream &iss, bool bench) {
             m_td->search_limits.maximum_node = option;
         } else if (token == "movetime") {
             movetime = option;
-        } else if (token == "wtime" && m_td->position.get_stm() == WHITE) {
+        } else if (token == "wtime" && m_td->position.stm() == WHITE) {
             time = option;
-        } else if (token == "btime" && m_td->position.get_stm() == BLACK) {
+        } else if (token == "btime" && m_td->position.stm() == BLACK) {
             time = option;
-        } else if (token == "winc" && m_td->position.get_stm() == WHITE) {
+        } else if (token == "winc" && m_td->position.stm() == WHITE) {
             inc = option;
-        } else if (token == "binc" && m_td->position.get_stm() == BLACK) {
+        } else if (token == "binc" && m_td->position.stm() == BLACK) {
             inc = option;
         } else if (token == "movestogo") {
             movestogo = option;

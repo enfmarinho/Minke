@@ -44,7 +44,7 @@ class History {
         Square to = move.to();
         PieceType moved_pt = get_piece_type(position.consult(move.from()));
         PieceType captured_pt = move.is_ep() ? PAWN : get_piece_type(position.consult(to));
-        return m_capture_history[position.get_stm()][moved_pt][to][captured_pt];
+        return m_capture_history[position.stm()][moved_pt][to][captured_pt];
     }
 
     inline void clear_killers(const int &height) {
