@@ -342,7 +342,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             if (singular_score < singular_beta) {
                 extension = 1;
 
-                if (!pv_node && singular_score < beta - double_extension_margin())
+                if (!pv_node && singular_score < singular_beta - double_extension_margin())
                     extension = 2;
             } else if (singular_score >= beta) { // Multi-Cut
                 return singular_score;
