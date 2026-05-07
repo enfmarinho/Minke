@@ -306,7 +306,7 @@ void Position::make_move(const Move &move) {
     }();
 
     if constexpr (UPDATE)
-        m_nnue.push(dp);
+        m_nnue.push(dp, get_king_placement(WHITE), get_king_placement(BLACK));
 
     hash_castle_key();
     update_castling_rights(move);
