@@ -193,4 +193,17 @@ struct BoardState {
     }
 };
 
+struct PieceSquare {
+    Piece piece;
+    Square sq;
+
+    inline PieceSquare() : piece(EMPTY), sq(NO_SQ) {}
+    inline PieceSquare(Piece _piece, Square _sq) : piece(_piece), sq(_sq) {}
+};
+
+struct DirtyPiece {
+    PieceSquare add0, add1, sub0, sub1;
+    MoveType move_type;
+};
+
 #endif // #ifndef GAME_ELEMENTS_H

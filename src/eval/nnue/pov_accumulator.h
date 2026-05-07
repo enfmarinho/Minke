@@ -23,25 +23,6 @@
 #include <cstdint>
 #include <cstring>
 
-#include "../../move.h"
-#include "../../types.h"
-#include "arch.h"
-
-struct PieceSquare {
-    Piece piece;
-    Square sq;
-
-    inline PieceSquare() : piece(EMPTY), sq(NO_SQ) {}
-    inline PieceSquare(Piece _piece, Square _sq) : piece(_piece), sq(_sq) {}
-    size_t feature_idx(const Color pov) const;
-};
-
-struct DirtyPiece {
-    PieceSquare add0, add1, sub0, sub1;
-    MoveType move_type;
-};
-
-// NOTE: must be initialized by init()
 class alignas(64) PovAccumulator {
   public:
     PovAccumulator() = default;
