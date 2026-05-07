@@ -22,23 +22,32 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <span>
+
+#include "arch.h"
 
 class alignas(64) PovAccumulator {
   public:
     PovAccumulator() = default;
+    PovAccumulator(const PovAccumulator &copy) = default;
     ~PovAccumulator() = default;
 
-    inline void reset() { memcpy(m_neurons.data(), network.hidden_bias.data(), sizeof(network.hidden_bias)); }
+    PovAccumulator &operator=(const PovAccumulator &) = default;
 
-    const std::array<int16_t, HIDDEN_LAYER_SIZE> &neurons() const { return m_neurons; }
+    inline void reset() { std::memcpy(m_neurons.data(), network.hidden_bias.data(), sizeof(network.hidden_bias)); }
 
-    void add(const PovAccumulator &input, const size_t feature_idx);
+    std::span<const int16_t> neurons() const { return m_neurons; }
+
+    void add(const PovAccumulator &input, const size_t add0);
+    void sub(const PovAccumulator &input, const size_t sub0);
     void add_sub(const PovAccumulator &input, const size_t add0, const size_t sub0);
     void add_sub2(const PovAccumulator &input, const size_t add0, const size_t sub0, const size_t sub1);
     void add2_sub2(const PovAccumulator &input, const size_t add0, const size_t add1, const size_t sub0,
                    const size_t sub1);
 
-    void self_add(const size_t feature_idx);
+    void self_add(const size_t add0);
+    void self_sub(const size_t sub0);
+    void self_add_sub(const size_t add0, const size_t sub0);
 
   private:
     std::array<int16_t, HIDDEN_LAYER_SIZE> m_neurons;

@@ -39,43 +39,51 @@
     return crelu_out * crelu_out;
 }
 
-void NNUE::refresh(const Position &position) {
+void NNUE::refresh(const Position &pos) {
+    const auto &white_pov_acc = m_finny_table.update(pos, WHITE);
+    const auto &black_pov_acc = m_finny_table.update(pos, BLACK);
+
     m_accumulators.clear();
-    m_accumulators.emplace_back(position);
+    m_accumulators.emplace_back(pos.get_king_placement(WHITE), pos.get_king_placement(BLACK), white_pov_acc,
+                                black_pov_acc);
 }
 
 void NNUE::pop() { m_accumulators.pop_back(); }
 
-void NNUE::push(const DirtyPiece &dp) {
-    assert(!m_accumulators.empty()); // NNUE must have been initialized with 'init' method before pushing
-    m_accumulators.emplace_back(dp);
+void NNUE::push(const DirtyPiece &dp, const Square white_king_sq, const Square black_king_sq) {
+    assert(!m_accumulators.empty()); // NNUE must have been initialized with the 'refresh' method before pushing
+    m_accumulators.emplace_back(dp, white_king_sq, black_king_sq);
 }
 
-ScoreType NNUE::eval(const Color &stm) {
-    update();
-
-    const Color ntm = static_cast<Color>(stm ^ 1);
-    return flatten_screlu_and_affine(m_accumulators.back().pov(stm), m_accumulators.back().pov(ntm));
+ScoreType NNUE::eval(const Position &pos) {
+    update(pos);
+    return flatten_screlu_and_affine(m_accumulators.back().pov(pos.get_stm()),
+                                     m_accumulators.back().pov(pos.get_adversary()));
 }
 
-void NNUE::update() {
-    update_pov(WHITE);
-    update_pov(BLACK);
+void NNUE::update(const Position &pos) {
+    update_pov(pos, WHITE);
+    update_pov(pos, BLACK);
 }
 
-void NNUE::update_pov(const Color &pov) {
-    if (m_accumulators.back().updated(pov))
+void NNUE::update_pov(const Position &pos, const Color &pov) {
+    auto head = m_accumulators.rbegin();
+
+    if (head->updated(pov))
         return;
 
-    // Get pointer to most recently updated accumulator
-    auto r_it = std::find_if(m_accumulators.rbegin(), m_accumulators.rend(),
-                             [&pov](const auto &acc) { return acc.updated(pov); });
-
-    assert(r_it != m_accumulators.rend()); // There must be at least one accumulator up-to date in this branch
-
-    // Update from last updated Accumulator until most recent one
-    for (auto forward_it = r_it.base(); forward_it != m_accumulators.end(); ++forward_it) {
-        forward_it->update(pov, (forward_it - 1)->pov(pov));
+    for (auto iter = m_accumulators.rbegin() + 1; iter != m_accumulators.rend(); ++iter) {
+        if (iter->needs_refresh(pov, pos.get_king_placement(pov))) {
+            const PovAccumulator &acc = m_finny_table.update(pos, pov);
+            head->refresh(pov, acc);
+            break;
+        } else if (iter->updated(pov)) {
+            while (iter != head) {
+                (iter - 1)->update(pov, iter->pov(pov));
+                --iter;
+            }
+            break;
+        }
     }
 }
 

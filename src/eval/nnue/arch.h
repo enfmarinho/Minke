@@ -22,10 +22,15 @@
 #include <array>
 #include <cstdint>
 
+#include "../../types.h"
+#include "../../utils.h"
 #include "simd.h"
 
 constexpr int INPUT_LAYER_SIZE = 64 * 12;
 constexpr int HIDDEN_LAYER_SIZE = 1024;
+
+constexpr int NUM_KING_BUCKETS = 1;
+constexpr int KING_BUCKETS_LAYOUT[64] = {0};
 
 constexpr int32_t CRELU_MIN = 0;
 constexpr int32_t CRELU_MAX = 255;
@@ -48,5 +53,30 @@ struct alignas(64) Network {
     int16_t output_bias;
 };
 extern Network network;
+
+/// Check whether king has crossed half of the board, i.e. if the board should be flipped for horizontal mirroring
+inline bool should_flip(const Square king_pov_sq) { return get_file(king_pov_sq) > 3; }
+
+/// Input layer feature index
+inline size_t feature_idx(const Piece piece, const Square sq, const Square king_pov_sq, const Color pov) {
+    constexpr size_t COLOR_STRIDE = 64 * 6;
+    constexpr size_t PIECE_STRIDE = 64;
+
+    const Color piece_color = get_color(piece);
+    int pov_sq = sq;
+    if (pov == BLACK) // Convert square to pov, i.e. flip rank if stm is black
+        pov_sq = pov_sq ^ 56;
+    if (should_flip(king_pov_sq)) // Flip file
+        pov_sq = pov_sq ^ 7;
+
+    const size_t idx = KING_BUCKETS_LAYOUT[king_pov_sq] * INPUT_LAYER_SIZE + // Input bucket offset
+                       (piece_color != pov) * COLOR_STRIDE +                 // Perspective offset
+                       get_piece_type(piece, piece_color) * PIECE_STRIDE +   // Piece type offset
+                       pov_sq;
+    return idx * HIDDEN_LAYER_SIZE;
+}
+inline size_t feature_idx(const PieceSquare ps, const Square king_pov_sq, const Color pov) {
+    return feature_idx(ps.piece, ps.sq, king_pov_sq, pov);
+}
 
 #endif // !ARCH_H
