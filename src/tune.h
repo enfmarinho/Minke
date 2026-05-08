@@ -16,6 +16,8 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#define TUNE
+
 #ifndef TUNE_H
 #define TUNE_H
 
