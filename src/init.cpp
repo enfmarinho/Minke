@@ -18,6 +18,7 @@
 
 #include "init.h"
 
+#include <array>
 #include <cmath>
 
 #include "attacks.h"
@@ -25,6 +26,7 @@
 #include "hash.h"
 #include "incbin.h"
 #include "search.h"
+#include "time_manager.h"
 #include "tune.h"
 #include "types.h"
 
@@ -36,6 +38,7 @@ INCBIN(NetParameters, EVALFILE);
 
 int LMR_TABLE[64][64];
 int LMP_TABLE[2][LMP_DEPTH];
+std::array<double, 6> MOVE_STABILITY_SCALE;
 HashKeys hash_keys;
 Network network;
 Bitboard between_squares[64][64];
@@ -60,6 +63,12 @@ void init_search_params() {
         LMP_TABLE[0][depth] = (lmp_base() / 100.0) + (lmp_scale() / 100.0) * depth * depth;
         LMP_TABLE[1][depth] = 2 * (lmp_base() / 100.0) + 2 * (lmp_scale() / 100.0) * depth * depth; // Improving
     }
+}
+
+void init_tm_params() {
+    MOVE_STABILITY_SCALE = {tm_move_stability_scale1() / 100.0, tm_move_stability_scale2() / 100.0,
+                            tm_move_stability_scale3() / 100.0, tm_move_stability_scale4() / 100.0,
+                            tm_move_stability_scale4() / 100.0, tm_move_stability_scale6() / 100.0};
 }
 
 void init_network_params() {

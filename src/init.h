@@ -23,6 +23,8 @@ void init_all();
 
 void init_search_params();
 
+void init_tm_params();
+
 void init_network_params();
 
 void init_hash_keys();

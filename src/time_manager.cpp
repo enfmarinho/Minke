@@ -18,6 +18,7 @@
 
 #include "time_manager.h"
 
+#include "move.h"
 #include "search.h"
 #include "tune.h"
 #include "types.h"
@@ -57,20 +58,36 @@ void TimeManager::reset(CounterType inc, CounterType time, CounterType mtg, Coun
 }
 
 void TimeManager::reset() {
+    m_start_time = now();
+
     m_scale = 1;
     m_movetime = false;
-    m_can_stop = false;
     m_time_set = false;
-    m_start_time = now();
+    m_can_stop = false;
+
+    m_move_stability = 0;
+    m_prev_best_move = MOVE_NONE;
 }
 
-void TimeManager::update(const ThreadData &td) {
+void TimeManager::update(const ThreadData &td, const int depth) {
     if (m_movetime || !m_time_set)
         return;
 
+    if (td.best_move == m_prev_best_move) {
+        ++m_move_stability;
+    } else {
+        m_move_stability = 0;
+        m_prev_best_move = td.best_move;
+    }
+
+    const double move_scaling_factor =
+        depth >= tm_move_stability_scaling_min_depth() ? 1 : MOVE_STABILITY_SCALE[m_move_stability];
+
     const double node_fraction = td.node_table[td.best_move.from_and_to()] / static_cast<double>(td.nodes_searched);
     const double node_scaling_factor = (node_tm_base() / 100.0 - node_fraction) * (node_tm_scale() / 100.0);
-    m_scale = std::clamp<double>(node_scaling_factor, tm_min_scale() / 100.0, tm_max_scale() / 100.0);
+
+    m_scale =
+        std::clamp<double>(node_scaling_factor * move_scaling_factor, tm_min_scale() / 100.0, tm_max_scale() / 100.0);
 }
 
 bool TimeManager::stop_early() const { return m_can_stop && time_passed() > m_optimum_time * m_scale; }

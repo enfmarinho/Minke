@@ -199,6 +199,14 @@ TUNABLE_PARAM(node_tm_scale, 164, 100, 250, 7, 0.002)
 TUNABLE_PARAM(tm_min_scale, 48, 10, 100, 7, 0.002)
 TUNABLE_PARAM(tm_max_scale, 166, 100, 250, 7, 0.002)
 
+TUNABLE_PARAM(tm_move_stability_scaling_min_depth, 7, 4, 9, 0.5, 0.002)
+TUNABLE_PARAM(tm_move_stability_scale1, 100, 60, 260, 10, 0.002)
+TUNABLE_PARAM(tm_move_stability_scale2, 100, 60, 260, 10, 0.002)
+TUNABLE_PARAM(tm_move_stability_scale3, 100, 60, 260, 10, 0.002)
+TUNABLE_PARAM(tm_move_stability_scale4, 100, 60, 260, 10, 0.002)
+TUNABLE_PARAM(tm_move_stability_scale5, 100, 60, 260, 10, 0.002)
+TUNABLE_PARAM(tm_move_stability_scale6, 100, 60, 260, 10, 0.002)
+
 // Material scale
 TUNABLE_PARAM(pawn_scaling_factor, 100, 64, 128, 5, 0.002)
 TUNABLE_PARAM(knight_scaling_factor, 300, 128, 512, 20, 0.002)

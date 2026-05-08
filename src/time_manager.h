@@ -19,9 +19,14 @@
 #ifndef TIME_MANAGER_H
 #define TIME_MANAGER_H
 
+#include <array>
+
+#include "move.h"
 #include "types.h"
 
 struct ThreadData;
+
+extern std::array<double, 6> MOVE_STABILITY_SCALE;
 
 class TimeManager {
   public:
@@ -30,7 +35,7 @@ class TimeManager {
 
     void reset(CounterType inc, CounterType time, CounterType movestogo, CounterType movetime, bool infinite);
     void reset();
-    void update(const ThreadData &td);
+    void update(const ThreadData &td, const int depth);
     bool stop_early() const;
     bool time_over() const;
     TimeType time_passed() const;
@@ -45,6 +50,9 @@ class TimeManager {
     bool m_movetime;
     bool m_time_set;
     bool m_can_stop;
+
+    int m_move_stability;
+    Move m_prev_best_move;
 };
 
 #endif // #ifndef TIME_MANAGER_H
