@@ -275,7 +275,7 @@ void Position::remove_piece(const PieceSquare &ps) {
 }
 
 template <bool UPDATE>
-bool Position::make_move(const Move &move) {
+void Position::make_move(const Move &move) {
     m_played_positions[m_history_ply] = m_hash_key;
     m_history_stack[m_history_ply] = m_curr_state;
     ++m_history_ply;
@@ -313,15 +313,12 @@ bool Position::make_move(const Move &move) {
     hash_castle_key();
     hash_side_key();
 
-    bool legal = !is_attacked(get_king_placement(m_stm));
-
     change_side();
     update_pin_and_checkers_bb();
-    return legal;
 }
 
-template bool Position::make_move<true>(const Move &move);
-template bool Position::make_move<false>(const Move &move);
+template void Position::make_move<true>(const Move &move);
+template void Position::make_move<false>(const Move &move);
 
 template <bool UPDATE>
 DirtyPiece Position::make_regular(const Move &move) {
@@ -681,9 +678,8 @@ int Position::legal_move_amount() {
     ScoredMove *end = gen_moves(moves, *this, GEN_ALL);
     int legal_amount = 0;
     for (ScoredMove *begin = moves; begin != end; ++begin) {
-        if (make_move<false>(begin->move))
+        if (is_legal(begin->move))
             ++legal_amount;
-        unmake_move<false>(begin->move);
     }
     return legal_amount;
 }
@@ -692,10 +688,7 @@ bool Position::no_legal_moves() {
     ScoredMove moves[MAX_MOVES_PER_POS];
     ScoredMove *end = gen_moves(moves, *this, GEN_ALL);
     for (ScoredMove *curr = moves; curr != end; ++curr) {
-        bool legal = make_move<false>(curr->move);
-        unmake_move<false>(curr->move);
-
-        if (legal)
+        if (is_legal(curr->move))
             return false;
     }
     return true;
