@@ -346,6 +346,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                     extension = 2;
             } else if (singular_score >= beta) { // Multi-Cut
                 return singular_score;
+            } else if (ttscore >= beta) {
+                extension = -2;
             } else if (cutnode) {
                 extension = -2;
             }
