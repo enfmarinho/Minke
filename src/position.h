@@ -43,7 +43,7 @@ class Position {
     void reset_nnue();
 
     template <bool UPDATE>
-    bool make_move(const Move &move);
+    void make_move(const Move &move);
     template <bool UPDATE>
     void unmake_move(const Move &move);
 
