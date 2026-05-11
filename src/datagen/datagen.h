@@ -186,7 +186,7 @@ class DatagenThread {
     }
 
     void init_pos_randomly() {
-        m_td->position.set_fen<true>(START_FEN);
+        m_td->position.set_fen<false>(START_FEN);
 
         int move_count = 8 + (prng.rand<uint32_t>() % 5);
         for (int i = 0; i < move_count; ++i) {
@@ -205,11 +205,12 @@ class DatagenThread {
             }
 
             if (!legal_found) {
-                m_td->position.set_fen<true>(START_FEN);
+                m_td->position.set_fen<false>(START_FEN);
                 i = -1; // increment is happening after the loop, so this will be 0
             }
         }
 
+        m_td->position.reset_nnue();
         m_td->search_history.reset();
         m_td->tt.clear();
         m_games.reset(m_td->position);
