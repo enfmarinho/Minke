@@ -149,9 +149,8 @@ void UCI::print_debug_info() {
     std::cout << "Move list: ";
     ScoredMove scored_move;
     while ((scored_move = move_picker.next_move_scored(false)) != SCORED_MOVE_NONE) {
-        if (!m_td->position.make_move<false>(scored_move.move))
+        if (!m_td->position.is_legal(scored_move.move))
             std::cout << "*";
-        m_td->position.unmake_move<false>(scored_move.move);
         std::cout << scored_move.move.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks()) << "("
                   << scored_move.score << ") ";
     }
@@ -285,10 +284,10 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
     ScoredMove *end = gen_moves(moves, m_td->position, GEN_ALL);
     for (ScoredMove *begin = moves; begin != end; ++begin) {
         Move move = begin->move;
-        if (!position.make_move<false>(move)) {
-            position.unmake_move<false>(move);
+        if (!position.is_legal(move)) {
             continue;
         }
+        position.make_move<false>(move);
 
         if (root && depth <= 1)
             count = 1, ++nodes;

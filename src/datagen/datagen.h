@@ -197,9 +197,8 @@ class DatagenThread {
 
             bool legal_found = false;
             for (auto curr = moves; curr != end; ++curr) {
-                if (!m_td->position.make_move<false>(curr->move)) {
-                    m_td->position.unmake_move<false>(curr->move);
-                } else {
+                if (m_td->position.is_legal(curr->move)) {
+                    m_td->position.make_move<false>(curr->move);
                     legal_found = true;
                     break;
                 }
