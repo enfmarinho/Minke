@@ -200,7 +200,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     tthit = tthit && !singular_search; // Don't use ttentry result if in singular search
     // Extraction data from ttentry if tthit
     Move ttmove = (tthit ? tte.best_move() : MOVE_NONE);
-    ScoreType ttscore = tthit ? tte.score() : SCORE_NONE;
+    ScoreType ttscore = tthit ? tte.score(td.height) : SCORE_NONE;
     ScoreType tteval = tthit ? tte.eval() : SCORE_NONE;
     IndexType ttbound = tthit ? tte.bound() : static_cast<IndexType>(BOUND_EMPTY);
     IndexType ttdepth = tthit ? tte.depth() : 0;
@@ -231,7 +231,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     } else {
         raw_eval = position.eval();
         eval = node.static_eval = adjust_eval(position, raw_eval);
-        td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv);
+        td.tt.store(position.get_hash(), 0, td.height, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv);
     }
 
     // Clean killer moves for the next ply
@@ -295,7 +295,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 position.unmake_move<true>(move);
 
                 if (pc_score >= pc_beta) {
-                    td.tt.store(position.get_hash(), depth - 3, move, pc_score, raw_eval, LOWER, ttpv);
+                    td.tt.store(position.get_hash(), depth - 3, td.height, move, pc_score, raw_eval, LOWER, ttpv);
                     return pc_score;
                 }
             }
@@ -437,7 +437,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     if (!stop_search(td)) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
-        td.tt.store(position.get_hash(), depth, best_move, best_score, raw_eval, bound, ttpv);
+        td.tt.store(position.get_hash(), depth, td.height, best_move, best_score, raw_eval, bound, ttpv);
         td.best_move = best_move;
     }
 
@@ -459,7 +459,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     TTEntry tte;
     bool tthit = td.tt.probe(position, tte);
     Move ttmove = tthit ? tte.best_move() : MOVE_NONE;
-    ScoreType ttscore = tthit ? tte.score() : SCORE_NONE;
+    ScoreType ttscore = tthit ? tte.score(td.height) : SCORE_NONE;
     ScoreType tteval = tthit ? tte.eval() : SCORE_NONE;
     IndexType ttbound = tthit ? tte.bound() : static_cast<IndexType>(BOUND_EMPTY);
     const bool ttpv = pv_node || (tthit && tte.was_pv());
@@ -485,7 +485,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     } else {
         raw_eval = position.eval();
         best_score = static_eval = node.static_eval = adjust_eval(position, raw_eval);
-        td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv);
+        td.tt.store(position.get_hash(), 0, td.height, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv);
     }
 
     // Stand-pat
@@ -537,7 +537,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     }
 
     BoundType bound = best_score >= beta ? LOWER : UPPER;
-    td.tt.store(position.get_hash(), 0, best_move, best_score, raw_eval, bound, ttpv);
+    td.tt.store(position.get_hash(), 0, td.height, best_move, best_score, raw_eval, bound, ttpv);
 
     return best_score;
 }
