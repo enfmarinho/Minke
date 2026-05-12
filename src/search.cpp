@@ -231,7 +231,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     } else {
         raw_eval = position.eval();
         eval = node.static_eval = adjust_eval(position, raw_eval);
-        td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age(), tthit);
+        td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv);
     }
 
     // Clean killer moves for the next ply
@@ -295,8 +295,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 position.unmake_move<true>(move);
 
                 if (pc_score >= pc_beta) {
-                    td.tt.store(position.get_hash(), depth - 3, move, pc_score, raw_eval, LOWER, ttpv, td.tt.age(),
-                                tthit);
+                    td.tt.store(position.get_hash(), depth - 3, move, pc_score, raw_eval, LOWER, ttpv);
                     return pc_score;
                 }
             }
@@ -438,7 +437,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     if (!stop_search(td)) { // Save on TT if search was completed
         BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
-        td.tt.store(position.get_hash(), depth, best_move, best_score, raw_eval, bound, ttpv, td.tt.age(), tthit);
+        td.tt.store(position.get_hash(), depth, best_move, best_score, raw_eval, bound, ttpv);
         td.best_move = best_move;
     }
 
@@ -486,7 +485,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     } else {
         raw_eval = position.eval();
         best_score = static_eval = node.static_eval = adjust_eval(position, raw_eval);
-        td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age(), tthit);
+        td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv);
     }
 
     // Stand-pat
@@ -538,7 +537,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     }
 
     BoundType bound = best_score >= beta ? LOWER : UPPER;
-    td.tt.store(position.get_hash(), 0, best_move, best_score, raw_eval, bound, ttpv, td.tt.age(), tthit);
+    td.tt.store(position.get_hash(), 0, best_move, best_score, raw_eval, bound, ttpv);
 
     return best_score;
 }

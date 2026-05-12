@@ -80,8 +80,7 @@ class TranspositionTable {
 
     bool probe(const Position &position, TTEntry &found);
     void store(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-               const ScoreType &eval, const BoundType &bound, const bool was_pv, const IndexType age,
-               const bool &tthit);
+               const ScoreType &eval, const BoundType &bound, const bool was_pv);
     void update_age() { m_age = (m_age + 1) & AGE_MASK; }
     IndexType age() { return m_age; }
     void prefetch(const HashType &key);
