@@ -70,14 +70,17 @@ bool TranspositionTable::probe(const Position &position, TTEntry &tte) {
 
 void TranspositionTable::store(const HashType &hash, const IndexType &depth, const Move &best_move,
                                const ScoreType &score, const ScoreType &eval, const BoundType &bound, const bool was_pv,
-                               const IndexType age, const bool &tthit) {
+                               const IndexType age) {
     size_t table_index = table_index_from_hash(hash);
     KeyType target_key = key_from_hash(hash);
     TTBucket *bucket = &m_table[table_index];
     TTEntry *replace = &bucket->entry[0];
+
+    bool tthit = false;
     for (IndexType index = 0; index < BUCKET_SIZE; ++index) {
         if (bucket->entry[index].key() == target_key) {
             replace = &bucket->entry[index];
+            tthit = true;
             break;
         }
         if (replace->depth() > bucket->entry[index].depth())
