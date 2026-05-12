@@ -78,13 +78,15 @@ void TranspositionTable::store(const HashType &hash, const IndexType &depth, con
 
     bool tthit = false;
     for (IndexType index = 0; index < BUCKET_SIZE; ++index) {
-        if (bucket->entry[index].key() == target_key) {
+        TTEntry *curr_entry = &bucket->entry[index];
+        if (curr_entry->key() == target_key) {
             replace = &bucket->entry[index];
             tthit = true;
             break;
         }
-        if (replace->depth() > bucket->entry[index].depth())
-            replace = &bucket->entry[index];
+        if (replace->depth() - ((MAX_AGE + m_age - replace->age()) & AGE_MASK) * 4 >
+            curr_entry->depth() - ((MAX_AGE + m_age - curr_entry->age()) & AGE_MASK) * 4)
+            replace = curr_entry;
     }
     replace->store(hash, depth, best_move, score, eval, bound, was_pv, age, tthit);
 }
