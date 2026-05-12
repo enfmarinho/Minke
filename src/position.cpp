@@ -144,7 +144,7 @@ bool Position::set_fen(const std::string &fen) {
         std::cerr << "INVALID FEN: game clock is not a number." << std::endl;
         return false;
     }
-    update_pin_and_checkers_bb();
+    update_pins_and_checkers();
 
     if constexpr (UPDATE)
         reset_nnue();
@@ -314,7 +314,7 @@ void Position::make_move(const Move &move) {
     hash_side_key();
 
     change_side();
-    update_pin_and_checkers_bb();
+    update_pins_and_checkers();
 }
 
 template void Position::make_move<true>(const Move &move);
@@ -598,7 +598,7 @@ void Position::make_null_move() {
     }
     hash_side_key();
     change_side();
-    update_pin_and_checkers_bb();
+    update_pins_and_checkers();
 }
 
 void Position::unmake_null_move() {
@@ -609,24 +609,40 @@ void Position::unmake_null_move() {
     change_side();
 }
 
-void Position::update_pin_and_checkers_bb() {
-    Color adversary = get_adversary();
-    Square king_sq = get_king_placement(m_stm);
-    m_curr_state.pins = 0;
-    m_curr_state.checkers = (pawn_attacks[m_stm][king_sq] & get_piece_bb(PAWN, adversary)) // Pawns
-                            | (knight_attacks[king_sq] & get_piece_bb(KNIGHT, adversary)); // Knights;
+void Position::update_pins_and_checkers() {
+    const Color ntm = get_adversary();
+    const Bitboard occ = get_occupancy();
+    const Square king_sq = get_king_placement(m_stm);
+    m_curr_state.checkers = (pawn_attacks[m_stm][king_sq] & get_piece_bb(PAWN, ntm)) // Pawns
+                            | (knight_attacks[king_sq] & get_piece_bb(KNIGHT, ntm)); // Knights;
 
     Bitboard slider_checkers =
-        ((get_piece_bb(QUEEN, adversary) | get_piece_bb(BISHOP, adversary)) & get_bishop_attacks(king_sq, 0)) |
-        ((get_piece_bb(QUEEN, adversary) | get_piece_bb(ROOK, adversary)) & get_rook_attacks(king_sq, 0));
+        ((get_piece_bb(QUEEN, ntm) | get_piece_bb(BISHOP, ntm)) & get_bishop_attacks(king_sq, occ)) |
+        ((get_piece_bb(QUEEN, ntm) | get_piece_bb(ROOK, ntm)) & get_rook_attacks(king_sq, occ));
     while (slider_checkers) {
-        Square sq = poplsb(slider_checkers);
+        const Square sq = poplsb(slider_checkers);
+        set_bit(m_curr_state.checkers, sq);
+    }
 
-        Bitboard blockers = between_squares[king_sq][sq] & get_occupancy();
-        if (!blockers) {
-            set_bit(m_curr_state.checkers, sq);
-        } else if (count_bits(blockers) == 1) {
-            set_bits(m_curr_state.pins, blockers & get_occupancy(m_stm));
+    pov_update_pin(WHITE);
+    pov_update_pin(BLACK);
+}
+
+void Position::pov_update_pin(const Color pov) {
+    const Color npov = static_cast<Color>(pov ^ 1);
+    const Bitboard npov_occ = get_occupancy(npov);
+    const Square king_sq = get_king_placement(pov);
+    Bitboard slider_attackers =
+        ((get_piece_bb(QUEEN, npov) | get_piece_bb(BISHOP, npov)) & get_bishop_attacks(king_sq, npov_occ)) |
+        ((get_piece_bb(QUEEN, npov) | get_piece_bb(ROOK, npov)) & get_rook_attacks(king_sq, npov_occ));
+
+    m_curr_state.pins[pov] = 0;
+    while (slider_attackers) {
+        const Square sq = poplsb(slider_attackers);
+
+        const Bitboard blockers = between_squares[king_sq][sq] & get_occupancy(pov);
+        if (count_bits(blockers) == 1) {
+            m_curr_state.pins[pov] |= blockers;
         }
     }
 }
@@ -708,7 +724,8 @@ bool Position::is_legal(const Move &move) {
         if (to == c1 || to == c8) {
             rook_from = lsb(stm_castling_rooks);
         }
-        return !is_attacked(to) && !(get_pins() & (1ULL << rook_from)); // Other clauses were checked by movegen
+        return !is_attacked(to) &&
+               !(get_pinned_bb(m_stm) & (1ULL << rook_from)); // Other clauses were checked by movegen
     }
     if (move.is_ep()) {
         int pawn_offset = (m_stm == WHITE ? NORTH : SOUTH);
@@ -733,7 +750,7 @@ bool Position::is_legal(const Move &move) {
     if (count_bits(get_checkers()) > 1) // Double check can only be evaded by king movements
         return false;
 
-    if (get_pins() & (1ULL << from)) // if piece is pinned, it must keep blocking the check
+    if (get_pinned_bb(m_stm) & (1ULL << from)) // if piece is pinned, it must keep blocking the check
         return !get_checkers() &&
                (((1ULL << from) & between_squares[king_sq][to]) || ((1ULL << to) & between_squares[king_sq][from]));
 
@@ -876,7 +893,7 @@ void Position::print() {
             std::string color = "";
             if (m_curr_state.checkers & (1ULL << sq)) {
                 color = "\033[31m";
-            } else if (m_curr_state.pins & (1ULL << sq)) {
+            } else if (m_curr_state.pins[m_stm] & (1ULL << sq)) {
                 color = "\033[34m";
             }
 

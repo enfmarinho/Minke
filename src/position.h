@@ -102,7 +102,7 @@ class Position {
     inline int get_history_ply() const { return m_history_ply; }
     inline BoardState get_board_state() const { return m_curr_state; };
     inline Bitboard get_checkers() const { return m_curr_state.checkers; }
-    inline Bitboard get_pins() const { return m_curr_state.pins; }
+    inline Bitboard get_pinned_bb(const Color side) const { return m_curr_state.pins[side]; }
     inline Bitboard get_castle_rooks() const { return m_curr_state.castle_rooks; }
     inline void reset_history() { m_history_ply = 0; }
 
@@ -135,7 +135,8 @@ class Position {
     DirtyPiece make_en_passant(const Move &move);
 
     void update_castling_rights(const Move &move);
-    void update_pin_and_checkers_bb();
+    void update_pins_and_checkers();
+    void pov_update_pin(const Color pov);
 
     bool insufficient_material() const;
     bool repetition() const;
