@@ -46,12 +46,12 @@
 class DatagenThread {
   private:
     static constexpr int VERIFICATION_MAX_SCORE = 800;
-    static constexpr int VERIFICATION_SOFT_NODE_LIMIT = 80'000;
-    static constexpr int VERIFICATION_HARD_NODE_LIMIT = 200'000;
+    static constexpr int VERIFICATION_SOFT_NODE_LIMIT = 50'000;
+    static constexpr int VERIFICATION_HARD_NODE_LIMIT = 5 * VERIFICATION_SOFT_NODE_LIMIT;
     static constexpr int VERIFICATION_MAX_DEPTH = 14;
 
-    static constexpr int SOFT_NODE_LIMIT = 20'000;
-    static constexpr int HARD_NODE_LIMIT = 40'000;
+    static constexpr int SOFT_NODE_LIMIT = 5'000;
+    static constexpr int HARD_NODE_LIMIT = 20 * SOFT_NODE_LIMIT;
 
     static constexpr int WIN_ADJ_PLY = 4;
     static constexpr int DRAW_ADJ_PLY = 12;
