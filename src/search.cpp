@@ -210,12 +210,13 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         return ttscore;
     }
 
+    bool in_check = position.in_check();
+
     // Internal Iterative Reductions
-    if ((!tthit || ttdepth + 4 < depth) && depth >= iir_min_depth()) {
+    if (!in_check && (!tthit || ttdepth + 4 < depth) && depth >= iir_min_depth()) {
         depth -= iir_depth_reduction();
     }
 
-    bool in_check = position.in_check();
     ScoreType eval, raw_eval;
     if (in_check) {
         eval = node.static_eval = raw_eval = SCORE_NONE;
