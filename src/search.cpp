@@ -561,11 +561,19 @@ bool SEE(Position &position, const Move &move, int threshold) {
     if (score >= 0) // Already surpassed threshold
         return true;
 
-    Bitboard attackers = position.attackers(to);
     Bitboard occupancy = position.get_occupancy() ^ (1ULL << from); // Removed already used attacker
     Bitboard diagonal_attackers = position.get_piece_bb(BISHOP) | position.get_piece_bb(QUEEN);
-    Bitboard line_attackers = position.get_piece_bb(ROOK) | position.get_piece_bb(QUEEN);
+    Bitboard horizontal_attackers = position.get_piece_bb(ROOK) | position.get_piece_bb(QUEEN);
     Color stm = static_cast<Color>(!position.get_stm());
+
+    const Bitboard white_pinned = position.get_pinned_bb(WHITE);
+    const Bitboard black_pinned = position.get_pinned_bb(BLACK);
+
+    const Bitboard allowed = ~(white_pinned & black_pinned) |
+                             (white_pinned & between_squares[position.get_king_placement(WHITE)][to]) |
+                             (black_pinned & between_squares[position.get_king_placement(BLACK)][to]);
+
+    Bitboard attackers = position.attackers(to) & allowed;
 
     while (true) {
         attackers &= occupancy; // Remove used piece from attackers bitboard
@@ -601,11 +609,11 @@ bool SEE(Position &position, const Move &move, int threshold) {
                 attackers |= get_piece_attacks(to, occupancy, BISHOP) & diagonal_attackers;
                 break;
             case ROOK:
-                attackers |= get_piece_attacks(to, occupancy, ROOK) & line_attackers;
+                attackers |= get_piece_attacks(to, occupancy, ROOK) & horizontal_attackers;
                 break;
             case QUEEN:
                 attackers |= (get_piece_attacks(to, occupancy, BISHOP) & diagonal_attackers) |
-                             (get_piece_attacks(to, occupancy, ROOK) & line_attackers);
+                             (get_piece_attacks(to, occupancy, ROOK) & horizontal_attackers);
                 break;
             default:
                 break;
