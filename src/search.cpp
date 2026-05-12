@@ -391,6 +391,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
                 // Reduce less if this move is or was a principal variation
                 scaled_reduction -= ttpv * lmr_ttpv_delta();
+
+                scaled_reduction -= td.search_history.get_history(td, move) * lmr_quiet_history_scale() / 1024;
             } else {
                 // reduce noisy
             }
