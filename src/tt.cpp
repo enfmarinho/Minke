@@ -69,8 +69,8 @@ bool TranspositionTable::probe(const Position &position, TTEntry &tte) {
 }
 
 void TranspositionTable::store(const HashType &hash, const IndexType &depth, const Move &best_move,
-                               const ScoreType &score, const ScoreType &eval, const BoundType &bound, const bool was_pv,
-                               const IndexType age) {
+                               const ScoreType &score, const ScoreType &eval, const BoundType &bound,
+                               const bool was_pv) {
     size_t table_index = table_index_from_hash(hash);
     KeyType target_key = key_from_hash(hash);
     TTBucket *bucket = &m_table[table_index];
@@ -86,7 +86,7 @@ void TranspositionTable::store(const HashType &hash, const IndexType &depth, con
         if (replace->depth() > bucket->entry[index].depth())
             replace = &bucket->entry[index];
     }
-    replace->store(hash, depth, best_move, score, eval, bound, was_pv, age, tthit);
+    replace->store(hash, depth, best_move, score, eval, bound, was_pv, age(), tthit);
 }
 
 void TranspositionTable::prefetch(const HashType &key) {
