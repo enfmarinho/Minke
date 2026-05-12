@@ -25,6 +25,22 @@
 #include "position.h"
 #include "types.h"
 
+inline ScoreType score_to_tt(const ScoreType score, const int ply) {
+    if (score > MATE_FOUND)
+        return score + ply;
+    else if (score < -MATE_FOUND)
+        return score - ply;
+    return score;
+}
+
+inline ScoreType score_from_tt(const ScoreType score, const int ply) {
+    if (score > MATE_FOUND)
+        return score - ply;
+    else if (score < -MATE_FOUND)
+        return score + ply;
+    return score;
+}
+
 class TTEntry {
   public:
     TTEntry() = default;
@@ -33,7 +49,7 @@ class TTEntry {
     KeyType key() const { return m_key; }
     IndexType depth() const { return m_depth; }
     Move best_move() const { return m_best_move; }
-    ScoreType score() const { return m_score; }
+    ScoreType score(const int ply) const { return score_from_tt(m_score, ply); }
     ScoreType eval() const { return m_eval; }
     IndexType bound() const { return m_age_pv_bound & BOUND_MASK; }
     IndexType age() const { return (m_age_pv_bound & AGE_MASK) >> AGE_OFFSET; }
@@ -79,8 +95,8 @@ class TranspositionTable {
     TranspositionTable &operator=(const TranspositionTable &) = delete;
 
     bool probe(const Position &position, TTEntry &found);
-    void store(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-               const ScoreType &eval, const BoundType &bound, const bool was_pv);
+    void store(const HashType &hash, const IndexType &depth, const int ply, const Move &best_move,
+               const ScoreType &score, const ScoreType &eval, const BoundType &bound, const bool was_pv);
     void update_age() { m_age = (m_age + 1) & AGE_MASK; }
     IndexType age() { return m_age; }
     void prefetch(const HashType &key);
