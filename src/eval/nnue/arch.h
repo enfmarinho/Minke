@@ -25,7 +25,7 @@
 #include "simd.h"
 
 constexpr int INPUT_LAYER_SIZE = 64 * 12;
-constexpr int HIDDEN_LAYER_SIZE = 1024;
+constexpr int HIDDEN_LAYER_SIZE = 128;
 
 constexpr int32_t CRELU_MIN = 0;
 constexpr int32_t CRELU_MAX = 255;
