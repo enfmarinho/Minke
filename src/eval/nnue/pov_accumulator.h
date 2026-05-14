@@ -26,9 +26,12 @@
 
 #include "arch.h"
 
+class Position;
+
 class alignas(64) PovAccumulator {
   public:
     PovAccumulator() = default;
+    PovAccumulator(const Position &pos, const Color pov);
     PovAccumulator(const PovAccumulator &copy) = default;
     ~PovAccumulator() = default;
 
@@ -48,6 +51,8 @@ class alignas(64) PovAccumulator {
     void self_add(const size_t add0);
     void self_sub(const size_t sub0);
     void self_add_sub(const size_t add0, const size_t sub0);
+
+    friend bool operator==(const PovAccumulator &lhs, const PovAccumulator &rhs);
 
   private:
     std::array<int16_t, HIDDEN_LAYER_SIZE> m_neurons;

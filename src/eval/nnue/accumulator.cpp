@@ -89,11 +89,8 @@ void Accumulator::refresh(const Color side, const PovAccumulator &finny_table_ne
 bool operator==(const Accumulator &lhs, const Accumulator &rhs) {
     for (int color_i = 0; color_i <= 1; ++color_i) {
         Color color = static_cast<Color>(color_i);
-        for (size_t i = 0; i < lhs.pov(color).neurons().size(); ++i) {
-            if (lhs.pov(color).neurons()[i] != rhs.pov(color).neurons()[i])
-                return false;
-        }
-
+        if (lhs.pov(color) != rhs.pov(color))
+            return false;
         if (lhs.m_updated[color] != rhs.m_updated[color])
             return false;
     }
