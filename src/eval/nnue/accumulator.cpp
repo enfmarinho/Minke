@@ -25,7 +25,9 @@
 Accumulator::Accumulator(const Square white_king_sq, const Square black_king_sq, const PovAccumulator &white_pov_acc,
                          const PovAccumulator &black_pov_acc)
     : m_pov_accumulators{white_pov_acc, black_pov_acc} {
-    init(DirtyPiece(), white_king_sq, black_king_sq);
+    m_updated[WHITE] = m_updated[BLACK] = true;
+    m_king_sqs[WHITE] = white_king_sq;
+    m_king_sqs[BLACK] = black_king_sq;
 }
 
 Accumulator::Accumulator(const DirtyPiece &dp, const Square white_king_sq, const Square black_king_sq) {
@@ -33,8 +35,7 @@ Accumulator::Accumulator(const DirtyPiece &dp, const Square white_king_sq, const
 }
 
 void Accumulator::init(const DirtyPiece &dp, const Square white_king_sq, const Square black_king_sq) {
-    m_updated[WHITE] = false;
-    m_updated[BLACK] = false;
+    m_updated[WHITE] = m_updated[BLACK] = false;
 
     m_king_sqs[WHITE] = white_king_sq;
     m_king_sqs[BLACK] = black_king_sq;
