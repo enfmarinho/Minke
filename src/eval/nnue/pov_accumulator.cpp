@@ -21,6 +21,21 @@
 #include <cstddef>
 #include <cstring>
 
+#include "../../position.h"
+
+PovAccumulator::PovAccumulator(const Position &pos, const Color pov) {
+    // Debug-only constructor. Computes a PovAccumulator from scratch and uses it as a
+    // source of truth to validate incremental updates and finny tables.
+    reset();
+    Square king_pov_sq = static_cast<Square>(pos.get_king_placement(pov) ^ (pov == WHITE ? 0 : 56));
+    for (int sqi = a1; sqi <= h8; ++sqi) {
+        const Square sq = static_cast<Square>(sqi);
+        Piece piece = pos.consult(sq);
+        if (piece != EMPTY)
+            self_add(feature_idx(piece, sq, king_pov_sq, pov));
+    }
+}
+
 void PovAccumulator::add(const PovAccumulator &input, const size_t add0) {
     for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
         m_neurons[column] = input.m_neurons[column] + network.hidden_weights[add0 + column];
@@ -61,3 +76,11 @@ void PovAccumulator::self_add(const size_t add0) { add(*this, add0); }
 void PovAccumulator::self_sub(const size_t sub0) { sub(*this, sub0); }
 
 void PovAccumulator::self_add_sub(const size_t add0, const size_t sub0) { add_sub(*this, add0, sub0); }
+
+bool operator==(const PovAccumulator &lhs, const PovAccumulator &rhs) {
+    for (size_t i = 0; i < lhs.m_neurons.size(); ++i) {
+        if (lhs.m_neurons[i] != rhs.m_neurons[i])
+            return false;
+    }
+    return true;
+}
