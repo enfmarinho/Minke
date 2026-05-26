@@ -33,11 +33,7 @@ void FinnyTable::reset() {
 
 const PovAccumulator &FinnyTable::update(const Position &pos, const Color pov) {
     const Square king_sq = pos.get_king_placement(pov);
-    const Square king_pov_sq = static_cast<Square>(pov == WHITE ? king_sq : king_sq ^ 56);
-    const size_t king_bucket = KING_BUCKETS_LAYOUT[king_pov_sq];
-    const bool flip = should_flip(king_pov_sq);
-
-    FinnyTableCache &cached_entry = get_cache(flip, king_bucket, pov);
+    FinnyTableCache &cached_entry = get_cache(should_flip(king_sq), king_bucket_idx(king_sq, pov), pov);
 
     for (size_t piece_idx = WHITE_PAWN; piece_idx <= BLACK_KING; ++piece_idx) {
         const Piece piece = static_cast<Piece>(piece_idx);
@@ -53,12 +49,12 @@ const PovAccumulator &FinnyTable::update(const Position &pos, const Color pov) {
 
         while (added) {
             const Square sq = poplsb(added);
-            cached_entry.pov_accumulator.self_add(feature_idx(piece, sq, king_pov_sq, pov));
+            cached_entry.pov_accumulator.self_add(feature_idx(piece, sq, king_sq, pov));
         }
 
         while (removed) {
             const Square sq = poplsb(removed);
-            cached_entry.pov_accumulator.self_sub(feature_idx(piece, sq, king_pov_sq, pov));
+            cached_entry.pov_accumulator.self_sub(feature_idx(piece, sq, king_sq, pov));
         }
 
         cached_entry.bbs[piece_idx] = pos.get_piece_bb(piece);
