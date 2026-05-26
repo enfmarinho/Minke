@@ -840,7 +840,7 @@ bool Position::castling_pseudo_legal(const Square &from, const Square &to, const
     return true;
 }
 
-void Position::print() {
+void Position::print() const {
     auto print_line = []() -> void {
         for (IndexType i = 0; i < 8; ++i) {
             std::cout << "+";
@@ -890,8 +890,7 @@ void Position::print() {
         std::cout << "  " << rank_simbol << " ";
 
     std::cout << "\n\nFEN: " << get_fen();
-    std::cout << "\nHash: " << m_hash_key;
-    std::cout << "\nEval: " << eval() << "\n";
+    std::cout << "\nHash: " << m_hash_key << "\n";
 }
 
 bool Position::insufficient_material() const {

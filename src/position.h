@@ -65,7 +65,7 @@ class Position {
 
     int legal_move_amount();
     bool no_legal_moves();
-    void print();
+    void print() const;
 
     inline Bitboard get_occupancy() const { return m_occupancies[WHITE] | m_occupancies[BLACK]; }
     inline Bitboard get_occupancy(const Color &color) const {
