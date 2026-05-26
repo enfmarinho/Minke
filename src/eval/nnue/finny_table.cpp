@@ -64,6 +64,8 @@ const PovAccumulator &FinnyTable::update(const Position &pos, const Color pov) {
         cached_entry.bbs[piece_idx] = pos.get_piece_bb(piece);
     }
 
+    assert(cached_entry.pov_accumulator == PovAccumulator(pos, pov));
+
     return cached_entry.pov_accumulator;
 }
 
