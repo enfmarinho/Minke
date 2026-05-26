@@ -27,12 +27,11 @@ PovAccumulator::PovAccumulator(const Position &pos, const Color pov) {
     // Debug-only constructor. Computes a PovAccumulator from scratch and uses it as a
     // source of truth to validate incremental updates and finny tables.
     reset();
-    Square king_pov_sq = static_cast<Square>(pos.get_king_placement(pov) ^ (pov == WHITE ? 0 : 56));
     for (int sqi = a1; sqi <= h8; ++sqi) {
         const Square sq = static_cast<Square>(sqi);
         Piece piece = pos.consult(sq);
         if (piece != EMPTY)
-            self_add(feature_idx(piece, sq, king_pov_sq, pov));
+            self_add(feature_idx(piece, sq, pos.get_king_placement(pov), pov));
     }
 }
 

@@ -76,9 +76,9 @@ void Accumulator::update(const Color pov, const PovAccumulator &prev_pov_acc) {
     m_updated[pov] = true;
 }
 
-bool Accumulator::needs_refresh(const Color side, const Square new_king_sq) const {
-    return (new_king_sq & 0b100) != (m_king_sqs[side] & 0b100) ||                     // King crossed half of the board
-           KING_BUCKETS_LAYOUT[new_king_sq] != KING_BUCKETS_LAYOUT[m_king_sqs[side]]; // King bucket change
+bool Accumulator::needs_refresh(const Color pov, const Square new_king_sq) const {
+    return (new_king_sq & 0b100) != (m_king_sqs[pov] & 0b100) ||                       // King crossed half of the board
+           king_bucket_idx(new_king_sq, pov) != king_bucket_idx(m_king_sqs[pov], pov); // King bucket change
 }
 
 void Accumulator::refresh(const Color side, const PovAccumulator &finny_table_neurons) {
