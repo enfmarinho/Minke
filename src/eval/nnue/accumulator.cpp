@@ -68,6 +68,7 @@ void Accumulator::update(const Color pov, const PovAccumulator &prev_pov_acc) {
                                               feature_idx(m_dirty_piece.sub1, m_king_sqs[pov], pov));
             break;
         default:
+            assert(false);
             __builtin_unreachable();
     }
     // clang-format on

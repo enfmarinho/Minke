@@ -46,6 +46,11 @@ void NNUE::refresh(const Position &pos) {
     m_accumulators.clear();
     m_accumulators.emplace_back(pos.get_king_placement(WHITE), pos.get_king_placement(BLACK), white_pov_acc,
                                 black_pov_acc);
+
+    assert(m_accumulators.back().updated(WHITE));
+    assert(m_accumulators.back().updated(BLACK));
+    assert(m_accumulators.back().pov(WHITE) == PovAccumulator(pos, WHITE));
+    assert(m_accumulators.back().pov(BLACK) == PovAccumulator(pos, BLACK));
 }
 
 void NNUE::pop() { m_accumulators.pop_back(); }
@@ -85,6 +90,8 @@ void NNUE::update_pov(const Position &pos, const Color &pov) {
             break;
         }
     }
+    assert(head->updated(pov));
+    assert(head->pov(pov) == PovAccumulator(pos, pov));
 }
 
 ScoreType NNUE::flatten_screlu_and_affine(const PovAccumulator &player, const PovAccumulator &adversary) const {
