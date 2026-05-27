@@ -43,7 +43,9 @@ class History {
     inline HistoryType get_capture_history(const Position &position, const Move &move) {
         Square to = move.to();
         PieceType moved_pt = get_piece_type(position.consult(move.from()));
-        PieceType captured_pt = move.is_ep() ? PAWN : get_piece_type(position.consult(to));
+        PieceType captured_pt = get_piece_type(position.consult(to));
+        if (move.is_ep() || move.is_promotion())
+            captured_pt = PAWN;
         return m_capture_history[position.get_stm()][moved_pt][to][captured_pt];
     }
 
