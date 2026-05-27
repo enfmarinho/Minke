@@ -35,6 +35,8 @@ enum MovePickerStage {
     PICK_TT,
     GEN_NOISY,
     PICK_GOOD_NOISY,
+    PICK_KILLER,
+    PICK_COUNTER,
     GEN_QUIET,
     PICK_QUIET,
     PICK_BAD_NOISY,
