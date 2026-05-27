@@ -40,13 +40,12 @@ void MovePicker::init(Move ttmove, ThreadData &td, bool qsearch, ScoreType thres
     else
         m_stage = GEN_NOISY;
 
-    m_killer1 = m_td->search_history.consult_killer1(m_td->height);
-    m_killer2 = m_td->search_history.consult_killer2(m_td->height);
+    m_killer = m_td->search_history.consult_killer(m_td->height);
 
     m_counter = MOVE_NONE;
     if (m_td->height > 0)
         m_counter = m_td->search_history.consult_counter(m_td->nodes[m_td->height - 1].curr_pmove.move);
-    if (m_counter == m_killer1 || m_counter == m_killer2)
+    if (m_counter == m_killer)
         m_counter = MOVE_NONE;
 
     m_curr = m_end = m_end_bad = m_moves;
@@ -139,10 +138,8 @@ void MovePicker::score_moves() {
             case CASTLING:
                 // Fall-through
             case REGULAR:
-                if (runner->move == m_killer1)
-                    runner->score = KILLER_1_SCORE;
-                else if (runner->move == m_killer2)
-                    runner->score = KILLER_2_SCORE;
+                if (runner->move == m_killer)
+                    runner->score = KILLER_SCORE;
                 else if (runner->move == m_counter)
                     runner->score = COUNTER_SCORE;
                 else
