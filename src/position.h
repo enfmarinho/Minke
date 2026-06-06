@@ -90,14 +90,14 @@ class Position {
     inline HashType get_hash() const { return m_hash_key; }
     inline int get_game_ply() const { return m_game_clock_ply; }
     inline int get_fifty_move_ply() const { return m_curr_state.fifty_move_ply; }
-    inline int get_material_count(const Piece &piece) const { return count_bits(get_piece_bb(piece)); }
-    inline int get_material_count(const PieceType &piece_type, const Color &color) const {
-        return get_material_count(static_cast<Piece>(piece_type + color * COLOR_OFFSET));
+    inline int get_piece_count(const Piece &piece) const { return count_bits(get_piece_bb(piece)); }
+    inline int get_piece_count(const PieceType &piece_type, const Color &color) const {
+        return get_piece_count(static_cast<Piece>(piece_type + color * COLOR_OFFSET));
     }
-    inline int get_material_count(const PieceType &piece_type) const {
+    inline int get_piece_count(const PieceType &piece_type) const {
         return count_bits(m_pieces[piece_type] | m_pieces[piece_type + COLOR_OFFSET]);
     }
-    inline int get_material_count() const { return count_bits(get_occupancy()); }
+    inline int get_piece_count() const { return count_bits(get_occupancy()); }
     inline Piece consult(const Square &sq) const { return m_board[sq]; }
     inline int get_history_ply() const { return m_history_ply; }
     inline BoardState get_board_state() const { return m_curr_state; };

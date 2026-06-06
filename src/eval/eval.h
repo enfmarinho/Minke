@@ -26,12 +26,12 @@
 #include "../types.h"
 
 static inline int apply_material_scaling(const Position& pos, ScoreType raw_eval) {
-    const int material_scale = material_scaling_base()                                    //
-                               + pos.get_material_count(PAWN) * pawn_scaling_factor()     //
-                               + pos.get_material_count(KNIGHT) * knight_scaling_factor() //
-                               + pos.get_material_count(BISHOP) * bishop_scaling_factor() //
-                               + pos.get_material_count(ROOK) * rook_scaling_factor()     //
-                               + pos.get_material_count(QUEEN) * queen_scaling_factor();
+    const int material_scale = material_scaling_base()                                 //
+                               + pos.get_piece_count(PAWN) * pawn_scaling_factor()     //
+                               + pos.get_piece_count(KNIGHT) * knight_scaling_factor() //
+                               + pos.get_piece_count(BISHOP) * bishop_scaling_factor() //
+                               + pos.get_piece_count(ROOK) * rook_scaling_factor()     //
+                               + pos.get_piece_count(QUEEN) * queen_scaling_factor();
 
     return raw_eval * material_scale / 32768;
 }

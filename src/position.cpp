@@ -894,13 +894,13 @@ void Position::print() const {
 }
 
 bool Position::insufficient_material() const {
-    int piece_amount = get_material_count();
+    int piece_amount = get_piece_count();
     if (piece_amount == 2) {
         return true;
-    } else if (piece_amount == 3 && (get_material_count(KNIGHT) == 1 || get_material_count(BISHOP) == 1)) {
+    } else if (piece_amount == 3 && (get_piece_count(KNIGHT) == 1 || get_piece_count(BISHOP) == 1)) {
         return true;
-    } else if (piece_amount == 4 && (get_material_count(KNIGHT) == 2 || (get_material_count(WHITE_BISHOP) == 1 &&
-                                                                         get_material_count(BLACK_BISHOP) == 1))) {
+    } else if (piece_amount == 4 && (get_piece_count(KNIGHT) == 2 ||
+                                     (get_piece_count(WHITE_BISHOP) == 1 && get_piece_count(BLACK_BISHOP) == 1))) {
         return true;
     }
 
