@@ -28,7 +28,7 @@
 #include "types.h"
 
 namespace EngineOptions {
-constexpr CounterType BENCH_DEPTH = 12;
+constexpr CounterType BENCH_DEPTH = 16;
 static constexpr CounterType HASH_DEFAULT = 16;
 static constexpr CounterType HASH_MIN = 1;
 static constexpr CounterType HASH_MAX = 2097152;
