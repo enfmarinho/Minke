@@ -24,8 +24,6 @@
 
 enum BaseScore {
     TT_SCORE = 100'000,
-    QUEEN_PROMOTION_SCORE = 90'000,
-    NON_QUEEN_PROMOTION_SCORE = -90'000,
     CAPTURE_SCORE = 20'000,
     KILLER_1_SCORE = 19'000,
     KILLER_2_SCORE = 18'000,
@@ -56,7 +54,8 @@ class MovePicker {
 
   private:
     void sort_next_move();
-    void score_moves();
+    void score_quiet_moves();
+    void score_noisy_moves();
 
     bool m_qsearch;
     MovePickerStage m_stage;

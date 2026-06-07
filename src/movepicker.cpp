@@ -65,14 +65,13 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
             // Fall-through
         case GEN_NOISY:
             m_end = gen_moves(m_curr, m_td->position, NOISY);
-            score_moves();
+            score_noisy_moves();
             m_stage = PICK_GOOD_NOISY;
             // Fall-through
         case PICK_GOOD_NOISY:
             while (m_curr != m_end) {
                 sort_next_move();
-                if (!SEE(m_td->position, m_curr->move, m_threshold) ||
-                    m_curr->score == NON_QUEEN_PROMOTION_SCORE) // Bad noisy
+                if (!SEE(m_td->position, m_curr->move, m_threshold)) // Bad noisy
                     *m_end_bad++ = *m_curr++;
                 else if (m_curr->move != m_ttmove)
                     return *m_curr++;
@@ -93,7 +92,7 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
             // Fall-through
         case GEN_QUIET:
             m_end = gen_moves(m_curr, m_td->position, QUIET);
-            score_moves();
+            score_quiet_moves();
             m_stage = PICK_QUIET;
             // Fall-through
         case PICK_QUIET:
@@ -133,38 +132,34 @@ void MovePicker::sort_next_move() {
     std::swap(*best_move, *m_curr);
 }
 
-void MovePicker::score_moves() {
+void MovePicker::score_quiet_moves() {
     for (ScoredMove *runner = m_curr; runner != m_end; ++runner) {
-        switch (runner->move.type()) {
-            case CASTLING:
-                // Fall-through
-            case REGULAR:
-                if (runner->move == m_killer1)
-                    runner->score = KILLER_1_SCORE;
-                else if (runner->move == m_killer2)
-                    runner->score = KILLER_2_SCORE;
-                else if (runner->move == m_counter)
-                    runner->score = COUNTER_SCORE;
-                else
-                    runner->score = m_td->search_history.get_history(*m_td, runner->move);
-                break;
-            case CAPTURE:
-                runner->score = CAPTURE_SCORE + 20 * SEE_VALUES[m_td->position.consult(runner->move.to())] +
-                                m_td->search_history.get_capture_history(m_td->position, runner->move);
-                break;
-            case EP:
-                runner->score = CAPTURE_SCORE + 20 * SEE_VALUES[PAWN] +
-                                m_td->search_history.get_capture_history(m_td->position, runner->move);
-                break;
-            case PAWN_PROMOTION_QUEEN:
-                // Fall-through
-            case PAWN_PROMOTION_QUEEN_CAPTURE:
-                runner->score = QUEEN_PROMOTION_SCORE;
-                break;
-            default: // Non queen promotion
-                runner->score = NON_QUEEN_PROMOTION_SCORE;
-                assert(runner->move.is_promotion());
-                break;
+        if (runner->move == m_killer1)
+            runner->score = KILLER_1_SCORE;
+        else if (runner->move == m_killer2)
+            runner->score = KILLER_2_SCORE;
+        else if (runner->move == m_counter)
+            runner->score = COUNTER_SCORE;
+        else
+            runner->score = m_td->search_history.get_history(*m_td, runner->move);
+    }
+}
+
+void MovePicker::score_noisy_moves() {
+    for (ScoredMove *runner = m_curr; runner != m_end; ++runner) {
+        const Move &move = runner->move;
+        const Piece captured = [&]() {
+            if (move.is_ep())
+                return WHITE_PAWN; // color does not matter
+            else
+                return m_td->position.consult(move.to());
+        }();
+
+        runner->score =
+            CAPTURE_SCORE + 20 * SEE_VALUES[captured] + m_td->search_history.get_capture_history(m_td->position, move);
+
+        if (move.is_promotion()) {
+            runner->score += SEE_VALUES[move.promotee()] - SEE_VALUES[WHITE_PAWN];
         }
     }
 }
