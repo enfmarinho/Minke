@@ -501,7 +501,6 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         if (!position.is_legal(move)) { // Avoid illegal moves
             continue;
         }
-        node.curr_pmove = {move, position.consult(move.to())};
         ++moves_searched;
 
         if (best_score > -MATE_FOUND) {
@@ -512,6 +511,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
             }
         }
         position.make_move<true>(move);
+        node.curr_pmove = {move, position.consult(move.to())};
         td.tt.prefetch(position.get_hash());
 
         ++td.height;
