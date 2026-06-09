@@ -22,6 +22,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "position.h"
+#include "types.h"
 #include "move.h"
 #include "search.h"
 #include "tune.h"
@@ -31,7 +33,7 @@ inline HistoryType calculate_score(const int depth, const int bonus_mult, const 
 }
 
 inline void update_score(HistoryType *value, const int bonus) {
-    *value += bonus - *value * std::abs(bonus) / HistoryDivisor;
+    *value += bonus - *value * std::abs(bonus) / HISTORY_DIVISOR;
 }
 
 History::History() { reset(); }
@@ -40,6 +42,7 @@ void History::reset() {
     std::memset(m_capture_history, 0, sizeof(m_capture_history));
     std::memset(m_search_history_table, 0, sizeof(m_search_history_table));
     std::memset(m_continuation_history, 0, sizeof(m_continuation_history));
+    std::memset(m_pawn_corr_hist, 0, sizeof(m_pawn_corr_hist));
     std::memset(m_killer_moves, MOVE_NONE.internal(), sizeof(m_killer_moves));
     for (Move &move : m_counter_moves)
         move = MOVE_NONE;
@@ -48,6 +51,10 @@ void History::reset() {
 HistoryType History::get_history(const ThreadData &td, const Move &move) const {
     PieceMove pmove = {move, td.position.consult(move.from())};
     return get_history_heuristic_score(td.position, move) + get_continuation_history_score(td, pmove);
+}
+
+HistoryType History::get_corr_history(const Position &position) const {
+    return pawn_corr_factor() * get_pawn_corr_hist(position) / CORRHIST_GRAIN;
 }
 
 void History::update_history(const ThreadData &td, const Move &best_move, int depth, const PieceMoveList &quiets_tried,
@@ -85,6 +92,17 @@ void History::update_history(const ThreadData &td, const Move &best_move, int de
         if (move != best_move)
             update_capture_history_score(td.position, move, capture_penalty);
     }
+}
+
+void History::update_corr_history(const ThreadData &td, int depth, int diff) {
+    auto update_corrhist_entry = [](HistoryType &entry, HistoryType bonus) {
+        const HistoryType scaled_bonus = bonus - entry * std::abs(bonus) / CORRHIST_MAX;
+        entry = std::clamp(entry + scaled_bonus, -CORRHIST_MAX, CORRHIST_MAX);
+    };
+
+    HistoryType bonus = std::clamp(diff * depth / 8, -CORRHIST_MAX / 4, CORRHIST_MAX / 4);
+
+    update_corrhist_entry(get_pawn_corr_hist(td.position), bonus);
 }
 
 void History::update_capture_history_score(const Position &position, const Move &move, int bonus) {
