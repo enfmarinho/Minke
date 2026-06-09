@@ -277,9 +277,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             MovePicker move_picker(ttmove, td, true, pc_beta - node.static_eval);
             Move move;
             while ((move = move_picker.next_move(true)) != MOVE_NONE) {
-                if (!position.is_legal(move)) { // Avoid illegal moves
+                if (move == td.nodes[td.height].excluded_move || !position.is_legal(move)) { // Avoid illegal moves
                     continue;
-                }
+                } 
                 position.make_move<true>(move);
 
                 node.curr_pmove.move = move;
