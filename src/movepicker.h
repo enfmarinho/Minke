@@ -24,10 +24,10 @@
 
 enum BaseScore {
     TT_SCORE = 100'000,
-    CAPTURE_SCORE = 20'000,
-    KILLER_1_SCORE = 19'000,
-    KILLER_2_SCORE = 18'000,
-    COUNTER_SCORE = 17'000,
+    CAPTURE_SCORE = 60'000,
+    KILLER_1_SCORE = 59'000,
+    KILLER_2_SCORE = 58'000,
+    COUNTER_SCORE = 57'000,
 };
 
 enum MovePickerStage {
