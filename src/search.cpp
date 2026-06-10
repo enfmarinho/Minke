@@ -505,6 +505,9 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         ++moves_searched;
 
         if (best_score > -MATE_FOUND) {
+            if (moves_searched > qs_lmp()) 
+                break;
+            
             ScoreType futility = static_eval + qs_futility_margin();
             if (!in_check && futility <= alpha && !SEE(position, move, 1)) {
                 best_score = std::max(best_score, futility);

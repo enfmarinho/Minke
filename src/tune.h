@@ -160,8 +160,11 @@ TUNABLE_PARAM(double_extension_margin, 10, -20, 40, 3, 0.002)
 TUNABLE_PARAM(razoring_max_depth, 5, 2, 6, 0.5, 0.002)
 TUNABLE_PARAM(razoring_mult, 242, 150, 300, 7.5, 0.002)
 
-// Futility Pruning
+// Qsearch Futility Pruning
 TUNABLE_PARAM(qs_futility_margin, 208, 0, 500, 25, 0.002)
+
+// Qsearch LMP
+TUNABLE_PARAM(qs_lmp, 3, 1, 5, 0.5, 0.002)
 
 // Prob Cut
 TUNABLE_PARAM(probcut_margin, 296, 100, 400, 15, 0.002)
