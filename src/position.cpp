@@ -145,6 +145,7 @@ bool Position::set_fen(const std::string &fen) {
         return false;
     }
     update_pin_and_checkers_bb();
+    update_threats_bb();
 
     if constexpr (UPDATE)
         reset_nnue();
@@ -243,7 +244,9 @@ void Position::reset() {
     std::memset(m_occupancies, 0ULL, sizeof(m_occupancies));
     std::memset(m_pieces, 0ULL, sizeof(m_pieces));
 
+    m_stm = WHITE;
     m_hash_key = 0ULL;
+    m_game_clock_ply = 0;
     m_history_ply = 0;
     m_curr_state.reset();
 }
@@ -315,6 +318,7 @@ void Position::make_move(const Move &move) {
 
     change_side();
     update_pin_and_checkers_bb();
+    update_threats_bb();
 }
 
 template void Position::make_move<true>(const Move &move);
@@ -599,6 +603,7 @@ void Position::make_null_move() {
     hash_side_key();
     change_side();
     update_pin_and_checkers_bb();
+    update_threats_bb();
 }
 
 void Position::unmake_null_move() {
@@ -629,6 +634,37 @@ void Position::update_pin_and_checkers_bb() {
             set_bits(m_curr_state.pins, blockers & get_occupancy(m_stm));
         }
     }
+}
+
+void Position::update_threats_bb() {
+    m_curr_state.threats = 0;
+
+    Bitboard occ = get_occupancy();
+    Color opponent = get_adversary();
+
+    Bitboard pawn_bb = get_piece_bb(PAWN, opponent);
+    while (pawn_bb) {
+        Square sq = poplsb(pawn_bb);
+        m_curr_state.threats |= pawn_attacks[opponent][sq];
+    }
+
+    auto update_piece_threats = [&](Bitboard piece_bb, PieceType pt) {
+        while (piece_bb) {
+            Square sq = poplsb(piece_bb);
+            m_curr_state.threats |= get_piece_attacks(sq, occ, pt);
+        }
+    };
+
+    Bitboard knight_bb = get_piece_bb(KNIGHT, opponent);
+    update_piece_threats(knight_bb, KNIGHT);
+
+    Bitboard bishop_bb = get_piece_bb(BISHOP, opponent) | get_piece_bb(QUEEN, opponent);
+    update_piece_threats(bishop_bb, BISHOP);
+
+    Bitboard rook_bb = get_piece_bb(ROOK, opponent) | get_piece_bb(QUEEN, opponent);
+    update_piece_threats(rook_bb, ROOK);
+
+    m_curr_state.threats |= king_attacks[get_king_placement(opponent)];
 }
 
 bool Position::is_attacked(const Square &sq) const {
@@ -876,6 +912,8 @@ void Position::print() {
             std::string color = "";
             if (m_curr_state.checkers & (1ULL << sq)) {
                 color = "\033[31m";
+            } else if (is_threaded(sq)) {
+                color = "\033[33m";
             } else if (m_curr_state.pins & (1ULL << sq)) {
                 color = "\033[34m";
             }
