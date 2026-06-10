@@ -163,6 +163,9 @@ TUNABLE_PARAM(razoring_mult, 242, 150, 300, 7.5, 0.002)
 // Futility Pruning
 TUNABLE_PARAM(qs_futility_margin, 208, 0, 500, 25, 0.002)
 
+// See Pruning
+TUNABLE_PARAM(qs_see_margin, -40, -100, 0, 5, 0.002)
+
 // Prob Cut
 TUNABLE_PARAM(probcut_margin, 296, 100, 400, 15, 0.002)
 FIXED_PARAM(probcut_min_depth, 5, 4, 8, 0.5, 0.002)
