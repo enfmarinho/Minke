@@ -136,20 +136,20 @@ TUNABLE_PARAM(rfp_margin, 104, 50, 150, 10, 0.002)
 FIXED_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)
 
 // Late Move Reductions
-TUNABLE_PARAM(lmr_base, 1108, 512, 2048, 128, 0.002)
-TUNABLE_PARAM(lmr_scale, 752, 256, 2048, 128, 0.002)
-TUNABLE_PARAM(lmr_gives_check_delta, 1156, 512, 2048, 128, 0.002)
-TUNABLE_PARAM(lmr_non_improving_delta, 958, 512, 2048, 128, 0.002)
-TUNABLE_PARAM(lmr_cutnode_delta, 871, 512, 2048, 128, 0.002)
-TUNABLE_PARAM(lmr_killer_delta, 1082, 512, 2048, 128, 0.002)
-TUNABLE_PARAM(lmr_counter_delta, 1099, 512, 2048, 128, 0.002)
-TUNABLE_PARAM(lmr_ttpv_delta, 1012, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_base, 1057, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_scale, 747, 256, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_gives_check_delta, 1131, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_non_improving_delta, 838, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_cutnode_delta, 787, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_killer_delta, 1189, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_counter_delta, 1183, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_ttpv_delta, 925, 512, 2048, 128, 0.002)
 
 // Late Moves Pruning
-TUNABLE_PARAM(lmp_base, 128, 100, 200, 5, 0.002)
-TUNABLE_PARAM(lmp_scale, 34, 20, 120, 5, 0.002)
-TUNABLE_PARAM(lmp_improving_base, 251, 200, 400, 5, 0.002)
-TUNABLE_PARAM(lmp_improving_scale, 76, 40, 240, 5, 0.002)
+TUNABLE_PARAM(lmp_base, 125, 100, 200, 5, 0.002)
+TUNABLE_PARAM(lmp_scale, 33, 20, 120, 5, 0.002)
+TUNABLE_PARAM(lmp_improving_base, 255, 200, 400, 5, 0.002)
+TUNABLE_PARAM(lmp_improving_scale, 78, 40, 240, 5, 0.002)
 
 // Singular Extension
 FIXED_PARAM(singular_extension_min_depth, 8, 4, 10, 0.5, 0.002)
@@ -164,7 +164,7 @@ TUNABLE_PARAM(razoring_mult, 242, 150, 300, 7.5, 0.002)
 TUNABLE_PARAM(qs_futility_margin, 208, 0, 500, 25, 0.002)
 
 // Prob Cut
-TUNABLE_PARAM(probcut_margin, 286, 100, 400, 15, 0.002)
+TUNABLE_PARAM(probcut_margin, 288, 100, 400, 15, 0.002)
 FIXED_PARAM(probcut_min_depth, 5, 4, 8, 0.5, 0.002)
 
 // History Formulas Parameters
