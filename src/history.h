@@ -77,8 +77,10 @@ class History {
     HistoryType get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const;
 
     inline void save_killer(const Move &move, const int height) {
-        m_killer_moves[height][1] = m_killer_moves[height][0];
-        m_killer_moves[height][0] = move;
+        if (m_killer_moves[height][0] == MOVE_NONE)
+            m_killer_moves[height][0] = move;
+        else
+            m_killer_moves[height][1] = move;
     }
 
     inline void save_counter(const Move &past_move, const Move &move) {
