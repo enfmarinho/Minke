@@ -569,7 +569,7 @@ bool SEE(Position &position, const Move &move, int threshold) {
     const Bitboard white_pinned = position.get_pinned_bb(WHITE);
     const Bitboard black_pinned = position.get_pinned_bb(BLACK);
 
-    const Bitboard allowed = ~(white_pinned & black_pinned) |
+    const Bitboard allowed = ~(white_pinned | black_pinned) |
                              (white_pinned & between_squares[position.get_king_placement(WHITE)][to]) |
                              (black_pinned & between_squares[position.get_king_placement(BLACK)][to]);
 
