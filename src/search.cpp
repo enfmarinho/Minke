@@ -562,6 +562,9 @@ bool SEE(Position &position, const Move &move, int threshold) {
         return true;
 
     Bitboard occupancy = position.get_occupancy() ^ (1ULL << from); // Removed already used attacker
+    if (move.is_ep()) 
+        occupancy ^= position.get_en_passant();
+
     Bitboard diagonal_attackers = position.get_piece_bb(BISHOP) | position.get_piece_bb(QUEEN);
     Bitboard horizontal_attackers = position.get_piece_bb(ROOK) | position.get_piece_bb(QUEEN);
     Color stm = static_cast<Color>(!position.get_stm());
