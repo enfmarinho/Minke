@@ -18,21 +18,29 @@
 
 #include "accumulator.h"
 
-#include "../../position.h"
+#include <cstring>
+
 #include "pov_accumulator.h"
 
-Accumulator::Accumulator(const Position &pos) { refresh(pos); }
-
-Accumulator::Accumulator(const DirtyPiece &dp) {
-    m_updated[WHITE] = false;
-    m_updated[BLACK] = false;
-
-    m_dirty_piece = dp;
+Accumulator::Accumulator(const Square white_king_sq, const Square black_king_sq, const PovAccumulator &white_pov_acc,
+                         const PovAccumulator &black_pov_acc)
+    : m_pov_accumulators{white_pov_acc, black_pov_acc} {
+    m_updated[WHITE] = m_updated[BLACK] = true;
+    m_king_sqs[WHITE] = white_king_sq;
+    m_king_sqs[BLACK] = black_king_sq;
 }
 
-void Accumulator::refresh(const Position &pos) {
-    refresh_pov(WHITE, pos);
-    refresh_pov(BLACK, pos);
+Accumulator::Accumulator(const DirtyPiece &dp, const Square white_king_sq, const Square black_king_sq) {
+    init(dp, white_king_sq, black_king_sq);
+}
+
+void Accumulator::init(const DirtyPiece &dp, const Square white_king_sq, const Square black_king_sq) {
+    m_updated[WHITE] = m_updated[BLACK] = false;
+
+    m_king_sqs[WHITE] = white_king_sq;
+    m_king_sqs[BLACK] = black_king_sq;
+
+    m_dirty_piece = dp;
 }
 
 void Accumulator::update(const Color pov, const PovAccumulator &prev_pov_acc) {
@@ -43,23 +51,24 @@ void Accumulator::update(const Color pov, const PovAccumulator &prev_pov_acc) {
     switch (m_dirty_piece.move_type) {
         case REGULAR:
             m_pov_accumulators[pov].add_sub(prev_pov_acc, 
-                                            m_dirty_piece.add0.feature_idx(pov),
-                                            m_dirty_piece.sub0.feature_idx(pov));
+                                            feature_idx(m_dirty_piece.add0, m_king_sqs[pov], pov),
+                                            feature_idx(m_dirty_piece.sub0, m_king_sqs[pov], pov));
             break;
         case CAPTURE:
             m_pov_accumulators[pov].add_sub2(prev_pov_acc, 
-                                             m_dirty_piece.add0.feature_idx(pov),
-                                             m_dirty_piece.sub0.feature_idx(pov),
-                                             m_dirty_piece.sub1.feature_idx(pov));
+                                             feature_idx(m_dirty_piece.add0, m_king_sqs[pov], pov),
+                                             feature_idx(m_dirty_piece.sub0, m_king_sqs[pov], pov),
+                                             feature_idx(m_dirty_piece.sub1, m_king_sqs[pov], pov));
             break;
         case CASTLING:
             m_pov_accumulators[pov].add2_sub2(prev_pov_acc, 
-                                              m_dirty_piece.add0.feature_idx(pov), 
-                                              m_dirty_piece.add1.feature_idx(pov),
-                                              m_dirty_piece.sub0.feature_idx(pov), 
-                                              m_dirty_piece.sub1.feature_idx(pov));
+                                              feature_idx(m_dirty_piece.add0, m_king_sqs[pov], pov), 
+                                              feature_idx(m_dirty_piece.add1, m_king_sqs[pov], pov),
+                                              feature_idx(m_dirty_piece.sub0, m_king_sqs[pov], pov), 
+                                              feature_idx(m_dirty_piece.sub1, m_king_sqs[pov], pov));
             break;
         default:
+            assert(false);
             __builtin_unreachable();
     }
     // clang-format on
@@ -67,28 +76,22 @@ void Accumulator::update(const Color pov, const PovAccumulator &prev_pov_acc) {
     m_updated[pov] = true;
 }
 
-// TODO: optimize this
-void Accumulator::refresh_pov(const Color pov, const Position &pos) {
-    m_pov_accumulators[pov].reset();
+bool Accumulator::needs_refresh(const Color pov, const Square new_king_sq) const {
+    return (new_king_sq & 0b100) != (m_king_sqs[pov] & 0b100) ||                       // King crossed half of the board
+           king_bucket_idx(new_king_sq, pov) != king_bucket_idx(m_king_sqs[pov], pov); // King bucket change
+}
 
-    for (int sqi = a1; sqi <= h8; ++sqi) {
-        const Square sq = static_cast<Square>(sqi);
-        const Piece piece = pos.consult(sq);
-        if (piece != EMPTY) {
-            m_pov_accumulators[pov].self_add(PieceSquare(piece, sq).feature_idx(pov));
-        }
-    }
-
-    m_updated[pov] = true;
+void Accumulator::refresh(const Color side, const PovAccumulator &finny_table_neurons) {
+    m_pov_accumulators[side] = finny_table_neurons;
+    m_updated[side] = true;
 }
 
 // This does not check if the Accumulators are identical, only their neurons. Used for debugging
 bool operator==(const Accumulator &lhs, const Accumulator &rhs) {
     for (int color_i = 0; color_i <= 1; ++color_i) {
         Color color = static_cast<Color>(color_i);
-        if (lhs.pov(color).neurons() != rhs.pov(color).neurons())
+        if (lhs.pov(color) != rhs.pov(color))
             return false;
-
         if (lhs.m_updated[color] != rhs.m_updated[color])
             return false;
     }

@@ -63,19 +63,20 @@ void init_search_params() {
 }
 
 void init_network_params() {
-    const int16_t *pointer = reinterpret_cast<const int16_t *>(gNetParametersData);
+    const int16_t *p = reinterpret_cast<const int16_t *>(gNetParametersData);
 
-    for (int i = 0; i < INPUT_LAYER_SIZE; ++i)
-        for (int j = 0; j < HIDDEN_LAYER_SIZE; ++j)
-            network.hidden_weights[i * HIDDEN_LAYER_SIZE + j] = *(pointer++);
+    for (int b = 0; b < NUM_KING_BUCKETS; ++b)
+        for (int i = 0; i < INPUT_LAYER_SIZE; ++i)
+            for (int j = 0; j < HIDDEN_LAYER_SIZE; ++j)
+                network.hidden_weights[b * INPUT_LAYER_SIZE * HIDDEN_LAYER_SIZE + i * HIDDEN_LAYER_SIZE + j] = *(p++);
 
     for (int i = 0; i < HIDDEN_LAYER_SIZE; ++i)
-        network.hidden_bias[i] = *(pointer++);
+        network.hidden_bias[i] = *(p++);
 
     for (int i = 0; i < HIDDEN_LAYER_SIZE * 2; ++i)
-        network.output_weights[i] = *(pointer++);
+        network.output_weights[i] = *(p++);
 
-    network.output_bias = *(pointer++);
+    network.output_bias = *(p++);
 }
 
 void init_hash_keys() {

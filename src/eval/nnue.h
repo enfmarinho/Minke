@@ -24,6 +24,7 @@
 
 #include "../types.h"
 #include "nnue/accumulator.h"
+#include "nnue/finny_table.h"
 #include "nnue/pov_accumulator.h"
 
 class Position;
@@ -34,18 +35,20 @@ class NNUE {
     NNUE() = default;
     ~NNUE() = default;
 
-    void refresh(const Position &position);
+    void refresh(const Position &pos);
 
     void pop();
-    void push(const DirtyPiece &dp);
+    void push(const DirtyPiece &dp, const Square white_king_sq, const Square black_king_sq);
 
-    ScoreType eval(const Color &stm);
+    ScoreType eval(const Position &pos);
 
   private:
-    void update();
-    void update_pov(const Color &pov);
+    void update(const Position &pos);
+    void update_pov(const Position &pos, const Color &pov);
+
     ScoreType flatten_screlu_and_affine(const PovAccumulator &player, const PovAccumulator &adversary) const;
 
+    FinnyTable m_finny_table;
     std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
 };
 

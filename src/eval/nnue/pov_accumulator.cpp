@@ -19,27 +19,31 @@
 #include "pov_accumulator.h"
 
 #include <cstddef>
+#include <cstring>
 
-#include "../../utils.h"
+#include "../../position.h"
 
-size_t PieceSquare::feature_idx(const Color pov) const {
-    constexpr size_t COLOR_STRIDE = 64 * 6;
-    constexpr size_t PIECE_STRIDE = 64;
-
-    const Color piece_color = get_color(piece);
-    int pov_sq = sq;
-    if (pov == BLACK) // Convert square to pov, i.e. flip rank if stm is black
-        pov_sq = pov_sq ^ 56;
-
-    const size_t idx = (piece_color != pov) * COLOR_STRIDE +               // Perspective offset
-                       get_piece_type(piece, piece_color) * PIECE_STRIDE + // Piece type offset
-                       pov_sq;
-    return idx * HIDDEN_LAYER_SIZE;
+PovAccumulator::PovAccumulator(const Position &pos, const Color pov) {
+    // Debug-only constructor. Computes a PovAccumulator from scratch and uses it as a
+    // source of truth to validate incremental updates and finny tables.
+    reset();
+    for (int sqi = a1; sqi <= h8; ++sqi) {
+        const Square sq = static_cast<Square>(sqi);
+        Piece piece = pos.consult(sq);
+        if (piece != EMPTY)
+            self_add(feature_idx(piece, sq, pos.get_king_placement(pov), pov));
+    }
 }
 
-void PovAccumulator::add(const PovAccumulator &input, const size_t feature_idx) {
+void PovAccumulator::add(const PovAccumulator &input, const size_t add0) {
     for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
-        m_neurons[column] = input.m_neurons[column] + network.hidden_weights[feature_idx + column];
+        m_neurons[column] = input.m_neurons[column] + network.hidden_weights[add0 + column];
+    }
+}
+
+void PovAccumulator::sub(const PovAccumulator &input, const size_t sub0) {
+    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
+        m_neurons[column] = input.m_neurons[column] - network.hidden_weights[sub0 + column];
     }
 }
 
@@ -66,4 +70,16 @@ void PovAccumulator::add2_sub2(const PovAccumulator &input, const size_t add0, c
     }
 }
 
-void PovAccumulator::self_add(const size_t feature_idx) { add(*this, feature_idx); }
+void PovAccumulator::self_add(const size_t add0) { add(*this, add0); }
+
+void PovAccumulator::self_sub(const size_t sub0) { sub(*this, sub0); }
+
+void PovAccumulator::self_add_sub(const size_t add0, const size_t sub0) { add_sub(*this, add0, sub0); }
+
+bool operator==(const PovAccumulator &lhs, const PovAccumulator &rhs) {
+    for (size_t i = 0; i < lhs.m_neurons.size(); ++i) {
+        if (lhs.m_neurons[i] != rhs.m_neurons[i])
+            return false;
+    }
+    return true;
+}

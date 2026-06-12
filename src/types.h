@@ -110,6 +110,24 @@ enum BoundType : char {
     UPPER,
 };
 
+enum MoveType : char {
+    REGULAR = 0b0000,
+    CAPTURE = 0b0100,
+    EP = 0b010 | CAPTURE,
+    CASTLING = 0b0011,
+
+    PAWN_PROMOTION_MASK = 0b1000,
+    PAWN_PROMOTION_KNIGHT = PAWN_PROMOTION_MASK | 0b0000,
+    PAWN_PROMOTION_BISHOP = PAWN_PROMOTION_MASK | 0b0001,
+    PAWN_PROMOTION_ROOK = PAWN_PROMOTION_MASK | 0b0010,
+    PAWN_PROMOTION_QUEEN = PAWN_PROMOTION_MASK | 0b011,
+
+    PAWN_PROMOTION_KNIGHT_CAPTURE = PAWN_PROMOTION_KNIGHT | CAPTURE,
+    PAWN_PROMOTION_BISHOP_CAPTURE = PAWN_PROMOTION_BISHOP | CAPTURE,
+    PAWN_PROMOTION_ROOK_CAPTURE = PAWN_PROMOTION_ROOK | CAPTURE,
+    PAWN_PROMOTION_QUEEN_CAPTURE = PAWN_PROMOTION_QUEEN | CAPTURE,
+};
+
 using HashType = uint64_t;
 using KeyType = uint16_t;
 using IndexType = uint8_t;
@@ -173,6 +191,19 @@ struct BoardState {
         en_passant = NO_SQ;
         castle_rooks = 0;
     }
+};
+
+struct PieceSquare {
+    Piece piece;
+    Square sq;
+
+    inline PieceSquare() : piece(EMPTY), sq(NO_SQ) {}
+    inline PieceSquare(Piece _piece, Square _sq) : piece(_piece), sq(_sq) {}
+};
+
+struct DirtyPiece {
+    PieceSquare add0, add1, sub0, sub1;
+    MoveType move_type;
 };
 
 #endif // #ifndef GAME_ELEMENTS_H
