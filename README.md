@@ -65,8 +65,8 @@ This will generate the executable called minke
 ### Evaluation
 - Quantized NNUE (Easily Updatable Neural Network)
     - SCrelu as the activation neuron
-    - Net architecture: (768 -> 1024)x2 -> 1
-    - Trained with a mix of Lella and Stockfish data
+    - Net architecture: (768x6hm->1024)x2->1 
+    - Trained exclusively on self-generated data from a random initialization
 
 ## Acknowledgements
 Minke has been inspired by several other chess engines, such as:
