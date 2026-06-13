@@ -43,6 +43,8 @@ constexpr int KING_BUCKETS_LAYOUT[64] = {
 };
 // clang-format on
 
+constexpr int OUTPUT_BUCKET_COUNT = 8;
+
 constexpr int32_t CRELU_MIN = 0;
 constexpr int32_t CRELU_MAX = 255;
 
@@ -60,8 +62,8 @@ const vepi16 QONE = vepi16_set(QA);
 struct alignas(64) Network {
     std::array<int16_t, NUM_KING_BUCKETS * INPUT_LAYER_SIZE * HIDDEN_LAYER_SIZE> hidden_weights;
     std::array<int16_t, HIDDEN_LAYER_SIZE> hidden_bias;
-    std::array<int16_t, HIDDEN_LAYER_SIZE * 2> output_weights;
-    int16_t output_bias;
+    std::array<int16_t, HIDDEN_LAYER_SIZE * 2 * OUTPUT_BUCKET_COUNT> output_weights;
+    std::array<int16_t, OUTPUT_BUCKET_COUNT> output_bias;
 };
 extern Network network;
 

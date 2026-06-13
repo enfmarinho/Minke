@@ -20,6 +20,7 @@
 #define NNUE_H
 
 #include <cassert>
+#include <cstddef>
 #include <vector>
 
 #include "../types.h"
@@ -46,7 +47,8 @@ class NNUE {
     void update(const Position &pos);
     void update_pov(const Position &pos, const Color &pov);
 
-    ScoreType flatten_screlu_and_affine(const PovAccumulator &player, const PovAccumulator &adversary) const;
+    ScoreType flatten_screlu_and_affine(const PovAccumulator &player, const PovAccumulator &adversary,
+                                        const size_t output_bucket) const;
 
     FinnyTable m_finny_table;
     std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
