@@ -23,6 +23,7 @@
 #include "move.h"
 #include "movegen.h"
 #include "search.h"
+#include "tune.h"
 #include "types.h"
 
 MovePicker::MovePicker(Move ttmove, ThreadData &td, bool qsearch, ScoreType threshold) {
@@ -59,7 +60,7 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
         case PICK_TT:
             m_stage = GEN_NOISY;
             if ((!skip_quiets || m_ttmove.is_noisy()) && m_td->position.is_pseudo_legal(m_ttmove)) {
-                return {m_ttmove, TT_SCORE};
+                return {m_ttmove, 0};
             } else {
             }
             // Fall-through
@@ -134,14 +135,13 @@ void MovePicker::sort_next_move() {
 
 void MovePicker::score_quiet_moves() {
     for (ScoredMove *runner = m_curr; runner != m_end; ++runner) {
+        runner->score = m_td->search_history.get_history(*m_td, runner->move);
         if (runner->move == m_killer1)
-            runner->score = KILLER_1_SCORE;
+            runner->score += mp_killer1_bonus();
         else if (runner->move == m_killer2)
-            runner->score = KILLER_2_SCORE;
+            runner->score += mp_killer2_bonus();
         else if (runner->move == m_counter)
-            runner->score = COUNTER_SCORE;
-        else
-            runner->score = m_td->search_history.get_history(*m_td, runner->move);
+            runner->score += mp_counter_bonus();
     }
 }
 
@@ -156,7 +156,7 @@ void MovePicker::score_noisy_moves() {
         }();
 
         runner->score =
-            CAPTURE_SCORE + 20 * SEE_VALUES[captured] + m_td->search_history.get_capture_history(m_td->position, move);
+            20'000 + 20 * SEE_VALUES[captured] + m_td->search_history.get_capture_history(m_td->position, move);
 
         if (move.is_promotion()) {
             runner->score += SEE_VALUES[move.promotee()] - SEE_VALUES[WHITE_PAWN];
