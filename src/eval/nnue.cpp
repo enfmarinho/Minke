@@ -28,6 +28,7 @@
 #include "../incbin.h"
 #include "../position.h"
 #include "../types.h"
+#include "nnue/arch.h"
 #include "nnue/pov_accumulator.h"
 
 [[maybe_unused]] static inline constexpr int32_t crelu(const int32_t &input) {
@@ -61,9 +62,10 @@ void NNUE::push(const DirtyPiece &dp, const Square white_king_sq, const Square b
 }
 
 ScoreType NNUE::eval(const Position &pos) {
+    const size_t output_bucket = (pos.get_material_count() - 2) / (32 / OUTPUT_BUCKET_COUNT);
     update(pos);
     return flatten_screlu_and_affine(m_accumulators.back().pov(pos.get_stm()),
-                                     m_accumulators.back().pov(pos.get_adversary()));
+                                     m_accumulators.back().pov(pos.get_adversary()), output_bucket);
 }
 
 void NNUE::update(const Position &pos) {
@@ -94,18 +96,21 @@ void NNUE::update_pov(const Position &pos, const Color &pov) {
     assert(head->pov(pov) == PovAccumulator(pos, pov));
 }
 
-ScoreType NNUE::flatten_screlu_and_affine(const PovAccumulator &player, const PovAccumulator &adversary) const {
+ScoreType NNUE::flatten_screlu_and_affine(const PovAccumulator &player, const PovAccumulator &adversary,
+                                          const size_t output_bucket) const {
+    const size_t stm_offset = output_bucket * 2 * HIDDEN_LAYER_SIZE;
+    const size_t ntm_offset = stm_offset + HIDDEN_LAYER_SIZE;
 #ifdef USE_SIMD
     vepi32 sum_vec = vepi32_zero();
     for (int i = 0; i < HIDDEN_LAYER_SIZE; i += REGISTER_SIZE) {
-        vepi16 player_weights_vec = vepi16_load(&network.output_weights[i]);
+        vepi16 player_weights_vec = vepi16_load(&network.output_weights[i + stm_offset]);
         vepi16 player_vec = vepi16_load(&player.neurons()[i]);
 
         player_vec = vepi16_clamp(player_vec, QZERO, QONE);
         vepi32 player_product = vepi16_madd(vepi16_mult(player_vec, player_weights_vec), player_vec);
         sum_vec = vepi32_add(sum_vec, player_product);
 
-        vepi16 adversary_weights_vec = vepi16_load(&network.output_weights[i + HIDDEN_LAYER_SIZE]);
+        vepi16 adversary_weights_vec = vepi16_load(&network.output_weights[i + ntm_offset]);
         vepi16 adversary_vec = vepi16_load(&adversary.neurons()[i]);
 
         adversary_vec = vepi16_clamp(adversary_vec, QZERO, QONE);
@@ -119,12 +124,12 @@ ScoreType NNUE::flatten_screlu_and_affine(const PovAccumulator &player, const Po
 
     int32_t sum = 0;
     for (int neuron_index = 0; neuron_index < HIDDEN_LAYER_SIZE; ++neuron_index) {
-        sum += screlu(player.neurons()[neuron_index]) * network.output_weights[neuron_index];
-        sum += screlu(adversary.neurons()[neuron_index]) * network.output_weights[neuron_index + HIDDEN_LAYER_SIZE];
+        sum += screlu(player.neurons()[neuron_index]) * network.output_weights[neuron_index + stm_offset];
+        sum += screlu(adversary.neurons()[neuron_index]) * network.output_weights[neuron_index + ntm_offset];
     }
 
 #endif
 
-    sum = (sum / QA + network.output_bias) * SCALE / QAB;
+    sum = (sum / QA + network.output_bias[output_bucket]) * SCALE / QAB;
     return std::clamp(sum, -MATE_FOUND + 1, MATE_FOUND - 1);
 }
