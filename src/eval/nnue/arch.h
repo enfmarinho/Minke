@@ -29,19 +29,21 @@
 constexpr int INPUT_LAYER_SIZE = 64 * 12;
 constexpr int HIDDEN_LAYER_SIZE = 1024;
 
-constexpr int NUM_KING_BUCKETS = 6;
+constexpr int NUM_KING_BUCKETS = 8;
 // clang-format off
 constexpr int KING_BUCKETS_LAYOUT[64] = {
-    0, 0, 1, 1, 1, 1, 0, 0,
-    2, 2, 3, 3, 3, 3, 2, 2,
-    4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4,
-    5, 5, 5, 5, 5, 5, 5, 5,
-    5, 5, 5, 5, 5, 5, 5, 5,
-    5, 5, 5, 5, 5, 5, 5, 5,
+    0, 1, 2, 3, 3, 2, 1, 0,
+    4, 4, 5, 5, 5, 5, 4, 4,
+    6, 6, 6, 6, 6, 6, 6, 6,
+    6, 6, 6, 6, 6, 6, 6, 6,
+    6, 6, 6, 6, 6, 6, 6, 6,
+    7, 7, 7, 7, 7, 7, 7, 7,
+    7, 7, 7, 7, 7, 7, 7, 7,
+    7, 7, 7, 7, 7, 7, 7, 7,
 };
 // clang-format on
+
+constexpr int OUTPUT_BUCKET_COUNT = 8;
 
 constexpr int32_t CRELU_MIN = 0;
 constexpr int32_t CRELU_MAX = 255;
@@ -60,8 +62,8 @@ const vepi16 QONE = vepi16_set(QA);
 struct alignas(64) Network {
     std::array<int16_t, NUM_KING_BUCKETS * INPUT_LAYER_SIZE * HIDDEN_LAYER_SIZE> hidden_weights;
     std::array<int16_t, HIDDEN_LAYER_SIZE> hidden_bias;
-    std::array<int16_t, HIDDEN_LAYER_SIZE * 2> output_weights;
-    int16_t output_bias;
+    std::array<int16_t, HIDDEN_LAYER_SIZE * 2 * OUTPUT_BUCKET_COUNT> output_weights;
+    std::array<int16_t, OUTPUT_BUCKET_COUNT> output_bias;
 };
 extern Network network;
 

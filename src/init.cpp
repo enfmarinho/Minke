@@ -73,10 +73,11 @@ void init_network_params() {
     for (int i = 0; i < HIDDEN_LAYER_SIZE; ++i)
         network.hidden_bias[i] = *(p++);
 
-    for (int i = 0; i < HIDDEN_LAYER_SIZE * 2; ++i)
+    for (int i = 0; i < OUTPUT_BUCKET_COUNT * HIDDEN_LAYER_SIZE * 2; ++i)
         network.output_weights[i] = *(p++);
 
-    network.output_bias = *(p++);
+    for (int i = 0; i < OUTPUT_BUCKET_COUNT; ++i)
+        network.output_bias[i] = *(p++);
 }
 
 void init_hash_keys() {
