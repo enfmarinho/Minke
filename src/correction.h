@@ -56,6 +56,7 @@ class CorrectionHistory {
     };
 
     std::array<PovTables, 2> m_pov_tables;
+    std::array<std::array<CorrectionEntry, 64 * 12>, 64 * 12> m_cont_corr{}; // [piece * prev_to][piece * to]
 };
 
 #endif // !CORRECTION_H
