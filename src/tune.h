@@ -153,7 +153,7 @@ TUNABLE_PARAM(lmp_improving_scale, 73, 40, 240, 5, 0.002)
 
 // Singular Extension
 FIXED_PARAM(singular_extension_min_depth, 8, 4, 10, 0.5, 0.002)
-TUNABLE_PARAM(singular_extension_depth_factor, 16, 10, 20, 1, 0.002)
+TUNABLE_PARAM(singular_extension_depth_factor, 8, 4, 64, 3, 0.002)
 TUNABLE_PARAM(double_extension_margin, 10, -20, 40, 3, 0.002)
 
 // Razoring
