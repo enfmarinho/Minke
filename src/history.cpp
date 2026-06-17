@@ -19,12 +19,14 @@
 #include "history.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdlib>
 #include <cstring>
 
 #include "move.h"
 #include "search.h"
 #include "tune.h"
+#include "types.h"
 
 inline HistoryType calculate_score(const int depth, const int bonus_mult, const int bonus_offset, const int bonus_max) {
     return std::min(depth * bonus_mult + bonus_offset, bonus_max);
@@ -33,6 +35,10 @@ inline HistoryType calculate_score(const int depth, const int bonus_mult, const 
 inline void update_score(HistoryType *value, const int bonus) {
     *value += bonus - *value * std::abs(bonus) / HistoryDivisor;
 }
+
+static inline size_t cont_hist_idx(const PieceMove &pmove) {
+    return (static_cast<size_t>(pmove.piece) << 6) | static_cast<size_t>(pmove.move.to());
+};
 
 History::History() { reset(); }
 
@@ -111,11 +117,9 @@ void History::update_continuation_history_table(const ThreadData &td, const Piec
 void History::update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int offset) {
     int past_node_idx = td.height - offset;
     if (past_node_idx >= 0 && td.nodes[past_node_idx].curr_pmove != PIECE_MOVE_NONE) {
-        // those index are equivalent to moved_piece * to_sq
-        const int &past_moved_piece_to_idx = static_cast<int>(td.nodes[past_node_idx].curr_pmove.piece) *
-                                             static_cast<int>(td.nodes[past_node_idx].curr_pmove.move.to());
-        const int &curr_moved_piece_to_idx = static_cast<int>(pmove.piece) * static_cast<int>(pmove.move.to());
-        HistoryType *ptr = &m_continuation_history[past_moved_piece_to_idx][curr_moved_piece_to_idx];
+        const size_t past_conthist_idx = cont_hist_idx(td.nodes[past_node_idx].curr_pmove);
+        const size_t curr_conthist_idx = cont_hist_idx(pmove);
+        HistoryType *ptr = &m_continuation_history[past_conthist_idx][curr_conthist_idx];
         update_score(ptr, bonus);
     }
 }
@@ -131,11 +135,10 @@ HistoryType History::get_continuation_history_score(const ThreadData &td, const 
 
 HistoryType History::get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const {
     int past_node_idx = td.height - offset;
-    if (past_node_idx < 0)
+    if (past_node_idx < 0 || td.nodes[past_node_idx].curr_pmove == PIECE_MOVE_NONE)
         return 0;
 
-    const int past_piece_to_idx = static_cast<int>(td.nodes[past_node_idx].curr_pmove.piece) *
-                                  static_cast<int>(td.nodes[past_node_idx].curr_pmove.move.to());
-    const int curr_piece_to_idx = static_cast<int>(pmove.piece) * static_cast<int>(pmove.move.to());
-    return m_continuation_history[past_piece_to_idx][curr_piece_to_idx];
+    const size_t past_conthist_idx = cont_hist_idx(td.nodes[past_node_idx].curr_pmove);
+    const size_t curr_conthist_idx = cont_hist_idx(pmove);
+    return m_continuation_history[past_conthist_idx][curr_conthist_idx];
 }

@@ -280,9 +280,10 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 if (move == td.nodes[td.height].excluded_move || !position.is_legal(move)) { // Avoid illegal moves
                     continue;
                 }
+
+                node.curr_pmove = {move, position.consult(move.from())};
                 position.make_move<true>(move);
 
-                node.curr_pmove.move = move;
                 ++td.height;
 
                 td.tt.prefetch(position.get_hash());
@@ -350,8 +351,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             }
         }
 
+        node.curr_pmove = {move, position.consult(move.from())};
         position.make_move<true>(move);
-        node.curr_pmove = {move, position.consult(move.to())}; // move.to() because move has already been made
 
         td.tt.prefetch(position.get_hash());
         int new_depth = depth + extension;
@@ -501,7 +502,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         if (!position.is_legal(move)) { // Avoid illegal moves
             continue;
         }
-        node.curr_pmove = {move, position.consult(move.to())};
+        node.curr_pmove = {move, position.consult(move.from())};
         ++moves_searched;
 
         if (best_score > -MATE_FOUND) {
