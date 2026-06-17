@@ -20,6 +20,7 @@
 
 #include <cstring>
 
+#include "move.h"
 #include "position.h"
 #include "search.h"
 #include "tune.h"
@@ -37,6 +38,15 @@ void CorrectionHistory::update(const ThreadData& td, const int depth, const int 
     tables.pawn[td.position.get_pawn_hash() % CORRHIST_SIZE].update(bonus);
     tables.white_nonpawn[td.position.get_white_nonpawn_hash() % CORRHIST_SIZE].update(bonus);
     tables.black_nonpawn[td.position.get_black_nonpawn_hash() % CORRHIST_SIZE].update(bonus);
+
+    if (td.height >= 2) {
+        const PieceMove pmove1 = td.nodes[td.height - 1].curr_pmove;
+        const PieceMove pmove2 = td.nodes[td.height - 2].curr_pmove;
+
+        if (pmove1 != PIECE_MOVE_NONE && pmove2 != PIECE_MOVE_NONE) {
+            m_cont_corr[pmove1.piece * pmove1.move.to()][pmove2.piece * pmove1.move.to()].update(bonus);
+        }
+    }
 }
 
 HistoryType CorrectionHistory::correction(const ThreadData& td) const {
@@ -45,6 +55,15 @@ HistoryType CorrectionHistory::correction(const ThreadData& td) const {
     HistoryType adjustment = pawn_corr_factor() * tables.pawn[td.position.get_pawn_hash() % CORRHIST_SIZE];
     adjustment += nonpawn_corr_factor() * tables.white_nonpawn[td.position.get_white_nonpawn_hash() % CORRHIST_SIZE];
     adjustment += nonpawn_corr_factor() * tables.black_nonpawn[td.position.get_black_nonpawn_hash() % CORRHIST_SIZE];
+
+    if (td.height >= 2) {
+        const PieceMove pmove1 = td.nodes[td.height - 1].curr_pmove;
+        const PieceMove pmove2 = td.nodes[td.height - 2].curr_pmove;
+        if (pmove1 != PIECE_MOVE_NONE && pmove2 != PIECE_MOVE_NONE) {
+            adjustment +=
+                cont_corr_factor() * m_cont_corr[pmove1.piece * pmove1.move.to()][pmove2.piece * pmove1.move.to()];
+        }
+    }
 
     return adjustment / CORRHIST_GRAIN;
 }
