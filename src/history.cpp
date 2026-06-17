@@ -50,6 +50,7 @@ void History::reset() {
     std::memset(m_pawn_corr_hist, 0, sizeof(m_pawn_corr_hist));
     std::memset(m_white_nonpawn_corr_hist, 0, sizeof(m_white_nonpawn_corr_hist));
     std::memset(m_black_nonpawn_corr_hist, 0, sizeof(m_black_nonpawn_corr_hist));
+    std::memset(m_major_piece_corr_hist, 0, sizeof(m_major_piece_corr_hist));
     std::memset(m_killer_moves, MOVE_NONE.internal(), sizeof(m_killer_moves));
     for (Move &move : m_counter_moves)
         move = MOVE_NONE;
@@ -64,6 +65,7 @@ HistoryType History::get_corr_history(const Position &position) const {
     int adjustment = pawn_corr_factor() * get_pawn_corr_hist(position);
     adjustment += nonpawn_corr_factor() * get_white_nonpawn_corr_hist(position);
     adjustment += nonpawn_corr_factor() * get_black_nonpawn_corr_hist(position);
+    adjustment += major_piece_corr_factor() * get_major_piece_corr_hist(position);
 
     return adjustment / CORRHIST_GRAIN;
 }
@@ -116,6 +118,7 @@ void History::update_corr_history(const ThreadData &td, int depth, int diff) {
     update_corrhist_entry(get_pawn_corr_hist(td.position), bonus);
     update_corrhist_entry(get_white_nonpawn_corr_hist(td.position), bonus);
     update_corrhist_entry(get_black_nonpawn_corr_hist(td.position), bonus);
+    update_corrhist_entry(get_major_piece_corr_hist(td.position), bonus);
 }
 
 void History::update_capture_history_score(const Position &position, const Move &move, int bonus) {
