@@ -87,6 +87,18 @@ class History {
     inline HistoryType get_pawn_corr_hist(const Position &pos) const {
         return m_pawn_corr_hist[pos.get_stm()][pos.get_pawn_hash() % CORRHIST_SIZE];
     }
+    inline HistoryType &get_white_nonpawn_corr_hist(const Position &pos) {
+        return m_white_nonpawn_corr_hist[pos.get_stm()][pos.get_white_nonpawn_hash() % CORRHIST_SIZE];
+    }
+    inline HistoryType get_white_nonpawn_corr_hist(const Position &pos) const {
+        return m_white_nonpawn_corr_hist[pos.get_stm()][pos.get_white_nonpawn_hash() % CORRHIST_SIZE];
+    }
+    inline HistoryType &get_black_nonpawn_corr_hist(const Position &pos) {
+        return m_black_nonpawn_corr_hist[pos.get_stm()][pos.get_black_nonpawn_hash() % CORRHIST_SIZE];
+    }
+    inline HistoryType get_black_nonpawn_corr_hist(const Position &pos) const {
+        return m_black_nonpawn_corr_hist[pos.get_stm()][pos.get_black_nonpawn_hash() % CORRHIST_SIZE];
+    }
 
     inline void save_killer(const Move &move, const int height) {
         m_killer_moves[height][1] = m_killer_moves[height][0];
@@ -102,6 +114,8 @@ class History {
     HistoryType m_search_history_table[COLOR_NB][64 * 64];
     HistoryType m_continuation_history[12 * 64][12 * 64];
     HistoryType m_pawn_corr_hist[2][CORRHIST_SIZE];
+    HistoryType m_white_nonpawn_corr_hist[2][CORRHIST_SIZE];
+    HistoryType m_black_nonpawn_corr_hist[2][CORRHIST_SIZE];
     Move m_counter_moves[64 * 64];
     Move m_killer_moves[MAX_SEARCH_DEPTH][2];
 };
