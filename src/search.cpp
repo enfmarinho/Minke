@@ -205,7 +205,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     IndexType ttbound = tthit ? tte.bound() : static_cast<IndexType>(BOUND_EMPTY);
     IndexType ttdepth = tthit ? tte.depth() : 0;
     const bool ttpv = pv_node || (tthit && tte.was_pv());
-    if (!pv_node && !singular_search && tthit && ttdepth >= depth  && (ttscore <= alpha || cutnode) &&
+    if (!pv_node && !singular_search && tthit && ttdepth >= depth && (ttscore <= alpha || cutnode) &&
         (ttbound == EXACT || (ttbound == UPPER && ttscore <= alpha) || (ttbound == LOWER && ttscore >= beta))) {
         return ttscore;
     }
@@ -279,7 +279,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             while ((move = move_picker.next_move(true)) != MOVE_NONE) {
                 if (move == td.nodes[td.height].excluded_move || !position.is_legal(move)) { // Avoid illegal moves
                     continue;
-                } 
+                }
                 position.make_move<true>(move);
 
                 node.curr_pmove.move = move;
