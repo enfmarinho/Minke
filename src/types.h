@@ -132,6 +132,7 @@ using HashType = uint64_t;
 using KeyType = uint16_t;
 using IndexType = uint8_t;
 using CounterType = int;
+using HistoryType = int;
 using ScoreType = int16_t;
 using TimeType = std::chrono::milliseconds::rep;
 using TimePoint = std::chrono::steady_clock::time_point;

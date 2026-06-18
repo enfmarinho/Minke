@@ -21,6 +21,7 @@
 
 #include <cstdint>
 
+#include "correction.h"
 #include "history.h"
 #include "move.h"
 #include "pv_list.h"
@@ -62,6 +63,7 @@ struct ThreadData {
 
     Position position;
     History search_history;
+    CorrectionHistory correction_history;
     NodeData nodes[MAX_SEARCH_DEPTH];
     Move best_move;
 

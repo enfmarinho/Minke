@@ -204,6 +204,7 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
 
 void UCI::ucinewgame() {
     m_td->search_history.reset();
+    m_td->correction_history.reset();
     m_td->time_manager.reset();
     m_td->position.set_fen<true>(START_FEN);
     m_td->reset_search_parameters();
