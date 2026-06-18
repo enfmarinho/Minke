@@ -33,16 +33,6 @@ constexpr int LMP_DEPTH = 32;
 extern int LMP_TABLE[2][LMP_DEPTH];
 extern int LMR_TABLE[64][64];
 
-struct SearchLimits {
-    int depth;
-    int optimum_node;
-    int maximum_node;
-
-    SearchLimits();
-    SearchLimits(int _depth, int _optimum_node, int _maximum_node);
-
-    inline void reset();
-};
 
 struct NodeData {
     PieceMove curr_pmove;
