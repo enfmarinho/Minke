@@ -207,20 +207,4 @@ struct DirtyPiece {
     MoveType move_type;
 };
 
-struct SearchLimits {
-    int depth;
-    int optimum_node;
-    int maximum_node;
-
-    SearchLimits() { reset(); }
-    SearchLimits(int _depth, int _optimum_node, int _maximum_node)
-        : depth(_depth), optimum_node(_optimum_node), maximum_node(_maximum_node) {}
-
-    void reset() {
-        depth = MAX_SEARCH_DEPTH;
-        optimum_node = std::numeric_limits<int>::max();
-        maximum_node = std::numeric_limits<int>::max();
-    }
-};
-
 #endif // #ifndef GAME_ELEMENTS_H

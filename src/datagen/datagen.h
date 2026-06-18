@@ -106,8 +106,13 @@ class DatagenThread {
         init_pos_randomly();
 
         // Search deeper to verify position before generating data from it
-        m_td->reset_search_parameters();
-        m_td->set_search_limits({VERIFICATION_MAX_DEPTH, VERIFICATION_SOFT_NODE_LIMIT, VERIFICATION_HARD_NODE_LIMIT});
+        m_td->clear_search_context();
+
+        SearchLimits verification_limits = {};
+        verification_limits.depth = VERIFICATION_MAX_DEPTH;
+        verification_limits.optimum_node = VERIFICATION_SOFT_NODE_LIMIT;
+        verification_limits.maximum_node = VERIFICATION_HARD_NODE_LIMIT;
+        m_td->search_limiter.reset(verification_limits);
 
         ScoreType verification_score = iterative_deepening(*m_td);
         if (std::abs(verification_score) > VERIFICATION_MAX_SCORE) {
@@ -120,8 +125,13 @@ class DatagenThread {
         uint64_t position_count = 0;
 
         while (!m_stop_flag) {
-            m_td->reset_search_parameters();
-            m_td->set_search_limits({MAX_SEARCH_DEPTH, SOFT_NODE_LIMIT, HARD_NODE_LIMIT});
+            m_td->clear_search_context();
+
+            SearchLimits limits = {};
+            limits.depth = MAX_SEARCH_DEPTH;
+            limits.optimum_node = SOFT_NODE_LIMIT;
+            limits.maximum_node = HARD_NODE_LIMIT;
+            m_td->search_limiter.reset(limits);
 
             ScoreType score = iterative_deepening(*m_td);
             ScoreType normalized_score = normalize_score(score);

@@ -25,24 +25,17 @@
 ThreadData::ThreadData() {
     datagen = false;
     report = true;
-    reset_search_parameters();
+    clear_search_context();
 }
 
-void ThreadData::reset_search_parameters() {
+void ThreadData::clear_search_context() {
     best_move = MOVE_NONE;
     stop = true;
     ply = 0;
     nodes_searched = -1; // Avoid counting the root
     std::memset(node_table, 0, sizeof(node_table));
-    time_manager.reset();
-    search_limits.reset();
+    search_limiter.reset({});
     // TODO i dont think this is necessary
     for (int i = 0; i < MAX_SEARCH_DEPTH; ++i)
         stack[i].reset();
-}
-
-void ThreadData::set_search_limits(const SearchLimits sl) { this->search_limits = sl; }
-
-bool ThreadData::stop_search() const {
-    return time_manager.time_over() || stop || nodes_searched > search_limits.maximum_node;
 }

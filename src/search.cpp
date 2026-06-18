@@ -50,8 +50,8 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
         std::cout << " score cp " << normalize_score(eval);
     }
     // Add 1 to time_passed() to avoid division by 0
-    std::cout << " time " << td.time_manager.time_passed() << " nodes " << td.nodes_searched << " nps "
-              << td.nodes_searched * 1000 / (td.time_manager.time_passed() + 1) << " pv ";
+    std::cout << " time " << td.search_limiter.time_passed() << " nodes " << td.nodes_searched << " nps "
+              << td.nodes_searched * 1000 / (td.search_limiter.time_passed() + 1) << " pv ";
     pv_list.print(td.chess960, td.position.get_castle_rooks());
     std::cout << std::endl;
 }
@@ -61,9 +61,9 @@ ScoreType iterative_deepening(ThreadData &td) {
 
     Move best_move = MOVE_NONE;
     ScoreType past_eval = -MAX_SCORE;
-    for (CounterType depth = 1; depth <= std::min(td.search_limits.depth, MAX_SEARCH_DEPTH - 1); ++depth) {
+    for (CounterType depth = 1; depth <= td.search_limiter.depth_limit(); ++depth) {
         ScoreType eval = aspiration(depth, past_eval, td);
-        if (td.stop_search()) // Search did not finished completely
+        if (td.search_limiter.exceeded(td.nodes_searched)) // Search did not finished completely
             break;
 
         best_move = td.best_move;
@@ -75,11 +75,11 @@ ScoreType iterative_deepening(ThreadData &td) {
             print_search_info(depth, eval, td.stack[0].pv_list, td);
 
         if (depth > 5)
-            td.time_manager.update(td);
-        if (td.time_manager.stop_early() || td.nodes_searched >= td.search_limits.optimum_node)
+            td.search_limiter.update(td);
+        if (td.search_limiter.stop_early(td.nodes_searched))
             break;
 
-        td.time_manager.can_stop(); // Avoids stopping before depth 1 has been searched through
+        td.search_limiter.allow_stopping(); // Avoids stopping before depth 1 has been searched through
     }
 
     if (td.report)
@@ -109,7 +109,7 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, Threa
     while (true) {
         ScoreType curr_score = negamax(alpha, beta, curr_depth, false, td);
 
-        if (td.stop_search())
+        if (td.search_limiter.exceeded(td.nodes_searched))
             break;
 
         score = curr_score;
@@ -132,7 +132,7 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, Threa
 }
 
 ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool cutnode, ThreadData &td) {
-    if (td.stop_search()) // Out of time
+    if (td.search_limiter.exceeded(td.nodes_searched)) // Out of time
         return -MAX_SCORE;
     else if (depth <= 0)
         return quiescence(alpha, beta, td);
@@ -407,7 +407,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         td.correction_history.update(td, depth, best_score - eval);
     }
 
-    if (!td.stop_search() && !singular_search) {
+    if (!td.search_limiter.exceeded(td.nodes_searched) && !singular_search) {
         td.tt.store(position.get_hash(), depth, best_move, best_score, raw_eval, bound, ttpv, td.tt.age());
         td.best_move = best_move;
     }
@@ -418,7 +418,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     ++td.nodes_searched;
     Position &position = td.position;
-    if (td.stop_search())
+    if (td.search_limiter.exceeded(td.nodes_searched))
         return -MAX_SCORE;
     else if (position.draw())
         return 0;

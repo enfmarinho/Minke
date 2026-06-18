@@ -27,7 +27,7 @@
 #include "move.h"
 #include "position.h"
 #include "pv_list.h"
-#include "time_manager.h"
+#include "search_limiter.h"
 #include "tt.h"
 #include "types.h"
 
@@ -54,8 +54,7 @@ struct ThreadData {
     SearchStack stack[MAX_SEARCH_DEPTH];
     Move best_move;
 
-    SearchLimits search_limits;
-    TimeManager time_manager;
+    SearchLimiter search_limiter;
     int64_t nodes_searched;
     int64_t node_table[64 * 64];
     int ply;
@@ -65,10 +64,7 @@ struct ThreadData {
     bool chess960;
 
     ThreadData();
-    void reset_search_parameters();
-    void set_search_limits(const SearchLimits sl);
-
-    bool stop_search() const;
+    void clear_search_context();
 };
 
 #endif // !THREAD_H

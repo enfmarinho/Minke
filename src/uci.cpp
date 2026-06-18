@@ -27,15 +27,19 @@
 #include <string>
 #include <vector>
 
-#include "benchmark.h"
+#ifdef TUNE
 #include "init.h"
+#include "tune.h"
+#endif // TUNE
+
+#include "benchmark.h"
 #include "move.h"
 #include "movegen.h"
 #include "movepicker.h"
 #include "position.h"
 #include "search.h"
+#include "search_limiter.h"
 #include "tt.h"
-#include "tune.h"
 #include "types.h"
 #include "utils.h"
 
@@ -48,7 +52,7 @@ UCI::UCI() {
 
     m_td = new (mem) ThreadData();
     m_td->tt.resize(EngineOptions::HASH_DEFAULT);
-    m_td->reset_search_parameters();
+    m_td->clear_search_context();
     m_td->report = true;
 }
 
@@ -81,11 +85,18 @@ void UCI::loop() {
                 continue;
             else if (m_thread.joinable())
                 m_thread.join();
-            m_td->reset_search_parameters();
-            if (parse_go(iss))
-                perft(m_td->position, m_td->search_limits.depth);
+
+            m_td->clear_search_context();
+            SearchLimits limits = parse_go(iss);
+            m_td->search_limiter.reset(limits);
+            go();
+        } else if (token == "perft") {
+            CounterType perft_depth;
+            iss >> perft_depth;
+            if (iss.fail())
+                std::cout << "Could not parse perft depth!" << std::endl;
             else
-                go();
+                perft(m_td->position, perft_depth);
         } else if (token == "position") {
             position(iss);
         } else if (token == "ucinewgame") {
@@ -205,9 +216,9 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
 void UCI::ucinewgame() {
     m_td->search_history.reset();
     m_td->correction_history.reset();
-    m_td->time_manager.reset();
+    m_td->search_limiter.reset({});
     m_td->position.set_fen<true>(START_FEN);
-    m_td->reset_search_parameters();
+    m_td->clear_search_context();
     m_td->tt.clear();
 }
 
@@ -260,12 +271,17 @@ void UCI::bench(int depth) {
     TimeType total_time = 0;
     int64_t nodes_searched = 0;
     m_td->report = false;
+
     for (const std::string &fen : BENCHMARK_FEN_LIST) {
         ucinewgame();
         m_td->position.set_fen<true>(fen);
-        m_td->reset_search_parameters();
-        m_td->search_limits.depth = depth;
+        m_td->clear_search_context();
         m_td->tt.clear();
+
+        SearchLimits sl;
+        sl.depth = depth;
+        m_td->search_limiter.reset(sl);
+
         TimeType start_time = now();
         go();
         m_thread.join();
@@ -310,46 +326,38 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
 
 void UCI::eval() { std::cout << "The position evaluation is " << m_td->position.eval() << std::endl; }
 
-bool UCI::parse_go(std::istringstream &iss, bool bench) {
-    std::string token;
-    CounterType time = -1;
-    CounterType movestogo = -1;
-    CounterType movetime = -1;
-    CounterType inc = -1;
-    bool infinite = false;
+SearchLimits UCI::parse_go(std::istringstream &iss) {
+    SearchLimits limits;
 
+    std::string token;
     while (iss >> token) {
-        if (token == "infinite" && !bench) {
-            infinite = true;
+        if (token == "infinite") {
+            limits.infinite = true;
             break;
         }
 
         CounterType option;
         iss >> option;
-        if (token == "perft" && !iss.fail()) { // Don't "perft" if depth hasn't been passed
-            m_td->search_limits.depth = option;
-            return true;
-        } else if (token == "depth") {
-            m_td->search_limits.depth = option;
+        if (token == "depth") {
+            limits.depth = option;
         } else if (token == "nodes") {
-            m_td->search_limits.maximum_node = option;
+            limits.maximum_node = option;
         } else if (token == "movetime") {
-            movetime = option;
+            limits.movetime = option;
         } else if (token == "wtime" && m_td->position.get_stm() == WHITE) {
-            time = option;
+            limits.time = option;
         } else if (token == "btime" && m_td->position.get_stm() == BLACK) {
-            time = option;
+            limits.time = option;
         } else if (token == "winc" && m_td->position.get_stm() == WHITE) {
-            inc = option;
+            limits.inc = option;
         } else if (token == "binc" && m_td->position.get_stm() == BLACK) {
-            inc = option;
+            limits.inc = option;
         } else if (token == "movestogo") {
-            movestogo = option;
+            limits.movestogo = option;
         }
     }
 
-    m_td->time_manager.reset(inc, time, movestogo, movetime, infinite);
-    return false;
+    return limits;
 }
 
 void UCI::go() { m_thread = std::thread(iterative_deepening, std::ref(*m_td)); }

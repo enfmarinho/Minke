@@ -24,8 +24,8 @@
 #include "correction.h"
 #include "history.h"
 #include "move.h"
+#include "search_limiter.h"
 #include "thread.h"
-#include "time_manager.h"
 #include "types.h"
 
 constexpr int LMP_DEPTH = 32;

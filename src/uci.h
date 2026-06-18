@@ -24,6 +24,7 @@
 #include <thread>
 
 #include "position.h"
+#include "search_limiter.h"
 #include "thread.h"
 #include "types.h"
 
@@ -46,14 +47,13 @@ class UCI {
     void bench(int depth);
 
   private:
-    void position(std::istringstream &);
+    void position(std::istringstream &iss);
     void set_position(const std::string &fen, const std::vector<std::string> &move_list);
     void ucinewgame();
 
-    void set_option(std::istringstream &);
+    void set_option(std::istringstream &iss);
 
-    /// Returns true if perft argument was passed and false otherwise.
-    bool parse_go(std::istringstream &, bool bench = false);
+    SearchLimits parse_go(std::istringstream &iss);
     int64_t perft(Position &position, CounterType depth, bool root = true);
     void go();
 
