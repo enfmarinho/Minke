@@ -72,7 +72,9 @@ ScoredMove MovePicker::next_move_scored(const bool skip_quiets) {
         case PICK_GOOD_NOISY:
             while (m_curr != m_end) {
                 sort_next_move();
-                if (!SEE(m_td->position, m_curr->move, m_threshold)) // Bad noisy
+                const ScoreType see_threshold =
+                    m_mp_type == PROBCUT ? m_threshold : -m_curr->score / 32 + mp_see_threshold_base();
+                if (!SEE(m_td->position, m_curr->move, see_threshold)) // Bad noisy
                     *m_end_bad++ = *m_curr++;
                 else if (m_curr->move != m_ttmove)
                     return *m_curr++;
@@ -155,8 +157,7 @@ void MovePicker::score_noisy_moves() {
                 return m_td->position.consult(move.to());
         }();
 
-        runner->score =
-            20'000 + 20 * SEE_VALUES[captured] + m_td->search_history.get_capture_history(m_td->position, move);
+        runner->score = 20 * SEE_VALUES[captured] + m_td->search_history.get_capture_history(m_td->position, move);
 
         if (move.is_promotion()) {
             runner->score += SEE_VALUES[move.promotee()] - SEE_VALUES[WHITE_PAWN];

@@ -210,6 +210,7 @@ TUNABLE_PARAM(queen_scaling_factor, 1008, 800, 1400, 30, 0.002)
 TUNABLE_PARAM(material_scaling_base, 25337, 20000, 40000, 1000, 0.002)
 
 // Move picker
+TUNABLE_PARAM(mp_see_threshold_base, 100, -256, 256, 25, 0.002)
 TUNABLE_PARAM(mp_killer1_bonus, 9000, 0, 16000, 400, 0.002)
 TUNABLE_PARAM(mp_killer2_bonus, 6000, 0, 16000, 400, 0.002)
 TUNABLE_PARAM(mp_counter_bonus, 3000, 0, 16000, 400, 0.002)
