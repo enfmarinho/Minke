@@ -145,7 +145,7 @@ void UCI::print_debug_info() {
         std::cout << "Best move: " << ttmove.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks())
                   << std::endl;
     }
-    MovePicker move_picker(ttmove, *m_td, false);
+    MovePicker move_picker(ttmove, *m_td, SEARCH);
     std::cout << "Move list: ";
     ScoredMove scored_move;
     while ((scored_move = move_picker.next_move_scored(false)) != SCORED_MOVE_NONE) {

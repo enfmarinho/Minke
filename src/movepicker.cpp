@@ -26,14 +26,14 @@
 #include "tune.h"
 #include "types.h"
 
-MovePicker::MovePicker(Move ttmove, ThreadData &td, bool qsearch, ScoreType threshold) {
-    init(ttmove, td, qsearch, threshold);
+MovePicker::MovePicker(Move ttmove, ThreadData &td, MovePickerType mp_type, ScoreType threshold) {
+    init(ttmove, td, mp_type, threshold);
 }
 
-void MovePicker::init(Move ttmove, ThreadData &td, bool qsearch, ScoreType threshold) {
+void MovePicker::init(Move ttmove, ThreadData &td, MovePickerType mp_type, ScoreType threshold) {
     m_td = &td;
     m_ttmove = ttmove;
-    m_qsearch = qsearch;
+    m_mp_type = mp_type;
     m_threshold = threshold;
 
     if (ttmove != MOVE_NONE)
@@ -53,9 +53,9 @@ void MovePicker::init(Move ttmove, ThreadData &td, bool qsearch, ScoreType thres
     m_curr = m_end = m_end_bad = m_moves;
 }
 
-Move MovePicker::next_move(const bool &skip_quiets) { return next_move_scored(skip_quiets).move; }
+Move MovePicker::next_move(const bool skip_quiets) { return next_move_scored(skip_quiets).move; }
 
-ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
+ScoredMove MovePicker::next_move_scored(const bool skip_quiets) {
     switch (m_stage) {
         case PICK_TT:
             m_stage = GEN_NOISY;
@@ -79,7 +79,7 @@ ScoredMove MovePicker::next_move_scored(const bool &skip_quiets) {
                 else
                     ++m_curr;
             }
-            if (m_qsearch && skip_quiets) {
+            if ((m_mp_type == QSEARCH && skip_quiets) || m_mp_type == PROBCUT) {
                 m_stage = FINISHED;
                 return SCORED_MOVE_NONE;
             } else if (skip_quiets) {
