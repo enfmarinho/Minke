@@ -32,15 +32,21 @@ enum MovePickerStage {
     FINISHED
 };
 
+enum MovePickerType {
+    SEARCH,
+    QSEARCH,
+    PROBCUT,
+};
+
 class MovePicker {
   public:
     MovePicker() = default;
-    MovePicker(Move ttmove, ThreadData &td, bool qsearch, ScoreType threshold = 0);
+    MovePicker(Move ttmove, ThreadData &td, MovePickerType mp_type, ScoreType threshold = 0);
     ~MovePicker() = default;
 
-    void init(Move ttmove, ThreadData &td, bool qsearch, ScoreType threshold = 0);
-    Move next_move(const bool &skip_quiets);
-    ScoredMove next_move_scored(const bool &skip_quiets);
+    void init(Move ttmove, ThreadData &td, MovePickerType mp_type, ScoreType threshold = 0);
+    Move next_move(const bool skip_quiets);
+    ScoredMove next_move_scored(const bool skip_quiets);
 
     MovePickerStage picker_stage() const { return m_stage; }
 
@@ -49,7 +55,7 @@ class MovePicker {
     void score_quiet_moves();
     void score_noisy_moves();
 
-    bool m_qsearch;
+    MovePickerType m_mp_type;
     MovePickerStage m_stage;
     ScoredMove m_moves[MAX_MOVES_PER_POS];
     ScoredMove *m_curr, *m_end, *m_end_bad;
