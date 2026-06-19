@@ -145,6 +145,7 @@ bool Position::set_fen(const std::string &fen) {
         return false;
     }
     update_pin_and_checkers_bb();
+    update_checkzones();
 
     if constexpr (UPDATE)
         reset_nnue();
@@ -318,6 +319,7 @@ void Position::make_move(const Move &move) {
 
     change_side();
     update_pin_and_checkers_bb();
+    update_checkzones();
 }
 
 template void Position::make_move<true>(const Move &move);
@@ -602,6 +604,7 @@ void Position::make_null_move() {
     hash_side_key();
     change_side();
     update_pin_and_checkers_bb();
+    update_checkzones();
 }
 
 void Position::unmake_null_move() {
@@ -632,6 +635,33 @@ void Position::update_pin_and_checkers_bb() {
             set_bits(m_curr_state.pins, blockers & get_occupancy(m_stm));
         }
     }
+}
+
+void Position::update_checkzones() {
+    const Square opp_king_sq = get_king_placement(get_adversary());
+    const Bitboard occ = get_occupancy();
+
+    m_curr_state.checkzones[PAWN] = pawn_attacks[get_adversary()][opp_king_sq];
+    m_curr_state.checkzones[KNIGHT] = knight_attacks[opp_king_sq];
+    m_curr_state.checkzones[BISHOP] = get_bishop_attacks(opp_king_sq, occ);
+    m_curr_state.checkzones[ROOK] = get_rook_attacks(opp_king_sq, occ);
+}
+
+bool Position::is_direct_check(const Move move) const {
+    const PieceType moved_pt = move.is_promotion() ? move.promotee() : get_piece_type(consult(move.from()));
+
+    if (moved_pt == KING) {
+        return false;
+    }
+
+    Bitboard checkzone = [&]() {
+        if (moved_pt == QUEEN)
+            return m_curr_state.checkzones[BISHOP] | m_curr_state.checkzones[ROOK];
+
+        return m_curr_state.checkzones[moved_pt];
+    }();
+
+    return checkzone & (1ULL << move.to());
 }
 
 bool Position::is_attacked(const Square &sq) const {

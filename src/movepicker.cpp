@@ -144,6 +144,9 @@ void MovePicker::score_quiet_moves() {
             runner->score += mp_killer2_bonus();
         else if (runner->move == m_counter)
             runner->score += mp_counter_bonus();
+
+        if (m_td->position.is_direct_check(runner->move))
+            runner->score += mp_direct_check_bonus();
     }
 }
 
