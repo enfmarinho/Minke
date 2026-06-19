@@ -51,6 +51,7 @@ class Position {
     void unmake_null_move();
 
     inline bool in_check() const { return m_curr_state.checkers; }
+    bool is_direct_check(const Move move) const;
     bool is_attacked(const Square &sq) const;
     bool is_legal(const Move &move);
     bool is_pseudo_legal(const Move &move) const;
@@ -139,6 +140,7 @@ class Position {
 
     void update_castling_rights(const Move &move);
     void update_pin_and_checkers_bb();
+    void update_checkzones();
 
     bool insufficient_material() const;
     bool repetition() const;

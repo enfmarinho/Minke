@@ -182,6 +182,7 @@ struct BoardState {
     Bitboard checkers;
     Bitboard pins;
     Bitboard castle_rooks;
+    Bitboard checkzones[4];
     void reset() {
         checkers = 0;
         pins = 0;
@@ -191,6 +192,9 @@ struct BoardState {
         castling_rights = NO_CASTLING;
         en_passant = NO_SQ;
         castle_rooks = 0;
+
+        for (Bitboard& b : checkzones)
+            b = 0ULL;
     }
 };
 
