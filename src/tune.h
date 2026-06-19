@@ -168,29 +168,29 @@ TUNABLE_PARAM(probcut_margin, 296, 100, 400, 15, 0.002)
 FIXED_PARAM(probcut_min_depth, 5, 4, 8, 0.5, 0.002)
 
 // History Formulas Parameters
-TUNABLE_PARAM(hist_bonus_mult, 200, 1, 1024, 50, 0.002)
-TUNABLE_PARAM(hist_bonus_offset, 393, -512, 512, 50, 0.002)
-TUNABLE_PARAM(hist_bonus_max, 2311, 1500, 3500, 100, 0.002)
+TUNABLE_PARAM(hist_bonus_mult, 210, 1, 1024, 50, 0.002)
+TUNABLE_PARAM(hist_bonus_offset, 402, -512, 512, 50, 0.002)
+TUNABLE_PARAM(hist_bonus_max, 2303, 1500, 3500, 100, 0.002)
 
-TUNABLE_PARAM(hist_penalty_mult, -37, -1024, -1, 50, 0.002)
-TUNABLE_PARAM(hist_penalty_offset, -24, -512, 512, 50, 0.002)
-TUNABLE_PARAM(hist_penalty_max, -1058, -3500, -500, 150, 0.002)
+TUNABLE_PARAM(hist_penalty_mult, -34, -1024, -1, 50, 0.002)
+TUNABLE_PARAM(hist_penalty_offset, -25, -512, 512, 50, 0.002)
+TUNABLE_PARAM(hist_penalty_max, -1074, -3500, -500, 150, 0.002)
 
-TUNABLE_PARAM(cont_bonus_mult, 168, 1, 1024, 50, 0.002)
-TUNABLE_PARAM(cont_bonus_offset, 430, -512, 512, 50, 0.002)
-TUNABLE_PARAM(cont_bonus_max, 2408, 1500, 3500, 100, 0.002)
+TUNABLE_PARAM(cont_bonus_mult, 179, 1, 1024, 50, 0.002)
+TUNABLE_PARAM(cont_bonus_offset, 427, -512, 512, 50, 0.002)
+TUNABLE_PARAM(cont_bonus_max, 2406, 1500, 3500, 100, 0.002)
 
-TUNABLE_PARAM(cont_penalty_mult, -63, -1024, -1, 50, 0.002)
-TUNABLE_PARAM(cont_penalty_offset, -68, -512, 512, 50, 0.002)
-TUNABLE_PARAM(cont_penalty_max, -1145, -3500, -500, 150, 0.002)
+TUNABLE_PARAM(cont_penalty_mult, -71, -1024, -1, 50, 0.002)
+TUNABLE_PARAM(cont_penalty_offset, -60, -512, 512, 50, 0.002)
+TUNABLE_PARAM(cont_penalty_max, -1119, -3500, -500, 150, 0.002)
 
-TUNABLE_PARAM(capt_hist_bonus_mult, 213, 1, 1024, 50, 0.002)
-TUNABLE_PARAM(capt_hist_bonus_offset, -44, -512, 512, 50, 0.002)
-TUNABLE_PARAM(capt_hist_bonus_max, 1395, 500, 3500, 150, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_mult, 200, 1, 1024, 50, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_offset, -47, -512, 512, 50, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_max, 1387, 500, 3500, 150, 0.002)
 
-TUNABLE_PARAM(capt_hist_penalty_mult, -380, -1024, -1, 50, 0.002)
-TUNABLE_PARAM(capt_hist_penalty_offset, 44, -512, 512, 50, 0.002)
-TUNABLE_PARAM(capt_hist_penalty_max, -1176, -3500, -500, 150, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_mult, -391, -1024, -1, 50, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_offset, 41, -512, 512, 50, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_max, -1187, -3500, -500, 150, 0.002)
 
 TUNABLE_PARAM(pawn_corr_factor, 30, 1, 300, 15, 0.002)
 TUNABLE_PARAM(nonpawn_corr_factor, 40, 1, 300, 15, 0.002)
@@ -211,8 +211,8 @@ TUNABLE_PARAM(material_scaling_base, 25337, 20000, 40000, 1000, 0.002)
 
 // Move picker
 TUNABLE_PARAM(mp_see_threshold_base, 100, -256, 256, 25, 0.002)
-TUNABLE_PARAM(mp_killer1_bonus, 9000, 0, 16000, 400, 0.002)
-TUNABLE_PARAM(mp_killer2_bonus, 6000, 0, 16000, 400, 0.002)
-TUNABLE_PARAM(mp_counter_bonus, 3000, 0, 16000, 400, 0.002)
+TUNABLE_PARAM(mp_killer1_bonus, 8989, 0, 16000, 400, 0.002)
+TUNABLE_PARAM(mp_killer2_bonus, 6043, 0, 16000, 400, 0.002)
+TUNABLE_PARAM(mp_counter_bonus, 3023, 0, 16000, 400, 0.002)
 
 #endif // #ifndef TUNE_H
