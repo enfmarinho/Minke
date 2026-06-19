@@ -214,6 +214,6 @@ TUNABLE_PARAM(mp_see_threshold_base, 100, -256, 256, 25, 0.002)
 TUNABLE_PARAM(mp_killer1_bonus, 9000, 0, 16000, 400, 0.002)
 TUNABLE_PARAM(mp_killer2_bonus, 6000, 0, 16000, 400, 0.002)
 TUNABLE_PARAM(mp_counter_bonus, 3000, 0, 16000, 400, 0.002)
-TUNABLE_PARAM(mp_direct_check_bonus, 6000, 0, 16000, 400, 0.002)
+TUNABLE_PARAM(mp_direct_check_bonus, 4000, 0, 16000, 400, 0.002)
 
 #endif // #ifndef TUNE_H
