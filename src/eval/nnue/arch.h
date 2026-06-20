@@ -29,17 +29,18 @@
 constexpr int INPUT_LAYER_SIZE = 64 * 12;
 constexpr int HIDDEN_LAYER_SIZE = 1024;
 
-constexpr int NUM_KING_BUCKETS = 8;
+constexpr int NUM_KING_BUCKETS = 10;
 // clang-format off
 constexpr int KING_BUCKETS_LAYOUT[64] = {
     0, 1, 2, 3, 3, 2, 1, 0,
-    4, 4, 5, 5, 5, 5, 4, 4,
-    6, 6, 6, 6, 6, 6, 6, 6,
-    6, 6, 6, 6, 6, 6, 6, 6,
-    6, 6, 6, 6, 6, 6, 6, 6,
-    7, 7, 7, 7, 7, 7, 7, 7,
-    7, 7, 7, 7, 7, 7, 7, 7,
-    7, 7, 7, 7, 7, 7, 7, 7,
+    4, 5, 6, 7, 7, 6, 5, 4,
+    8, 8, 8, 8, 8, 8, 8, 8,
+    9, 9, 9, 9, 9, 9, 9, 9,
+    9, 9, 9, 9, 9, 9, 9, 9,
+    9, 9, 9, 9, 9, 9, 9, 9,
+    9, 9, 9, 9, 9, 9, 9, 9,
+    9, 9, 9, 9, 9, 9, 9, 9,
+
 };
 // clang-format on
 
