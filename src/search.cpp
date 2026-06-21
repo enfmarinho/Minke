@@ -442,7 +442,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         td.correction_history.update(td, depth, best_score - eval);
     }
 
-    if (!stop_search(td)) { // Save on TT if search was completed
+    if (!stop_search(td) && !singular_search) {
         td.tt.store(position.get_hash(), depth, best_move, best_score, raw_eval, bound, ttpv, td.tt.age());
         td.best_move = best_move;
     }
