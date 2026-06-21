@@ -436,15 +436,18 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         return position.in_check() ? -MATE_SCORE + td.height : 0;
     }
 
-    const BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
-    if (!in_check && (best_move == MOVE_NONE || best_move.is_quiet()) &&
-        (bound == EXACT || (bound == LOWER && best_score > eval) || (bound == UPPER && best_score < eval))) {
-        td.correction_history.update(td, depth, best_score - eval);
-    }
+    if (!singular_search) {
+        const BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
 
-    if (!stop_search(td) && !singular_search) {
-        td.tt.store(position.get_hash(), depth, best_move, best_score, raw_eval, bound, ttpv, td.tt.age());
-        td.best_move = best_move;
+        if (!in_check && (best_move == MOVE_NONE || best_move.is_quiet()) &&
+            (bound == EXACT || (bound == LOWER && best_score > eval) || (bound == UPPER && best_score < eval))) {
+            td.correction_history.update(td, depth, best_score - eval);
+        }
+
+        if (!stop_search(td)) { // Only save if search was not stopped midway through
+            td.tt.store(position.get_hash(), depth, best_move, best_score, raw_eval, bound, ttpv, td.tt.age());
+            td.best_move = best_move;
+        }
     }
 
     return best_score;
