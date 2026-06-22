@@ -68,9 +68,9 @@ void History::update_history(const ThreadData &td, const Move &best_move, int de
     HistoryType capture_penalty =
         calculate_score(depth, capt_hist_penalty_mult(), capt_hist_penalty_offset(), capt_hist_penalty_max());
     if (best_move.is_quiet()) {
-        save_killer(best_move, td.height);
-        if (td.height > 0)
-            save_counter(td.nodes[td.height - 1].curr_pmove.move, best_move);
+        save_killer(best_move, td.ply);
+        if (td.ply > 0)
+            save_counter(td.stack[td.ply - 1].curr_pmove.move, best_move);
 
         // Increase the score of the move that caused the beta cutoff
         update_history_heuristic_score(td.position, best_move, quiet_bonus);
@@ -116,9 +116,9 @@ void History::update_continuation_history_table(const ThreadData &td, const Piec
 }
 
 void History::update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int offset) {
-    int past_node_idx = td.height - offset;
-    if (past_node_idx >= 0 && td.nodes[past_node_idx].curr_pmove != PIECE_MOVE_NONE) {
-        const size_t past_conthist_idx = cont_hist_idx(td.nodes[past_node_idx].curr_pmove);
+    int past_node_idx = td.ply - offset;
+    if (past_node_idx >= 0 && td.stack[past_node_idx].curr_pmove != PIECE_MOVE_NONE) {
+        const size_t past_conthist_idx = cont_hist_idx(td.stack[past_node_idx].curr_pmove);
         const size_t curr_conthist_idx = cont_hist_idx(pmove);
         HistoryType *ptr = &m_continuation_history[past_conthist_idx][curr_conthist_idx];
         update_score(ptr, bonus);
@@ -135,11 +135,11 @@ HistoryType History::get_continuation_history_score(const ThreadData &td, const 
 }
 
 HistoryType History::get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const {
-    int past_node_idx = td.height - offset;
-    if (past_node_idx < 0 || td.nodes[past_node_idx].curr_pmove == PIECE_MOVE_NONE)
+    int past_node_idx = td.ply - offset;
+    if (past_node_idx < 0 || td.stack[past_node_idx].curr_pmove == PIECE_MOVE_NONE)
         return 0;
 
-    const size_t past_conthist_idx = cont_hist_idx(td.nodes[past_node_idx].curr_pmove);
+    const size_t past_conthist_idx = cont_hist_idx(td.stack[past_node_idx].curr_pmove);
     const size_t curr_conthist_idx = cont_hist_idx(pmove);
     return m_continuation_history[past_conthist_idx][curr_conthist_idx];
 }

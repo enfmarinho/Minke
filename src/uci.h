@@ -24,7 +24,7 @@
 #include <thread>
 
 #include "position.h"
-#include "search.h"
+#include "thread.h"
 #include "types.h"
 
 namespace EngineOptions {

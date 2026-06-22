@@ -41,12 +41,12 @@ void MovePicker::init(Move ttmove, ThreadData &td, MovePickerType mp_type, Score
     else
         m_stage = GEN_NOISY;
 
-    m_killer1 = m_td->search_history.consult_killer1(m_td->height);
-    m_killer2 = m_td->search_history.consult_killer2(m_td->height);
+    m_killer1 = m_td->search_history.consult_killer1(m_td->ply);
+    m_killer2 = m_td->search_history.consult_killer2(m_td->ply);
 
     m_counter = MOVE_NONE;
-    if (m_td->height > 0)
-        m_counter = m_td->search_history.consult_counter(m_td->nodes[m_td->height - 1].curr_pmove.move);
+    if (m_td->ply > 0)
+        m_counter = m_td->search_history.consult_counter(m_td->stack[m_td->ply - 1].curr_pmove.move);
     if (m_counter == m_killer1 || m_counter == m_killer2)
         m_counter = MOVE_NONE;
 

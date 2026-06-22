@@ -16,28 +16,33 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef SEARCH_H
-#define SEARCH_H
-
-#include <cstddef>
-
-#include "correction.h"
-#include "history.h"
-#include "move.h"
 #include "thread.h"
-#include "time_manager.h"
+
+#include <cstring>
+
 #include "types.h"
 
-constexpr int LMP_DEPTH = 32;
-extern int LMP_TABLE[2][LMP_DEPTH];
-extern int LMR_TABLE[64][64];
+ThreadData::ThreadData() {
+    datagen = false;
+    report = true;
+    reset_search_parameters();
+}
 
-ScoreType normalize_score(ScoreType score);
+void ThreadData::reset_search_parameters() {
+    best_move = MOVE_NONE;
+    stop = true;
+    ply = 0;
+    nodes_searched = -1; // Avoid counting the root
+    std::memset(node_table, 0, sizeof(node_table));
+    time_manager.reset();
+    search_limits.reset();
+    // TODO i dont think this is necessary
+    for (int i = 0; i < MAX_SEARCH_DEPTH; ++i)
+        stack[i].reset();
+}
 
-ScoreType iterative_deepening(ThreadData &td);
-ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);
-ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool cutnode, ThreadData &td);
-ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td);
-bool SEE(Position &position, const Move &move, int threshold);
+void ThreadData::set_search_limits(const SearchLimits sl) { this->search_limits = sl; }
 
-#endif // #ifndef SEARCH_H
+bool ThreadData::stop_search() const {
+    return time_manager.time_over() || stop || nodes_searched > search_limits.maximum_node;
+}
