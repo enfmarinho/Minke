@@ -47,8 +47,8 @@ class SearchLimiter {
     void update(const ThreadData& td);
 
     [[nodiscard]] CounterType depth_limit() const;
-    [[nodiscard]] bool stop_early(const size_t nodes_searched) const;
-    [[nodiscard]] bool exceeded(const size_t nodes_searched) const;
+    [[nodiscard]] bool stop_early(const ThreadData& td) const;
+    [[nodiscard]] bool exceeded(const ThreadData& td) const;
 
     void allow_stopping();
 

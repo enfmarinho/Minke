@@ -63,7 +63,7 @@ ScoreType iterative_deepening(ThreadData &td) {
     ScoreType past_eval = -MAX_SCORE;
     for (CounterType depth = 1; depth <= td.search_limiter.depth_limit(); ++depth) {
         ScoreType eval = aspiration(depth, past_eval, td);
-        if (td.search_limiter.exceeded(td.nodes_searched)) // Search did not finished completely
+        if (td.search_limiter.exceeded(td)) // Search did not finished completely
             break;
 
         best_move = td.best_move;
@@ -76,7 +76,7 @@ ScoreType iterative_deepening(ThreadData &td) {
 
         if (depth > 5)
             td.search_limiter.update(td);
-        if (td.search_limiter.stop_early(td.nodes_searched))
+        if (td.search_limiter.stop_early(td))
             break;
 
         td.search_limiter.allow_stopping(); // Avoids stopping before depth 1 has been searched through
@@ -109,7 +109,7 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, Threa
     while (true) {
         ScoreType curr_score = negamax(alpha, beta, curr_depth, false, td);
 
-        if (td.search_limiter.exceeded(td.nodes_searched))
+        if (td.search_limiter.exceeded(td))
             break;
 
         score = curr_score;
@@ -132,7 +132,7 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, Threa
 }
 
 ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool cutnode, ThreadData &td) {
-    if (td.search_limiter.exceeded(td.nodes_searched)) // Out of time
+    if (td.search_limiter.exceeded(td)) // Out of time
         return -MAX_SCORE;
     else if (depth <= 0)
         return quiescence(alpha, beta, td);
@@ -407,7 +407,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         td.correction_history.update(td, depth, best_score - eval);
     }
 
-    if (!td.search_limiter.exceeded(td.nodes_searched) && !singular_search) {
+    if (!td.search_limiter.exceeded(td) && !singular_search) {
         td.tt.store(position.get_hash(), depth, best_move, best_score, raw_eval, bound, ttpv, td.tt.age());
         td.best_move = best_move;
     }
@@ -418,7 +418,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     ++td.nodes_searched;
     Position &position = td.position;
-    if (td.search_limiter.exceeded(td.nodes_searched))
+    if (td.search_limiter.exceeded(td))
         return -MAX_SCORE;
     else if (position.draw())
         return 0;

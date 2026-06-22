@@ -55,8 +55,8 @@ struct ThreadData {
     Move best_move;
 
     SearchLimiter search_limiter;
-    int64_t nodes_searched;
-    int64_t node_table[64 * 64];
+    size_t nodes_searched;
+    size_t node_table[64 * 64];
     int ply;
     bool stop;
     bool datagen;

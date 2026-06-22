@@ -32,7 +32,7 @@ void ThreadData::clear_search_context() {
     best_move = MOVE_NONE;
     stop = true;
     ply = 0;
-    nodes_searched = -1; // Avoid counting the root
+    nodes_searched = 0;
     std::memset(node_table, 0, sizeof(node_table));
     search_limiter.reset({});
     // TODO i dont think this is necessary

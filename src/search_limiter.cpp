@@ -67,7 +67,7 @@ void SearchLimiter::reset(const SearchLimits &limits) {
 }
 
 void SearchLimiter::update(const ThreadData &td) {
-    if (m_movetime_set || m_optimum_time != NO_TIME_LIMIT)
+    if (m_movetime_set || m_optimum_time == NO_TIME_LIMIT)
         return;
 
     const double node_fraction = td.node_table[td.best_move.from_and_to()] / static_cast<double>(td.nodes_searched);
@@ -77,12 +77,13 @@ void SearchLimiter::update(const ThreadData &td) {
 
 [[nodiscard]] CounterType SearchLimiter::depth_limit() const { return m_depth_limit; }
 
-bool SearchLimiter::stop_early(const size_t nodes_searched) const {
-    return m_can_stop && (nodes_searched >= m_optimum_nodes || (now() - m_start_time >= m_optimum_time * m_scale));
+bool SearchLimiter::stop_early(const ThreadData &td) const {
+    return td.stop ||
+           (m_can_stop && (td.nodes_searched >= m_optimum_nodes || (now() - m_start_time >= m_optimum_time * m_scale)));
 }
 
-bool SearchLimiter::exceeded(const size_t nodes_searched) const {
-    return m_can_stop && (nodes_searched >= m_maximum_nodes || (time_passed() >= m_maximum_time));
+bool SearchLimiter::exceeded(const ThreadData &td) const {
+    return td.stop || (m_can_stop && (td.nodes_searched >= m_maximum_nodes || (time_passed() >= m_maximum_time)));
 }
 
 TimeType SearchLimiter::time_passed() const { return now() - m_start_time; }
