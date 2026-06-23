@@ -35,7 +35,7 @@ void TTEntry::store(const HashType &hash, const IndexType &depth, const Move &be
     if (best_move != MOVE_NONE || !tthit)
         m_best_move = best_move;
 
-    if (!tthit || bound == EXACT || depth + 4 > m_depth || age != this->age()) {
+    if (!tthit || bound == EXACT || depth + 4 + 2 * was_pv > m_depth || age != this->age()) {
         m_key = key_from_hash(hash);
         m_depth = depth;
         m_score = score;
