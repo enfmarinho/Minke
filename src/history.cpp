@@ -110,9 +110,9 @@ void History::update_history_heuristic_score(const Position &position, const Mov
 }
 
 void History::update_continuation_history_table(const ThreadData &td, const PieceMove &pmove, int bonus) {
-    update_continuation_history_score(td, pmove, bonus, 1); // Counter Moves History
-    update_continuation_history_score(td, pmove, bonus, 2); // Follow Up History
-    // update_continuation_history_score(td, pmove, bonus, 4);
+    update_continuation_history_score(td, pmove, bonus, 1); // Counter Moves History (1-ply)
+    update_continuation_history_score(td, pmove, bonus, 2); // Follow Up History (2-ply)
+    update_continuation_history_score(td, pmove, bonus, 4); // 4-ply
 }
 
 void History::update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int offset) {
