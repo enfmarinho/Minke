@@ -4,7 +4,7 @@
 #   make EVALFILE=net.nnue bmi2                     # use a custom network file
 
 VERSION := 6.0.0
-DEFAULT_EVALFILE := minke28
+DEFAULT_EVALFILE := minke29
 
 PGO ?= off
 
