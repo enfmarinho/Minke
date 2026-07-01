@@ -145,10 +145,10 @@ void UCI::print_debug_info() {
         std::cout << "Best move: " << ttmove.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks())
                   << std::endl;
     }
-    MovePicker move_picker(ttmove, *m_td, SEARCH);
-    std::cout << "Move list: ";
-    ScoredMove scored_move;
-    while ((scored_move = move_picker.next_move_scored(false)) != SCORED_MOVE_NONE) {
+    Movegen::ScoredMoveList move_list;
+    Movegen::all(move_list, m_td->position);
+    std::cout << "Move list(" << move_list.size() << "): ";
+    for (ScoredMove scored_move : move_list) {
         if (!m_td->position.is_legal(scored_move.move))
             std::cout << "*";
         std::cout << scored_move.move.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks()) << "("
@@ -176,25 +176,25 @@ void UCI::position(std::istringstream &iss) {
     set_position(fen, move_list);
 }
 
-void UCI::set_position(const std::string &fen, const std::vector<std::string> &move_list) {
+void UCI::set_position(const std::string &fen, const std::vector<std::string> &moves) {
     if (!m_td->position.set_fen<true>(fen)) {
         std::cerr << "Invalid FEN!" << std::endl;
         return;
     }
 
-    for (unsigned int index = 0; index < move_list.size(); ++index) {
+    for (unsigned int index = 0; index < moves.size(); ++index) {
         // Make sure to only save the game history for the last 100 positions, more than that is completely unnecessary
         // Moreover, the second conditional assures that the history stacks don't overflow
-        if (move_list.size() - index == 100 || m_td->position.get_history_ply() > 100)
+        if (moves.size() - index == 100 || m_td->position.get_history_ply() > 100)
             m_td->position.reset_history();
 
-        ScoredMove moves[MAX_MOVES_PER_POS];
-        ScoredMove *end = gen_moves(moves, m_td->position, GEN_ALL);
+        Movegen::ScoredMoveList move_list;
+        Movegen::all(move_list, m_td->position);
 
-        for (ScoredMove *curr = moves; curr != end; ++curr) {
-            if (move_list[index] ==
-                curr->move.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks())) {
-                m_td->position.make_move<false>(curr->move);
+        for (auto scored_move : move_list) {
+            if (moves[index] ==
+                scored_move.move.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks())) {
+                m_td->position.make_move<false>(scored_move.move);
                 break;
             }
         }
@@ -281,10 +281,10 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
     bool is_leaf = (depth == 2);
     int64_t count = 0, nodes = 0;
 
-    ScoredMove moves[MAX_MOVES_PER_POS];
-    ScoredMove *end = gen_moves(moves, m_td->position, GEN_ALL);
-    for (ScoredMove *begin = moves; begin != end; ++begin) {
-        Move move = begin->move;
+    Movegen::ScoredMoveList move_list;
+    Movegen::all(move_list, m_td->position);
+    for (ScoredMove score_move : move_list) {
+        Move move = score_move.move;
         if (!position.is_legal(move)) {
             continue;
         }

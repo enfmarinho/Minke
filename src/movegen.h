@@ -21,13 +21,22 @@
 
 #include "move.h"
 #include "position.h"
+#include "types.h"
+#include "utils.h"
 
-enum MoveGenType {
-    QUIET = 1,
-    NOISY = QUIET << 1,
-    GEN_ALL = QUIET | NOISY
-};
+namespace Movegen {
 
-ScoredMove* gen_moves(ScoredMove* moves, const Position& position, const MoveGenType type);
+using ScoredMoveList = StaticVector<ScoredMove, MAX_MOVES_PER_POS>;
+
+/// Generate all pseudo-legal noisy moves
+void noisies(ScoredMoveList& move_list, const Position& pos);
+
+/// Generate all pseudo-legal quiet moves
+void quiets(ScoredMoveList& move_list, const Position& pos);
+
+/// Generate all pseudo-legal moves
+void all(ScoredMoveList& move_list, const Position& pos);
+
+} // namespace Movegen
 
 #endif // #ifndef MOVEGEN_H

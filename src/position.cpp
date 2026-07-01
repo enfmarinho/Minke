@@ -677,21 +677,21 @@ Bitboard Position::attackers(const Square &sq) const {
 }
 
 int Position::legal_move_amount() {
-    ScoredMove moves[MAX_MOVES_PER_POS];
-    ScoredMove *end = gen_moves(moves, *this, GEN_ALL);
+    Movegen::ScoredMoveList move_list;
+    Movegen::all(move_list, *this);
     int legal_amount = 0;
-    for (ScoredMove *begin = moves; begin != end; ++begin) {
-        if (is_legal(begin->move))
+    for (ScoredMove scored_move : move_list) {
+        if (is_legal(scored_move.move))
             ++legal_amount;
     }
     return legal_amount;
 }
 
 bool Position::no_legal_moves() {
-    ScoredMove moves[MAX_MOVES_PER_POS];
-    ScoredMove *end = gen_moves(moves, *this, GEN_ALL);
-    for (ScoredMove *curr = moves; curr != end; ++curr) {
-        if (is_legal(curr->move))
+    Movegen::ScoredMoveList move_list;
+    Movegen::all(move_list, *this);
+    for (ScoredMove scored_move : move_list) {
+        if (is_legal(scored_move.move))
             return false;
     }
     return true;
@@ -930,10 +930,10 @@ bool Position::repetition() const {
 
 bool Position::fifty_move_draw() {
     if (m_curr_state.fifty_move_ply >= 100) {
-        ScoredMove moves[MAX_MOVES_PER_POS];
-        ScoredMove *end = gen_moves(moves, *this, GEN_ALL);
-        for (ScoredMove *begin = moves; begin != end; ++begin) {
-            bool legal = is_legal(begin->move);
+        Movegen::ScoredMoveList move_list;
+        Movegen::all(move_list, *this);
+        for (ScoredMove scored_move : move_list) {
+            bool legal = is_legal(scored_move.move);
             if (legal)
                 return true;
         }

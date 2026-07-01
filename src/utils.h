@@ -177,6 +177,8 @@ inline int get_pawn_start_rank(const Color &color) { return color == WHITE ? 1 :
 
 inline int get_pawn_promotion_rank(const Color &color) { return color == WHITE ? 7 : 0; }
 
+inline Bitboard get_pawn_promotion_rank_mask(const Color &color) { return RANK_MASKS[get_pawn_promotion_rank(color)]; }
+
 inline Direction get_pawn_offset(const Color &color) { return color == WHITE ? NORTH : SOUTH; }
 
 #if defined(__linux__)
@@ -207,5 +209,49 @@ inline void aligned_free(void *ptr) {
     std::free(ptr);
 #endif
 }
+
+/// A wrapper for std::array.
+/// Make it move convenient to use arrays by tracking it's own size, just like a std::vector
+template <typename T, size_t MAX_SIZE>
+class StaticVector {
+  public:
+    inline void push(const T &v) {
+        assert(m_size < MAX_SIZE);
+        m_array[m_size++] = v;
+    }
+    inline void push(const T &&v) {
+        assert(m_size < MAX_SIZE);
+        m_array[m_size++] = std::move(v);
+    }
+
+    inline void pop() {
+        assert(m_size > 0);
+        --m_size;
+    }
+
+    [[nodiscard]] inline const T &operator[](size_t idx) const {
+        assert(idx < m_size);
+        return m_array[idx];
+    }
+
+    [[nodiscard]] inline T &operator[](size_t idx) {
+        assert(idx < m_size);
+        return m_array[idx];
+    }
+
+    [[nodiscard]] bool empty() const { return m_size == 0; }
+    [[nodiscard]] size_t size() const { return m_size; }
+    [[nodiscard]] size_t capacity() const { return MAX_SIZE; }
+
+    [[nodiscard]] inline auto begin() { return m_array.begin(); }
+    [[nodiscard]] inline auto end() { return m_array.begin() + static_cast<std::ptrdiff_t>(m_size); }
+
+    [[nodiscard]] inline auto begin() const { return m_array.begin(); }
+    [[nodiscard]] inline auto end() const { return m_array.begin() + static_cast<std::ptrdiff_t>(m_size); }
+
+  private:
+    std::array<T, MAX_SIZE> m_array;
+    size_t m_size{};
+};
 
 #endif // #ifndef UTILS_H
