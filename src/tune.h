@@ -153,8 +153,8 @@ TUNABLE_PARAM(lmp_improving_scale, 73, 40, 240, 5, 0.002)
 
 // Quiet History Pruning
 TUNABLE_PARAM(history_pruning_max_depth_scaled, 5000, 2500, 10000, 300, 0.002)
-TUNABLE_PARAM(quiet_hist_pruning_factor, -2500, -5000, -1000, 200, 0.002)
-TUNABLE_PARAM(quiet_hist_pruning_base, -1000, -2500, -500, 100, 0.002)
+TUNABLE_PARAM(quiet_hist_pruning_factor, -1500, -5000, -500, 200, 0.002)
+TUNABLE_PARAM(quiet_hist_pruning_base, -400, -2500, 0, 100, 0.002)
 
 // Singular Extension
 FIXED_PARAM(singular_extension_min_depth, 8, 4, 10, 0.5, 0.002)
