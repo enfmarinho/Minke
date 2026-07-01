@@ -325,7 +325,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 skip_quiets = true;
             }
 
-            const CounterType lmr_scaled_depth = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
+            const CounterType lmr_scaled_depth =
+                depth * 1024 - LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
 
             // Quiet History Pruning
             if (lmr_scaled_depth <= history_pruning_max_depth_scaled() && move.is_quiet() &&
