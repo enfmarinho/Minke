@@ -447,8 +447,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     const BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
     if (!in_check && (best_move == MOVE_NONE || best_move.is_quiet()) &&
-        (bound == EXACT || (bound == LOWER && best_score > eval) || (bound == UPPER && best_score < eval))) {
-        td.correction_history.update(td, depth, best_score - eval);
+        (bound == EXACT || (bound == LOWER && best_score > node.static_eval) ||
+         (bound == UPPER && best_score < node.static_eval))) {
+        td.correction_history.update(td, depth, best_score - node.static_eval);
     }
 
     if (!stop_search(td) && !singular_search) {
@@ -484,24 +485,22 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     }
 
     bool in_check = position.in_check();
-    ScoreType best_score, static_eval, raw_eval;
+    ScoreType best_score, raw_eval;
     if (in_check) {
-        static_eval = node.static_eval = raw_eval = SCORE_NONE;
+        node.static_eval = raw_eval = SCORE_NONE;
         best_score = -MAX_SCORE;
     } else if (tthit) {
         raw_eval = tteval != SCORE_NONE ? tteval : position.eval();
-        best_score = static_eval = node.static_eval =
-            adjust_eval(position, raw_eval, td.correction_history.correction(td));
+        best_score = node.static_eval = adjust_eval(position, raw_eval, td.correction_history.correction(td));
 
-        if (ttscore != SCORE_NONE && (ttbound == EXACT || (ttbound == UPPER && ttscore < static_eval) ||
-                                      (ttbound == LOWER && ttscore > static_eval))) {
+        if (ttscore != SCORE_NONE && (ttbound == EXACT || (ttbound == UPPER && ttscore < best_score) ||
+                                      (ttbound == LOWER && ttscore > best_score))) {
             best_score = ttscore;
         }
 
     } else {
         raw_eval = position.eval();
-        best_score = static_eval = node.static_eval =
-            adjust_eval(position, raw_eval, td.correction_history.correction(td));
+        best_score = node.static_eval = adjust_eval(position, raw_eval, td.correction_history.correction(td));
         td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age());
     }
 
@@ -525,7 +524,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
             if (moves_searched >= 3) // late move pruning
                 break;
 
-            ScoreType futility = static_eval + qs_futility_margin();
+            ScoreType futility = node.static_eval + qs_futility_margin();
             if (!in_check && futility <= alpha && !SEE(position, move, 1)) {
                 best_score = std::max(best_score, futility);
                 continue;
