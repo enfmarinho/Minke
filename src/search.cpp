@@ -447,8 +447,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     const BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
     if (!in_check && (best_move == MOVE_NONE || best_move.is_quiet()) &&
-        (bound == EXACT || (bound == LOWER && best_score > eval) || (bound == UPPER && best_score < eval))) {
-        td.correction_history.update(td, depth, best_score - eval);
+        (bound == EXACT || (bound == LOWER && best_score > node.static_eval) ||
+         (bound == UPPER && best_score < node.static_eval))) {
+        td.correction_history.update(td, depth, best_score - node.static_eval);
     }
 
     if (!stop_search(td) && !singular_search) {
