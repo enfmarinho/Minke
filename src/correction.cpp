@@ -26,6 +26,10 @@
 #include "tune.h"
 #include "types.h"
 
+static inline size_t cont_corr_idx(const PieceMove& pmove) {
+    return (static_cast<size_t>(pmove.piece) << 6) | static_cast<size_t>(pmove.move.to());
+};
+
 void CorrectionHistory::reset() {
     m_pov_tables = {}; //
 }
@@ -44,7 +48,7 @@ void CorrectionHistory::update(const ThreadData& td, const int depth, const int 
         const PieceMove pmove2 = td.nodes[td.height - 2].curr_pmove;
 
         if (pmove1 != PIECE_MOVE_NONE && pmove2 != PIECE_MOVE_NONE) {
-            m_cont_corr[pmove1.piece * pmove1.move.to()][pmove2.piece * pmove1.move.to()].update(bonus);
+            m_cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)].update(bonus);
         }
     }
 }
@@ -60,8 +64,7 @@ HistoryType CorrectionHistory::correction(const ThreadData& td) const {
         const PieceMove pmove1 = td.nodes[td.height - 1].curr_pmove;
         const PieceMove pmove2 = td.nodes[td.height - 2].curr_pmove;
         if (pmove1 != PIECE_MOVE_NONE && pmove2 != PIECE_MOVE_NONE) {
-            adjustment +=
-                cont_corr_factor() * m_cont_corr[pmove1.piece * pmove1.move.to()][pmove2.piece * pmove1.move.to()];
+            adjustment += cont_corr_factor() * m_cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)];
         }
     }
 
