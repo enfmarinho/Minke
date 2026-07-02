@@ -53,10 +53,10 @@ class CorrectionHistory {
         std::array<CorrectionEntry, CORRHIST_SIZE> pawn{};
         std::array<CorrectionEntry, CORRHIST_SIZE> white_nonpawn{};
         std::array<CorrectionEntry, CORRHIST_SIZE> black_nonpawn{};
+        std::array<std::array<CorrectionEntry, 64 * 12>, 64 * 12> cont_corr{}; // [piece * prev_to][piece * to]
     };
 
     std::array<PovTables, 2> m_pov_tables;
-    std::array<std::array<CorrectionEntry, 64 * 12>, 64 * 12> m_cont_corr{}; // [piece * prev_to][piece * to]
 };
 
 #endif // !CORRECTION_H
