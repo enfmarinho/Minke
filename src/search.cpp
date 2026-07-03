@@ -344,9 +344,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 continue;
             }
 
-            int see_margin = (move.is_quiet() ? see_quiet_pruning_factor() * lmr_depth
-                                              : see_noisy_pruning_factor() * lmr_depth * lmr_depth);
-            if (!SEE(position, move, see_margin))
+            const int see_margin = see_noisy_pruning_factor() * lmr_depth * lmr_depth;
+            if (move_picker.picker_stage() >= PICK_BAD_NOISY && !SEE(position, move, see_margin))
                 continue;
         }
 
