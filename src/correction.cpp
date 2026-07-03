@@ -20,10 +20,15 @@
 
 #include <cstring>
 
+#include "move.h"
 #include "position.h"
 #include "search.h"
 #include "tune.h"
 #include "types.h"
+
+static inline size_t cont_corr_idx(const PieceMove& pmove) {
+    return (static_cast<size_t>(pmove.piece) << 6) | static_cast<size_t>(pmove.move.to());
+};
 
 void CorrectionHistory::reset() {
     m_pov_tables = {}; //
@@ -37,6 +42,15 @@ void CorrectionHistory::update(const ThreadData& td, const int depth, const int 
     tables.pawn[td.position.get_pawn_hash() % CORRHIST_SIZE].update(bonus);
     tables.white_nonpawn[td.position.get_white_nonpawn_hash() % CORRHIST_SIZE].update(bonus);
     tables.black_nonpawn[td.position.get_black_nonpawn_hash() % CORRHIST_SIZE].update(bonus);
+
+    if (td.height >= 2) {
+        const PieceMove pmove1 = td.nodes[td.height - 1].curr_pmove;
+        const PieceMove pmove2 = td.nodes[td.height - 2].curr_pmove;
+
+        if (pmove1 != PIECE_MOVE_NONE && pmove2 != PIECE_MOVE_NONE) {
+            tables.cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)].update(bonus);
+        }
+    }
 }
 
 HistoryType CorrectionHistory::correction(const ThreadData& td) const {
@@ -45,6 +59,14 @@ HistoryType CorrectionHistory::correction(const ThreadData& td) const {
     HistoryType adjustment = pawn_corr_factor() * tables.pawn[td.position.get_pawn_hash() % CORRHIST_SIZE];
     adjustment += nonpawn_corr_factor() * tables.white_nonpawn[td.position.get_white_nonpawn_hash() % CORRHIST_SIZE];
     adjustment += nonpawn_corr_factor() * tables.black_nonpawn[td.position.get_black_nonpawn_hash() % CORRHIST_SIZE];
+
+    if (td.height >= 2) {
+        const PieceMove pmove1 = td.nodes[td.height - 1].curr_pmove;
+        const PieceMove pmove2 = td.nodes[td.height - 2].curr_pmove;
+        if (pmove1 != PIECE_MOVE_NONE && pmove2 != PIECE_MOVE_NONE) {
+            adjustment += cont_corr_factor() * tables.cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)];
+        }
+    }
 
     return adjustment / CORRHIST_GRAIN;
 }
