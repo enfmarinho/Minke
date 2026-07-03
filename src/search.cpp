@@ -334,6 +334,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
             const CounterType lmr_scaled_depth =
                 depth * 1024 - LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
+            const CounterType lmr_depth = lmr_scaled_depth / 1024;
 
             // Quiet History Pruning
             if (lmr_scaled_depth <= history_pruning_max_depth_scaled() && move.is_quiet() &&
@@ -342,6 +343,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 skip_quiets = true;
                 continue;
             }
+
+            int see_margin = (move.is_quiet() ? see_quiet_pruning_factor() * lmr_depth
+                                              : see_noisy_pruning_factor() * lmr_depth * lmr_depth);
+            if (!SEE(position, move, see_margin))
+                continue;
         }
 
         // Extensions
