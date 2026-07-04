@@ -136,7 +136,7 @@ TUNABLE_PARAM(rfp_margin, 107, 50, 150, 10, 0.002)
 FIXED_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)
 
 // Late Move Reductions
-TUNABLE_PARAM(lmr_base, 1135, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_base, 111, 512, 2048, 128, 0.002)
 TUNABLE_PARAM(lmr_scale, 725, 256, 2048, 128, 0.002)
 TUNABLE_PARAM(lmr_gives_check_delta, 948, 512, 2048, 128, 0.002)
 TUNABLE_PARAM(lmr_non_improving_delta, 1321, 512, 2048, 128, 0.002)
