@@ -31,4 +31,6 @@ void init_magic_attack_tables();
 
 void init_between_squares();
 
+void init_passing_rays();
+
 #endif // #ifndef INIT_H

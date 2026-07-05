@@ -128,44 +128,34 @@ static inline void gen_knights(ScoredMoveList& move_list, const Position& pos, B
 template <MoveType move_t>
 static inline void gen_sliders(ScoredMoveList& move_list, const Position& pos, Bitboard dst_mask) {
     const Bitboard occ = pos.get_occupancy();
-    // const Bitboard pins = pos.get_pins();
-    // const Square king_sq = pos.get_king_placement(pos.get_stm());
+    const Bitboard pins = pos.get_pins();
+    const Square king_sq = pos.get_king_placement(pos.get_stm());
 
     Bitboard queen_bb = pos.get_piece_bb(QUEEN, pos.get_stm());
     Bitboard rook_bb = pos.get_piece_bb(ROOK, pos.get_stm()) | queen_bb;
     Bitboard bishop_bb = pos.get_piece_bb(BISHOP, pos.get_stm()) | queen_bb;
 
-    // auto gen_not_pinned = [&](Bitboard bb, PieceType pt) {
-    //     Bitboard not_pinned_bb = bb & ~pins;
-    //     while (not_pinned_bb) {
-    //         Square from = poplsb(not_pinned_bb);
-    //         Bitboard attacks = get_piece_attacks(from, occ, pt);
-    //         push_regular_moves<move_t>(move_list, from, attacks & dst_mask);
-    //     }
-    // };
-    // auto gen_pinned = [&](Bitboard bb, PieceType pt) {
-    //     Bitboard pinned_bb = bb & pins;
-    //     while (pinned_bb) {
-    //         Square from = poplsb(pinned_bb);
-    //         Bitboard attacks = get_piece_attacks(from, occ, pt);
-    //         const Bitboard ray_mask = between_squares[from][king_sq];
-    //         push_regular_moves<move_t>(move_list, from, attacks & dst_mask & ray_mask);
-    //     }
-    // };
-    // gen_not_pinned(rook_bb, ROOK);
-    // gen_not_pinned(bishop_bb, BISHOP);
-    // gen_pinned(rook_bb, ROOK);
-    // gen_pinned(bishop_bb, BISHOP);
-
     auto gen_not_pinned = [&](Bitboard bb, PieceType pt) {
-        while (bb) {
-            Square from = poplsb(bb);
+        Bitboard not_pinned_bb = bb & ~pins;
+        while (not_pinned_bb) {
+            Square from = poplsb(not_pinned_bb);
             Bitboard attacks = get_piece_attacks(from, occ, pt);
             push_regular_moves<move_t>(move_list, from, attacks & dst_mask);
         }
     };
+    auto gen_pinned = [&](Bitboard bb, PieceType pt) {
+        Bitboard pinned_bb = bb & pins;
+        while (pinned_bb) {
+            Square from = poplsb(pinned_bb);
+            Bitboard attacks = get_piece_attacks(from, occ, pt);
+            const Bitboard ray_mask = passing_rays[king_sq][from];
+            push_regular_moves<move_t>(move_list, from, attacks & dst_mask & ray_mask);
+        }
+    };
     gen_not_pinned(rook_bb, ROOK);
     gen_not_pinned(bishop_bb, BISHOP);
+    gen_pinned(rook_bb, ROOK);
+    gen_pinned(bishop_bb, BISHOP);
 }
 
 template <MoveType move_t>
