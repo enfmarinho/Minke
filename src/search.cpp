@@ -40,6 +40,12 @@ ScoreType normalize_score(ScoreType score) {
     return score / 2;
 }
 
+static bool is_mate(const ScoreType score) { return score > MATE_FOUND; }
+
+static bool is_mated(const ScoreType score) { return score < -MATE_FOUND; }
+
+static bool is_decisive(const ScoreType score) { return is_mate(score) || is_mated(score); }
+
 static void print_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
                               const ThreadData &td) {
     std::cout << "info depth " << depth;
@@ -327,14 +333,24 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         }
 
         if (!root && best_score >= -MATE_FOUND && !skip_quiets) {
+            const CounterType lmr_scaled_depth =
+                depth * 1024 - LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
+            const CounterType lmr_depth = lmr_scaled_depth / 1024;
+
             // Late Move Pruning
             if (moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
                 skip_quiets = true;
             }
 
-            const CounterType lmr_scaled_depth =
-                depth * 1024 - LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
-            const CounterType lmr_depth = lmr_scaled_depth / 1024;
+            // Quiet Futility pruning
+            const ScoreType futility_value = node.static_eval + fp_margin() + fp_depth_factor() * lmr_depth;
+            if (!in_check && move.is_quiet() && lmr_scaled_depth <= fp_max_depth() && futility_value <= alpha) {
+                if (!is_decisive(best_score) && best_score < futility_value) {
+                    best_score = futility_value;
+                }
+                skip_quiets = true;
+                continue;
+            }
 
             // Quiet History Pruning
             if (lmr_scaled_depth <= history_pruning_max_depth_scaled() && move.is_quiet() &&
