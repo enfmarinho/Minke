@@ -19,6 +19,9 @@
 #ifndef MOVEPICKER_H
 #define MOVEPICKER_H
 
+#include <cstddef>
+
+#include "movegen.h"
 #include "search.h"
 #include "types.h"
 
@@ -51,14 +54,14 @@ class MovePicker {
     MovePickerStage picker_stage() const { return m_stage; }
 
   private:
-    void sort_next_move();
+    size_t sort_next_move();
     void score_quiet_moves();
     void score_noisy_moves();
 
     MovePickerType m_mp_type;
     MovePickerStage m_stage;
-    ScoredMove m_moves[MAX_MOVES_PER_POS];
-    ScoredMove *m_curr, *m_end, *m_end_bad;
+    Movegen::ScoredMoveList m_move_list;
+    size_t m_idx, m_end, m_bad_noisy_end;
     Move m_ttmove, m_killer1, m_killer2, m_counter;
     ThreadData *m_td;
     ScoreType m_threshold;

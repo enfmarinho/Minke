@@ -39,6 +39,7 @@ int LMP_TABLE[2][LMP_DEPTH];
 HashKeys hash_keys;
 Network network;
 Bitboard between_squares[64][64];
+Bitboard passing_rays[64][64];
 
 void init_all() {
     init_search_params();
@@ -46,6 +47,7 @@ void init_all() {
     init_hash_keys();
     init_magic_attack_tables();
     init_between_squares();
+    init_passing_rays();
 }
 
 void init_search_params() {
@@ -126,6 +128,29 @@ void init_between_squares() {
                 between_squares[sq1][sq2] = get_bishop_attacks(sq1, occ2) & get_bishop_attacks(sq2, occ1);
             } else if (get_rook_attacks(sq1, 0) & occ2) {
                 between_squares[sq1][sq2] = get_rook_attacks(sq1, occ2) & get_rook_attacks(sq2, occ1);
+            }
+        }
+    }
+}
+
+void init_passing_rays() {
+    for (int src = a1; src <= h8; ++src) {
+        Square src_sq = static_cast<Square>(src);
+        Bitboard src_mask = (1ull << src_sq);
+
+        Bitboard rook_attack = get_rook_attacks(src_sq, 0);
+        Bitboard bishop_attack = get_bishop_attacks(src_sq, 0);
+        for (int to = a1; to <= h8; ++to) {
+            if (src == to)
+                continue;
+
+            Square to_sq = static_cast<Square>(to);
+            Bitboard to_mask = (1ull << to_sq);
+
+            if (rook_attack & to_mask) {
+                passing_rays[src][to] = rook_attack & (get_rook_attacks(to_sq, src_mask) | to_mask);
+            } else if (bishop_attack & to_mask) {
+                passing_rays[src][to] = bishop_attack & (get_bishop_attacks(to_sq, src_mask) | to_mask);
             }
         }
     }

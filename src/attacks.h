@@ -49,6 +49,7 @@ extern Bitboard bishop_attacks[64][512];
 extern Bitboard rook_attacks[64][4096];
 
 extern Bitboard between_squares[64][64];
+extern Bitboard passing_rays[64][64];
 
 void init_magic_table(PieceType piece_type);
 

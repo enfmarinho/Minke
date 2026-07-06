@@ -190,15 +190,16 @@ class DatagenThread {
 
         int move_count = 8 + (prng.rand<uint32_t>() % 5);
         for (int i = 0; i < move_count; ++i) {
-            ScoredMove moves[MAX_MOVES_PER_POS];
-            ScoredMove* end = gen_moves(moves, m_td->position, MoveGenType::GEN_ALL);
+            Movegen::ScoredMoveList move_list;
+            Movegen::all(move_list, m_td->position);
 
-            std::shuffle(moves, end, prng);
+            std::shuffle(move_list.begin(), move_list.end(), prng);
 
             bool legal_found = false;
-            for (auto curr = moves; curr != end; ++curr) {
-                if (m_td->position.is_legal(curr->move)) {
-                    m_td->position.make_move<false>(curr->move);
+            for (const ScoredMove score_move : move_list) {
+                const Move move = score_move.move;
+                if (m_td->position.is_legal(move)) {
+                    m_td->position.make_move<false>(move);
                     legal_found = true;
                     break;
                 }
