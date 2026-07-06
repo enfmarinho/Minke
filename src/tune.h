@@ -144,6 +144,7 @@ TUNABLE_PARAM(lmr_cutnode_delta, 769, 512, 2048, 128, 0.002)
 TUNABLE_PARAM(lmr_killer_delta, 1103, 512, 2048, 128, 0.002)
 TUNABLE_PARAM(lmr_counter_delta, 1226, 512, 2048, 128, 0.002)
 TUNABLE_PARAM(lmr_ttpv_delta, 926, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_corrhist_divisor, 512, 0, 2048, 128, 0.002)
 
 // Late Moves Pruning
 TUNABLE_PARAM(lmp_base, 123, 100, 200, 5, 0.002)

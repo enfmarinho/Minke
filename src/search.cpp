@@ -223,20 +223,21 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     bool in_check = position.in_check();
     ScoreType eval, raw_eval;
+    ScoreType correction_value = td.correction_history.correction(td);
     if (in_check) {
         eval = node.static_eval = raw_eval = SCORE_NONE;
     } else if (singular_search) {
         eval = raw_eval = node.static_eval;
     } else if (tthit) {
         raw_eval = tteval != SCORE_NONE ? tteval : position.eval();
-        eval = node.static_eval = adjust_eval(position, raw_eval, td.correction_history.correction(td));
+        eval = node.static_eval = adjust_eval(position, raw_eval, correction_value);
         if (ttscore != SCORE_NONE &&
             (ttbound == EXACT || (ttbound == UPPER && ttscore < eval) || (ttbound == LOWER && ttscore > eval)))
             eval = ttscore;
 
     } else {
         raw_eval = position.eval();
-        eval = node.static_eval = adjust_eval(position, raw_eval, td.correction_history.correction(td));
+        eval = node.static_eval = adjust_eval(position, raw_eval, correction_value);
         td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age());
     }
 
@@ -432,6 +433,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
                 // Reduce less if this move is or was a principal variation
                 scaled_reduction -= ttpv * lmr_ttpv_delta();
+
+                // Reduce based on correction history.
+                scaled_reduction -= std::abs(correction_value) / lmr_corrhist_divisor();
             } else {
                 // reduce noisy
             }
