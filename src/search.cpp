@@ -443,7 +443,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             score = -negamax(-alpha - 1, -alpha, lmr_depth, true, td);
 
             if (score > alpha && scaled_reduction > 1024) {
-                new_depth += score > best_score + 35;
+                new_depth += score > best_score + lmr_deeper_margin() + lmr_deeper_factor() * new_depth;
                 new_depth -= score < best_score + new_depth + 1;
 
                 score = -negamax(-alpha - 1, -alpha, new_depth, !cutnode, td);
