@@ -153,10 +153,6 @@ constexpr IndexType BOARD_WIDTH = 8;
 
 constexpr inline auto START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-// clang-format off
-constexpr ScoreType SEE_VALUES[PIECE_NB] = {100, 300, 300, 500, 1000, 5000,
-                                            100, 300, 300, 500, 1000, 5000, 0};
-// clang-format on
 constexpr Bitboard FILE_MASKS[8] = {0x101010101010101,  0x202020202020202,  0x404040404040404,  0x808080808080808,
                                     0x1010101010101010, 0x2020202020202020, 0x4040404040404040, 0x8080808080808080};
 

@@ -28,6 +28,8 @@
 #include <string>
 #include <vector>
 
+#include "types.h"
+
 struct TunableParam {
     std::string name;
     int default_value;
@@ -234,6 +236,18 @@ TUNABLE_PARAM(bishop_scaling_factor, 339, 200, 400, 10, 0.002)
 TUNABLE_PARAM(rook_scaling_factor, 524, 400, 700, 15, 0.002)
 TUNABLE_PARAM(queen_scaling_factor, 975, 800, 1400, 20, 0.002)
 TUNABLE_PARAM(material_scaling_base, 26090, 20000, 30000, 400, 0.002)
+
+// SEE values
+TUNABLE_PARAM(pawn_see_value, 100, 20, 160, 5, 0.002)
+TUNABLE_PARAM(knight_see_value, 300, 200, 400, 10, 0.002)
+TUNABLE_PARAM(bishop_see_value, 300, 200, 400, 10, 0.002)
+TUNABLE_PARAM(rook_see_value, 500, 400, 700, 15, 0.002)
+TUNABLE_PARAM(queen_see_value, 1000, 800, 1400, 20, 0.002)
+
+// clang-format off
+const int SEE_VALUES[PIECE_NB] = {pawn_see_value(), knight_see_value(), bishop_see_value(), rook_see_value(), queen_see_value(), 5000,
+                                  pawn_see_value(), knight_see_value(), bishop_see_value(), rook_see_value(), queen_see_value(), 5000, 0};
+// clang-format on
 
 // Move picker
 TUNABLE_PARAM(mp_see_threshold_base, 76, 0, 150, 5, 0.002)
