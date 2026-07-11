@@ -19,6 +19,8 @@
 #ifndef TUNE_H
 #define TUNE_H
 
+#define TUNE
+
 #ifdef TUNE
 
 #include <cassert>
