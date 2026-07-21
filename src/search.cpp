@@ -436,6 +436,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
                 // Reduce based on correction history.
                 scaled_reduction -= std::abs(correction_value) / lmr_corrhist_divisor();
+
+                // Reduce based on history move score.
+                scaled_reduction -= 1024 * td.search_history.get_history(td, move) / lmr_hist_divisor();
             } else {
                 // reduce noisy
             }

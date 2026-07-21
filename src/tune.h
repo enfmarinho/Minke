@@ -145,6 +145,7 @@ TUNABLE_PARAM(lmr_killer_delta, 1103, 512, 2048, 128, 0.002)
 TUNABLE_PARAM(lmr_counter_delta, 1226, 512, 2048, 128, 0.002)
 TUNABLE_PARAM(lmr_ttpv_delta, 926, 512, 2048, 128, 0.002)
 TUNABLE_PARAM(lmr_corrhist_divisor, 512, 0, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_hist_divisor, 4096, 1024, 16384, 400, 0.002)
 TUNABLE_PARAM(lmr_deeper_margin, 30, 20, 100, 5, 0.002)
 TUNABLE_PARAM(lmr_deeper_factor, 2, 1, 10, 1, 0.002)
 
