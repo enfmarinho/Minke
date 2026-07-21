@@ -16,11 +16,12 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef SIMD_H
-#define SIMD_H
+#if USE_SIMD && USE_NEON
 
-#include "simd/avx2.h"
-#include "simd/avx512.h"
-#include "simd/neon.h"
+#include <arm_neon.h>
 
-#endif // #ifndef SIMD_H
+#include <cstdint>
+
+namespace simd {} // namespace simd
+
+#endif // USE_SIMD && USE_NEON
