@@ -131,6 +131,9 @@ TUNABLE_PARAM(nmp_base_reduction, 304, 128, 384, 15, 0.002)
 TUNABLE_PARAM(nmp_depth_factor, 21, 16, 63, 0.5, 0.002)
 FIXED_PARAM(nmp_min_depth, 2, 2, 8, 0.5, 0.002)
 
+// Hindsight
+TUNABLE_PARAM(hindsight_eval, 150, 50, 300, 10, 0.002)
+
 // Reverse Futility Pruning
 TUNABLE_PARAM(rfp_margin, 107, 50, 150, 10, 0.002)
 FIXED_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)

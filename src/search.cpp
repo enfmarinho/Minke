@@ -257,6 +257,13 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     // Forward pruning methods
     if (!in_check && !pv_node && !root && !singular_search) {
+        // Hindsight reduction
+        if (depth >= 2 && td.height >= 1 && td.nodes[td.height - 1].reduction >= 1 &&
+            td.nodes[td.height - 1].static_eval != SCORE_NONE &&
+            node.static_eval + td.nodes[td.height - 1].static_eval >= hindsight_eval()) {
+            --depth;
+        }
+
         // Reverse futility pruning
         if (depth < rfp_max_depth() && eval - rfp_margin() * (depth - improving) >= beta)
             return eval;
@@ -439,8 +446,12 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             } else {
                 // reduce noisy
             }
-            const int lmr_depth = std::min(std::max(new_depth - scaled_reduction / 1024, 1), new_depth);
+            const int reduction = scaled_reduction / 1024;
+            const int lmr_depth = std::min(std::max(new_depth - reduction, 1), new_depth);
+
+            td.nodes[td.height - 1].reduction = reduction;
             score = -negamax(-alpha - 1, -alpha, lmr_depth, true, td);
+            td.nodes[td.height - 1].reduction = 0;
 
             if (score > alpha && scaled_reduction > 1024) {
                 new_depth += score > best_score + lmr_deeper_margin() + lmr_deeper_factor() * new_depth;
