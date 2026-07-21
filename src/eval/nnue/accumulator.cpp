@@ -18,8 +18,6 @@
 
 #include "accumulator.h"
 
-#include <cstring>
-
 #include "pov_accumulator.h"
 
 Accumulator::Accumulator(const Square white_king_sq, const Square black_king_sq, const PovAccumulator &white_pov_acc,

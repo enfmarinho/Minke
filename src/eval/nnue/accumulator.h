@@ -43,8 +43,6 @@ class alignas(64) Accumulator {
     friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
 
   private:
-    void refresh_pov(const Color pov, const Position &pos);
-
     void init(const DirtyPiece &dp, const Square white_king_sq, const Square black_king_sq);
 
     alignas(64) PovAccumulator m_pov_accumulators[2];

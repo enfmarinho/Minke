@@ -22,6 +22,7 @@
 #include <cstring>
 
 #include "../../position.h"
+#include "arch.h"
 
 PovAccumulator::PovAccumulator(const Position &pos, const Color pov) {
     // Debug-only constructor. Computes a PovAccumulator from scratch and uses it as a
@@ -36,37 +37,37 @@ PovAccumulator::PovAccumulator(const Position &pos, const Color pov) {
 }
 
 void PovAccumulator::add(const PovAccumulator &input, const size_t add0) {
-    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
-        m_neurons[column] = input.m_neurons[column] + network.hidden_weights[add0 + column];
+    for (int column{0}; column < L1_SIZE; ++column) {
+        m_neurons[column] = input.m_neurons[column] + network.ft_weights[add0 + column];
     }
 }
 
 void PovAccumulator::sub(const PovAccumulator &input, const size_t sub0) {
-    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
-        m_neurons[column] = input.m_neurons[column] - network.hidden_weights[sub0 + column];
+    for (int column{0}; column < L1_SIZE; ++column) {
+        m_neurons[column] = input.m_neurons[column] - network.ft_weights[sub0 + column];
     }
 }
 
 void PovAccumulator::add_sub(const PovAccumulator &input, const size_t add0, const size_t sub0) {
-    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
+    for (int column{0}; column < L1_SIZE; ++column) {
         m_neurons[column] =
-            input.m_neurons[column] + network.hidden_weights[add0 + column] - network.hidden_weights[sub0 + column];
+            input.m_neurons[column] + network.ft_weights[add0 + column] - network.ft_weights[sub0 + column];
     }
 }
 
 void PovAccumulator::add_sub2(const PovAccumulator &input, const size_t add0, const size_t sub0, const size_t sub1) {
-    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
-        m_neurons[column] = input.m_neurons[column] + network.hidden_weights[add0 + column] -
-                            network.hidden_weights[sub0 + column] - network.hidden_weights[sub1 + column];
+    for (int column{0}; column < L1_SIZE; ++column) {
+        m_neurons[column] = input.m_neurons[column] + network.ft_weights[add0 + column] -
+                            network.ft_weights[sub0 + column] - network.ft_weights[sub1 + column];
     }
 }
 
 void PovAccumulator::add2_sub2(const PovAccumulator &input, const size_t add0, const size_t add1, const size_t sub0,
                                const size_t sub1) {
-    for (int column{0}; column < HIDDEN_LAYER_SIZE; ++column) {
-        m_neurons[column] = input.m_neurons[column] + network.hidden_weights[add0 + column] +
-                            network.hidden_weights[add1 + column] - network.hidden_weights[sub0 + column] -
-                            network.hidden_weights[sub1 + column];
+    for (int column{0}; column < L1_SIZE; ++column) {
+        m_neurons[column] = input.m_neurons[column] + network.ft_weights[add0 + column] +
+                            network.ft_weights[add1 + column] - network.ft_weights[sub0 + column] -
+                            network.ft_weights[sub1 + column];
     }
 }
 
