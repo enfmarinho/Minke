@@ -19,6 +19,7 @@
 #include "init.h"
 
 #include <cmath>
+#include <cstdint>
 
 #include "attacks.h"
 #include "eval/nnue/arch.h"
@@ -65,21 +66,65 @@ void init_search_params() {
 }
 
 void init_network_params() {
-    const int16_t *p = reinterpret_cast<const int16_t *>(gNetParametersData);
+    const uint8_t* raw_bytes = reinterpret_cast<const uint8_t*>(gNetParametersData);
 
-    for (int b = 0; b < NUM_KING_BUCKETS; ++b)
-        for (int i = 0; i < INPUT_LAYER_SIZE; ++i)
-            for (int j = 0; j < HIDDEN_LAYER_SIZE; ++j)
-                network.hidden_weights[b * INPUT_LAYER_SIZE * HIDDEN_LAYER_SIZE + i * HIDDEN_LAYER_SIZE + j] = *(p++);
+    // Copy FT weights
+    size_t offset = 0;
+    std::memcpy(network.ft_weights, raw_bytes + offset, sizeof(network.ft_weights));
+    offset += sizeof(network.ft_weights);
 
-    for (int i = 0; i < HIDDEN_LAYER_SIZE; ++i)
-        network.hidden_bias[i] = *(p++);
+    // Copy FT biases
+    std::memcpy(network.ft_biases, raw_bytes + offset, sizeof(network.ft_biases));
+    offset += sizeof(network.ft_biases);
 
-    for (int i = 0; i < OUTPUT_BUCKET_COUNT * HIDDEN_LAYER_SIZE * 2; ++i)
-        network.output_weights[i] = *(p++);
+    // Transform raw l1_weights, bullet output (transposed: (output_buckets * l2_size) x l1_size) into VNNI layout
+    const int8_t* raw_l1 = reinterpret_cast<const int8_t*>(raw_bytes + offset);
+    for (int l1_idx = 0; l1_idx < L1_SIZE; ++l1_idx) {
+        for (int out_bucket_idx = 0; out_bucket_idx < OUTPUT_BUCKET_COUNT; ++out_bucket_idx) {
+            for (int l2_idx = 0; l2_idx < L2_SIZE; ++l2_idx) {
+                network.l1_weights[out_bucket_idx][l1_idx / 4][l2_idx][l1_idx % 4] =
+                    raw_l1[(out_bucket_idx * L2_SIZE + l2_idx) * L1_SIZE + l1_idx];
+            }
+        }
+    }
+    offset += sizeof(network.l1_weights);
 
-    for (int i = 0; i < OUTPUT_BUCKET_COUNT; ++i)
-        network.output_bias[i] = *(p++);
+    // Copy L1 biases
+    const int32_t* raw_l1b = reinterpret_cast<const int32_t*>(raw_bytes + offset);
+    for (int out_bucket_idx = 0; out_bucket_idx < OUTPUT_BUCKET_COUNT; ++out_bucket_idx) {
+        for (int l2_idx = 0; l2_idx < L2_SIZE; ++l2_idx) {
+            network.l1_biases[out_bucket_idx][l2_idx] = raw_l1b[out_bucket_idx * L2_SIZE + l2_idx];
+        }
+    }
+    offset += sizeof(network.l1_biases);
+
+    // Transform raw l2_weights, bullet output (transposed: (output_buckets * l3_size) x l2_size)
+    const int32_t* raw_l2 = reinterpret_cast<const int32_t*>(raw_bytes + offset);
+    for (int l2_idx = 0; l2_idx < L2_SIZE; ++l2_idx) {
+        for (int out_bucket_idx = 0; out_bucket_idx < OUTPUT_BUCKET_COUNT; ++out_bucket_idx) {
+            for (int l3_idx = 0; l3_idx < L3_SIZE; ++l3_idx) {
+                network.l2_weights[out_bucket_idx][l2_idx][l3_idx] =
+                    raw_l2[(out_bucket_idx * L3_SIZE + l3_idx) * L2_SIZE + l2_idx];
+            }
+        }
+    }
+    offset += sizeof(network.l2_weights);
+
+    // L2 biases
+    std::memcpy(network.l2_biases, raw_bytes + offset, sizeof(network.l2_biases));
+    offset += sizeof(network.l2_biases);
+
+    // Transform raw l3_weights, bullet output (transposed: output_buckets x l3_size)
+    const int32_t* raw_l3 = reinterpret_cast<const int32_t*>(raw_bytes + offset);
+    for (int l3_idx = 0; l3_idx < L3_SIZE; ++l3_idx) {
+        for (int out_bucket_idx = 0; out_bucket_idx < OUTPUT_BUCKET_COUNT; ++out_bucket_idx) {
+            network.l3_weights[out_bucket_idx][l3_idx] = raw_l3[out_bucket_idx * L3_SIZE + l3_idx];
+        }
+    }
+    offset += sizeof(network.l3_weights);
+
+    // L3 biases
+    std::memcpy(network.l3_biases, raw_bytes + offset, sizeof(network.l3_biases));
 }
 
 void init_hash_keys() {
