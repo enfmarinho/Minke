@@ -202,8 +202,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     // Transposition table probe
     TTEntry tte;
-    bool tthit = td.tt.probe(position, tte);
-    tthit = tthit && !singular_search; // Don't use ttentry result if in singular search
+    bool tthit = !singular_search && td.tt.probe(position, tte);
+
     // Extraction data from ttentry if tthit
     Move ttmove = (tthit ? tte.best_move() : MOVE_NONE);
     ScoreType ttscore = tthit ? tte.score() : SCORE_NONE;
