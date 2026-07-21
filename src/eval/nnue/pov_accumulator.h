@@ -37,9 +37,9 @@ class alignas(64) PovAccumulator {
 
     PovAccumulator &operator=(const PovAccumulator &) = default;
 
-    inline void reset() { std::memcpy(m_neurons.data(), network.hidden_bias.data(), sizeof(network.hidden_bias)); }
+    inline void reset() { std::memcpy(m_neurons.data(), network.ft_biases, sizeof(network.ft_biases)); }
 
-    std::span<const int16_t> neurons() const { return m_neurons; }
+    std::span<const int16_t, L1_SIZE> neurons() const { return m_neurons; }
 
     void add(const PovAccumulator &input, const size_t add0);
     void sub(const PovAccumulator &input, const size_t sub0);
@@ -55,7 +55,7 @@ class alignas(64) PovAccumulator {
     friend bool operator==(const PovAccumulator &lhs, const PovAccumulator &rhs);
 
   private:
-    std::array<int16_t, HIDDEN_LAYER_SIZE> m_neurons;
+    std::array<int16_t, L1_SIZE> m_neurons;
 };
 
 #endif // #ifndef POV_ACCUMULATOR_H

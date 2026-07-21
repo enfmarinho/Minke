@@ -19,15 +19,15 @@
 #ifndef ARCH_H
 #define ARCH_H
 
-#include <array>
 #include <cstdint>
 
 #include "../../types.h"
 #include "../../utils.h"
-#include "simd.h"
 
 constexpr int INPUT_LAYER_SIZE = 64 * 12;
-constexpr int HIDDEN_LAYER_SIZE = 1024;
+constexpr int L1_SIZE = 1024;
+constexpr int L2_SIZE = 16;
+constexpr int L3_SIZE = 32;
 
 constexpr int NUM_KING_BUCKETS = 10;
 // clang-format off
@@ -45,26 +45,28 @@ constexpr int KING_BUCKETS_LAYOUT[64] = {
 // clang-format on
 
 constexpr int OUTPUT_BUCKET_COUNT = 8;
+constexpr int BUCKET_SIZE = 32 / OUTPUT_BUCKET_COUNT;
 
 constexpr int32_t CRELU_MIN = 0;
 constexpr int32_t CRELU_MAX = 255;
 
-constexpr int SCALE = 400;
+constexpr int32_t SCALE = 400;
 
-constexpr int QA = 255;
-constexpr int QB = 64;
-constexpr int QAB = QA * QB;
+constexpr int32_t QA = 255;
+constexpr int32_t QB = 128;
+constexpr int32_t QC = 64;
 
-#ifdef USE_SIMD
-const vepi16 QZERO = vepi16_zero();
-const vepi16 QONE = vepi16_set(QA);
-#endif
+constexpr int32_t FT_SCALE_BITS = 7;
 
 struct alignas(64) Network {
-    std::array<int16_t, NUM_KING_BUCKETS * INPUT_LAYER_SIZE * HIDDEN_LAYER_SIZE> hidden_weights;
-    std::array<int16_t, HIDDEN_LAYER_SIZE> hidden_bias;
-    std::array<int16_t, HIDDEN_LAYER_SIZE * 2 * OUTPUT_BUCKET_COUNT> output_weights;
-    std::array<int16_t, OUTPUT_BUCKET_COUNT> output_bias;
+    int16_t ft_weights[NUM_KING_BUCKETS * INPUT_LAYER_SIZE * L1_SIZE];
+    int16_t ft_biases[L1_SIZE];
+    int8_t l1_weights[OUTPUT_BUCKET_COUNT][L1_SIZE / 4][L2_SIZE][4];
+    int32_t l1_biases[OUTPUT_BUCKET_COUNT][L2_SIZE];
+    int32_t l2_weights[OUTPUT_BUCKET_COUNT][L2_SIZE][L3_SIZE];
+    int32_t l2_biases[OUTPUT_BUCKET_COUNT][L3_SIZE];
+    int32_t l3_weights[OUTPUT_BUCKET_COUNT][L3_SIZE];
+    int32_t l3_biases[OUTPUT_BUCKET_COUNT];
 };
 extern Network network;
 
@@ -95,8 +97,9 @@ inline size_t feature_idx(const Piece piece, const Square sq, const Square king_
                        (piece_color != pov) * COLOR_STRIDE +               // Perspective offset
                        get_piece_type(piece, piece_color) * PIECE_STRIDE + // Piece type offset
                        pov_sq;
-    return idx * HIDDEN_LAYER_SIZE;
+    return idx * L1_SIZE;
 }
+
 inline size_t feature_idx(const PieceSquare ps, const Square king_sq, const Color pov) {
     return feature_idx(ps.piece, ps.sq, king_sq, pov);
 }

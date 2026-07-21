@@ -20,11 +20,13 @@
 #define NNUE_H
 
 #include <cassert>
-#include <cstddef>
+#include <cstdint>
+#include <span>
 #include <vector>
 
 #include "../types.h"
 #include "nnue/accumulator.h"
+#include "nnue/arch.h"
 #include "nnue/finny_table.h"
 #include "nnue/pov_accumulator.h"
 
@@ -47,11 +49,17 @@ class NNUE {
     void update(const Position &pos);
     void update_pov(const Position &pos, const Color &pov);
 
-    ScoreType flatten_screlu_and_affine(const PovAccumulator &player, const PovAccumulator &adversary,
-                                        const size_t output_bucket) const;
+    int32_t propagate(std::span<const int16_t, L1_SIZE> stm_inputs, std::span<const int16_t, L1_SIZE> ntm_inputs,
+                      const int bucket);
+
+    void activate_ft(std::span<const int16_t, L1_SIZE> stm_acc, std::span<const int16_t, L1_SIZE> ntm_acc,
+                     std::span<uint8_t, L1_SIZE> outputs);
+    void propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs, std::span<int32_t, L2_SIZE> outputs);
+    void propagate_l2(int bucket, std::span<const int32_t, L2_SIZE> inputs, std::span<int32_t, L3_SIZE> outputs);
+    void propagate_l3(int bucket, std::span<const int32_t, L3_SIZE> inputs, int32_t &output);
 
     FinnyTable m_finny_table;
-    std::vector<Accumulator> m_accumulators; //!< Stack with accumulators
+    std::vector<Accumulator> m_accumulators;
 };
 
 #endif // #ifndef NNUE_H
