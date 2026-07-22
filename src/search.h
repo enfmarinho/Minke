@@ -47,6 +47,7 @@ struct SearchLimits {
 struct NodeData {
     PieceMove curr_pmove;
     Move excluded_move;
+    CounterType reduction;
     ScoreType static_eval;
     PvList pv_list;
 
