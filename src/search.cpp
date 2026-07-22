@@ -241,6 +241,20 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         td.tt.store(position.get_hash(), 0, MOVE_NONE, SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age());
     }
 
+    // Quiet move history update based on eval difference (idea from Alexandria)
+    ScoreType parent_static_eval = td.height >= 1 ? td.nodes[td.height - 1].static_eval : SCORE_NONE;
+    Move parent_move = td.height >= 1 ? td.nodes[td.height - 1].curr_pmove.move : MOVE_NONE;
+    if (!singular_search                    //
+        && !in_check                        //
+        && parent_static_eval != SCORE_NONE //
+        && parent_move != MOVE_NONE && parent_move.is_quiet()) {
+        HistoryType static_eval_diff = -parent_static_eval - node.static_eval;
+        HistoryType bonus = std::clamp(opp_buterfly_hist_update_factor() * static_eval_diff,
+                                       opp_buterfly_hist_update_min(), opp_buterfly_hist_update_max()) +
+                            opp_buterfly_hist_update_offset();
+        td.search_history.update_opp_butterfly_hist(td, parent_move, bonus);
+    }
+
     // Clean killer moves for the next ply
     td.nodes[td.height + 1].excluded_move = MOVE_NONE;
     td.search_history.clear_killers(td.height + 1);

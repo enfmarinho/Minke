@@ -57,6 +57,15 @@ HistoryType History::get_history(const ThreadData &td, const Move &move) const {
     return get_history_heuristic_score(td.position, move) + get_continuation_history_score(td, pmove);
 }
 
+void History::update_opp_butterfly_hist(const ThreadData &td, const Move move, const HistoryType bonus) {
+    const bool from_threatened = td.position.was_threatened(move.from());
+    const bool to_threatened = td.position.was_threatened(move.to());
+    HistoryType *ptr =
+        &m_search_history_table[td.position.get_adversary()][move.from_and_to()][from_threatened][to_threatened];
+
+    update_score(ptr, bonus);
+}
+
 void History::update_history(const ThreadData &td, const Move &best_move, int depth, const PieceMoveList &quiets_tried,
                              const PieceMoveList &tacticals_tried) {
     HistoryType quiet_bonus = calculate_score(depth, hist_bonus_mult(), hist_bonus_offset(), hist_bonus_max());

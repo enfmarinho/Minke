@@ -51,6 +51,9 @@ class Position {
     void unmake_null_move();
 
     inline bool in_check() const { return m_curr_state.checkers; }
+    inline bool was_threatened(const Square &sq) const {
+        return m_history_stack[m_history_ply - 1].threats & (1ULL << sq);
+    }
     inline bool is_threatened(const Square &sq) const { return m_curr_state.threats & (1ULL << sq); }
     bool is_attacked(const Square &sq) const;
     bool is_legal(const Move &move);
