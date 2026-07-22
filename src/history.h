@@ -46,7 +46,7 @@ class History {
         PieceType captured_pt = get_piece_type(position.consult(to));
         if (move.is_ep() || move.is_promotion())
             captured_pt = PAWN;
-        return m_capture_history[position.get_stm()][moved_pt][to][captured_pt];
+        return m_capture_history[position.get_stm()][moved_pt][to][captured_pt][position.is_threatened(to)];
     }
 
     inline void clear_killers(const int &height) {
@@ -86,7 +86,7 @@ class History {
             m_counter_moves[past_move.from_and_to()] = move;
     }
 
-    HistoryType m_capture_history[2][6][64][5];
+    HistoryType m_capture_history[2][6][64][5][2];
     HistoryType m_search_history_table[2][64 * 64][2][2];
     HistoryType m_continuation_history[12 * 64][12 * 64];
     Move m_counter_moves[64 * 64];
