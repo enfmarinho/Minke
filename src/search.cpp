@@ -94,7 +94,8 @@ void ThreadData::reset_search_parameters() {
 void ThreadData::set_search_limits(const SearchLimits sl) { this->search_limits = sl; }
 
 inline bool stop_search(const ThreadData &td) {
-    return td.time_manager.time_over() || td.stop || td.nodes_searched > td.search_limits.maximum_node;
+    return (td.nodes_searched & 2047 && td.time_manager.time_over()) || td.stop ||
+           td.nodes_searched > td.search_limits.maximum_node;
 }
 
 ScoreType iterative_deepening(ThreadData &td) {
