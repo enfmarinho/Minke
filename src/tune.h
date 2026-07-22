@@ -169,8 +169,9 @@ TUNABLE_PARAM(see_noisy_pruning_factor, -20, -200, 50, 10, 0.002)
 // Singular Extension
 FIXED_PARAM(singular_extension_min_depth, 8, 4, 10, 0.5, 0.002)
 TUNABLE_PARAM(singular_extension_depth_factor, 17, 10, 20, 1, 0.002)
-TUNABLE_PARAM(double_extension_margin, 9, -20, 40, 3, 0.002)
-TUNABLE_PARAM(triple_ext_margin, 105, 40, 140, 5, 0.002)
+TUNABLE_PARAM(double_ext_base, 9, -20, 40, 3, 0.002)
+TUNABLE_PARAM(double_ext_pv_factor, 250, 100, 400, 15, 0.002)
+TUNABLE_PARAM(triple_ext_base, 105, 40, 140, 5, 0.002)
 
 // Razoring
 TUNABLE_PARAM(razoring_max_depth, 5, 2, 6, 0.5, 0.002)
