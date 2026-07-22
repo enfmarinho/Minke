@@ -393,10 +393,12 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             td.nodes[td.height].excluded_move = MOVE_NONE;
 
             if (singular_score < singular_beta) {
-                extension = 1;
+                int double_margin = double_ext_base() + double_ext_pv_factor() * pv_node;
+                int triple_margin = triple_ext_base() + triple_ext_pv_factor() * pv_node;
 
-                if (!pv_node && singular_score < singular_beta - double_extension_margin())
-                    extension = 2 + (singular_score < singular_beta - triple_ext_margin());
+                extension = 1;
+                extension += singular_score < singular_beta - double_margin;
+                extension += singular_score < singular_beta - triple_margin;
             } else if (singular_score >= beta) { // Multi-Cut
                 return singular_score;
             } else if (ttscore >= beta) {
