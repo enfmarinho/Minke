@@ -257,11 +257,17 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     // Forward pruning methods
     if (!in_check && !pv_node && !root && !singular_search) {
-        // Hindsight reduction
-        if (depth >= 2 && td.height >= 1 && td.nodes[td.height - 1].reduction >= 1 &&
-            td.nodes[td.height - 1].static_eval != SCORE_NONE &&
-            node.static_eval + td.nodes[td.height - 1].static_eval >= hindsight_eval()) {
-            --depth;
+        if (td.height >= 1 && td.nodes[td.height - 1].static_eval != SCORE_NONE) {
+            ScoreType eval_delta = node.static_eval + td.nodes[td.height - 1].static_eval;
+            CounterType reduction = td.nodes[td.height - 1].reduction;
+
+            // Hindsight extension
+            if (reduction > 1 && eval_delta < 0)
+                ++depth;
+
+            // Hindsight reduction
+            if (depth >= 2 && reduction > 0 && eval_delta >= hindsight_eval())
+                --depth;
         }
 
         // Reverse futility pruning
