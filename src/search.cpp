@@ -381,28 +381,32 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
         // Extensions
         int extension = 0;
-        if (!root && depth >= singular_extension_min_depth() && move == ttmove && ttdepth > depth - 4 &&
-            move != td.nodes[td.height].excluded_move && ttbound == LOWER) {
-            ScoreType singular_beta = ttscore - depth * singular_extension_depth_factor() / 16;
-            ScoreType singular_depth = (depth - 1) / 2;
+        if (!root && move != td.nodes[td.height].excluded_move && move == ttmove) {
+            if (depth >= singular_extension_min_depth() && ttdepth > depth - 4 && ttbound == LOWER) {
+                ScoreType singular_beta = ttscore - depth * singular_extension_depth_factor() / 16;
+                ScoreType singular_depth = (depth - 1) / 2;
 
-            td.tt.prefetch(position.get_hash());
+                td.tt.prefetch(position.get_hash());
 
-            td.nodes[td.height].excluded_move = ttmove;
-            ScoreType singular_score = negamax(singular_beta - 1, singular_beta, singular_depth, cutnode, td);
-            td.nodes[td.height].excluded_move = MOVE_NONE;
+                td.nodes[td.height].excluded_move = ttmove;
+                ScoreType singular_score = negamax(singular_beta - 1, singular_beta, singular_depth, cutnode, td);
+                td.nodes[td.height].excluded_move = MOVE_NONE;
 
-            if (singular_score < singular_beta) {
+                if (singular_score < singular_beta) {
+                    extension = 1;
+
+                    if (!pv_node && singular_score < singular_beta - double_extension_margin())
+                        extension = 2 + (singular_score < singular_beta - triple_ext_margin());
+                } else if (singular_score >= beta) { // Multi-Cut
+                    return singular_score;
+                } else if (ttscore >= beta) {
+                    extension = -2;
+                } else if (cutnode) {
+                    extension = -2;
+                }
+            } else if (depth <= 7 && !in_check && ttbound == LOWER &&
+                       node.static_eval <= alpha - ldse_margin()) { // low depth singular extension
                 extension = 1;
-
-                if (!pv_node && singular_score < singular_beta - double_extension_margin())
-                    extension = 2 + (singular_score < singular_beta - triple_ext_margin());
-            } else if (singular_score >= beta) { // Multi-Cut
-                return singular_score;
-            } else if (ttscore >= beta) {
-                extension = -2;
-            } else if (cutnode) {
-                extension = -2;
             }
         }
 
