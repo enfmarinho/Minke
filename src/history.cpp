@@ -105,7 +105,9 @@ void History::update_capture_history_score(const Position &position, const Move 
 }
 
 void History::update_history_heuristic_score(const Position &position, const Move &move, int bonus) {
-    HistoryType *ptr = &m_search_history_table[position.get_stm()][move.from_and_to()];
+    const bool from_threatened = position.is_threatened(move.from());
+    const bool to_threatened = position.is_threatened(move.to());
+    HistoryType *ptr = &m_search_history_table[position.get_stm()][move.from_and_to()][from_threatened][to_threatened];
     update_score(ptr, bonus);
 }
 
@@ -126,7 +128,9 @@ void History::update_continuation_history_score(const ThreadData &td, const Piec
 }
 
 HistoryType History::get_history_heuristic_score(const Position &position, const Move &move) const {
-    return m_search_history_table[position.get_stm()][move.from_and_to()];
+    const bool from_threatened = position.is_threatened(move.from());
+    const bool to_threatened = position.is_threatened(move.to());
+    return m_search_history_table[position.get_stm()][move.from_and_to()][from_threatened][to_threatened];
 }
 
 HistoryType History::get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const {
