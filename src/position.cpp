@@ -144,7 +144,7 @@ bool Position::set_fen(const std::string &fen) {
         std::cerr << "INVALID FEN: game clock is not a number." << std::endl;
         return false;
     }
-    update_pin_and_checkers_bb();
+    update_aux_bbs();
 
     if constexpr (UPDATE)
         reset_nnue();
@@ -317,7 +317,7 @@ void Position::make_move(const Move &move) {
     hash_side_key();
 
     change_side();
-    update_pin_and_checkers_bb();
+    update_aux_bbs();
 }
 
 template void Position::make_move<true>(const Move &move);
@@ -601,7 +601,7 @@ void Position::make_null_move() {
     }
     hash_side_key();
     change_side();
-    update_pin_and_checkers_bb();
+    update_aux_bbs();
 }
 
 void Position::unmake_null_move() {
@@ -612,7 +612,7 @@ void Position::unmake_null_move() {
     change_side();
 }
 
-void Position::update_pin_and_checkers_bb() {
+void Position::update_aux_bbs() {
     Color adversary = get_adversary();
     Square king_sq = get_king_placement(m_stm);
     m_curr_state.pins = 0;
@@ -632,6 +632,43 @@ void Position::update_pin_and_checkers_bb() {
             set_bits(m_curr_state.pins, blockers & get_occupancy(m_stm));
         }
     }
+
+    update_threats();
+}
+
+void Position::update_threats() {
+    Bitboard &threats = m_curr_state.threats;
+    threats = 0;
+
+    Color stm = get_adversary();
+    Bitboard occupancy_bb = get_occupancy() ^ get_piece_bb(KING, stm);
+
+    const Bitboard pawn_bb = get_piece_bb(PAWN, stm);
+    const Direction west_attack = static_cast<Direction>(get_pawn_offset(stm) + WEST);
+    const Direction east_attack = static_cast<Direction>(get_pawn_offset(stm) + EAST);
+
+    threats |= shift(pawn_bb & NOT_A_FILE, west_attack);
+    threats |= shift(pawn_bb & NOT_H_FILE, east_attack);
+
+    Bitboard knights_bb = get_piece_bb(KNIGHT, stm);
+    while (knights_bb) {
+        const Square sq = poplsb(knights_bb);
+        threats |= knight_attacks[sq];
+    }
+
+    Bitboard bishop_bb = get_piece_bb(BISHOP, stm) | get_piece_bb(QUEEN, stm);
+    while (bishop_bb) {
+        const Square sq = poplsb(bishop_bb);
+        threats |= get_piece_attacks(sq, occupancy_bb, BISHOP);
+    }
+
+    Bitboard rook_bb = get_piece_bb(ROOK, stm) | get_piece_bb(QUEEN, stm);
+    while (rook_bb) {
+        const Square sq = poplsb(rook_bb);
+        threats |= get_piece_attacks(sq, occupancy_bb, ROOK);
+    }
+
+    threats |= knight_attacks[get_king_placement(stm)];
 }
 
 bool Position::is_attacked(const Square &sq) const {
