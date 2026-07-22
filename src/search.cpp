@@ -295,7 +295,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         ScoreType pc_beta = std::min(beta + probcut_margin(), MATE_FOUND - 1);
         if (depth >= probcut_min_depth() && std::abs(beta) < MATE_FOUND &&
             (!tthit || ttdepth < depth - 3 || (ttscore != SCORE_NONE && ttscore >= pc_beta))) {
-            MovePicker move_picker(ttmove, td, PROBCUT, pc_beta - node.static_eval);
+            MovePicker move_picker(ttmove, td, PROBCUT, pc_beta - eval);
             Move move;
             while ((move = move_picker.next_move(true)) != MOVE_NONE) {
                 if (move == td.nodes[td.height].excluded_move || !position.is_legal(move)) { // Avoid illegal moves
