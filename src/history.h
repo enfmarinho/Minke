@@ -44,8 +44,11 @@ class History {
         Square to = move.to();
         PieceType moved_pt = get_piece_type(position.consult(move.from()));
         PieceType captured_pt = get_piece_type(position.consult(to));
-        if (move.is_ep())
+        if (captured_pt == NONE) {
+            assert(move.is_ep() || move.is_promotion());
             captured_pt = PAWN;
+        }
+        assert(captured_pt != KING);
         return m_capture_history[position.get_stm()][moved_pt][to][captured_pt];
     }
 
@@ -86,7 +89,7 @@ class History {
             m_counter_moves[past_move.from_and_to()] = move;
     }
 
-    HistoryType m_capture_history[2][6][64][7];
+    HistoryType m_capture_history[2][6][64][5];
     HistoryType m_search_history_table[2][64 * 64][2][2];
     HistoryType m_continuation_history[12 * 64][12 * 64];
     Move m_counter_moves[64 * 64];
