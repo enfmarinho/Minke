@@ -122,7 +122,7 @@ void History::update_continuation_history_score(const ThreadData &td, const Piec
     if (past_node_idx >= 0 && td.nodes[past_node_idx].curr_pmove != PIECE_MOVE_NONE) {
         const size_t past_conthist_idx = cont_hist_idx(td.nodes[past_node_idx].curr_pmove);
         const size_t curr_conthist_idx = cont_hist_idx(pmove);
-        HistoryType *ptr = &m_continuation_history[past_conthist_idx][curr_conthist_idx];
+        HistoryType *ptr = &m_continuation_history[td.position.in_check()][past_conthist_idx][curr_conthist_idx];
         update_score(ptr, bonus);
     }
 }
@@ -149,5 +149,5 @@ HistoryType History::get_continuation_history_entry(const ThreadData &td, const 
 
     const size_t past_conthist_idx = cont_hist_idx(td.nodes[past_node_idx].curr_pmove);
     const size_t curr_conthist_idx = cont_hist_idx(pmove);
-    return m_continuation_history[past_conthist_idx][curr_conthist_idx];
+    return m_continuation_history[td.position.in_check()][past_conthist_idx][curr_conthist_idx];
 }
