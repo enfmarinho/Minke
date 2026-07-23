@@ -42,6 +42,7 @@ void CorrectionHistory::update(const ThreadData& td, const int depth, const int 
     tables.pawn[td.position.get_pawn_hash() % CORRHIST_SIZE].update(bonus);
     tables.white_nonpawn[td.position.get_white_nonpawn_hash() % CORRHIST_SIZE].update(bonus);
     tables.black_nonpawn[td.position.get_black_nonpawn_hash() % CORRHIST_SIZE].update(bonus);
+    tables.major_pieces[td.position.get_major_piece_hash() % CORRHIST_SIZE].update(bonus);
 
     auto update_cont = [&](int offset) {
         if (td.height >= offset + 1) {
@@ -63,6 +64,7 @@ HistoryType CorrectionHistory::correction(const ThreadData& td) const {
     HistoryType adjustment = pawn_corr_factor() * tables.pawn[td.position.get_pawn_hash() % CORRHIST_SIZE];
     adjustment += nonpawn_corr_factor() * tables.white_nonpawn[td.position.get_white_nonpawn_hash() % CORRHIST_SIZE];
     adjustment += nonpawn_corr_factor() * tables.black_nonpawn[td.position.get_black_nonpawn_hash() % CORRHIST_SIZE];
+    adjustment += major_piece_corr_factor() * tables.major_pieces[td.position.get_major_piece_hash() % CORRHIST_SIZE];
 
     auto adjust_cont = [&](int offset) {
         if (td.height >= offset + 1) {

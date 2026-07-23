@@ -215,6 +215,7 @@ TUNABLE_PARAM(capt_hist_penalty_max, -997, -3500, -500, 100, 0.002)
 
 TUNABLE_PARAM(pawn_corr_factor, 38, 1, 100, 5, 0.002)
 TUNABLE_PARAM(nonpawn_corr_factor, 37, 1, 100, 5, 0.002)
+TUNABLE_PARAM(major_piece_corr_factor, 30, 1, 100, 5, 0.002)
 TUNABLE_PARAM(cont_corr_factor, 34, 1, 100, 5, 0.002)
 
 TUNABLE_PARAM(conthist_1ply_weight, 989, 0, 1536, 50, 0.002)
