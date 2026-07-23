@@ -382,7 +382,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         // Extensions
         int extension = 0;
         if (!root && depth >= singular_extension_min_depth() && move == ttmove && ttdepth > depth - 4 &&
-            move != td.nodes[td.height].excluded_move && ttbound == LOWER) {
+            move != td.nodes[td.height].excluded_move && ttbound != UPPER) {
             ScoreType singular_beta = ttscore - depth * singular_extension_depth_factor() / 16;
             ScoreType singular_depth = (depth - 1) / 2;
 
