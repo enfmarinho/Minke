@@ -164,7 +164,7 @@ void MovePicker::score_noisy_moves() {
                 return m_td->position.consult(move.to());
         }();
 
-        score = 20 * SEE_VALUES[captured] + m_td->search_history.get_capture_history(m_td->position, move);
+        score = 10 * SEE_VALUES[captured] + m_td->search_history.get_capture_history(m_td->position, move);
 
         if (move.is_promotion()) {
             score += SEE_VALUES[move.promotee()] - SEE_VALUES[WHITE_PAWN];
