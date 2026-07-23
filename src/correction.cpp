@@ -27,7 +27,7 @@
 #include "types.h"
 
 static inline size_t cont_corr_idx(const PieceMove& pmove) {
-    return (static_cast<size_t>(pmove.piece) << 6) | static_cast<size_t>(pmove.move.to());
+    return (static_cast<size_t>(get_piece_type(pmove.piece)) << 6) | static_cast<size_t>(pmove.move.to());
 };
 
 void CorrectionHistory::reset() {
