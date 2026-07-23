@@ -217,7 +217,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     }
 
     // Internal Iterative Reductions
-    if ((!tthit || ttdepth + 4 < depth) && depth >= 3) {
+    if ((ttmove == MOVE_NONE || ttdepth + 4 < depth) && depth >= 3) {
         depth -= 1;
     }
 
