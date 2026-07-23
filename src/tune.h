@@ -129,6 +129,9 @@ TUNABLE_PARAM(aw_widening_factor, 39, 1, 100, 5, 0.002)
 // Null move pruning
 TUNABLE_PARAM(nmp_base_reduction, 304, 128, 384, 15, 0.002)
 TUNABLE_PARAM(nmp_depth_factor, 21, 16, 63, 0.5, 0.002)
+TUNABLE_PARAM(nmp_beta_base_margin, 200, 10, 300, 20, 0.002)
+TUNABLE_PARAM(nmp_beta_improving_margin, 50, 0, 100, 5, 0.002)
+TUNABLE_PARAM(nmp_beta_depth_factor, 1300, 500, 2000, 50, 0.002)
 FIXED_PARAM(nmp_min_depth, 2, 2, 8, 0.5, 0.002)
 
 // Hindsight
