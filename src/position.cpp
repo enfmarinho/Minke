@@ -247,6 +247,7 @@ void Position::reset() {
     m_pawn_hash = 0ULL;
     m_white_non_pawn_hash = 0ULL;
     m_black_non_pawn_hash = 0ULL;
+    m_major_piece_hash = 0ULL;
     m_history_ply = 0;
     m_curr_state.reset();
 }
@@ -982,14 +983,21 @@ bool Position::fifty_move_draw() {
 void Position::hash_piece_key(const PieceSquare &ps) {
     assert(ps.piece >= WHITE_PAWN && ps.piece <= BLACK_KING);
     assert(ps.sq >= a1 && ps.sq <= h8);
-    m_position_hash ^= hash_keys.pieces[ps.piece][ps.sq];
+
+    const HashType key = hash_keys.pieces[ps.piece][ps.sq];
+
+    m_position_hash ^= key;
     if (ps.piece == WHITE_PAWN || ps.piece == BLACK_PAWN) {
-        m_pawn_hash ^= hash_keys.pieces[ps.piece][ps.sq];
+        m_pawn_hash ^= key;
     } else if (get_color(ps.piece) == WHITE) {
-        m_white_non_pawn_hash ^= hash_keys.pieces[ps.piece][ps.sq];
+        m_white_non_pawn_hash ^= key;
     } else {
-        assert(get_color(ps.piece) == BLACK);
-        m_black_non_pawn_hash ^= hash_keys.pieces[ps.piece][ps.sq];
+        m_black_non_pawn_hash ^= key;
+    }
+
+    PieceType pt = get_piece_type(ps.piece);
+    if (pt == ROOK || pt == QUEEN) { // major pieces
+        m_major_piece_hash ^= key;
     }
 }
 

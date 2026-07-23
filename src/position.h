@@ -92,6 +92,7 @@ class Position {
     inline HashType get_pawn_hash() const { return m_pawn_hash; }
     inline HashType get_white_nonpawn_hash() const { return m_white_non_pawn_hash; }
     inline HashType get_black_nonpawn_hash() const { return m_black_non_pawn_hash; }
+    inline HashType get_major_piece_hash() const { return m_major_piece_hash; }
     inline int get_game_ply() const { return m_game_clock_ply; }
     inline int get_fifty_move_ply() const { return m_curr_state.fifty_move_ply; }
     inline int get_material_count(const Piece &piece) const { return count_bits(get_piece_bb(piece)); }
@@ -165,6 +166,7 @@ class Position {
     HashType m_pawn_hash;
     HashType m_white_non_pawn_hash;
     HashType m_black_non_pawn_hash;
+    HashType m_major_piece_hash;
     int m_game_clock_ply;
 
     int m_history_ply;
