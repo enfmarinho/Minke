@@ -167,7 +167,7 @@ TUNABLE_PARAM(see_quiet_pruning_factor, -100, -200, 50, 10, 0.002)
 TUNABLE_PARAM(see_noisy_pruning_factor, -20, -200, 50, 10, 0.002)
 
 // Singular Extension
-FIXED_PARAM(singular_extension_min_depth, 8, 4, 10, 0.5, 0.002)
+FIXED_PARAM(singular_extension_min_depth, 6, 4, 10, 0.5, 0.002)
 TUNABLE_PARAM(singular_extension_depth_factor, 17, 10, 20, 1, 0.002)
 TUNABLE_PARAM(double_extension_margin, 9, -20, 40, 3, 0.002)
 TUNABLE_PARAM(triple_ext_margin, 105, 40, 140, 5, 0.002)
