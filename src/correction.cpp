@@ -43,14 +43,18 @@ void CorrectionHistory::update(const ThreadData& td, const int depth, const int 
     tables.white_nonpawn[td.position.get_white_nonpawn_hash() % CORRHIST_SIZE].update(bonus);
     tables.black_nonpawn[td.position.get_black_nonpawn_hash() % CORRHIST_SIZE].update(bonus);
 
-    if (td.height >= 2) {
-        const PieceMove pmove1 = td.nodes[td.height - 1].curr_pmove;
-        const PieceMove pmove2 = td.nodes[td.height - 2].curr_pmove;
+    auto update_cont = [&](int offset) {
+        if (td.height >= offset + 1) {
+            const PieceMove curr_pmove = td.nodes[td.height - 1].curr_pmove;
+            const PieceMove past_pmove = td.nodes[td.height - offset - 1].curr_pmove;
 
-        if (pmove1 != PIECE_MOVE_NONE && pmove2 != PIECE_MOVE_NONE) {
-            tables.cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)].update(bonus);
+            if (curr_pmove != PIECE_MOVE_NONE && past_pmove != PIECE_MOVE_NONE) {
+                tables.cont_corr[cont_corr_idx(curr_pmove)][cont_corr_idx(past_pmove)].update(bonus);
+            }
         }
-    }
+    };
+
+    update_cont(1);
 }
 
 HistoryType CorrectionHistory::correction(const ThreadData& td) const {
@@ -60,13 +64,16 @@ HistoryType CorrectionHistory::correction(const ThreadData& td) const {
     adjustment += nonpawn_corr_factor() * tables.white_nonpawn[td.position.get_white_nonpawn_hash() % CORRHIST_SIZE];
     adjustment += nonpawn_corr_factor() * tables.black_nonpawn[td.position.get_black_nonpawn_hash() % CORRHIST_SIZE];
 
-    if (td.height >= 2) {
-        const PieceMove pmove1 = td.nodes[td.height - 1].curr_pmove;
-        const PieceMove pmove2 = td.nodes[td.height - 2].curr_pmove;
-        if (pmove1 != PIECE_MOVE_NONE && pmove2 != PIECE_MOVE_NONE) {
-            adjustment += cont_corr_factor() * tables.cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)];
+    auto adjust_cont = [&](int offset) {
+        if (td.height >= offset + 1) {
+            const PieceMove pmove1 = td.nodes[td.height - 1].curr_pmove;
+            const PieceMove pmove2 = td.nodes[td.height - offset - 1].curr_pmove;
+            if (pmove1 != PIECE_MOVE_NONE && pmove2 != PIECE_MOVE_NONE) {
+                adjustment += cont_corr_factor() * tables.cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)];
+            }
         }
-    }
+    };
+    adjust_cont(1);
 
     return adjustment / CORRHIST_GRAIN;
 }
