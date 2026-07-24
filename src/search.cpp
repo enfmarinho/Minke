@@ -291,6 +291,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         if (!position.last_was_null()   //
             && depth >= nmp_min_depth() //
             && position.has_non_pawns() //
+            && eval >= beta             //
             && node.static_eval >= beta + nmp_beta_margin) {
             const int reduction = (nmp_base_reduction() + depth * nmp_depth_factor()) / 64;
 
