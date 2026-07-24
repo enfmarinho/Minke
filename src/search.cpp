@@ -429,7 +429,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         } else {
             int scaled_reduction = 0;
             // Late Move Reduction
-            if (moves_searched > 1 && depth >= 3 && move.is_quiet()) {
+            if (moves_searched >= 4 && depth >= 3 && move.is_quiet()) {
                 scaled_reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
 
                 if (position.get_checkers()) // Reduce less for moves that give check
