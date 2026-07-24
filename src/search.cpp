@@ -581,7 +581,6 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
             continue;
         }
         node.curr_pmove = {move, position.consult(move.from())};
-        ++moves_searched;
 
         if (best_score > -MATE_FOUND) {
             if (moves_searched >= 3) // late move pruning
@@ -596,6 +595,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         position.make_move<true>(move);
         td.tt.prefetch(position.get_hash());
 
+        ++moves_searched;
         ++td.height;
         ScoreType score = -quiescence(-beta, -alpha, td);
         --td.height;
