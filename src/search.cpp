@@ -281,8 +281,18 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 return razor_score;
         }
 
-        // Null move pruning
-        if (!position.last_was_null() && depth >= nmp_min_depth() && eval >= beta && position.has_non_pawns()) {
+        // Null move pruning (NMP)
+        ScoreType nmp_beta_margin = [&]() {
+            int margin = nmp_beta_base_margin();
+            margin -= nmp_beta_improving_margin() * improving;
+            margin -= nmp_beta_depth_factor() * depth / 128;
+            return std::max(margin, 0);
+        }();
+        if (!position.last_was_null()   //
+            && depth >= nmp_min_depth() //
+            && position.has_non_pawns() //
+            && eval >= beta             //
+            && node.static_eval >= beta + nmp_beta_margin) {
             const int reduction = (nmp_base_reduction() + depth * nmp_depth_factor()) / 64;
 
             position.make_null_move();
