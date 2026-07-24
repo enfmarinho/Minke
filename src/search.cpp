@@ -462,7 +462,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             } else {
                 // reduce noisy
             }
-            const int reduction = scaled_reduction / 1024;
+            const int reduction = std::round(scaled_reduction / 1024.0);
             const int lmr_depth = std::min(std::max(new_depth - reduction, 1), new_depth);
 
             td.nodes[td.height - 1].reduction = reduction;
