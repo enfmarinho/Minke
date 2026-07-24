@@ -24,9 +24,12 @@
 #include "../../types.h"
 #include "../../utils.h"
 
+constexpr bool DUAL_ACTIVATION = true;
+
 constexpr int INPUT_LAYER_SIZE = 64 * 12;
 constexpr int L1_SIZE = 1024;
 constexpr int L2_SIZE = 16;
+constexpr int ACTUAL_L2_SIZE = 16 * (DUAL_ACTIVATION + 1);
 constexpr int L3_SIZE = 32;
 
 constexpr int NUM_KING_BUCKETS = 10;
@@ -57,13 +60,14 @@ constexpr int32_t QB = 128;
 constexpr int32_t QC = 64;
 
 constexpr int32_t FT_SCALE_BITS = 7;
+constexpr int32_t QC_BITS = 6;
 
 struct alignas(64) Network {
     int16_t ft_weights[NUM_KING_BUCKETS * INPUT_LAYER_SIZE * L1_SIZE];
     int16_t ft_biases[L1_SIZE];
     int8_t l1_weights[OUTPUT_BUCKET_COUNT][L1_SIZE / 4][L2_SIZE][4];
     int32_t l1_biases[OUTPUT_BUCKET_COUNT][L2_SIZE];
-    int32_t l2_weights[OUTPUT_BUCKET_COUNT][L2_SIZE][L3_SIZE];
+    int32_t l2_weights[OUTPUT_BUCKET_COUNT][ACTUAL_L2_SIZE][L3_SIZE];
     int32_t l2_biases[OUTPUT_BUCKET_COUNT][L3_SIZE];
     int32_t l3_weights[OUTPUT_BUCKET_COUNT][L3_SIZE];
     int32_t l3_biases[OUTPUT_BUCKET_COUNT];
