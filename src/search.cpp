@@ -460,8 +460,8 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             td.nodes[td.height - 1].reduction = 0;
 
             if (score > alpha && scaled_reduction > 1024) {
-                new_depth += score > best_score + lmr_deeper_margin() + lmr_deeper_factor() * new_depth;
-                new_depth -= score < best_score + new_depth + 1;
+                new_depth += score > best_score + lmr_deeper_margin() + lmr_deeper_depth_factor() * new_depth;
+                new_depth -= score < best_score + lmr_shallower_margin() + lmr_shallower_depth_factor() * new_depth;
 
                 score = -negamax(-alpha - 1, -alpha, new_depth, !cutnode, td);
             }
