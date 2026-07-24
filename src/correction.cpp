@@ -55,6 +55,7 @@ void CorrectionHistory::update(const ThreadData& td, const int depth, const int 
     };
     update_cont(1);
     update_cont(2);
+    update_cont(4);
 }
 
 HistoryType CorrectionHistory::correction(const ThreadData& td) const {
@@ -75,6 +76,7 @@ HistoryType CorrectionHistory::correction(const ThreadData& td) const {
     };
     adjust_cont(1);
     adjust_cont(2);
+    adjust_cont(4);
 
     return adjustment / CORRHIST_GRAIN;
 }
