@@ -429,7 +429,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         } else {
             int scaled_reduction = 0;
             // Late Move Reduction
-            if (moves_searched > 1 && depth >= 3 && move.is_quiet()) {
+            if (moves_searched > 1 && depth >= 3) {
                 scaled_reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
 
                 if (position.get_checkers()) // Reduce less for moves that give check
@@ -449,8 +449,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
                 // Reduce based on correction history.
                 scaled_reduction -= std::abs(correction_value) / lmr_corrhist_divisor();
-            } else {
-                // reduce noisy
             }
             const int reduction = scaled_reduction / 1024;
             const int lmr_depth = std::min(std::max(new_depth - reduction, 1), new_depth);
