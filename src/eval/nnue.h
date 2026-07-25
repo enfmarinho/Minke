@@ -54,8 +54,8 @@ class NNUE {
 
     void activate_ft(std::span<const int16_t, L1_SIZE> stm_acc, std::span<const int16_t, L1_SIZE> ntm_acc,
                      std::span<uint8_t, L1_SIZE> outputs);
-    void propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs, std::span<int32_t, L2_SIZE> outputs);
-    void propagate_l2(int bucket, std::span<const int32_t, L2_SIZE> inputs, std::span<int32_t, L3_SIZE> outputs);
+    void propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs, std::span<int32_t, ACTUAL_L2_SIZE> outputs);
+    void propagate_l2(int bucket, std::span<const int32_t, ACTUAL_L2_SIZE> inputs, std::span<int32_t, L3_SIZE> outputs);
     void propagate_l3(int bucket, std::span<const int32_t, L3_SIZE> inputs, int32_t &output);
 
     FinnyTable m_finny_table;
