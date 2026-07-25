@@ -377,7 +377,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             }
 
             // Quiet History Pruning
-            if (lmr_scaled_depth <= history_pruning_max_depth_scaled() && move.is_quiet() &&
+            if (!in_check && lmr_scaled_depth <= history_pruning_max_depth_scaled() && move.is_quiet() &&
                 td.search_history.get_history(td, move) <
                     quiet_hist_pruning_factor() * depth + quiet_hist_pruning_base()) {
                 skip_quiets = true;
