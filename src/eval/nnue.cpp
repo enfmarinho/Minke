@@ -94,7 +94,7 @@ void NNUE::update_pov(const Position &pos, const Color &pov) {
 int32_t NNUE::propagate(std::span<const int16_t, L1_SIZE> stm_inputs, std::span<const int16_t, L1_SIZE> ntm_inputs,
                         const int bucket) {
     alignas(64) uint8_t ft_outputs[L1_SIZE];
-    alignas(64) int32_t l1_outputs[L2_SIZE];
+    alignas(64) int32_t l1_outputs[ACTUAL_L2_SIZE];
     alignas(64) int32_t l2_outputs[L3_SIZE];
     int32_t l3_output;
 
@@ -154,7 +154,8 @@ void NNUE::activate_ft(std::span<const int16_t, L1_SIZE> stm_acc, std::span<cons
     pov_activate(ntm_acc, PAIR_COUNT);
 }
 
-void NNUE::propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs, std::span<int32_t, L2_SIZE> outputs) {
+void NNUE::propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs,
+                        std::span<int32_t, ACTUAL_L2_SIZE> outputs) {
     constexpr int shift = 8;
 
 #if USE_SIMD
@@ -184,14 +185,26 @@ void NNUE::propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs, st
     // Apply shift, SCReLU activation and store
     const vepi32 zero = zero_i32();
     const vepi32 one = set_i32(QC);
+    const vepi32 one_sq = set_i32(QC * QC);
 
     for (size_t i = 0; i < NUM_REGISTERS; ++i) {
-        vepi32 reg = shiftright_i32(l2_regs[i], shift);
+        vepi32 x = shiftright_i32(l2_regs[i], shift);
 
-        reg = clamp_i32(reg, zero, one);
-        reg = mullo_i32(reg, reg);
+        if constexpr (DUAL_ACTIVATION) {
+            vepi32 out0 = clamp_i32(x, zero, one);
+            out0 = shiftleft_i32(out0, QC_BITS); // upscale to QC^2 space
 
-        store_i32(&outputs[i * CHUNK_SIZE_32BIT], reg);
+            vepi32 out1 = mullo_i32(x, x);
+            out1 = clamp_i32(out1, zero, one_sq);
+
+            store_i32(&outputs[i * CHUNK_SIZE_32BIT], out0);
+            store_i32(&outputs[i * CHUNK_SIZE_32BIT + L2_SIZE], out1);
+        } else {
+            vepi32 out = clamp_i32(x, zero, one);
+            out = mullo_i32(out, out);
+
+            store_i32(&outputs[i * CHUNK_SIZE_32BIT], out);
+        }
     }
 #else
     // Initialize accumulators with biases
@@ -218,15 +231,26 @@ void NNUE::propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs, st
 
     // Apply shift, SCReLU activation and store
     for (size_t output_idx = 0; output_idx < L2_SIZE; ++output_idx) {
-        int32_t v = outputs[output_idx] >> shift;
-        v = std::clamp(v, 0, QC);
-        outputs[output_idx] = v * v;
+        int32_t x = outputs[output_idx] >> shift;
+        if constexpr (DUAL_ACTIVATION) {
+            int32_t crelu = std::clamp(x, 0, QC);
+            outputs[output_idx] = crelu << QC_BITS; // upscale to QC^2 space
+
+            // CSReLU
+            // Cast via uint32_t to simulate the truncation of mullo
+            int32_t sq = static_cast<int32_t>(static_cast<uint32_t>(x) * static_cast<uint32_t>(x));
+            outputs[output_idx + L2_SIZE] = std::clamp(sq, 0, QC * QC);
+        } else {
+            x = std::clamp(x, 0, QC);
+            outputs[output_idx] = x * x;
+        }
     }
 #endif
 }
 
 /// Does not activate outputs, that's done on 'propagate_l3'
-void NNUE::propagate_l2(int bucket, std::span<const int32_t, L2_SIZE> inputs, std::span<int32_t, L3_SIZE> outputs) {
+void NNUE::propagate_l2(int bucket, std::span<const int32_t, ACTUAL_L2_SIZE> inputs,
+                        std::span<int32_t, L3_SIZE> outputs) {
     // L2 biases
     std::memcpy(outputs.data(), &network.l2_biases[bucket], outputs.size_bytes());
 
@@ -234,7 +258,7 @@ void NNUE::propagate_l2(int bucket, std::span<const int32_t, L2_SIZE> inputs, st
 #if USE_SIMD
     using namespace simd;
 
-    for (size_t input_idx = 0; input_idx < L2_SIZE; ++input_idx) {
+    for (size_t input_idx = 0; input_idx < ACTUAL_L2_SIZE; ++input_idx) {
         vepi32 input = set_i32(inputs[input_idx]);
 
         for (size_t output_idx = 0; output_idx < L3_SIZE; output_idx += CHUNK_SIZE_32BIT) {
@@ -248,7 +272,7 @@ void NNUE::propagate_l2(int bucket, std::span<const int32_t, L2_SIZE> inputs, st
         }
     }
 #else
-    for (size_t input_idx = 0; input_idx < L2_SIZE; ++input_idx) {
+    for (size_t input_idx = 0; input_idx < ACTUAL_L2_SIZE; ++input_idx) {
         const int32_t input = inputs[input_idx];
         const int32_t *weights = &network.l2_weights[bucket][input_idx][0];
         for (size_t output_idx = 0; output_idx < L3_SIZE; ++output_idx) {

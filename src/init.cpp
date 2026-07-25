@@ -100,11 +100,11 @@ void init_network_params() {
 
     // Transform raw l2_weights, bullet output (transposed: (output_buckets * l3_size) x l2_size)
     const int32_t* raw_l2 = reinterpret_cast<const int32_t*>(raw_bytes + offset);
-    for (int l2_idx = 0; l2_idx < L2_SIZE; ++l2_idx) {
+    for (int l2_idx = 0; l2_idx < ACTUAL_L2_SIZE; ++l2_idx) {
         for (int out_bucket_idx = 0; out_bucket_idx < OUTPUT_BUCKET_COUNT; ++out_bucket_idx) {
             for (int l3_idx = 0; l3_idx < L3_SIZE; ++l3_idx) {
                 network.l2_weights[out_bucket_idx][l2_idx][l3_idx] =
-                    raw_l2[(out_bucket_idx * L3_SIZE + l3_idx) * L2_SIZE + l2_idx];
+                    raw_l2[(out_bucket_idx * L3_SIZE + l3_idx) * ACTUAL_L2_SIZE + l2_idx];
             }
         }
     }
