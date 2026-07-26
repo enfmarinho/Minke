@@ -139,11 +139,10 @@ void UCI::print_debug_info() {
     m_td->position.print();
     TTEntry tte;
     bool tthit = m_td->tt.probe(m_td->position, tte);
-    Move ttmove = MOVE_NONE;
+    Move ttmove = Move::none();
     if (tthit) {
         ttmove = tte.best_move();
-        std::cout << "Best move: " << ttmove.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks())
-                  << std::endl;
+        std::cout << "Best move: " << ttmove.to_uci(m_td->chess960, m_td->position.get_castle_rooks()) << std::endl;
     }
     Movegen::ScoredMoveList move_list;
     Movegen::all(move_list, m_td->position);
@@ -151,7 +150,7 @@ void UCI::print_debug_info() {
     for (ScoredMove scored_move : move_list) {
         if (!m_td->position.is_legal(scored_move.move))
             std::cout << "*";
-        std::cout << scored_move.move.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks()) << "("
+        std::cout << scored_move.move.to_uci(m_td->chess960, m_td->position.get_castle_rooks()) << "("
                   << scored_move.score << ") ";
     }
     std::cout << "\nNNUE eval: " << m_td->position.eval() << std::endl;
@@ -192,8 +191,7 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
         Movegen::all(move_list, m_td->position);
 
         for (auto scored_move : move_list) {
-            if (moves[index] ==
-                scored_move.move.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks())) {
+            if (moves[index] == scored_move.move.to_uci(m_td->chess960, m_td->position.get_castle_rooks())) {
                 m_td->position.make_move<false>(scored_move.move);
                 break;
             }
@@ -299,8 +297,7 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
         position.unmake_move<false>(move);
 
         if (root)
-            std::cout << move.get_algebraic_notation(m_td->chess960, m_td->position.get_castle_rooks()) << ": " << count
-                      << std::endl;
+            std::cout << move.to_uci(m_td->chess960, m_td->position.get_castle_rooks()) << ": " << count << std::endl;
     }
 
     if (root)

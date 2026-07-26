@@ -785,7 +785,7 @@ bool Position::is_legal(const Move &move) {
 
 // TODO if the moved piece and/or the capture piece is present in the move itself this could be way faster
 bool Position::is_pseudo_legal(const Move &move) const {
-    if (move == MOVE_NONE)
+    if (!move)
         return false;
 
     Square from = move.from();

@@ -48,7 +48,7 @@ void CorrectionHistory::update(const ThreadData& td, const int depth, const int 
             const PieceMove curr_pmove = td.nodes[td.height - 1].curr_pmove;
             const PieceMove past_pmove = td.nodes[td.height - offset - 1].curr_pmove;
 
-            if (curr_pmove != PIECE_MOVE_NONE && past_pmove != PIECE_MOVE_NONE) {
+            if (curr_pmove && past_pmove) {
                 tables.cont_corr[cont_corr_idx(curr_pmove)][cont_corr_idx(past_pmove)].update(bonus);
             }
         }
@@ -68,7 +68,7 @@ HistoryType CorrectionHistory::correction(const ThreadData& td) const {
         if (td.height >= offset + 1) {
             const PieceMove pmove1 = td.nodes[td.height - 1].curr_pmove;
             const PieceMove pmove2 = td.nodes[td.height - offset - 1].curr_pmove;
-            if (pmove1 != PIECE_MOVE_NONE && pmove2 != PIECE_MOVE_NONE) {
+            if (pmove1 && pmove2) {
                 adjustment += cont_corr_factor() * tables.cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)];
             }
         }

@@ -47,9 +47,14 @@ void History::reset() {
     std::memset(m_capture_history, 0, sizeof(m_capture_history));
     std::memset(m_search_history_table, 0, sizeof(m_search_history_table));
     std::memset(m_continuation_history, 0, sizeof(m_continuation_history));
-    std::memset(m_killer_moves, MOVE_NONE.internal(), sizeof(m_killer_moves));
-    for (Move &move : m_counter_moves)
-        move = MOVE_NONE;
+
+    for (auto &moves : m_killer_moves) {
+        moves[0] = Move::none();
+        moves[1] = Move::none();
+    }
+    for (Move &move : m_counter_moves) {
+        move = Move::none();
+    }
 };
 
 HistoryType History::get_history(const ThreadData &td, const Move &move) const {
@@ -74,12 +79,12 @@ void History::update_history(const ThreadData &td, const Move &best_move, int de
 
         // Increase the score of the move that caused the beta cutoff
         update_history_heuristic_score(td.position, best_move, quiet_bonus);
-        update_continuation_history_table(td, quiets_tried.list[quiets_tried.size - 1], cont_bonus);
+        update_continuation_history_table(td, quiets_tried.back(), cont_bonus);
 
         // Decrease all the quiet moves scores that did not caused a beta cutoff
-        for (int idx = 0; idx < quiets_tried.size - 1; ++idx) {
-            update_history_heuristic_score(td.position, quiets_tried.list[idx].move, quiet_penalty);
-            update_continuation_history_table(td, quiets_tried.list[idx], cont_penalty);
+        for (size_t idx = 0; idx < quiets_tried.size() - 1; ++idx) {
+            update_history_heuristic_score(td.position, quiets_tried[idx].move, quiet_penalty);
+            update_continuation_history_table(td, quiets_tried[idx], cont_penalty);
         }
 
     } else {
@@ -87,8 +92,7 @@ void History::update_history(const ThreadData &td, const Move &best_move, int de
     }
 
     // Decrease all the noisy moves scores that did not caused a beta cutoff
-    for (int idx = 0; idx < tacticals_tried.size; ++idx) {
-        Move move = tacticals_tried.list[idx].move;
+    for (const auto [move, _] : tacticals_tried) {
         if (move != best_move)
             update_capture_history_score(td.position, move, capture_penalty);
     }
@@ -119,7 +123,7 @@ void History::update_continuation_history_table(const ThreadData &td, const Piec
 
 void History::update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int offset) {
     int past_node_idx = td.height - offset;
-    if (past_node_idx >= 0 && td.nodes[past_node_idx].curr_pmove != PIECE_MOVE_NONE) {
+    if (past_node_idx >= 0 && td.nodes[past_node_idx].curr_pmove) {
         const size_t past_conthist_idx = cont_hist_idx(td.nodes[past_node_idx].curr_pmove);
         const size_t curr_conthist_idx = cont_hist_idx(pmove);
         HistoryType *ptr = &m_continuation_history[past_conthist_idx][curr_conthist_idx];
@@ -144,7 +148,7 @@ HistoryType History::get_continuation_history_score(const ThreadData &td, const 
 
 HistoryType History::get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const {
     int past_node_idx = td.height - offset;
-    if (past_node_idx < 0 || td.nodes[past_node_idx].curr_pmove == PIECE_MOVE_NONE)
+    if (past_node_idx < 0 || !td.nodes[past_node_idx].curr_pmove)
         return 0;
 
     const size_t past_conthist_idx = cont_hist_idx(td.nodes[past_node_idx].curr_pmove);

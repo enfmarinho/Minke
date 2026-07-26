@@ -129,7 +129,7 @@ class DatagenThread {
 
             Move move = m_td->best_move;
 
-            if (move == MOVE_NONE) {
+            if (!move) {
                 if (m_td->position.in_check())
                     result = m_td->position.get_stm() == WHITE ? LOSS : WIN;
                 else

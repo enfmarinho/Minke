@@ -21,7 +21,7 @@
 #include "types.h"
 #include "utils.h"
 
-std::string Move::get_algebraic_notation(const bool chess960, const Bitboard castle_rooks) const {
+std::string Move::to_uci(const bool chess960, const Bitboard castle_rooks) const {
     std::string algebraic_notation;
     Square source = from();
     Square target = to();
