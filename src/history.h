@@ -50,15 +50,14 @@ class History {
     }
 
     inline void clear_killers(const int &height) {
-        m_killer_moves[height][0] = MOVE_NONE;
-        m_killer_moves[height][1] = MOVE_NONE;
+        m_killer_moves[height][0] = Move::none();
+        m_killer_moves[height][1] = Move::none();
     }
     inline Move consult_killer1(const int &height) const { return m_killer_moves[height][0]; }
     inline Move consult_killer2(const int &height) const { return m_killer_moves[height][1]; }
     inline Move consult_counter(const Move &past_move) const {
-        // TODO try the usual indexing ([piece_type][to]), instead of butterfly
-        if (past_move == MOVE_NONE)
-            return MOVE_NONE;
+        if (!past_move)
+            return Move::none();
         return m_counter_moves[past_move.from_and_to()];
     }
     inline bool is_killer(const Move &move, const int &height) const {
@@ -82,7 +81,7 @@ class History {
     }
 
     inline void save_counter(const Move &past_move, const Move &move) {
-        if (past_move != MOVE_NONE)
+        if (past_move)
             m_counter_moves[past_move.from_and_to()] = move;
     }
 

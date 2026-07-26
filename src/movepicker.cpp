@@ -37,7 +37,7 @@ void MovePicker::init(Move ttmove, ThreadData &td, MovePickerType mp_type, Score
     m_threshold = threshold;
     m_move_list.clear();
 
-    if (ttmove != MOVE_NONE)
+    if (ttmove)
         m_stage = PICK_TT;
     else
         m_stage = GEN_NOISY;
@@ -45,32 +45,30 @@ void MovePicker::init(Move ttmove, ThreadData &td, MovePickerType mp_type, Score
     m_killer1 = m_td->search_history.consult_killer1(m_td->height);
     m_killer2 = m_td->search_history.consult_killer2(m_td->height);
 
-    m_counter = MOVE_NONE;
+    m_counter = Move::none();
     if (m_td->height > 0)
         m_counter = m_td->search_history.consult_counter(m_td->nodes[m_td->height - 1].curr_pmove.move);
     if (m_counter == m_killer1 || m_counter == m_killer2)
-        m_counter = MOVE_NONE;
+        m_counter = Move::none();
 
     m_idx = m_end = m_bad_noisy_end = 0;
 }
 
-Move MovePicker::next_move(const bool skip_quiets) { return next_move_scored(skip_quiets).move; }
-
-ScoredMove MovePicker::next_move_scored(const bool skip_quiets) {
+Move MovePicker::next_move(bool skip_quiets) {
     switch (m_stage) {
         case PICK_TT:
             m_stage = GEN_NOISY;
             if ((!skip_quiets || m_ttmove.is_noisy()) && m_td->position.is_pseudo_legal(m_ttmove)) {
-                return {m_ttmove, 0};
+                return m_ttmove;
             } else {
             }
-            // Fall-through
+            [[fallthrough]];
         case GEN_NOISY:
             Movegen::noisies(m_move_list, m_td->position);
             m_end = m_move_list.size();
             score_noisy_moves();
             m_stage = PICK_GOOD_NOISY;
-            // Fall-through
+            [[fallthrough]];
         case PICK_GOOD_NOISY:
             while (m_idx != m_end) {
                 const size_t idx = sort_next_move();
@@ -82,49 +80,49 @@ ScoredMove MovePicker::next_move_scored(const bool skip_quiets) {
                 if (!SEE(m_td->position, move, see_threshold)) // Bad noisy
                     m_move_list[m_bad_noisy_end++] = m_move_list[idx];
                 else if (move != m_ttmove)
-                    return {move, score};
+                    return move;
             }
             if ((m_mp_type == QSEARCH && skip_quiets) || m_mp_type == PROBCUT) {
                 m_stage = FINISHED;
-                return SCORED_MOVE_NONE;
+                return Move::none();
             } else if (skip_quiets) {
                 m_idx = 0;
                 m_stage = PICK_BAD_NOISY;
-                return next_move_scored(skip_quiets); // Work around to avoid the switch fall-through
+                return next_move(skip_quiets); // Work around to avoid the switch fall-through
             } else {
                 m_idx = m_bad_noisy_end;
                 m_move_list.resize(m_bad_noisy_end);
                 m_stage = GEN_QUIET;
             }
-            // Fall-through
+            [[fallthrough]];
         case GEN_QUIET:
             Movegen::quiets(m_move_list, m_td->position);
             m_end = m_move_list.size();
             score_quiet_moves();
             m_stage = PICK_QUIET;
-            // Fall-through
+            [[fallthrough]];
         case PICK_QUIET:
             while (m_idx != m_end && !skip_quiets) {
                 size_t idx = sort_next_move();
                 const auto [move, score] = m_move_list[idx];
 
                 if (move != m_ttmove)
-                    return {move, score};
+                    return move;
             }
             m_idx = 0;
             m_stage = PICK_BAD_NOISY;
-            // Fall-through
+            [[fallthrough]];
         case PICK_BAD_NOISY:
             while (m_idx != m_bad_noisy_end) {
                 // No need to call 'sort_next_move', since bad noisy moves are already sorted in PickGoodNoisy
                 const auto [move, score] = m_move_list[m_idx++];
                 if (move != m_ttmove)
-                    return {move, score};
+                    return move;
             }
             m_stage = FINISHED;
-            // Fall-through
+            [[fallthrough]];
         case FINISHED:
-            return SCORED_MOVE_NONE;
+            return Move::none();
         default:
             __builtin_unreachable();
     }

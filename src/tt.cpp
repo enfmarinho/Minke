@@ -32,7 +32,7 @@ inline static KeyType key_from_hash(const HashType &hash) { return static_cast<K
 void TTEntry::store(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
                     const ScoreType &eval, const BoundType &bound, const bool was_pv, const IndexType age,
                     const bool &tthit) {
-    if (best_move != MOVE_NONE || !tthit)
+    if (best_move || !tthit)
         m_best_move = best_move;
 
     if (!tthit || bound == EXACT || depth + 4 + 2 * was_pv > m_depth || age != this->age()) {
@@ -47,7 +47,7 @@ void TTEntry::store(const HashType &hash, const IndexType &depth, const Move &be
 void TTEntry::reset() {
     m_key = 0;
     m_depth = 0;
-    m_best_move = MOVE_NONE;
+    m_best_move = Move::none();
     m_score = SCORE_NONE;
     m_eval = SCORE_NONE;
     m_age_pv_bound = 0;

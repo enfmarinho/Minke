@@ -29,7 +29,7 @@ void PvList::update(Move new_move, const PvList &list) {
 
 void PvList::print(const bool chess960, const Bitboard castle_rooks) const {
     for (int i = 0; i < m_size; ++i) {
-        std::cout << m_pv[i].get_algebraic_notation(chess960, castle_rooks) << ' ';
+        std::cout << m_pv[i].to_uci(chess960, castle_rooks) << ' ';
     }
 }
 

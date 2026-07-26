@@ -52,8 +52,8 @@ struct NodeData {
     PvList pv_list;
 
     inline void reset() {
-        curr_pmove = PIECE_MOVE_NONE;
-        excluded_move = MOVE_NONE;
+        curr_pmove = PieceMove::none();
+        excluded_move = Move::none();
         static_eval = SCORE_NONE;
         pv_list.clear();
     }
