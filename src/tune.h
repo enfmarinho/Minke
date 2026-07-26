@@ -202,6 +202,14 @@ TUNABLE_PARAM(hist_penalty_mult, -26, -512, -1, 25, 0.002)
 TUNABLE_PARAM(hist_penalty_offset, 98, -512, 512, 50, 0.002)
 TUNABLE_PARAM(hist_penalty_max, -1094, -3500, -500, 100, 0.002)
 
+TUNABLE_PARAM(pawn_hist_bonus_mult, 275, 1, 512, 25, 0.002)
+TUNABLE_PARAM(pawn_hist_bonus_offset, 324, -512, 512, 50, 0.002)
+TUNABLE_PARAM(pawn_hist_bonus_max, 2462, 1500, 3500, 100, 0.002)
+
+TUNABLE_PARAM(pawn_hist_penalty_mult, -26, -512, -1, 25, 0.002)
+TUNABLE_PARAM(pawn_hist_penalty_offset, 98, -512, 512, 50, 0.002)
+TUNABLE_PARAM(pawn_hist_penalty_max, -1094, -3500, -500, 100, 0.002)
+
 TUNABLE_PARAM(cont_bonus_mult, 228, 1, 512, 25, 0.002)
 TUNABLE_PARAM(cont_bonus_offset, 477, -512, 512, 50, 0.002)
 TUNABLE_PARAM(cont_bonus_max, 2360, 1500, 3500, 100, 0.002)

@@ -27,6 +27,7 @@ struct ThreadData;
 
 using HistoryType = int;
 constexpr HistoryType HISTORY_DIVISOR = 16384;
+constexpr size_t PAWNHIST_SIZE = 16384;
 
 class History {
   public:
@@ -70,9 +71,11 @@ class History {
     void update_capture_history_score(const Position &position, const Move &move, int bonus);
     void update_history_heuristic_score(const Position &position, const Move &move, int bonus);
     void update_continuation_history_table(const ThreadData &td, const PieceMove &pmove, int bonus);
+    void update_pawn_history(const Position &position, const PieceMove move, int bonus);
 
     void update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int offset);
     HistoryType get_history_heuristic_score(const Position &position, const Move &move) const;
+    HistoryType get_pawn_history_score(const Position &pos, const PieceMove &pmove) const;
     HistoryType get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const;
     HistoryType get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const;
 
@@ -89,6 +92,7 @@ class History {
     HistoryType m_capture_history[2][6][64][5][2];
     HistoryType m_search_history_table[2][64 * 64][2][2];
     HistoryType m_continuation_history[12 * 64][12 * 64];
+    HistoryType m_pawn_history[PAWNHIST_SIZE][12 * 64];
     Move m_counter_moves[64 * 64];
     Move m_killer_moves[MAX_SEARCH_DEPTH][2];
 };
