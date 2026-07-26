@@ -8,9 +8,21 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 
 # Sources files
-file(GLOB SOURCES src/*.cpp src/eval/*.cpp src/eval/nnue/*.cpp)
+file(
+  GLOB
+  SOURCES
+  src/main.cpp
+  src/core/*.cpp
+  src/datagen/*.cpp
+  src/eval/*.cpp
+  src/eval/nnue/*.cpp
+  src/search/*.cpp
+  src/uci/*.cpp
+  src/utils/*.cpp)
 
 add_executable(minke ${SOURCES})
+
+target_include_directories(minke PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" build_type)
 if(NOT CMAKE_BUILD_TYPE)

@@ -16,13 +16,13 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "pov_accumulator.h"
+#include "eval/nnue/pov_accumulator.h"
 
 #include <cstddef>
 #include <cstring>
 
-#include "../../position.h"
-#include "arch.h"
+#include "core/position.h"
+#include "eval/nnue/arch.h"
 
 PovAccumulator::PovAccumulator(const Position &pos, const Color pov) {
     // Debug-only constructor. Computes a PovAccumulator from scratch and uses it as a

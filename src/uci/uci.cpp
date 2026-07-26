@@ -1,0 +1,366 @@
+/*
+ *  Minke is a UCI chess engine
+ *  Copyright (C) 2026 Eduardo Marinho <eduardomarinho@pm.me>
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#include "uci/uci.h"
+
+#include <cassert>
+#include <cstdint>
+#include <exception>
+#include <ios>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include "core/move.h"
+#include "core/movegen.h"
+#include "core/position.h"
+#include "core/types.h"
+#include "search/movepicker.h"
+#include "search/search.h"
+#include "search/tt.h"
+#include "uci/benchmark.h"
+#include "uci/init.h"
+#include "uci/tune.h"
+#include "utils/utils.h"
+
+UCI::UCI() {
+    void *mem = aligned_malloc(64, sizeof(ThreadData));
+    if (!mem) {
+        std::cerr << "Fatal: Failed to allocate memory for ThreadData." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+
+    m_td = new (mem) ThreadData();
+    m_td->tt.resize(EngineOptions::HASH_DEFAULT);
+    m_td->reset_search_parameters();
+    m_td->report = true;
+}
+
+UCI::~UCI() {
+    if (m_td != nullptr) {
+        m_td->~ThreadData();
+        aligned_free(m_td);
+        m_td = nullptr;
+    }
+}
+
+void UCI::loop() {
+    std::cout << "Minke Chess Engine by Eduardo Marinho" << std::endl;
+
+    std::string input, token;
+    do {
+        if (!std::getline(std::cin, input))
+            input = "quit";
+        std::istringstream iss(input);
+
+        token.clear();
+        iss >> std::skipws >> token;
+        if (token == "quit" || token == "stop") {
+            m_td->stop = true;
+        } else if (token == "go") {
+#ifdef TUNE
+            init_search_params();
+#endif
+            if (!m_td->stop)
+                continue;
+            else if (m_thread.joinable())
+                m_thread.join();
+            m_td->reset_search_parameters();
+            if (parse_go(iss))
+                perft(m_td->position, m_td->search_limits.depth);
+            else
+                go();
+        } else if (token == "position") {
+            position(iss);
+        } else if (token == "ucinewgame") {
+            ucinewgame();
+        } else if (token == "setoption") {
+            if (!m_td->stop) {
+                std::cerr << "Can not set an option while searching" << std::endl;
+                return;
+            } else if (m_thread.joinable()) {
+                m_thread.join();
+            }
+            set_option(iss);
+        } else if (token == "eval") {
+            eval();
+        } else if (token == "uci") {
+            std::cout << "id name Minke 6.0.0 \n"
+                      << "id author Eduardo Marinho \n";
+            EngineOptions::print();
+            std::cout << "uciok" << std::endl;
+        } else if (token == "isready") {
+            std::cout << "readyok" << std::endl;
+        } else if (token == "d") {
+            print_debug_info();
+        } else if (token == "bench") {
+            if (!m_td->stop)
+                continue;
+            else if (m_thread.joinable())
+                m_thread.join();
+
+            int bench_depth = EngineOptions::BENCH_DEPTH;
+            iss >> std::skipws >> bench_depth;
+            bench(bench_depth);
+        }
+#ifdef TUNE
+        else if (token == "tuneinfo") {
+            for (const TunableParam &tunable_param : TunableParamList::get()) {
+                tunable_param.print_ob_format();
+            }
+        }
+#endif
+        else if (!token.empty()) {
+            std::cout << "Unknown command: '" << token << "'. Type help for information." << std::endl;
+        }
+    } while (token != "quit");
+
+    if (m_thread.joinable())
+        m_thread.join();
+}
+
+void UCI::print_debug_info() {
+    m_td->position.print();
+    TTEntry tte;
+    bool tthit = m_td->tt.probe(m_td->position, tte);
+    Move ttmove = Move::none();
+    if (tthit) {
+        ttmove = tte.best_move();
+        std::cout << "Best move: " << ttmove.to_uci(m_td->chess960, m_td->position.get_castle_rooks()) << std::endl;
+    }
+    Movegen::ScoredMoveList move_list;
+    Movegen::all(move_list, m_td->position);
+    std::cout << "Move list(" << move_list.size() << "): ";
+    for (ScoredMove scored_move : move_list) {
+        if (!m_td->position.is_legal(scored_move.move))
+            std::cout << "*";
+        std::cout << scored_move.move.to_uci(m_td->chess960, m_td->position.get_castle_rooks()) << "("
+                  << scored_move.score << ") ";
+    }
+    std::cout << "\nNNUE eval: " << m_td->position.eval() << std::endl;
+}
+
+void UCI::position(std::istringstream &iss) {
+    std::string token, fen, move;
+    iss >> token;
+    if (token == "startpos") {
+        fen = START_FEN;
+        iss >> move; // consume the "moves" token, if there is one.
+    } else if (token == "fen") {
+        while (iss >> token && token != "moves")
+            fen += token + " ";
+    } else {
+        return;
+    }
+
+    std::vector<std::string> move_list;
+    while (iss >> move)
+        move_list.push_back(move);
+    set_position(fen, move_list);
+}
+
+void UCI::set_position(const std::string &fen, const std::vector<std::string> &moves) {
+    if (!m_td->position.set_fen<true>(fen)) {
+        std::cerr << "Invalid FEN!" << std::endl;
+        return;
+    }
+
+    for (unsigned int index = 0; index < moves.size(); ++index) {
+        // Make sure to only save the game history for the last 100 positions, more than that is completely unnecessary
+        // Moreover, the second conditional assures that the history stacks don't overflow
+        if (moves.size() - index == 100 || m_td->position.get_history_ply() > 100)
+            m_td->position.reset_history();
+
+        Movegen::ScoredMoveList move_list;
+        Movegen::all(move_list, m_td->position);
+
+        for (auto scored_move : move_list) {
+            if (moves[index] == scored_move.move.to_uci(m_td->chess960, m_td->position.get_castle_rooks())) {
+                m_td->position.make_move<false>(scored_move.move);
+                break;
+            }
+        }
+    }
+    m_td->position.reset_nnue();
+}
+
+void UCI::ucinewgame() {
+    m_td->search_history.reset();
+    m_td->correction_history.reset();
+    m_td->time_manager.reset();
+    m_td->position.set_fen<true>(START_FEN);
+    m_td->reset_search_parameters();
+    m_td->tt.clear();
+}
+
+void UCI::set_option(std::istringstream &iss) {
+    std::string value;
+    int value_int;
+    bool value_bool;
+    auto valid_int_value = [&](int min, int max) -> bool {
+        try {
+            value_int = std::stoi(value);
+            return min <= value_int && value_int <= max;
+        } catch (const std::exception &) {
+            return false;
+        }
+    };
+    auto valid_bool_value = [&]() -> bool {
+        if (value == "true") {
+            value_bool = true;
+            return true;
+        } else if (value == "false") {
+            value_bool = false;
+            return true;
+        }
+        return false;
+    };
+
+    std::string token, garbage;
+    iss >> garbage; // Consume the "name" token
+    iss >> token;
+    iss >> garbage; // Consume the "value" token.
+    iss >> value;
+    if (token == "Hash" && valid_int_value(EngineOptions::HASH_MIN, EngineOptions::HASH_MAX)) {
+        m_td->tt.resize(value_int);
+    } else if (token == "Threads" && valid_int_value(EngineOptions::THREADS_MIN, EngineOptions::THREADS_MAX)) {
+        // For now this is only for compatibility with OpenBench
+    } else if (token == "UCI_Chess960" && valid_bool_value()) {
+        m_td->chess960 = value_bool;
+    }
+#ifdef TUNE
+    else if (TunableParam *param_ptr = TunableParamList::get().find(token)) {
+        param_ptr->curr_value = std::stoi(value);
+    }
+#endif
+    else {
+        std::cout << "Trying to set unknown option: " << token << "\n";
+    }
+}
+
+void UCI::bench(int depth) {
+    TimeType total_time = 0;
+    int64_t nodes_searched = 0;
+    m_td->report = false;
+    for (const std::string &fen : BENCHMARK_FEN_LIST) {
+        ucinewgame();
+        m_td->position.set_fen<true>(fen);
+        m_td->reset_search_parameters();
+        m_td->search_limits.depth = depth;
+        m_td->tt.clear();
+        TimeType start_time = now();
+        go();
+        m_thread.join();
+        nodes_searched += m_td->nodes_searched;
+        total_time += now() - start_time;
+    }
+
+    std::cout << "info time " << total_time << "ms\n";
+    std::cout << nodes_searched << " nodes " << nodes_searched * 1000 / total_time << " nps\n";
+}
+
+int64_t UCI::perft(Position &position, CounterType depth, bool root) {
+    bool is_leaf = (depth == 2);
+    int64_t count = 0, nodes = 0;
+
+    Movegen::ScoredMoveList move_list;
+    Movegen::all(move_list, m_td->position);
+    for (ScoredMove score_move : move_list) {
+        Move move = score_move.move;
+        if (!position.is_legal(move)) {
+            continue;
+        }
+        position.make_move<false>(move);
+
+        if (root && depth <= 1)
+            count = 1, ++nodes;
+        else {
+            count = is_leaf ? position.legal_move_amount() : perft(position, depth - 1, false);
+            nodes += count;
+        }
+        position.unmake_move<false>(move);
+
+        if (root)
+            std::cout << move.to_uci(m_td->chess960, m_td->position.get_castle_rooks()) << ": " << count << std::endl;
+    }
+
+    if (root)
+        std::cout << "\nNodes searched: " << nodes << std::endl;
+    return nodes;
+}
+
+void UCI::eval() { std::cout << "The position evaluation is " << m_td->position.eval() << std::endl; }
+
+bool UCI::parse_go(std::istringstream &iss, bool bench) {
+    std::string token;
+    CounterType time = -1;
+    CounterType movestogo = -1;
+    CounterType movetime = -1;
+    CounterType inc = -1;
+    bool infinite = false;
+
+    while (iss >> token) {
+        if (token == "infinite" && !bench) {
+            infinite = true;
+            break;
+        }
+
+        CounterType option;
+        iss >> option;
+        if (token == "perft" && !iss.fail()) { // Don't "perft" if depth hasn't been passed
+            m_td->search_limits.depth = option;
+            return true;
+        } else if (token == "depth") {
+            m_td->search_limits.depth = option;
+        } else if (token == "nodes") {
+            m_td->search_limits.maximum_node = option;
+        } else if (token == "movetime") {
+            movetime = option;
+        } else if (token == "wtime" && m_td->position.get_stm() == WHITE) {
+            time = option;
+        } else if (token == "btime" && m_td->position.get_stm() == BLACK) {
+            time = option;
+        } else if (token == "winc" && m_td->position.get_stm() == WHITE) {
+            inc = option;
+        } else if (token == "binc" && m_td->position.get_stm() == BLACK) {
+            inc = option;
+        } else if (token == "movestogo") {
+            movestogo = option;
+        }
+    }
+
+    m_td->time_manager.reset(inc, time, movestogo, movetime, infinite);
+    return false;
+}
+
+void UCI::go() { m_thread = std::thread(iterative_deepening, std::ref(*m_td)); }
+
+void EngineOptions::print() {
+    std::cout << "option name Hash type spin default " << HASH_DEFAULT << " min " << HASH_MIN << " max " << HASH_MAX
+              << "\n";
+    std::cout << "option name Threads type spin default " << THREADS_DEFAULT << " min " << THREADS_MIN << " max "
+              << THREADS_MAX << "\n";
+    std::cout << "option name UCI_Chess960 type check default false\n";
+
+#ifdef TUNE
+    for (const TunableParam &tunable_param : TunableParamList::get()) {
+        tunable_param.print();
+    }
+#endif
+}

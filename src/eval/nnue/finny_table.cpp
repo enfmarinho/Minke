@@ -16,12 +16,12 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "finny_table.h"
+#include "eval/nnue/finny_table.h"
 
-#include "../../position.h"
-#include "accumulator.h"
-#include "arch.h"
-#include "pov_accumulator.h"
+#include "core/position.h"
+#include "eval/nnue/accumulator.h"
+#include "eval/nnue/arch.h"
+#include "eval/nnue/pov_accumulator.h"
 
 void FinnyTable::reset() {
     // Reset all cached accumulators

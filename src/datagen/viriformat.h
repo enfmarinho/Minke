@@ -16,15 +16,14 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef VIRIFORMAT_H
-#define VIRIFORMAT_H
+#pragma once
 
 #include <cstdint>
 #include <fstream>
 
-#include "../move.h"
-#include "../position.h"
-#include "packed_position.h"
+#include "core/move.h"
+#include "core/position.h"
+#include "datagen/packed_position.h"
 
 class Viriformat {
   public:
@@ -92,5 +91,3 @@ class Viriformat {
     PackedPosition m_initial_pos;
     std::vector<MoveScore> m_moves_scores; // move and score for this ply
 };
-
-#endif // #ifndef VIRIFORMAT_H

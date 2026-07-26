@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "nnue.h"
+#include "eval/nnue.h"
 
 #include <algorithm>
 #include <cassert>
@@ -25,13 +25,13 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "../incbin.h"
-#include "../position.h"
-#include "../types.h"
-#include "nnue/accumulator.h"
-#include "nnue/arch.h"
-#include "nnue/pov_accumulator.h"
-#include "nnue/simd.h"
+#include "core/position.h"
+#include "core/types.h"
+#include "eval/nnue/accumulator.h"
+#include "eval/nnue/arch.h"
+#include "eval/nnue/pov_accumulator.h"
+#include "eval/nnue/simd.h"
+#include "utils/incbin.h"
 
 void NNUE::refresh(const Position &pos) {
     const auto &white_pov_acc = m_finny_table.update(pos, WHITE);

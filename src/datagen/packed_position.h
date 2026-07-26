@@ -16,13 +16,13 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef PACKED_POSITION_H
-#define PACKED_POSITION_H
+#pragma once
 
 #include <cstdint>
 #include <cstring>
 
-#include "../position.h"
+#include "core/position.h"
+#include "core/types.h"
 
 // White perspective
 enum GameResult : uint8_t {
@@ -88,5 +88,3 @@ class __attribute__((packed)) PackedPosition {
     uint8_t m_padding;
 };
 static_assert(sizeof(PackedPosition) == 32, "PackedPosition struct is not 32 bytes");
-
-#endif // #ifndef PACKED_POSITION_H
