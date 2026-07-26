@@ -254,6 +254,12 @@ class StaticVector {
     [[nodiscard]] inline auto begin() const { return m_array.begin(); }
     [[nodiscard]] inline auto end() const { return m_array.begin() + static_cast<std::ptrdiff_t>(m_size); }
 
+    [[nodiscard]] inline T front() const { return m_array[0]; }
+    [[nodiscard]] inline T back() const {
+        assert(m_size > 0);
+        return m_array[m_size - 1];
+    }
+
   private:
     std::array<T, MAX_SIZE> m_array;
     size_t m_size{};
