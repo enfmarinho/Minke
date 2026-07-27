@@ -40,12 +40,13 @@ const PovAccumulator &FinnyTable::update(const Position &pos, const Color pov) {
         Bitboard added = pos.get_piece_bb(piece) & ~cached_entry.bbs[piece_idx];
         Bitboard removed = cached_entry.bbs[piece_idx] & ~pos.get_piece_bb(piece);
 
-        // TODO fused updates
-        // while (added && removed) {
-        //     const Square add0 = poplsb(added);
-        //     const Square sub0 = poplsb(removed);
-        //     cached_entry.pov_accumulator.self_add_sub(add0, sub0);
-        // }
+        // fused updates
+        while (added && removed) {
+            const Square add_sq = poplsb(added);
+            const Square sub_sq = poplsb(removed);
+            cached_entry.pov_accumulator.self_add_sub(feature_idx(piece, add_sq, king_sq, pov),
+                                                      feature_idx(piece, sub_sq, king_sq, pov));
+        }
 
         while (added) {
             const Square sq = poplsb(added);
