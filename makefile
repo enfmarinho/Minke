@@ -11,7 +11,7 @@ PGO ?= off
 # Flags
 CXXSTD := -std=c++20
 CXXWARNS := -Wall
-CXXFLAGS = -O3 -funroll-loops -flto=auto -DNDEBUG -DEVALFILE=\"$(NNUE_FILE)\" $(CXXSTD) $(CXXWARNS)
+CXXFLAGS = -O3 -funroll-loops -flto=auto -I src -DNDEBUG -DEVALFILE=\"$(NNUE_FILE)\" $(CXXSTD) $(CXXWARNS)
 LDFLAGS := -flto=auto
 
 # Arch flags
@@ -24,7 +24,7 @@ APPLESILICON_FLAGS := -DUSE_NEON -DUSE_SIMD -march=armv8.5-a
 # Paths
 BASE_BUILD_DIR := build
 PGO_DIR := $(BASE_BUILD_DIR)/pgo
-SRC_DIRS := src src/eval src/eval/nnue
+SRC_DIRS := src/ src/core/ src/datagen/ src/eval/ src/eval/nnue/ src/eval/nnue/simd/ src/search/ src/uci/ src/utils/
 SOURCES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 OBJECTS := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(notdir $(SOURCES)))
 

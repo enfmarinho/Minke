@@ -15,15 +15,14 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef FINNY_TABLE_H
-#define FINNY_TABLE_H
+#pragma once
 
 #include <array>
 #include <cstring>
 
-#include "../../types.h"
-#include "accumulator.h"
-#include "arch.h"
+#include "core/types.h"
+#include "eval/nnue/accumulator.h"
+#include "eval/nnue/arch.h"
 
 class Position;
 
@@ -52,5 +51,3 @@ class FinnyTable {
     std::array<std::array<std::array<FinnyTableCache, 2>, NUM_KING_BUCKETS>, 2>
         cache; // [flip][king_bucket_idx][pov_color]
 };
-
-#endif // #ifndef FINNY_TABLE_H

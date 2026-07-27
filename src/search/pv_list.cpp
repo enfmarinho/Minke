@@ -16,8 +16,21 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "search/pv_list.h"
 
-#include "eval/nnue/simd/avx2.h"
-#include "eval/nnue/simd/avx512.h"
-#include "eval/nnue/simd/neon.h"
+#include <iostream>
+
+void PvList::update(Move new_move, const PvList &list) {
+    std::copy(list.m_pv.begin(), list.m_pv.begin() + list.m_size, m_pv.begin() + 1);
+    m_pv[0] = new_move;
+
+    m_size = list.m_size + 1;
+}
+
+void PvList::print(const bool chess960, const Bitboard castle_rooks) const {
+    for (int i = 0; i < m_size; ++i) {
+        std::cout << m_pv[i].to_uci(chess960, castle_rooks) << ' ';
+    }
+}
+
+void PvList::clear() { m_size = 0; }

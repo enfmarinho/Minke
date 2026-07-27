@@ -16,11 +16,10 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ACCUMULATOR_H
-#define ACCUMULATOR_H
+#pragma once
 
-#include "../../types.h"
-#include "pov_accumulator.h"
+#include "core/types.h"
+#include "eval/nnue/pov_accumulator.h"
 
 class Position;
 
@@ -50,5 +49,3 @@ class alignas(64) Accumulator {
     Square m_king_sqs[2];
     DirtyPiece m_dirty_piece;
 };
-
-#endif // #ifndef ACCUMULATOR_H

@@ -16,6 +16,8 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
 #if USE_SIMD && USE_AVX512
 
 #include <immintrin.h>

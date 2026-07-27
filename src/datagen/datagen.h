@@ -16,8 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef DATAGEN_H
-#define DATAGEN_H
+#pragma once
 
 #include <algorithm>
 #include <atomic>
@@ -34,14 +33,14 @@
 #include <thread>
 #include <vector>
 
-#include "../hash.h"
-#include "../move.h"
-#include "../movegen.h"
-#include "../position.h"
-#include "../search.h"
-#include "../types.h"
-#include "packed_position.h"
-#include "viriformat.h"
+#include "core/move.h"
+#include "core/movegen.h"
+#include "core/position.h"
+#include "core/types.h"
+#include "datagen/packed_position.h"
+#include "datagen/viriformat.h"
+#include "search/search.h"
+#include "utils/hash.h"
 
 class DatagenThread {
   private:
@@ -337,5 +336,3 @@ class DatagenEngine {
     std::vector<std::unique_ptr<DatagenThread>> m_datagen_thread_ptrs;
     std::vector<std::thread> m_threads;
 };
-
-#endif // !DATAGEN_H

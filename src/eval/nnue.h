@@ -16,19 +16,18 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef NNUE_H
-#define NNUE_H
+#pragma once
 
 #include <cassert>
 #include <cstdint>
 #include <span>
 #include <vector>
 
-#include "../types.h"
-#include "nnue/accumulator.h"
-#include "nnue/arch.h"
-#include "nnue/finny_table.h"
-#include "nnue/pov_accumulator.h"
+#include "core/types.h"
+#include "eval/nnue/accumulator.h"
+#include "eval/nnue/arch.h"
+#include "eval/nnue/finny_table.h"
+#include "eval/nnue/pov_accumulator.h"
 
 class Position;
 
@@ -61,5 +60,3 @@ class NNUE {
     FinnyTable m_finny_table;
     std::vector<Accumulator> m_accumulators;
 };
-
-#endif // #ifndef NNUE_H
