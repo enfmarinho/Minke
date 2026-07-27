@@ -18,6 +18,22 @@
 
 #pragma once
 
-#include "eval/nnue/simd/avx2.h"
-#include "eval/nnue/simd/avx512.h"
-#include "eval/nnue/simd/neon.h"
+#include "core/move.h"
+#include "core/position.h"
+#include "core/types.h"
+#include "utils/utils.h"
+
+namespace Movegen {
+
+using ScoredMoveList = StaticVector<ScoredMove, MAX_MOVES_PER_POS>;
+
+/// Generate all pseudo-legal noisy moves
+void noisies(ScoredMoveList& move_list, const Position& pos);
+
+/// Generate all pseudo-legal quiet moves
+void quiets(ScoredMoveList& move_list, const Position& pos);
+
+/// Generate all pseudo-legal moves
+void all(ScoredMoveList& move_list, const Position& pos);
+
+} // namespace Movegen

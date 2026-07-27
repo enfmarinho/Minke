@@ -19,8 +19,8 @@
 #include <cstdlib>
 
 #include "datagen/datagen.h"
-#include "init.h"
-#include "uci.h"
+#include "uci/init.h"
+#include "uci/uci.h"
 
 int main(int argc, char *argv[]) {
     init_all();

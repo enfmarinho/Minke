@@ -16,9 +16,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "accumulator.h"
+#include "eval/nnue/accumulator.h"
 
-#include "pov_accumulator.h"
+#include "eval/nnue/pov_accumulator.h"
 
 Accumulator::Accumulator(const Square white_king_sq, const Square black_king_sq, const PovAccumulator &white_pov_acc,
                          const PovAccumulator &black_pov_acc)

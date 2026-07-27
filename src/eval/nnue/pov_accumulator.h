@@ -16,15 +16,14 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef POV_ACCUMULATOR_H
-#define POV_ACCUMULATOR_H
+#pragma once
 
 #include <array>
 #include <cstdint>
 #include <cstring>
 #include <span>
 
-#include "arch.h"
+#include "eval/nnue/arch.h"
 
 class Position;
 
@@ -57,5 +56,3 @@ class alignas(64) PovAccumulator {
   private:
     std::array<int16_t, L1_SIZE> m_neurons;
 };
-
-#endif // #ifndef POV_ACCUMULATOR_H

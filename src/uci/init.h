@@ -18,6 +18,16 @@
 
 #pragma once
 
-#include "eval/nnue/simd/avx2.h"
-#include "eval/nnue/simd/avx512.h"
-#include "eval/nnue/simd/neon.h"
+void init_all();
+
+void init_search_params();
+
+void init_network_params();
+
+void init_hash_keys();
+
+void init_magic_attack_tables();
+
+void init_between_squares();
+
+void init_passing_rays();

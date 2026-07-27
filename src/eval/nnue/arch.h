@@ -16,13 +16,12 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef ARCH_H
-#define ARCH_H
+#pragma once
 
 #include <cstdint>
 
-#include "../../types.h"
-#include "../../utils.h"
+#include "core/types.h"
+#include "utils/utils.h"
 
 constexpr bool DUAL_ACTIVATION = true;
 
@@ -107,5 +106,3 @@ inline size_t feature_idx(const Piece piece, const Square sq, const Square king_
 inline size_t feature_idx(const PieceSquare ps, const Square king_sq, const Color pov) {
     return feature_idx(ps.piece, ps.sq, king_sq, pov);
 }
-
-#endif // !ARCH_H

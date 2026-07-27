@@ -18,6 +18,30 @@
 
 #pragma once
 
-#include "eval/nnue/simd/avx2.h"
-#include "eval/nnue/simd/avx512.h"
-#include "eval/nnue/simd/neon.h"
+#include "core/types.h"
+
+struct ThreadData;
+
+class TimeManager {
+  public:
+    TimeManager();
+    ~TimeManager() = default;
+
+    void reset(CounterType inc, CounterType time, CounterType movestogo, CounterType movetime, bool infinite);
+    void reset();
+    void update(const ThreadData &td);
+    bool stop_early() const;
+    bool time_over() const;
+    TimeType time_passed() const;
+    void can_stop();
+
+  private:
+    TimeType m_start_time;
+    TimeType m_optimum_time;
+    TimeType m_maximum_time;
+
+    double m_scale;
+    bool m_movetime;
+    bool m_time_set;
+    bool m_can_stop;
+};

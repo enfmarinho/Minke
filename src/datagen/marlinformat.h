@@ -16,14 +16,13 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MARLINFORMAT_H
-#define MARLINFORMAT_H
+#pragma once
 
 #include <fstream>
 
-#include "../move.h"
-#include "../position.h"
-#include "packed_position.h"
+#include "core/move.h"
+#include "core/position.h"
+#include "datagen/packed_position.h"
 
 class Marlinformat {
   public:
@@ -56,5 +55,3 @@ class Marlinformat {
     Position m_pos;
     std::vector<PackedPosition> m_packed_positions;
 };
-
-#endif // #ifndef MARLINFORMAT_H

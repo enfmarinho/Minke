@@ -18,6 +18,18 @@
 
 #pragma once
 
-#include "eval/nnue/simd/avx2.h"
-#include "eval/nnue/simd/avx512.h"
-#include "eval/nnue/simd/neon.h"
+#include <array>
+
+#include "core/move.h"
+#include "core/types.h"
+
+class PvList {
+  public:
+    void update(Move new_move, const PvList &list);
+    void print(const bool chess960, const Bitboard castle_rooks) const;
+    void clear();
+
+  private:
+    std::array<Move, MAX_SEARCH_DEPTH> m_pv;
+    CounterType m_size{0};
+};

@@ -16,14 +16,13 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef EVAL_H
-#define EVAL_H
+#pragma once
 
 #include <algorithm>
 
-#include "../position.h"
-#include "../tune.h"
-#include "../types.h"
+#include "core/position.h"
+#include "core/types.h"
+#include "uci/tune.h"
 
 static inline int apply_material_scaling(const Position& pos, ScoreType raw_eval) {
     const int material_scale = material_scaling_base()                                    //
@@ -42,5 +41,3 @@ inline ScoreType adjust_eval(const Position& pos, const ScoreType raw_eval, cons
 
     return std::clamp(adjusted_eval, -MATE_FOUND + 1, MATE_FOUND - 1);
 }
-
-#endif // !EVAL_H
