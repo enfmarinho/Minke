@@ -222,6 +222,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     bool in_check = position.in_check();
     ScoreType eval, raw_eval;
     ScoreType correction_value = td.correction_history.correction(td);
+    ScoreType complexity = std::abs(correction_value);
     if (in_check) {
         eval = node.static_eval = raw_eval = SCORE_NONE;
     } else if (singular_search) {
@@ -269,8 +270,16 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         }
 
         // Reverse futility pruning
-        if (depth < rfp_max_depth() && eval - rfp_margin() * (depth - improving) >= beta)
+        const ScoreType rfp_margin = [&]() {
+            ScoreType rfp_margin = 0;
+            rfp_margin += rfp_depth_factor() * depth;
+            rfp_margin += rfp_improving_margin() * improving;
+            rfp_margin += rfp_complexity_factor() * complexity / 1024;
+            return rfp_margin;
+        }();
+        if (depth < rfp_max_depth() && eval - rfp_margin >= beta) {
             return eval;
+        }
 
         // Razoring heuristic
         if (depth <= razoring_max_depth() && node.static_eval + razoring_mult() * depth < alpha) {
@@ -461,7 +470,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 scaled_reduction -= ttpv * lmr_ttpv_delta();
 
                 // Reduce based on correction history.
-                scaled_reduction -= std::abs(correction_value) / lmr_corrhist_divisor();
+                scaled_reduction -= complexity / lmr_corrhist_divisor();
             } else {
                 // reduce noisy
             }
