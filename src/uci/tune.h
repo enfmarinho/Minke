@@ -228,10 +228,10 @@ TUNABLE_PARAM(conthist_2ply_weight, 1144, 0, 1536, 50, 0.002)
 TUNABLE_PARAM(conthist_4ply_weight, 559, 0, 1536, 50, 0.002)
 
 // Time Manager
-TUNABLE_PARAM(node_tm_base, 209, 150, 300, 5, 0.002)
-TUNABLE_PARAM(node_tm_scale, 161, 100, 250, 5, 0.002)
-TUNABLE_PARAM(tm_min_scale, 32, 10, 100, 5, 0.002)
-TUNABLE_PARAM(tm_max_scale, 163, 100, 250, 5, 0.002)
+TUNABLE_PARAM(node_tm_base, 150, 100, 200, 5, 0.002)
+TUNABLE_PARAM(node_tm_scale, 160, 100, 300, 5, 0.002)
+TUNABLE_PARAM(tm_min_scale, 50, 10, 100, 5, 0.002)
+TUNABLE_PARAM(tm_max_scale, 250, 150, 350, 5, 0.002)
 
 // Material scale
 TUNABLE_PARAM(pawn_scaling_factor, 98, 20, 160, 5, 0.002)

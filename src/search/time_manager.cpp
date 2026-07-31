@@ -54,7 +54,7 @@ void TimeManager::reset(CounterType inc, CounterType time, CounterType mtg, Coun
     TimeType max_time = 0.8 * time;
     m_optimum_time = std::min(m_optimum_time, max_time);
     m_maximum_time = std::min(m_maximum_time, max_time);
-    m_scale = 1.63;
+    m_optimum_time *= 1.63;
 }
 
 void TimeManager::reset() {
@@ -69,9 +69,9 @@ void TimeManager::update(const ThreadData &td) {
     if (m_movetime || !m_time_set)
         return;
 
-    // const double node_fraction = td.node_table[td.best_move.from_and_to()] / static_cast<double>(td.nodes_searched);
-    // const double node_scaling_factor = (node_tm_base() / 100.0 - node_fraction) * (node_tm_scale() / 100.0);
-    // m_scale = std::clamp<double>(node_scaling_factor, tm_min_scale() / 100.0, tm_max_scale() / 100.0);
+    const double node_fraction = td.node_table[td.best_move.from_and_to()] / static_cast<double>(td.nodes_searched);
+    const double node_scaling_factor = (node_tm_base() / 100.0 - node_fraction) * (node_tm_scale() / 100.0);
+    m_scale = std::clamp<double>(node_scaling_factor, tm_min_scale() / 100.0, tm_max_scale() / 100.0);
 }
 
 bool TimeManager::stop_early() const { return m_can_stop && time_passed() > m_optimum_time * m_scale; }
