@@ -54,6 +54,7 @@ void TimeManager::reset(CounterType inc, CounterType time, CounterType mtg, Coun
     TimeType max_time = 0.8 * time;
     m_optimum_time = std::min(m_optimum_time, max_time);
     m_maximum_time = std::min(m_maximum_time, max_time);
+    m_optimum_time *= 1.63;
 }
 
 void TimeManager::reset() {
