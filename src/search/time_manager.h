@@ -29,7 +29,7 @@ class TimeManager {
 
     void reset(CounterType inc, CounterType time, CounterType movestogo, CounterType movetime, bool infinite);
     void reset();
-    void update(const ThreadData &td);
+    void update(const ThreadData &td, CounterType pv_stability);
     bool stop_early() const;
     bool time_over() const;
     TimeType time_passed() const;
