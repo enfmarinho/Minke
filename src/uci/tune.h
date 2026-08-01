@@ -237,6 +237,11 @@ TUNABLE_PARAM(tm_pv_stability_base, 1280, 500, 3000, 50, 0.002)
 TUNABLE_PARAM(tm_pv_stability_factor, 50, 10, 200, 5, 0.002)
 TUNABLE_PARAM(tm_pv_stability_min_scale, 728, 200, 2000, 50, 0.002)
 
+TUNABLE_PARAM(tm_score_stability_delta, 12, 2, 40, 1, 0.002)
+TUNABLE_PARAM(tm_score_stability_base, 1280, 500, 3000, 50, 0.002)
+TUNABLE_PARAM(tm_score_stability_factor, 50, 10, 200, 5, 0.002)
+TUNABLE_PARAM(tm_score_stability_min_scale, 728, 200, 2000, 50, 0.002)
+
 TUNABLE_PARAM(tm_node_spent_base, 1516, 1000, 2000, 50, 0.002)
 TUNABLE_PARAM(tm_node_spent_factor, 1627, 1000, 3000, 50, 0.002)
 TUNABLE_PARAM(tm_min_scale, 527, 100, 1000, 50, 0.002)

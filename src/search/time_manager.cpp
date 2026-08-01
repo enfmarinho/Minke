@@ -60,7 +60,7 @@ void TimeManager::reset() {
     m_start_time = now();
 }
 
-void TimeManager::update(const ThreadData &td, CounterType pv_stability) {
+void TimeManager::update(const ThreadData &td, CounterType pv_stability, CounterType score_stability) {
     if (m_movetime || !m_time_set)
         return;
 
@@ -68,10 +68,15 @@ void TimeManager::update(const ThreadData &td, CounterType pv_stability) {
         std::max(tm_pv_stability_base() / 1000.0 - pv_stability * tm_pv_stability_factor() / 1000.0,
                  tm_pv_stability_min_scale() / 1000.0);
 
+    const double score_stability_scale =
+        std::max(tm_score_stability_base() / 1000.0 - score_stability * tm_score_stability_factor() / 1000.0,
+                 tm_score_stability_min_scale() / 1000.0);
+
     const double node_fraction = td.node_table[td.best_move.from_and_to()] / static_cast<double>(td.nodes_searched);
     const double node_spent_scale = (tm_node_spent_base() / 1000.0 - node_fraction) * (tm_node_spent_factor() / 1000.0);
-    m_scale =
-        std::clamp<double>(node_spent_scale * pv_stability_scale, tm_min_scale() / 1000.0, tm_max_scale() / 1000.0);
+
+    m_scale = std::clamp<double>(node_spent_scale * pv_stability_scale * score_stability_scale, tm_min_scale() / 1000.0,
+                                 tm_max_scale() / 1000.0);
 }
 
 bool TimeManager::stop_early() const { return m_can_stop && time_passed() > m_optimum_time * m_scale; }
