@@ -41,20 +41,15 @@ void TimeManager::reset(CounterType inc, CounterType time, CounterType mtg, Coun
         return;
     }
 
-    time = std::min(time - overhead, time / 2); // Decrease the overhead on total time
-    time = std::max(time, 1);                   // Ensure time is positive
-    inc = std::max(inc, 0);                     // Ensure inc is non negative
-    mtg = (mtg > 0 ? std::min(mtg, 50) : 50);   // Ensure movestogo is at most 50 if positive, else set it to 50
+    const TimeType limit = std::max(std::max(time - overhead, time / 2),
+                                    1);       // Decrease the overhead from total time and ensure limit its positive
+    inc = std::max(inc, 0);                   // Ensure inc is non negative
+    mtg = (mtg > 0 ? mtg : tm_default_mtg()); // set mtg to default if invalid, i.e. if non-positive
 
-    double base_time = 0.8 * time / static_cast<double>(mtg) + inc;
-    m_optimum_time = base_time;
-    m_maximum_time = 4 * base_time;
+    const double base_time = limit / static_cast<double>(mtg) + inc * tm_increment_factor() / 100.0;
 
-    // Limit time usage to 80% of total game time
-    TimeType max_time = 0.8 * time;
-    m_optimum_time = std::min(m_optimum_time, max_time);
-    m_maximum_time = std::min(m_maximum_time, max_time);
-    m_optimum_time *= 1.63;
+    m_maximum_time = limit * tm_max_time_factor() / 100.0;
+    m_optimum_time = std::min<TimeType>(base_time * tm_opt_time_factor() / 100.0, m_maximum_time);
 }
 
 void TimeManager::reset() {

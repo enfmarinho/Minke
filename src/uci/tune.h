@@ -228,6 +228,11 @@ TUNABLE_PARAM(conthist_2ply_weight, 1144, 0, 1536, 50, 0.002)
 TUNABLE_PARAM(conthist_4ply_weight, 559, 0, 1536, 50, 0.002)
 
 // Time Manager
+TUNABLE_PARAM(tm_default_mtg, 30, 10, 60, 1, 0.002)
+TUNABLE_PARAM(tm_increment_factor, 75, 20, 120, 5, 0.002)
+TUNABLE_PARAM(tm_opt_time_factor, 75, 20, 100, 5, 0.002)
+TUNABLE_PARAM(tm_max_time_factor, 75, 20, 100, 5, 0.002)
+
 TUNABLE_PARAM(node_tm_base, 150, 100, 200, 5, 0.002)
 TUNABLE_PARAM(node_tm_scale, 160, 100, 300, 5, 0.002)
 TUNABLE_PARAM(tm_min_scale, 50, 10, 100, 5, 0.002)
