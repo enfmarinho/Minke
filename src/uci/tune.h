@@ -18,7 +18,6 @@
 
 #pragma once
 
-#define TUNE
 #ifdef TUNE
 
 #include <cassert>
@@ -229,19 +228,19 @@ TUNABLE_PARAM(conthist_2ply_weight, 1144, 0, 1536, 50, 0.002)
 TUNABLE_PARAM(conthist_4ply_weight, 559, 0, 1536, 50, 0.002)
 
 // Time Manager
-TUNABLE_PARAM(tm_default_mtg, 30, 10, 60, 1, 0.002)
-TUNABLE_PARAM(tm_increment_factor, 75, 20, 120, 5, 0.002)
-TUNABLE_PARAM(tm_opt_time_factor, 75, 20, 100, 5, 0.002)
-TUNABLE_PARAM(tm_max_time_factor, 75, 20, 100, 5, 0.002)
+TUNABLE_PARAM(tm_default_mtg, 29, 10, 60, 1, 0.002)
+TUNABLE_PARAM(tm_increment_factor, 74, 20, 120, 5, 0.002)
+TUNABLE_PARAM(tm_opt_time_factor, 80, 20, 100, 5, 0.002)
+TUNABLE_PARAM(tm_max_time_factor, 74, 20, 100, 5, 0.002)
 
-TUNABLE_PARAM(tm_pv_stability_base, 1300, 500, 3000, 50, 0.002)
+TUNABLE_PARAM(tm_pv_stability_base, 1280, 500, 3000, 50, 0.002)
 TUNABLE_PARAM(tm_pv_stability_factor, 50, 10, 200, 5, 0.002)
-TUNABLE_PARAM(tm_pv_stability_min_scale, 700, 200, 2000, 50, 0.002)
+TUNABLE_PARAM(tm_pv_stability_min_scale, 728, 200, 2000, 50, 0.002)
 
-TUNABLE_PARAM(tm_node_spent_base, 1500, 1000, 2000, 50, 0.002)
-TUNABLE_PARAM(tm_node_spent_factor, 1600, 1000, 3000, 50, 0.002)
-TUNABLE_PARAM(tm_min_scale, 500, 100, 1000, 50, 0.002)
-TUNABLE_PARAM(tm_max_scale, 2500, 1500, 3500, 50, 0.002)
+TUNABLE_PARAM(tm_node_spent_base, 1516, 1000, 2000, 50, 0.002)
+TUNABLE_PARAM(tm_node_spent_factor, 1627, 1000, 3000, 50, 0.002)
+TUNABLE_PARAM(tm_min_scale, 527, 100, 1000, 50, 0.002)
+TUNABLE_PARAM(tm_max_scale, 2496, 1500, 3500, 50, 0.002)
 
 // Material scale
 TUNABLE_PARAM(pawn_scaling_factor, 98, 20, 160, 5, 0.002)
