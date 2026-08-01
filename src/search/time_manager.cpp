@@ -60,13 +60,18 @@ void TimeManager::reset() {
     m_start_time = now();
 }
 
-void TimeManager::update(const ThreadData &td) {
+void TimeManager::update(const ThreadData &td, CounterType pv_stability) {
     if (m_movetime || !m_time_set)
         return;
 
+    const double pv_stability_scale =
+        std::max(tm_pv_stability_base() / 1000.0 - pv_stability * tm_pv_stability_factor() / 1000.0,
+                 tm_pv_stability_min_scale() / 1000.0);
+
     const double node_fraction = td.node_table[td.best_move.from_and_to()] / static_cast<double>(td.nodes_searched);
-    const double node_scaling_factor = (node_tm_base() / 100.0 - node_fraction) * (node_tm_scale() / 100.0);
-    m_scale = std::clamp<double>(node_scaling_factor, tm_min_scale() / 100.0, tm_max_scale() / 100.0);
+    const double node_spent_scale = (tm_node_spent_base() / 1000.0 - node_fraction) * (tm_node_spent_factor() / 1000.0);
+    m_scale =
+        std::clamp<double>(node_spent_scale * pv_stability_scale, tm_min_scale() / 1000.0, tm_max_scale() / 1000.0);
 }
 
 bool TimeManager::stop_early() const { return m_can_stop && time_passed() > m_optimum_time * m_scale; }

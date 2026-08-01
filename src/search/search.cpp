@@ -103,10 +103,17 @@ ScoreType iterative_deepening(ThreadData &td) {
 
     Move best_move = Move::none();
     ScoreType past_eval = -MAX_SCORE;
+    CounterType pv_stability = 0;
     for (CounterType depth = 1; depth <= std::min(td.search_limits.depth, MAX_SEARCH_DEPTH - 1); ++depth) {
         ScoreType eval = aspiration(depth, past_eval, td);
         if (stop_search(td)) // Search did not finished completely
             break;
+
+        if (best_move == td.best_move) { // prev best move is the same as current
+            ++pv_stability;
+        } else {
+            pv_stability = 0;
+        }
 
         best_move = td.best_move;
         past_eval = eval;
@@ -117,7 +124,7 @@ ScoreType iterative_deepening(ThreadData &td) {
             print_search_info(depth, eval, td.nodes[0].pv_list, td);
 
         if (depth > 5)
-            td.time_manager.update(td);
+            td.time_manager.update(td, pv_stability);
         if (td.time_manager.stop_early() || td.nodes_searched >= td.search_limits.optimum_node)
             break;
 
