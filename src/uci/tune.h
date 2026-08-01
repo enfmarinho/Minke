@@ -141,7 +141,7 @@ TUNABLE_PARAM(hindsight_eval, 150, 50, 300, 10, 0.002)
 
 // Reverse Futility Pruning
 TUNABLE_PARAM(rfp_depth_factor, 106, 50, 150, 5, 0.002)
-TUNABLE_PARAM(rfp_improving_margin, -106, -50, -150, 5, 0.002)
+TUNABLE_PARAM(rfp_improving_margin, -106, -150, -50, 5, 0.002)
 TUNABLE_PARAM(rfp_complexity_factor, 250, 100, 400, 15, 0.002)
 FIXED_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)
 
