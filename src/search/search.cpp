@@ -137,8 +137,11 @@ ScoreType iterative_deepening(ThreadData &td) {
         if (td.report)
             print_search_info(depth, score, td.nodes[0].pv_list, td);
 
-        if (depth > 5)
-            td.time_manager.update(td, pv_stability, score_stability);
+        if (depth > 5) {
+            const double node_fraction =
+                td.node_table[td.best_move.from_and_to()] / static_cast<double>(td.nodes_searched);
+            td.time_manager.update(node_fraction, pv_stability, score_stability);
+        }
         if (td.time_manager.stop_early() || td.nodes_searched >= td.search_limits.optimum_node)
             break;
 

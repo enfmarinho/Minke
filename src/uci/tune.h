@@ -242,8 +242,10 @@ TUNABLE_PARAM(tm_score_stability_base, 1280, 500, 3000, 50, 0.002)
 TUNABLE_PARAM(tm_score_stability_factor, 50, 10, 200, 5, 0.002)
 TUNABLE_PARAM(tm_score_stability_min_scale, 728, 200, 2000, 50, 0.002)
 
-TUNABLE_PARAM(tm_node_spent_base, 1516, 1000, 2000, 50, 0.002)
-TUNABLE_PARAM(tm_node_spent_factor, 1627, 1000, 3000, 50, 0.002)
+TUNABLE_PARAM(tm_node_spent_base, 2800, 2000, 4000, 50, 0.002)
+TUNABLE_PARAM(tm_node_spent_factor, 2200, 1000, 3000, 50, 0.002)
+TUNABLE_PARAM(tm_node_spent_min_scale, 600, 500, 3000, 50, 0.002)
+
 TUNABLE_PARAM(tm_min_scale, 527, 100, 1000, 50, 0.002)
 TUNABLE_PARAM(tm_max_scale, 2496, 1500, 3500, 50, 0.002)
 
