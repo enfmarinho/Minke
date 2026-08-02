@@ -31,7 +31,8 @@ static inline size_t cont_corr_idx(const PieceMove& pmove) {
 };
 
 void CorrectionHistory::reset() {
-    m_pov_tables = {}; //
+    m_pov_tables = {};
+    m_cont_corr = {};
 }
 
 void CorrectionHistory::update(const ThreadData& td, const int depth, const int diff) {
