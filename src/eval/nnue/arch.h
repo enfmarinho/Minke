@@ -26,7 +26,7 @@
 constexpr bool DUAL_ACTIVATION = true;
 
 constexpr int INPUT_LAYER_SIZE = 64 * 12;
-constexpr int L1_SIZE = 1024;
+constexpr int L1_SIZE = 1280;
 constexpr int L2_SIZE = 16;
 constexpr int ACTUAL_L2_SIZE = 16 * (DUAL_ACTIVATION + 1);
 constexpr int L3_SIZE = 32;
