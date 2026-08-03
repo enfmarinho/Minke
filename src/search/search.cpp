@@ -94,29 +94,51 @@ void ThreadData::reset_search_parameters() {
 void ThreadData::set_search_limits(const SearchLimits sl) { this->search_limits = sl; }
 
 inline bool stop_search(const ThreadData &td) {
-    return td.time_manager.time_over() || td.stop || td.nodes_searched > td.search_limits.maximum_node;
+    return ((td.nodes_searched & 2047) == 2047 && td.time_manager.time_over()) || td.stop ||
+           td.nodes_searched > td.search_limits.maximum_node;
 }
 
 ScoreType iterative_deepening(ThreadData &td) {
     td.stop = false;
 
     Move best_move = Move::none();
-    ScoreType past_eval = -MAX_SCORE;
+    ScoreType past_score = -MAX_SCORE;
+    ScoreType avg_score = SCORE_NONE;
+    CounterType pv_stability = 0;
+    CounterType score_stability = 0;
     for (CounterType depth = 1; depth <= std::min(td.search_limits.depth, MAX_SEARCH_DEPTH - 1); ++depth) {
-        ScoreType eval = aspiration(depth, past_eval, td);
+        ScoreType score = aspiration(depth, past_score, td);
         if (stop_search(td)) // Search did not finished completely
             break;
 
+        if (avg_score == SCORE_NONE) {
+            avg_score = score;
+        } else {
+            avg_score = (avg_score + score) / 2;
+        }
+
+        if (std::abs(avg_score - score) < tm_score_stability_delta()) {
+            ++score_stability;
+        } else {
+            score_stability = 0;
+        }
+
+        if (best_move == td.best_move) { // prev best move is the same as current
+            ++pv_stability;
+        } else {
+            pv_stability = 0;
+        }
+
         best_move = td.best_move;
-        past_eval = eval;
+        past_score = score;
         if (!best_move) // No legal moves
             break;
 
         if (td.report)
-            print_search_info(depth, eval, td.nodes[0].pv_list, td);
+            print_search_info(depth, score, td.nodes[0].pv_list, td);
 
         if (depth > 5)
-            td.time_manager.update(td);
+            td.time_manager.update(td, pv_stability, score_stability);
         if (td.time_manager.stop_early() || td.nodes_searched >= td.search_limits.optimum_node)
             break;
 
@@ -130,7 +152,7 @@ ScoreType iterative_deepening(ThreadData &td) {
     td.stop = true;
     td.best_move = best_move; // A partial search would mess this up
     td.tt.update_age();       // Update tt age
-    return past_eval;
+    return past_score;
 }
 
 ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td) {
@@ -222,6 +244,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     bool in_check = position.in_check();
     ScoreType eval, raw_eval;
     ScoreType correction_value = td.correction_history.correction(td);
+    ScoreType complexity = std::abs(correction_value);
     if (in_check) {
         eval = node.static_eval = raw_eval = SCORE_NONE;
     } else if (singular_search) {
@@ -269,8 +292,16 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         }
 
         // Reverse futility pruning
-        if (depth < rfp_max_depth() && eval - rfp_margin() * (depth - improving) >= beta)
+        const ScoreType rfp_margin = [&]() {
+            ScoreType rfp_margin = 0;
+            rfp_margin += rfp_depth_factor() * depth;
+            rfp_margin += rfp_improving_margin() * improving;
+            rfp_margin += rfp_complexity_factor() * complexity / 1024;
+            return rfp_margin;
+        }();
+        if (depth < rfp_max_depth() && eval - rfp_margin >= beta) {
             return eval;
+        }
 
         // Razoring heuristic
         if (depth <= razoring_max_depth() && node.static_eval + razoring_mult() * depth < alpha) {
@@ -461,7 +492,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 scaled_reduction -= ttpv * lmr_ttpv_delta();
 
                 // Reduce based on correction history.
-                scaled_reduction -= std::abs(correction_value) / lmr_corrhist_divisor();
+                scaled_reduction -= complexity / lmr_corrhist_divisor();
             } else {
                 // reduce noisy
             }

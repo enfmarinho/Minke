@@ -27,11 +27,12 @@
 #include "uci/tune.h"
 
 static inline size_t cont_corr_idx(const PieceMove& pmove) {
-    return (static_cast<size_t>(get_piece_type(pmove.piece)) << 6) | static_cast<size_t>(pmove.move.to());
+    return (static_cast<size_t>(pmove.piece) << 6) | static_cast<size_t>(pmove.move.to());
 };
 
 void CorrectionHistory::reset() {
-    m_pov_tables = {}; //
+    m_pov_tables = {};
+    m_cont_corr = {};
 }
 
 void CorrectionHistory::update(const ThreadData& td, const int depth, const int diff) {
@@ -49,7 +50,7 @@ void CorrectionHistory::update(const ThreadData& td, const int depth, const int 
             const PieceMove past_pmove = td.nodes[td.height - offset - 1].curr_pmove;
 
             if (curr_pmove && past_pmove) {
-                tables.cont_corr[cont_corr_idx(curr_pmove)][cont_corr_idx(past_pmove)].update(bonus);
+                m_cont_corr[cont_corr_idx(curr_pmove)][cont_corr_idx(past_pmove)].update(bonus);
             }
         }
     };
@@ -69,7 +70,7 @@ HistoryType CorrectionHistory::correction(const ThreadData& td) const {
             const PieceMove pmove1 = td.nodes[td.height - 1].curr_pmove;
             const PieceMove pmove2 = td.nodes[td.height - offset - 1].curr_pmove;
             if (pmove1 && pmove2) {
-                adjustment += cont_corr_factor() * tables.cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)];
+                adjustment += cont_corr_factor() * m_cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)];
             }
         }
     };

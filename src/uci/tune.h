@@ -139,7 +139,9 @@ FIXED_PARAM(nmp_min_depth, 2, 2, 8, 0.5, 0.002)
 TUNABLE_PARAM(hindsight_eval, 150, 50, 300, 10, 0.002)
 
 // Reverse Futility Pruning
-TUNABLE_PARAM(rfp_margin, 106, 50, 150, 5, 0.002)
+TUNABLE_PARAM(rfp_depth_factor, 106, 50, 150, 5, 0.002)
+TUNABLE_PARAM(rfp_improving_margin, -106, -150, -50, 5, 0.002)
+TUNABLE_PARAM(rfp_complexity_factor, 250, 100, 400, 15, 0.002)
 FIXED_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)
 
 // Late Move Reductions
@@ -226,10 +228,24 @@ TUNABLE_PARAM(conthist_2ply_weight, 1144, 0, 1536, 50, 0.002)
 TUNABLE_PARAM(conthist_4ply_weight, 559, 0, 1536, 50, 0.002)
 
 // Time Manager
-TUNABLE_PARAM(node_tm_base, 209, 150, 300, 5, 0.002)
-TUNABLE_PARAM(node_tm_scale, 161, 100, 250, 5, 0.002)
-TUNABLE_PARAM(tm_min_scale, 32, 10, 100, 5, 0.002)
-TUNABLE_PARAM(tm_max_scale, 163, 100, 250, 5, 0.002)
+TUNABLE_PARAM(tm_default_mtg, 29, 10, 60, 1, 0.002)
+TUNABLE_PARAM(tm_increment_factor, 74, 20, 120, 5, 0.002)
+TUNABLE_PARAM(tm_opt_time_factor, 80, 20, 100, 5, 0.002)
+TUNABLE_PARAM(tm_max_time_factor, 74, 20, 100, 5, 0.002)
+
+TUNABLE_PARAM(tm_pv_stability_base, 1280, 500, 3000, 50, 0.002)
+TUNABLE_PARAM(tm_pv_stability_factor, 50, 10, 200, 5, 0.002)
+TUNABLE_PARAM(tm_pv_stability_min_scale, 728, 200, 2000, 50, 0.002)
+
+TUNABLE_PARAM(tm_score_stability_delta, 12, 2, 40, 1, 0.002)
+TUNABLE_PARAM(tm_score_stability_base, 1280, 500, 3000, 50, 0.002)
+TUNABLE_PARAM(tm_score_stability_factor, 50, 10, 200, 5, 0.002)
+TUNABLE_PARAM(tm_score_stability_min_scale, 728, 200, 2000, 50, 0.002)
+
+TUNABLE_PARAM(tm_node_spent_base, 1516, 1000, 2000, 50, 0.002)
+TUNABLE_PARAM(tm_node_spent_factor, 1627, 1000, 3000, 50, 0.002)
+TUNABLE_PARAM(tm_min_scale, 527, 100, 1000, 50, 0.002)
+TUNABLE_PARAM(tm_max_scale, 2496, 1500, 3500, 50, 0.002)
 
 // Material scale
 TUNABLE_PARAM(pawn_scaling_factor, 98, 20, 160, 5, 0.002)

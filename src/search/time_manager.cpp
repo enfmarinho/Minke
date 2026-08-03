@@ -41,19 +41,15 @@ void TimeManager::reset(CounterType inc, CounterType time, CounterType mtg, Coun
         return;
     }
 
-    time = std::min(time - overhead, time / 2); // Decrease the overhead on total time
-    time = std::max(time, 1);                   // Ensure time is positive
-    inc = std::max(inc, 0);                     // Ensure inc is non negative
-    mtg = (mtg > 0 ? std::min(mtg, 50) : 50);   // Ensure movestogo is at most 50 if positive, else set it to 50
+    const TimeType limit = std::max(std::max(time - overhead, time / 2),
+                                    1);       // Decrease the overhead from total time and ensure limit its positive
+    inc = std::max(inc, 0);                   // Ensure inc is non negative
+    mtg = (mtg > 0 ? mtg : tm_default_mtg()); // set mtg to default if invalid, i.e. if non-positive
 
-    double base_time = 0.8 * time / static_cast<double>(mtg) + inc;
-    m_optimum_time = base_time;
-    m_maximum_time = 4 * base_time;
+    const double base_time = limit / static_cast<double>(mtg) + inc * tm_increment_factor() / 100.0;
 
-    // Limit time usage to 80% of total game time
-    TimeType max_time = 0.8 * time;
-    m_optimum_time = std::min(m_optimum_time, max_time);
-    m_maximum_time = std::min(m_maximum_time, max_time);
+    m_maximum_time = limit * tm_max_time_factor() / 100.0;
+    m_optimum_time = std::min<TimeType>(base_time * tm_opt_time_factor() / 100.0, m_maximum_time);
 }
 
 void TimeManager::reset() {
@@ -64,13 +60,23 @@ void TimeManager::reset() {
     m_start_time = now();
 }
 
-void TimeManager::update(const ThreadData &td) {
+void TimeManager::update(const ThreadData &td, CounterType pv_stability, CounterType score_stability) {
     if (m_movetime || !m_time_set)
         return;
 
+    const double pv_stability_scale =
+        std::max(tm_pv_stability_base() / 1000.0 - pv_stability * tm_pv_stability_factor() / 1000.0,
+                 tm_pv_stability_min_scale() / 1000.0);
+
+    const double score_stability_scale =
+        std::max(tm_score_stability_base() / 1000.0 - score_stability * tm_score_stability_factor() / 1000.0,
+                 tm_score_stability_min_scale() / 1000.0);
+
     const double node_fraction = td.node_table[td.best_move.from_and_to()] / static_cast<double>(td.nodes_searched);
-    const double node_scaling_factor = (node_tm_base() / 100.0 - node_fraction) * (node_tm_scale() / 100.0);
-    m_scale = std::clamp<double>(node_scaling_factor, tm_min_scale() / 100.0, tm_max_scale() / 100.0);
+    const double node_spent_scale = (tm_node_spent_base() / 1000.0 - node_fraction) * (tm_node_spent_factor() / 1000.0);
+
+    m_scale = std::clamp<double>(node_spent_scale * pv_stability_scale * score_stability_scale, tm_min_scale() / 1000.0,
+                                 tm_max_scale() / 1000.0);
 }
 
 bool TimeManager::stop_early() const { return m_can_stop && time_passed() > m_optimum_time * m_scale; }
