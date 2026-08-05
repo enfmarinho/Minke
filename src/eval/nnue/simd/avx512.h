@@ -45,6 +45,10 @@ constexpr size_t CHUNK_SIZE_32BIT = sizeof(vepi32) / sizeof(int32_t);
 
 inline void store_u8(void* ptr, vepu8 v) { _mm512_store_si512(static_cast<vepu8*>(ptr), v); }
 
+inline vepu8 load_u8(const void* ptr) { return _mm512_load_si512(static_cast<const vepu8*>(ptr)); }
+
+inline uint32_t nonzero_mask_u8(vepu8 v) { return _mm512_cmpneq_epi32_mask(v, _mm512_setzero_si512()); }
+
 /// i8
 
 inline vepi8 zero_i8() { return _mm512_setzero_si512(); }
