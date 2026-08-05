@@ -22,6 +22,7 @@
 
 #include <arm_neon.h>
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 
@@ -43,6 +44,14 @@ constexpr size_t CHUNK_SIZE_32BIT = sizeof(vepi32) / sizeof(int32_t);
 
 /// u8
 inline void store_u8(void* ptr, vepu8 v) { vst1q_u8(static_cast<uint8_t*>(ptr), v); }
+
+inline vepu8 load_u8(const void* ptr) { return vld1q_u8(static_cast<const uint8_t*>(ptr)); }
+
+inline uint32_t nonzero_mask_u8(vepu8 v) {
+    alignas(sizeof(int16x8_t)) static constexpr std::array<uint32_t, 4> mask = {1, 2, 4, 8};
+    const uint32x4_t v32 = vreinterpretq_u32_u8(v);
+    return vaddvq_u32(vandq_u32(vtstq_u32(v32, v32), vld1q_u32(mask.data())));
+}
 
 /// i8
 
