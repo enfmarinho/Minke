@@ -220,7 +220,7 @@ void NNUE::propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs,
 
         for (size_t out_idx = 0; out_idx < L2_SIZE; out_idx += CHUNK_SIZE_32BIT) {
             auto &reg = l2_regs[out_idx / CHUNK_SIZE_32BIT];
-            const vepi8 w = load_i8(&network.l1_weights[bucket][idx][out_idx * CHUNK_SIZE_32BIT][0]);
+            const vepi8 w = load_i8(&network.l1_weights[bucket][idx][out_idx][0]);
 
             reg[0] = dpbusd_i32(reg[0], input, w);
         }
