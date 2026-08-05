@@ -45,12 +45,6 @@ void MovePicker::init(Move ttmove, ThreadData &td, MovePickerType mp_type, Score
     m_killer1 = m_td->search_history.consult_killer1(m_td->height);
     m_killer2 = m_td->search_history.consult_killer2(m_td->height);
 
-    m_counter = Move::none();
-    if (m_td->height > 0)
-        m_counter = m_td->search_history.consult_counter(m_td->nodes[m_td->height - 1].curr_pmove.move);
-    if (m_counter == m_killer1 || m_counter == m_killer2)
-        m_counter = Move::none();
-
     m_idx = m_end = m_bad_noisy_end = 0;
 }
 
@@ -147,8 +141,6 @@ void MovePicker::score_quiet_moves() {
             score += mp_killer1_bonus();
         else if (move == m_killer2)
             score += mp_killer2_bonus();
-        else if (move == m_counter)
-            score += mp_counter_bonus();
     }
 }
 
