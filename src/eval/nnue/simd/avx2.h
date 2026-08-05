@@ -93,10 +93,7 @@ inline vepi16 shiftleft_i16(const vepi16 a, const int c) { return _mm256_slli_ep
 
 inline vepi16 shiftright_i16(const vepi16 a, const int c) { return _mm256_srai_epi16(a, c); }
 
-inline vepu8 packus_i16(const vepi16 a, const vepi16 b) {
-    vepu8 packed = _mm256_packus_epi16(a, b);
-    return _mm256_permute4x64_epi64(packed, _MM_SHUFFLE(3, 1, 2, 0));
-}
+inline vepu8 packus_i16(const vepi16 a, const vepi16 b) { return _mm256_packus_epi16(a, b); }
 
 /// i32
 
