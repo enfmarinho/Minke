@@ -78,7 +78,7 @@ void init_network_params() {
     std::memcpy(network.ft_biases, raw_bytes + offset, sizeof(network.ft_biases));
     offset += sizeof(network.ft_biases);
 
-#ifdef USE_SIMD
+#if USE_SIMD
     if constexpr (simd::PACKUS_LANE_COUNT > 1) {
         using namespace simd;
         struct alignas(16) Chunk128 {
