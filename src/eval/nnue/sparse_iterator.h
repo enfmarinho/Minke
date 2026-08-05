@@ -23,6 +23,7 @@
 
 #ifdef USE_SIMD
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 
@@ -48,6 +49,8 @@ class SparseIterator {
             m_base = add(m_base, set1(8));
             m_count += std::popcount(mask);
         }
+
+        assert(m_count <= L1_SIZE / 4);
     }
 
   private:
