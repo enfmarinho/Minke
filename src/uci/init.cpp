@@ -30,10 +30,6 @@
 #include "utils/hash.h"
 #include "utils/incbin.h"
 
-#ifndef EVALFILE
-#define EVALFILE "../src/minke.bin"
-#endif // !EVALFILE
-
 INCBIN(NetParameters, EVALFILE);
 
 int LMR_TABLE[64][64];
