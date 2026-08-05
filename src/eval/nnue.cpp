@@ -154,7 +154,7 @@ void NNUE::activate_ft(std::span<const int16_t, L1_SIZE> stm_acc, std::span<cons
     pov_activate(stm_acc, 0);
     pov_activate(ntm_acc, PAIR_COUNT);
 
-#ifdef USE_SIMD
+#if USE_SIMD
     using namespace simd;
     for (size_t out = 0; out < L1_SIZE; out += CHUNK_SIZE_8BIT * 2) {
         const vepu8 a = load_u8(&outputs[out + CHUNK_SIZE_8BIT * 0]);

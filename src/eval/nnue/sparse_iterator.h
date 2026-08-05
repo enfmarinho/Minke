@@ -21,7 +21,7 @@
 #include <bit>
 #include <limits>
 
-#ifdef USE_SIMD
+#if USE_SIMD
 
 #include <cassert>
 #include <cstddef>
@@ -70,7 +70,7 @@ class SparseIterator {
         return idx;
     }();
 
-#ifdef USE_NEON
+#if USE_NEON
     using vep128u16 = uint16x8_t;
 
     inline static vep128u16 zero() { return vdupq_n_u16(0); }
@@ -106,4 +106,4 @@ class SparseIterator {
 // Not needed for scalar inference
 class SparseIterator {};
 
-#endif // #ifdef USE_SIMD
+#endif // #if USE_SIMD
