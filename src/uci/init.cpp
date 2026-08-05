@@ -78,6 +78,7 @@ void init_network_params() {
     std::memcpy(network.ft_biases, raw_bytes + offset, sizeof(network.ft_biases));
     offset += sizeof(network.ft_biases);
 
+#ifdef USE_SIMD
     if constexpr (simd::PACKUS_LANE_COUNT > 1) {
         using namespace simd;
         struct alignas(16) Chunk128 {
@@ -107,6 +108,7 @@ void init_network_params() {
                 biases_chunk[i + j] = temp[PACKUS_LANE_ORDER[j]];
         }
     }
+#endif
 
     // Transform raw l1_weights, bullet output (transposed: (output_buckets * l2_size) x l1_size) into VNNI layout
     const int8_t* raw_l1 = reinterpret_cast<const int8_t*>(raw_bytes + offset);
