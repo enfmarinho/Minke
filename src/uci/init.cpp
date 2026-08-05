@@ -24,6 +24,7 @@
 #include "core/attacks.h"
 #include "core/types.h"
 #include "eval/nnue/arch.h"
+#include "eval/nnue/simd.h"
 #include "search/search.h"
 #include "uci/tune.h"
 #include "utils/hash.h"
@@ -76,6 +77,36 @@ void init_network_params() {
     // Copy FT biases
     std::memcpy(network.ft_biases, raw_bytes + offset, sizeof(network.ft_biases));
     offset += sizeof(network.ft_biases);
+
+    if constexpr (simd::PACKUS_LANE_COUNT > 1) {
+        using namespace simd;
+        struct alignas(16) Chunk128 {
+            std::array<int16_t, 8> data;
+        };
+        std::array<Chunk128, PACKUS_LANE_COUNT> temp;
+
+        // Permute FT weights
+        Chunk128* weights_chunk = reinterpret_cast<Chunk128*>(network.ft_weights);
+        const std::size_t total_weight_chunks = sizeof(network.ft_weights) / (sizeof(Chunk128));
+
+        for (std::size_t i = 0; i < total_weight_chunks; i += PACKUS_LANE_COUNT) {
+            for (std::size_t j = 0; j < PACKUS_LANE_COUNT; ++j)
+                temp[j] = weights_chunk[i + j];
+            for (std::size_t j = 0; j < PACKUS_LANE_COUNT; ++j)
+                weights_chunk[i + j] = temp[PACKUS_LANE_ORDER[j]];
+        }
+
+        // Permute FT biases
+        Chunk128* biases_chunk = reinterpret_cast<Chunk128*>(network.ft_biases);
+        const std::size_t total_bias_chunks = sizeof(network.ft_biases) / (sizeof(Chunk128));
+
+        for (std::size_t i = 0; i < total_bias_chunks; i += PACKUS_LANE_COUNT) {
+            for (std::size_t j = 0; j < PACKUS_LANE_COUNT; ++j)
+                temp[j] = biases_chunk[i + j];
+            for (std::size_t j = 0; j < PACKUS_LANE_COUNT; ++j)
+                biases_chunk[i + j] = temp[PACKUS_LANE_ORDER[j]];
+        }
+    }
 
     // Transform raw l1_weights, bullet output (transposed: (output_buckets * l2_size) x l1_size) into VNNI layout
     const int8_t* raw_l1 = reinterpret_cast<const int8_t*>(raw_bytes + offset);

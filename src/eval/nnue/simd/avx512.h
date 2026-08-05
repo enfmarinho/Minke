@@ -94,12 +94,7 @@ inline vepi16 shiftleft_i16(const vepi16 a, const int c) { return _mm512_slli_ep
 
 inline vepi16 shiftright_i16(const vepi16 a, const int c) { return _mm512_srai_epi16(a, c); }
 
-inline vepu8 packus_i16(const vepi16 a, const vepi16 b) {
-    vepu8 packed = _mm512_packus_epi16(a, b);
-
-    const __m512i permute_mask = _mm512_set_epi64(7, 5, 3, 1, 6, 4, 2, 0);
-    return _mm512_permutexvar_epi64(permute_mask, packed);
-}
+inline vepu8 packus_i16(const vepi16 a, const vepi16 b) { return _mm512_packus_epi16(a, b); }
 
 /// i32
 
