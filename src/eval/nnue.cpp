@@ -109,7 +109,6 @@ int32_t NNUE::propagate(std::span<const int16_t, L1_SIZE> stm_inputs, std::span<
 
 void NNUE::activate_ft(std::span<const int16_t, L1_SIZE> stm_acc, std::span<const int16_t, L1_SIZE> ntm_acc,
                        std::span<uint8_t, L1_SIZE> outputs, [[maybe_unused]] SparseIterator &si) {
-    constexpr size_t PAIR_COUNT = L1_SIZE / 2;
     const auto pov_activate = [&](std::span<const int16_t, L1_SIZE> acc, int output_offset) {
 #if USE_SIMD
         using namespace simd;
@@ -162,6 +161,10 @@ void NNUE::activate_ft(std::span<const int16_t, L1_SIZE> stm_acc, std::span<cons
         si.update(a, b);
     }
 #endif // USE_SIMD
+
+#ifdef TRACK_ACTIVATIONS
+    track_activations(outputs);
+#endif // TRACK_ACTIVATIONS
 }
 
 void NNUE::propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs,
@@ -364,3 +367,17 @@ void NNUE::propagate_l3(int bucket, std::span<const int32_t, L3_SIZE> inputs, in
 
     output = static_cast<int32_t>(rescaled_out);
 }
+
+#ifdef TRACK_ACTIVATIONS
+
+void NNUE::track_activations(std::span<const uint8_t, L1_SIZE> ft_out) {
+    for (size_t idx = 0; idx < L1_SIZE; ++idx) {
+        if (ft_out[idx] != 0) {
+            ++m_activation_table[idx % (PAIR_COUNT)];
+        }
+    }
+}
+
+const std::array<size_t, PAIR_COUNT> &NNUE::activation_table() { return m_activation_table; }
+
+#endif // TRACK_ACTIVATIONS

@@ -31,6 +31,8 @@ constexpr int L2_SIZE = 16;
 constexpr int ACTUAL_L2_SIZE = 16 * (DUAL_ACTIVATION + 1);
 constexpr int L3_SIZE = 32;
 
+constexpr int PAIR_COUNT = L1_SIZE / 2;
+
 constexpr int NUM_KING_BUCKETS = 10;
 // clang-format off
 constexpr int KING_BUCKETS_LAYOUT[64] = {
