@@ -61,7 +61,7 @@ class MovePicker {
     MovePickerStage m_stage;
     Movegen::ScoredMoveList m_move_list;
     size_t m_idx, m_end, m_bad_noisy_end;
-    Move m_ttmove, m_killer1, m_killer2;
+    Move m_ttmove;
     ThreadData *m_td;
     ScoreType m_threshold;
 };
