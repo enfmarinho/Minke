@@ -271,4 +271,3 @@ const int SEE_VALUES[PIECE_NB] = {pawn_see_value(), knight_see_value(), bishop_s
 TUNABLE_PARAM(mp_see_threshold_base, 78, 0, 150, 5, 0.002)
 TUNABLE_PARAM(mp_killer1_bonus, 8591, 0, 16000, 400, 0.002)
 TUNABLE_PARAM(mp_killer2_bonus, 6387, 0, 16000, 400, 0.002)
-TUNABLE_PARAM(mp_counter_bonus, 3025, 0, 16000, 400, 0.002)
