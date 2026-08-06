@@ -1,9 +1,9 @@
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -21,7 +21,8 @@ using Err = std::string;
 template <typename T>
 using Result = std::variant<T, Err>;
 
-using RawNetwork = std::array<std::byte, sizeof(Network)>;
+using RawNetworkData = std::array<uint8_t, sizeof(Network)>;
+using RawNetwork = std::unique_ptr<RawNetworkData>;
 
 constexpr std::array<size_t, PAIR_COUNT> activation_counts = {};
 
@@ -41,90 +42,65 @@ std::array<uint16_t, L1_SIZE> build_permutation() {
     return perm_full;
 }
 
-// TODO remove
-void validate_permutation(const std::array<uint16_t, L1_SIZE>& perm_full) {
-    std::array<bool, L1_SIZE> seen{};
-    for (uint16_t idx : perm_full) {
-        assert(idx < L1_SIZE);
-        assert(!seen[idx] && "build_permutation produced a duplicate index");
-        seen[idx] = true;
-    }
-}
-
 std::unique_ptr<Network> transpose(const RawNetwork& raw_net) {
-    std::size_t offset = 0;
-    auto advance = [&](std::size_t bytes) {
-        assert(offset + bytes <= sizeof(Network));
-        offset += bytes;
-    };
-
-    std::unique_ptr<Network> net = std::make_unique<Network>();
+    std::unique_ptr<Network> net = std::make_unique_for_overwrite<Network>();
+    const uint8_t* base_ptr = reinterpret_cast<const uint8_t*>(raw_net->data());
 
     // Copy FT weights
-    const std::size_t ft_w_size = sizeof(net->ft_weights);
-    std::memcpy(net->ft_weights, raw_net.data() + offset, ft_w_size);
-    advance(ft_w_size);
+    std::memcpy(net->ft_weights, base_ptr + offsetof(Network, ft_weights), sizeof(net->ft_weights));
 
     // Copy FT biases
-    const std::size_t ft_b_size = sizeof(net->ft_biases);
-    std::memcpy(net->ft_biases, raw_net.data() + offset, ft_b_size);
-    advance(ft_b_size);
+    std::memcpy(net->ft_biases, base_ptr + offsetof(Network, ft_biases), sizeof(net->ft_biases));
 
     // Transform raw l1 weights, bullet output (transposed: (output_buckets * l2_size) x l1_size) into VNNI layout
-    const int8_t* raw_l1 = reinterpret_cast<const int8_t*>(raw_net.data() + offset);
+    std::span<const int8_t> raw_l1w{reinterpret_cast<const int8_t*>(base_ptr + offsetof(Network, l1_weights)),
+                                    sizeof(net->l1_weights) / sizeof(int8_t)};
     for (int l1_idx = 0; l1_idx < L1_SIZE; ++l1_idx) {
         for (int out_bucket_idx = 0; out_bucket_idx < OUTPUT_BUCKET_COUNT; ++out_bucket_idx) {
             for (int l2_idx = 0; l2_idx < L2_SIZE; ++l2_idx) {
-                const int8_t w = raw_l1[(out_bucket_idx * L2_SIZE + l2_idx) * L1_SIZE + l1_idx];
+                const int8_t w = raw_l1w[(out_bucket_idx * L2_SIZE + l2_idx) * L1_SIZE + l1_idx];
                 net->l1_weights[out_bucket_idx][l1_idx / 4][l2_idx][l1_idx % 4] = w;
             }
         }
     }
-    advance(sizeof(net->l1_weights));
 
     // Copy L1 biases
-    const int32_t* raw_l1b = reinterpret_cast<const int32_t*>(raw_net.data() + offset);
+    std::span<const int32_t> raw_l1b{reinterpret_cast<const int32_t*>(base_ptr + offsetof(Network, l1_biases)),
+                                     sizeof(net->l1_biases) / sizeof(int32_t)};
     for (int out_bucket_idx = 0; out_bucket_idx < OUTPUT_BUCKET_COUNT; ++out_bucket_idx) {
         for (int l2_idx = 0; l2_idx < L2_SIZE; ++l2_idx) {
             const int32_t b = raw_l1b[out_bucket_idx * L2_SIZE + l2_idx];
             net->l1_biases[out_bucket_idx][l2_idx] = b;
         }
     }
-    advance(sizeof(net->l1_biases));
 
     // Transform raw l2 weights, bullet output (transposed: (output_buckets * l3_size) x l2_size)
-    const int32_t* raw_l2 = reinterpret_cast<const int32_t*>(raw_net.data() + offset);
+    std::span<const int32_t> raw_l2w{reinterpret_cast<const int32_t*>(base_ptr + offsetof(Network, l2_weights)),
+                                     sizeof(net->l2_weights) / sizeof(int32_t)};
     for (int l2_idx = 0; l2_idx < ACTUAL_L2_SIZE; ++l2_idx) {
         for (int out_bucket_idx = 0; out_bucket_idx < OUTPUT_BUCKET_COUNT; ++out_bucket_idx) {
             for (int l3_idx = 0; l3_idx < L3_SIZE; ++l3_idx) {
-                const int32_t w = raw_l2[(out_bucket_idx * L3_SIZE + l3_idx) * ACTUAL_L2_SIZE + l2_idx];
+                const int32_t w = raw_l2w[(out_bucket_idx * L3_SIZE + l3_idx) * ACTUAL_L2_SIZE + l2_idx];
                 net->l2_weights[out_bucket_idx][l2_idx][l3_idx] = w;
             }
         }
     }
-    advance(sizeof(net->l2_weights));
 
     // L2 biases
-    const std::size_t l2b_size = sizeof(net->l2_biases);
-    std::memcpy(net->l2_biases, raw_net.data() + offset, l2b_size);
-    advance(l2b_size);
+    std::memcpy(net->l2_biases, base_ptr + offsetof(Network, l2_biases), sizeof(net->l2_biases));
 
     // Transform raw l3 weights, bullet output (transposed: output_buckets x l3_size)
-    const int32_t* raw_l3 = reinterpret_cast<const int32_t*>(raw_net.data() + offset);
+    std::span<const int32_t> raw_l3w{reinterpret_cast<const int32_t*>(base_ptr + offsetof(Network, l3_weights)),
+                                     sizeof(net->l3_weights) / sizeof(int32_t)};
     for (int l3_idx = 0; l3_idx < L3_SIZE; ++l3_idx) {
         for (int out_bucket_idx = 0; out_bucket_idx < OUTPUT_BUCKET_COUNT; ++out_bucket_idx) {
-            const int32_t w = raw_l3[out_bucket_idx * L3_SIZE + l3_idx];
+            const int32_t w = raw_l3w[out_bucket_idx * L3_SIZE + l3_idx];
             net->l3_weights[out_bucket_idx][l3_idx] = w;
         }
     }
-    advance(sizeof(net->l3_weights));
 
     // L3 biases
-    const std::size_t l3b_size = sizeof(net->l3_biases);
-    std::memcpy(net->l3_biases, raw_net.data() + offset, l3b_size);
-    advance(l3b_size);
-
-    assert(offset == raw_net.size()); // redundant, but for clearness
+    std::memcpy(net->l3_biases, base_ptr + offsetof(Network, l3_biases), sizeof(net->l3_biases));
 
     return net;
 }
@@ -134,7 +110,6 @@ std::unique_ptr<Network> transpose(const RawNetwork& raw_net) {
 // increases the fraction of all-zero uint8 chunks that propagate_l1's SparseIterator can skip.
 void repermute_for_sparsity(std::unique_ptr<Network>& net) {
     const auto perm_full = build_permutation();
-    validate_permutation(perm_full); // TODO remove
 
     std::array<int16_t, L1_SIZE> tmp{};
 
@@ -152,14 +127,18 @@ void repermute_for_sparsity(std::unique_ptr<Network>& net) {
     std::memcpy(net->ft_biases, tmp.data(), sizeof(tmp));
 
     // l1 weights
-    int8_t old_l1w[OUTPUT_BUCKET_COUNT][L1_SIZE / 4][L2_SIZE][4];
+    int8_t old_l1w[OUTPUT_BUCKET_COUNT][L1_SIZE / 4][L2_SIZE][4]; // TODO put this on the heap
     std::memcpy(old_l1w, net->l1_weights, sizeof(net->l1_weights));
     for (int out_bucket_idx = 0; out_bucket_idx < OUTPUT_BUCKET_COUNT; ++out_bucket_idx) {
-        for (int l2_idx = 0; l2_idx < L2_SIZE; ++l2_idx) {
-            for (int new_l1_idx = 0; new_l1_idx < L1_SIZE; ++new_l1_idx) {
-                const int old_l1_idx = perm_full[new_l1_idx];
-                net->l1_weights[out_bucket_idx][new_l1_idx / 4][l2_idx][new_l1_idx % 4] =
-                    old_l1w[out_bucket_idx][old_l1_idx / 4][l2_idx][old_l1_idx % 4];
+        for (int l1_chunk_idx = 0; l1_chunk_idx < L1_SIZE / 4; ++l1_chunk_idx) {
+            for (int l2_idx = 0; l2_idx < L2_SIZE; ++l2_idx) {
+                for (int l1_rem = 0; l1_rem < 4; ++l1_rem) {
+                    const int new_full_idx = l1_chunk_idx * 4 + l1_rem;
+                    const int old_full_idx = perm_full[new_full_idx];
+
+                    net->l1_weights[out_bucket_idx][l1_chunk_idx][l2_idx][l1_rem] =
+                        old_l1w[out_bucket_idx][old_full_idx / 4][l2_idx][old_full_idx % 4];
+                }
             }
         }
     }
@@ -200,23 +179,18 @@ void permute_network_ft_params(std::unique_ptr<Network>& net) {
 }
 
 Result<RawNetwork> read_in_raw_network(const std::string& in_path) {
-    std::ifstream in_file(in_path, std::ios::binary | std::ios::ate);
+    std::ifstream in_file(in_path, std::ios::binary);
     if (!in_file) {
         return "Failed to open input file: " + in_path;
     }
 
-    const auto in_file_size = in_file.tellg();
-    if (in_file_size == std::streampos(-1)) {
-        return "Failed to determine input file size.";
-    }
-    in_file.seekg(0, std::ios::beg); // go back to beginning of file
-
-    if (static_cast<std::size_t>(in_file_size) != sizeof(Network)) {
+    size_t size = std::filesystem::file_size(in_path);
+    if (size != sizeof(Network)) {
         return "Input file has an unexpected size.";
     }
 
-    RawNetwork raw_net;
-    if (!in_file.read(reinterpret_cast<char*>(&raw_net), sizeof(raw_net))) {
+    RawNetwork raw_net = std::make_unique_for_overwrite<RawNetworkData>();
+    if (!in_file.read(reinterpret_cast<char*>(raw_net->data()), sizeof(RawNetworkData))) {
         return "Failed to read input file.";
     }
 
@@ -258,7 +232,7 @@ int main(int argc, char* argv[]) {
     permute_network_ft_params(net);
 
     const std::string out_path = argv[2];
-    std::span out_bytes{reinterpret_cast<const uint8_t*>(&net), sizeof(net)};
+    std::span out_bytes{reinterpret_cast<const uint8_t*>(net.get()), sizeof(Network)};
     auto err_msg = write_out(out_path, out_bytes);
 
     // File write failed
