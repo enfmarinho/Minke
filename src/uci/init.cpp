@@ -19,12 +19,10 @@
 #include "uci/init.h"
 
 #include <cmath>
-#include <cstdint>
 
 #include "core/attacks.h"
 #include "core/types.h"
 #include "eval/nnue/arch.h"
-#include "eval/nnue/simd.h"
 #include "search/search.h"
 #include "uci/tune.h"
 #include "utils/hash.h"
@@ -62,99 +60,7 @@ void init_search_params() {
     }
 }
 
-void init_network_params() {
-    const uint8_t* raw_bytes = reinterpret_cast<const uint8_t*>(gNetParametersData);
-
-    // Copy FT weights
-    size_t offset = 0;
-    std::memcpy(network.ft_weights, raw_bytes + offset, sizeof(network.ft_weights));
-    offset += sizeof(network.ft_weights);
-
-    // Copy FT biases
-    std::memcpy(network.ft_biases, raw_bytes + offset, sizeof(network.ft_biases));
-    offset += sizeof(network.ft_biases);
-
-#if USE_SIMD
-    if constexpr (simd::PACKUS_LANE_COUNT > 1) {
-        using namespace simd;
-        struct alignas(16) Chunk128 {
-            std::array<int16_t, 8> data;
-        };
-        std::array<Chunk128, PACKUS_LANE_COUNT> temp;
-
-        // Permute FT weights
-        Chunk128* weights_chunk = reinterpret_cast<Chunk128*>(network.ft_weights);
-        const std::size_t total_weight_chunks = sizeof(network.ft_weights) / (sizeof(Chunk128));
-
-        for (std::size_t i = 0; i < total_weight_chunks; i += PACKUS_LANE_COUNT) {
-            for (std::size_t j = 0; j < PACKUS_LANE_COUNT; ++j)
-                temp[j] = weights_chunk[i + j];
-            for (std::size_t j = 0; j < PACKUS_LANE_COUNT; ++j)
-                weights_chunk[i + j] = temp[PACKUS_LANE_ORDER[j]];
-        }
-
-        // Permute FT biases
-        Chunk128* biases_chunk = reinterpret_cast<Chunk128*>(network.ft_biases);
-        const std::size_t total_bias_chunks = sizeof(network.ft_biases) / (sizeof(Chunk128));
-
-        for (std::size_t i = 0; i < total_bias_chunks; i += PACKUS_LANE_COUNT) {
-            for (std::size_t j = 0; j < PACKUS_LANE_COUNT; ++j)
-                temp[j] = biases_chunk[i + j];
-            for (std::size_t j = 0; j < PACKUS_LANE_COUNT; ++j)
-                biases_chunk[i + j] = temp[PACKUS_LANE_ORDER[j]];
-        }
-    }
-#endif
-
-    // Transform raw l1_weights, bullet output (transposed: (output_buckets * l2_size) x l1_size) into VNNI layout
-    const int8_t* raw_l1 = reinterpret_cast<const int8_t*>(raw_bytes + offset);
-    for (int l1_idx = 0; l1_idx < L1_SIZE; ++l1_idx) {
-        for (int out_bucket_idx = 0; out_bucket_idx < OUTPUT_BUCKET_COUNT; ++out_bucket_idx) {
-            for (int l2_idx = 0; l2_idx < L2_SIZE; ++l2_idx) {
-                network.l1_weights[out_bucket_idx][l1_idx / 4][l2_idx][l1_idx % 4] =
-                    raw_l1[(out_bucket_idx * L2_SIZE + l2_idx) * L1_SIZE + l1_idx];
-            }
-        }
-    }
-    offset += sizeof(network.l1_weights);
-
-    // Copy L1 biases
-    const int32_t* raw_l1b = reinterpret_cast<const int32_t*>(raw_bytes + offset);
-    for (int out_bucket_idx = 0; out_bucket_idx < OUTPUT_BUCKET_COUNT; ++out_bucket_idx) {
-        for (int l2_idx = 0; l2_idx < L2_SIZE; ++l2_idx) {
-            network.l1_biases[out_bucket_idx][l2_idx] = raw_l1b[out_bucket_idx * L2_SIZE + l2_idx];
-        }
-    }
-    offset += sizeof(network.l1_biases);
-
-    // Transform raw l2_weights, bullet output (transposed: (output_buckets * l3_size) x l2_size)
-    const int32_t* raw_l2 = reinterpret_cast<const int32_t*>(raw_bytes + offset);
-    for (int l2_idx = 0; l2_idx < ACTUAL_L2_SIZE; ++l2_idx) {
-        for (int out_bucket_idx = 0; out_bucket_idx < OUTPUT_BUCKET_COUNT; ++out_bucket_idx) {
-            for (int l3_idx = 0; l3_idx < L3_SIZE; ++l3_idx) {
-                network.l2_weights[out_bucket_idx][l2_idx][l3_idx] =
-                    raw_l2[(out_bucket_idx * L3_SIZE + l3_idx) * ACTUAL_L2_SIZE + l2_idx];
-            }
-        }
-    }
-    offset += sizeof(network.l2_weights);
-
-    // L2 biases
-    std::memcpy(network.l2_biases, raw_bytes + offset, sizeof(network.l2_biases));
-    offset += sizeof(network.l2_biases);
-
-    // Transform raw l3_weights, bullet output (transposed: output_buckets x l3_size)
-    const int32_t* raw_l3 = reinterpret_cast<const int32_t*>(raw_bytes + offset);
-    for (int l3_idx = 0; l3_idx < L3_SIZE; ++l3_idx) {
-        for (int out_bucket_idx = 0; out_bucket_idx < OUTPUT_BUCKET_COUNT; ++out_bucket_idx) {
-            network.l3_weights[out_bucket_idx][l3_idx] = raw_l3[out_bucket_idx * L3_SIZE + l3_idx];
-        }
-    }
-    offset += sizeof(network.l3_weights);
-
-    // L3 biases
-    std::memcpy(network.l3_biases, raw_bytes + offset, sizeof(network.l3_biases));
-}
+void init_network_params() { network = *reinterpret_cast<const Network *>(&gNetParametersData); }
 
 void init_hash_keys() {
     PRNG prng(1070372);

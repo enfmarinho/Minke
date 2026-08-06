@@ -28,8 +28,8 @@
 
 namespace simd {
 
-constexpr size_t PACKUS_LANE_COUNT = 2;
-constexpr size_t PACKUS_LANE_ORDER[2] = {0, 1};
+constexpr size_t PACKUS_LANE_COUNT = 1;
+constexpr size_t PACKUS_LANE_ORDER[2] = {0, 0};
 
 using vepu8 = uint8x16_t;
 using vepu16 = uint16x8_t;
@@ -143,12 +143,6 @@ inline vepi32 mullo_i32(vepi32 a, vepi32 b) { return vmulq_s32(a, b); }
 inline vepi32 shiftleft_i32(const vepi32 a, const int c) { return vshlq_s32(a, vdupq_n_s32(c)); }
 
 inline vepi32 shiftright_i32(const vepi32 a, const int c) { return vshlq_s32(a, vdupq_n_s32(-c)); }
-
-inline vepu16 packus_i32(const vepi32 a, const vepi32 b) {
-    uint16x4_t low = vqmovun_s32(a);
-    uint16x4_t high = vqmovun_s32(b);
-    return vcombine_u16(low, high);
-}
 
 inline int32_t hsum_i32(const vepi32 vec) {
 #if defined(__aarch64__)
