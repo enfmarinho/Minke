@@ -5,7 +5,7 @@
 
 VERSION := 6.0.0
 DEFAULT_EVALFILE := minke36
-PREPROCESSOR_SRC := utils/preprocess_nnue.cpp
+PREPROCESSOR_SRC := tools/preprocess_nnue.cpp
 
 PGO ?= off
 
