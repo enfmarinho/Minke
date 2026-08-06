@@ -81,7 +81,7 @@ std::array<uint16_t, L1_SIZE> build_permutation() {
     std::iota(order.begin(), order.end(), 0);
 
     std::stable_sort(order.begin(), order.end(),
-                     [](uint16_t a, uint16_t b) { return activation_counts[a] < activation_counts[b]; });
+                     [](uint16_t a, uint16_t b) { return activation_counts[a] > activation_counts[b]; });
 
     // perm_full[new_idx] = old_idx
     std::array<uint16_t, L1_SIZE> perm_full;
