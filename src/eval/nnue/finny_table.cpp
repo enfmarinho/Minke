@@ -19,9 +19,11 @@
 #include "eval/nnue/finny_table.h"
 
 #include "core/position.h"
+#include "core/types.h"
 #include "eval/nnue/accumulator.h"
 #include "eval/nnue/arch.h"
 #include "eval/nnue/pov_accumulator.h"
+#include "utils/utils.h"
 
 void FinnyTable::reset() {
     // Reset all cached accumulators
@@ -35,30 +37,42 @@ const PovAccumulator &FinnyTable::update(const Position &pos, const Color pov) {
     const Square king_sq = pos.get_king_placement(pov);
     FinnyTableCache &cached_entry = get_cache(should_flip(king_sq), king_bucket_idx(king_sq, pov), pov);
 
-    for (size_t piece_idx = WHITE_PAWN; piece_idx <= BLACK_KING; ++piece_idx) {
-        const Piece piece = static_cast<Piece>(piece_idx);
-        Bitboard added = pos.get_piece_bb(piece) & ~cached_entry.bbs[piece_idx];
-        Bitboard removed = cached_entry.bbs[piece_idx] & ~pos.get_piece_bb(piece);
+    for (size_t color_idx = WHITE; color_idx <= BLACK; ++color_idx) {
+        const Color color = static_cast<Color>(color_idx);
+        for (size_t pt_idx = PAWN; pt_idx <= KING; ++pt_idx) {
+            const PieceType pt = static_cast<PieceType>(pt_idx);
+            const Piece piece = get_piece(pt, color);
+            const Bitboard piece_bb = cached_entry.pt_bb[pt_idx] & cached_entry.color_bb[color_idx];
 
-        // fused updates
-        while (added && removed) {
-            const Square add_sq = poplsb(added);
-            const Square sub_sq = poplsb(removed);
-            cached_entry.pov_accumulator.self_add_sub(feature_idx(piece, add_sq, king_sq, pov),
-                                                      feature_idx(piece, sub_sq, king_sq, pov));
+            Bitboard added = ~piece_bb & pos.get_piece_bb(piece);
+            Bitboard removed = piece_bb & ~pos.get_piece_bb(piece);
+
+            // fused updates
+            while (added && removed) {
+                const Square add_sq = poplsb(added);
+                const Square sub_sq = poplsb(removed);
+                cached_entry.pov_accumulator.self_add_sub(feature_idx(piece, add_sq, king_sq, pov),
+                                                          feature_idx(piece, sub_sq, king_sq, pov));
+            }
+
+            while (added) {
+                const Square sq = poplsb(added);
+                cached_entry.pov_accumulator.self_add(feature_idx(piece, sq, king_sq, pov));
+            }
+
+            while (removed) {
+                const Square sq = poplsb(removed);
+                cached_entry.pov_accumulator.self_sub(feature_idx(piece, sq, king_sq, pov));
+            }
         }
+    }
 
-        while (added) {
-            const Square sq = poplsb(added);
-            cached_entry.pov_accumulator.self_add(feature_idx(piece, sq, king_sq, pov));
-        }
-
-        while (removed) {
-            const Square sq = poplsb(removed);
-            cached_entry.pov_accumulator.self_sub(feature_idx(piece, sq, king_sq, pov));
-        }
-
-        cached_entry.bbs[piece_idx] = pos.get_piece_bb(piece);
+    // update cached bbs
+    for (size_t color_idx = WHITE; color_idx <= BLACK; ++color_idx) {
+        cached_entry.color_bb[color_idx] = pos.get_occupancy(static_cast<Color>(color_idx));
+    }
+    for (size_t pt_idx = PAWN; pt_idx <= KING; ++pt_idx) {
+        cached_entry.pt_bb[pt_idx] = pos.get_piece_bb(static_cast<PieceType>(pt_idx));
     }
 
     assert(cached_entry.pov_accumulator == PovAccumulator(pos, pov));
@@ -67,7 +81,10 @@ const PovAccumulator &FinnyTable::update(const Position &pos, const Color pov) {
 }
 
 void FinnyTable::FinnyTableCache::reset() {
-    for (Bitboard &bb : bbs) {
+    for (Bitboard &bb : pt_bb) {
+        bb = 0;
+    }
+    for (Bitboard &bb : color_bb) {
         bb = 0;
     }
     pov_accumulator.reset();
