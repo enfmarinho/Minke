@@ -26,7 +26,29 @@
 #include "core/move.h"
 #include "eval/nnue.h"
 #include "types.h"
-#include "utils/utils.h"
+
+struct BoardState {
+    Piece captured;
+    int fifty_move_ply;
+    int ply_from_null;
+    uint8_t castling_rights;
+    Square en_passant;
+    Bitboard checkers;
+    Bitboard pins;
+    Bitboard castle_rooks;
+    Bitboard threats;
+    void reset() {
+        checkers = 0;
+        pins = 0;
+        captured = EMPTY;
+        fifty_move_ply = 0;
+        ply_from_null = 0;
+        castling_rights = NO_CASTLING;
+        en_passant = NO_SQ;
+        castle_rooks = 0;
+        threats = 0;
+    }
+};
 
 class Position {
   public:
