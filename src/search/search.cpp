@@ -681,7 +681,7 @@ bool SEE(Position &position, const Move &move, int threshold) {
         return true;
 
     Bitboard attackers = position.attackers(to);
-    Bitboard occupancy = position.get_occupancy() ^ (1ULL << from); // Removed already used attacker
+    Bitboard occupancy = position.get_occupancy() ^ Bitboard(from); // Removed already used attacker
     Bitboard diagonal_attackers = position.get_piece_bb(BISHOP) | position.get_piece_bb(QUEEN);
     Bitboard line_attackers = position.get_piece_bb(ROOK) | position.get_piece_bb(QUEEN);
     Color stm = static_cast<Color>(!position.get_stm());
@@ -710,7 +710,7 @@ bool SEE(Position &position, const Move &move, int threshold) {
             break;
         }
 
-        occupancy ^= (my_attackers & -my_attackers); // Remove used piece, i.e. unset lsb
+        occupancy ^= (my_attackers & Bitboard(-my_attackers)); // Remove used piece, i.e. unset lsb
 
         // Add x-ray attackers, if there is any
         switch (cheapest_attacker) {

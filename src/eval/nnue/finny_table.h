@@ -20,6 +20,7 @@
 #include <array>
 #include <cstring>
 
+#include "core/bitboard.h"
 #include "core/types.h"
 #include "eval/nnue/accumulator.h"
 #include "eval/nnue/arch.h"

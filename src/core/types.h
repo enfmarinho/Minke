@@ -93,13 +93,25 @@ enum Direction : int {
     SOUTH = -8,
     WEST = -1,
     EAST = 1,
+
     NORTH_EAST = NORTH + EAST,
     NORTH_WEST = NORTH + WEST,
     SOUTH_EAST = SOUTH + EAST,
     SOUTH_WEST = SOUTH + WEST,
 
     DOUBLE_NORTH = 2 * NORTH,
+    DOUBLE_NORTH_EAST = 2 * NORTH + EAST,
+    DOUBLE_NORTH_WEST = 2 * NORTH + WEST,
+
     DOUBLE_SOUTH = 2 * SOUTH,
+    DOUBLE_SOUTH_EAST = 2 * SOUTH + EAST,
+    DOUBLE_SOUTH_WEST = 2 * SOUTH + WEST,
+
+    DOUBLE_EAST_NORTH = 2 * EAST + NORTH,
+    DOUBLE_WEST_NORTH = 2 * WEST + NORTH,
+
+    DOUBLE_EAST_SOUTH = 2 * EAST + SOUTH,
+    DOUBLE_WEST_SOUTH = 2 * WEST + SOUTH,
 };
 
 enum BoundType : char {
@@ -135,9 +147,7 @@ using HistoryType = int;
 using ScoreType = int16_t;
 using TimeType = std::chrono::milliseconds::rep;
 using TimePoint = std::chrono::steady_clock::time_point;
-using Bitboard = uint64_t;
 
-constexpr Bitboard ALL_BITS = -1ULL;
 constexpr int MAX_MOVES_PER_POS = 256;
 constexpr int MAX_SEARCH_DEPTH = 256;
 constexpr int MAX_PLY = MAX_SEARCH_DEPTH + 100 + 5; // Plus 100 because of fifty move rule and plus 5 just to be safe
@@ -151,17 +161,6 @@ constexpr IndexType BOARD_HEIGHT = 8;
 constexpr IndexType BOARD_WIDTH = 8;
 
 constexpr inline auto START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
-constexpr Bitboard FILE_MASKS[8] = {0x101010101010101,  0x202020202020202,  0x404040404040404,  0x808080808080808,
-                                    0x1010101010101010, 0x2020202020202020, 0x4040404040404040, 0x8080808080808080};
-
-constexpr Bitboard RANK_MASKS[8] = {0xff,         0xff00,         0xff0000,         0xff000000,
-                                    0xff00000000, 0xff0000000000, 0xff000000000000, 0xff00000000000000};
-
-constexpr Bitboard WHITE_OO_CROSSING_MASK = 0x60;
-constexpr Bitboard WHITE_OOO_CROSSING_MASK = 0xe;
-constexpr Bitboard BLACK_OO_CROSSING_MASK = 0x6000000000000000;
-constexpr Bitboard BLACK_OOO_CROSSING_MASK = 0xe00000000000000;
 
 inline TimeType now() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())

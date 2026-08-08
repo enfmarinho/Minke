@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <string>
 
+#include "core/bitboard.h"
 #include "core/types.h"
 #include "utils/utils.h"
 

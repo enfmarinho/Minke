@@ -20,17 +20,8 @@
 
 #include <cassert>
 
+#include "core/bitboard.h"
 #include "core/types.h"
-
-const Bitboard NOT_A_FILE = ~FILE_MASKS[0];
-const Bitboard NOT_AB_FILE = ~(FILE_MASKS[0] | FILE_MASKS[1]);
-const Bitboard NOT_H_FILE = ~FILE_MASKS[7];
-const Bitboard NOT_HG_FILE = ~(FILE_MASKS[6] | FILE_MASKS[7]);
-
-const Bitboard NOT_1_RANK = ~RANK_MASKS[0];
-const Bitboard NOT_1_2_RANK = ~(RANK_MASKS[0] | RANK_MASKS[1]);
-const Bitboard NOT_8_RANK = ~RANK_MASKS[7];
-const Bitboard NOT_7_8_RANK = ~(RANK_MASKS[7] | RANK_MASKS[6]);
 
 extern Bitboard bishop_masks[64];
 extern Bitboard rook_masks[64];

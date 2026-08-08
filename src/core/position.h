@@ -23,6 +23,7 @@
 #include <cstring>
 #include <string>
 
+#include "core/bitboard.h"
 #include "core/move.h"
 #include "eval/nnue.h"
 #include "types.h"
@@ -72,7 +73,7 @@ class Position {
     void unmake_null_move();
 
     inline bool in_check() const { return m_curr_state.checkers; }
-    inline bool is_threatened(const Square &sq) const { return m_curr_state.threats & (1ULL << sq); }
+    inline bool is_threatened(const Square &sq) const { return m_curr_state.threats.is_set(sq); }
     bool is_attacked(const Square &sq) const;
     bool is_legal(const Move &move);
     bool is_pseudo_legal(const Move &move) const;
@@ -104,7 +105,7 @@ class Position {
     inline Bitboard get_piece_bb(const PieceType &piece_type) const {
         return m_pieces[piece_type] | m_pieces[piece_type + COLOR_OFFSET];
     }
-    inline Square get_king_placement(const Color &color) const { return lsb(m_pieces[KING + color * COLOR_OFFSET]); }
+    inline Square get_king_placement(const Color &color) const { return m_pieces[KING + color * COLOR_OFFSET].lsb(); }
     inline uint8_t get_castling_rights() const { return m_curr_state.castling_rights; }
     inline Color get_stm() const { return m_stm; }
     inline Color get_adversary() const { return static_cast<Color>(m_stm ^ 1); }
@@ -115,14 +116,14 @@ class Position {
     inline HashType get_black_nonpawn_hash() const { return m_black_non_pawn_hash; }
     inline int get_game_ply() const { return m_game_clock_ply; }
     inline int get_fifty_move_ply() const { return m_curr_state.fifty_move_ply; }
-    inline int get_material_count(const Piece &piece) const { return count_bits(get_piece_bb(piece)); }
+    inline int get_material_count(const Piece &piece) const { return get_piece_bb(piece).popcount(); }
     inline int get_material_count(const PieceType &piece_type, const Color &color) const {
         return get_material_count(static_cast<Piece>(piece_type + color * COLOR_OFFSET));
     }
     inline int get_material_count(const PieceType &piece_type) const {
-        return count_bits(m_pieces[piece_type] | m_pieces[piece_type + COLOR_OFFSET]);
+        return (m_pieces[piece_type] | m_pieces[piece_type + COLOR_OFFSET]).popcount();
     }
-    inline int get_material_count() const { return count_bits(get_occupancy()); }
+    inline int get_material_count() const { return get_occupancy().popcount(); }
     inline Piece consult(const Square &sq) const { return m_board[sq]; }
     inline int get_history_ply() const { return m_history_ply; }
     inline BoardState get_board_state() const { return m_curr_state; };
