@@ -293,11 +293,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
         // Reverse futility pruning
         const ScoreType rfp_margin = [&]() {
-            ScoreType rfp_margin = 0;
-            rfp_margin += rfp_depth_factor() * depth;
-            rfp_margin += rfp_improving_margin() * improving;
-            rfp_margin += rfp_complexity_factor() * complexity / 1024;
-            return rfp_margin;
+            ScoreType margin = 0;
+            margin += rfp_depth_factor() * depth;
+            margin += rfp_improving_margin() * improving;
+            margin += rfp_complexity_factor() * complexity / 1024;
+            return margin;
         }();
         if (depth < rfp_max_depth() && eval - rfp_margin >= beta) {
             return eval;

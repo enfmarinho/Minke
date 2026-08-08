@@ -241,8 +241,12 @@ template <bool UPDATE>
 void Position::reset() {
     for (int sqi = a1; sqi <= h8; ++sqi)
         m_board[sqi] = EMPTY;
-    std::memset(m_occupancies, 0ULL, sizeof(m_occupancies));
-    std::memset(m_pieces, 0ULL, sizeof(m_pieces));
+    for (size_t i = 0; i < 12; ++i) {
+        m_pieces[i] = Bitboard::EMPTY;
+    }
+    for (size_t i = 0; i < 2; ++i) {
+        m_occupancies[i] = Bitboard::EMPTY;
+    }
 
     m_position_hash = 0ULL;
     m_pawn_hash = 0ULL;

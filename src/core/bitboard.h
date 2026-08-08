@@ -192,7 +192,7 @@ class Bitboard {
     static constexpr UnderlyingT BLACK_OO_CROSSING_MASK = 0x6000000000000000;
     static constexpr UnderlyingT BLACK_OOO_CROSSING_MASK = 0xe00000000000000;
 
-    static constexpr UnderlyingT NO_SQ = 0x0;
+    static constexpr UnderlyingT EMPTY = 0x0;
 
     static inline UnderlyingT pov_first_rank(Color color) { return (color == WHITE ? RANK_1 : RANK_8); }
     static inline UnderlyingT pawn_promotion_rank(Color color) { return (color == WHITE ? RANK_8 : RANK_1); }
