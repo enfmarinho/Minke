@@ -5,13 +5,14 @@
 
 VERSION := 6.0.0
 DEFAULT_EVALFILE := minke37
+PREPROCESSOR_SRC := utils/preprocess_nnue.cpp
 
 PGO ?= off
 
 # Flags
 CXXSTD := -std=c++20
 CXXWARNS := -Wall
-CXXFLAGS = -O3 -funroll-loops -flto=auto -I src -DNDEBUG -DEVALFILE=\"$(NNUE_FILE)\" $(CXXSTD) $(CXXWARNS)
+CXXFLAGS = -O3 -funroll-loops -flto=auto -I src -DNDEBUG -DEVALFILE=\"$(NNUE_FILE_PROCESSED)\" $(CXXSTD) $(CXXWARNS)
 LDFLAGS := -flto=auto
 
 # Arch flags
@@ -27,13 +28,6 @@ PGO_DIR := $(BASE_BUILD_DIR)/pgo
 SRC_DIRS := src/ src/core/ src/datagen/ src/eval/ src/eval/nnue/ src/eval/nnue/simd/ src/search/ src/uci/ src/utils/
 SOURCES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 OBJECTS := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(notdir $(SOURCES)))
-
-ifndef EVALFILE
-	EVALFILE := $(DEFAULT_EVALFILE)
-	NNUE_FILE := $(EVALFILE).nnue
-else
-	NNUE_FILE := $(EVALFILE)
-endif
 
 ifndef EXE
 	EXE := minke-v$(VERSION)
@@ -87,6 +81,14 @@ ifndef DEFAULT_TARGET
 	DEFAULT_TARGET := native
 endif
 
+ifndef EVALFILE
+	EVALFILE := $(DEFAULT_EVALFILE)
+	NNUE_FILE_PREPROCESS := $(EVALFILE).nnue
+else
+	NNUE_FILE_PREPROCESS := $(EVALFILE)
+endif
+NNUE_FILE_PROCESSED := $(basename $(EVALFILE))_processed_$(DEFAULT_TARGET).nnue
+
 ifneq ($(PGO),on)
 define build
 	$(MAKE) \
@@ -123,17 +125,23 @@ endif
 .PHONY: all evalfile native avx2 bmi2 avx512 apple-silicon build clean
 all: $(DEFAULT_TARGET)
 
+evalfile_processed: evalfile
+	@echo "Compiling nnue pre-processor program"
+	$(CXX) $(CXXFLAGS) $(ARCH_FLAGS) $(PROFILE_FLAGS) $(LDFLAGS) $(PREPROCESSOR_SRC) -o preprocess_nnue
+	@echo "Pre-processing $(NNUE_FILE_PREPROCESS)"
+	./preprocess_nnue $(NNUE_FILE_PREPROCESS) $(NNUE_FILE_PROCESSED)
+
 evalfile:
-	@if [ ! -f $(NNUE_FILE) ]; then \
+	@if [ ! -f $(NNUE_FILE_PREPROCESS) ]; then \
 		if [ "$(EVALFILE)" = "$(DEFAULT_EVALFILE)" ]; then \
-			echo "Downloading $(NNUE_FILE)..."; \
-			curl -sLO https://github.com/enfmarinho/MinkeNets/releases/download/$(DEFAULT_EVALFILE)/$(NNUE_FILE); \
+			echo "Downloading $(NNUE_FILE_PREPROCESS)..."; \
+			curl -sLO https://github.com/enfmarinho/MinkeNets/releases/download/$(DEFAULT_EVALFILE)/$(NNUE_FILE_PREPROCESS); \
 		else \
-			echo "Error: Network file '$(NNUE_FILE)' not found!"; \
+			echo "Error: Network file '$(NNUE_FILE_PREPROCESS)' not found!"; \
 			exit 1; \
 		fi; \
 	else \
-		echo "Using network: $(NNUE_FILE)"; \
+		echo "Using network: $(NNUE_FILE_PREPROCESS)"; \
 	fi
 
 native:
@@ -151,12 +159,12 @@ avx512:
 apple-silicon:
 	$(call build,APPLESILICON,apple-silicon)
 
-build: evalfile $(OBJECTS)
+build: evalfile_processed $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(ARCH_FLAGS) $(PROFILE_FLAGS) $(LDFLAGS) -o $(EXE) $(OBJECTS)
 
 vpath %.cpp $(SRC_DIRS)
 
-$(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR) evalfile_processed
 	$(CXX) $(CXXFLAGS) $(ARCH_FLAGS) $(PROFILE_FLAGS) -c $< -o $@ -MMD -MP
 
 $(BUILD_DIR):
