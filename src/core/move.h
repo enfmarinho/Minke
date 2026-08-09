@@ -24,7 +24,7 @@
 
 #include "core/bitboard.h"
 #include "core/types.h"
-#include "utils/utils.h"
+#include "utils/static_vector.h"
 
 class Move {
   public:
