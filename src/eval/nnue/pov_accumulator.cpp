@@ -30,9 +30,9 @@ PovAccumulator::PovAccumulator(const Position &pos, const Color pov) {
     reset();
     for (int sqi = a1; sqi <= h8; ++sqi) {
         const Square sq = static_cast<Square>(sqi);
-        Piece piece = pos.consult(sq);
+        Piece piece = pos.piece_at(sq);
         if (piece != EMPTY)
-            self_add(feature_idx(piece, sq, pos.get_king_placement(pov), pov));
+            self_add(feature_idx(piece, sq, pos.king_sq(pov), pov));
     }
 }
 

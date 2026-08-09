@@ -130,14 +130,14 @@ class DatagenThread {
 
             if (!move) {
                 if (m_td->position.in_check())
-                    result = m_td->position.get_stm() == WHITE ? LOSS : WIN;
+                    result = m_td->position.stm() == WHITE ? LOSS : WIN;
                 else
                     result = DRAW;
 
                 break;
             }
 
-            if (m_td->position.get_stm() == BLACK)
+            if (m_td->position.stm() == BLACK)
                 score *= -1;
 
             if (std::abs(score) >= MATE_FOUND) {
@@ -147,7 +147,7 @@ class DatagenThread {
                     ++win_count;
                     draw_count = 0;
                 } else if (std::abs(normalized_score) < DRAW_ADJ_SCORE &&
-                           m_td->position.get_game_ply() >= DRAW_ADJ_MIN_PLY) {
+                           m_td->position.game_ply() >= DRAW_ADJ_MIN_PLY) {
                     win_count = 0;
                     ++draw_count;
                 } else {
@@ -162,7 +162,7 @@ class DatagenThread {
                 }
             }
 
-            if (m_td->position.draw()) {
+            if (m_td->position.is_draw()) {
                 result = DRAW;
                 score = 0;
             }

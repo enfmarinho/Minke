@@ -57,7 +57,7 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
     // Add 1 to time_passed() to avoid division by 0
     std::cout << " time " << td.time_manager.time_passed() << " nodes " << td.nodes_searched << " nps "
               << td.nodes_searched * 1000 / (td.time_manager.time_passed() + 1) << " pv ";
-    pv_list.print(td.chess960, td.position.get_castle_rooks());
+    pv_list.print(td.chess960, td.position.castle_rooks_bb());
     std::cout << std::endl;
 }
 
@@ -146,8 +146,8 @@ ScoreType iterative_deepening(ThreadData &td) {
     }
 
     if (td.report)
-        std::cout << "bestmove "
-                  << (!best_move ? "none" : best_move.to_uci(td.chess960, td.position.get_castle_rooks())) << std::endl;
+        std::cout << "bestmove " << (!best_move ? "none" : best_move.to_uci(td.chess960, td.position.castle_rooks_bb()))
+                  << std::endl;
 
     td.stop = true;
     td.best_move = best_move; // A partial search would mess this up
@@ -207,7 +207,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     // Early return conditions
     bool root = td.height == 0;
     if (!root) {
-        if (position.draw())
+        if (position.is_draw())
             return 0;
 
         if (td.height >= MAX_SEARCH_DEPTH - 1)
@@ -259,7 +259,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     } else {
         raw_eval = position.eval();
         eval = node.static_eval = adjust_eval(position, raw_eval, correction_value);
-        td.tt.store(position.get_hash(), 0, Move::none(), SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age());
+        td.tt.store(position.hash(), 0, Move::none(), SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age());
     }
 
     // Clean killer moves for the next ply
@@ -325,7 +325,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             const int reduction = (nmp_base_reduction() + depth * nmp_depth_factor()) / 64;
 
             position.make_null_move();
-            td.tt.prefetch(position.get_hash());
+            td.tt.prefetch(position.hash());
             ++td.height;
             node.curr_pmove = PieceMove::none();
             ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, !cutnode, td);
@@ -351,12 +351,12 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                     continue;
                 }
 
-                node.curr_pmove = {move, position.consult(move.from())};
+                node.curr_pmove = {move, position.piece_at(move.from())};
                 position.make_move<true>(move);
 
                 ++td.height;
 
-                td.tt.prefetch(position.get_hash());
+                td.tt.prefetch(position.hash());
 
                 int pc_score = -quiescence(-pc_beta, -pc_beta + 1, td);
                 if (pc_score >= pc_beta)
@@ -366,7 +366,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 position.unmake_move<true>(move);
 
                 if (pc_score >= pc_beta) {
-                    td.tt.store(position.get_hash(), depth - 3, move, pc_score, raw_eval, LOWER, ttpv, td.tt.age());
+                    td.tt.store(position.hash(), depth - 3, move, pc_score, raw_eval, LOWER, ttpv, td.tt.age());
                     return pc_score;
                 }
             }
@@ -430,7 +430,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             ScoreType singular_beta = ttscore - depth * singular_extension_depth_factor() / 16;
             ScoreType singular_depth = (depth - 1) / 2;
 
-            td.tt.prefetch(position.get_hash());
+            td.tt.prefetch(position.hash());
 
             td.nodes[td.height].excluded_move = ttmove;
             ScoreType singular_score = negamax(singular_beta - 1, singular_beta, singular_depth, cutnode, td);
@@ -450,10 +450,10 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             }
         }
 
-        node.curr_pmove = {move, position.consult(move.from())};
+        node.curr_pmove = {move, position.piece_at(move.from())};
         position.make_move<true>(move);
 
-        td.tt.prefetch(position.get_hash());
+        td.tt.prefetch(position.hash());
         int new_depth = depth + extension - 1;
 
         // Add move to tried list
@@ -476,7 +476,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             if (moves_searched > 1 && depth >= 3 && move.is_quiet()) {
                 scaled_reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
 
-                if (position.get_checkers()) // Reduce less for moves that give check
+                if (position.checkers_bb()) // Reduce less for moves that give check
                     scaled_reduction -= lmr_gives_check_delta();
 
                 scaled_reduction += !improving * lmr_non_improving_delta(); // Reduce more if not improving
@@ -550,7 +550,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     }
 
     if (!stop_search(td) && !singular_search) {
-        td.tt.store(position.get_hash(), depth, best_move, best_score, raw_eval, bound, ttpv, td.tt.age());
+        td.tt.store(position.hash(), depth, best_move, best_score, raw_eval, bound, ttpv, td.tt.age());
         td.best_move = best_move;
     }
 
@@ -562,7 +562,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     Position &position = td.position;
     if (stop_search(td))
         return -MAX_SCORE;
-    else if (position.draw())
+    else if (position.is_draw())
         return 0;
     else if (td.height >= MAX_SEARCH_DEPTH - 1)
         return position.in_check() ? 0 : position.eval();
@@ -598,7 +598,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     } else {
         raw_eval = position.eval();
         best_score = node.static_eval = adjust_eval(position, raw_eval, td.correction_history.correction(td));
-        td.tt.store(position.get_hash(), 0, Move::none(), SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age());
+        td.tt.store(position.hash(), 0, Move::none(), SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age());
     }
 
     // Stand-pat
@@ -617,7 +617,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         if (!position.is_legal(move)) { // Avoid illegal moves
             continue;
         }
-        node.curr_pmove = {move, position.consult(move.from())};
+        node.curr_pmove = {move, position.piece_at(move.from())};
 
         if (best_score > -MATE_FOUND) {
             if (moves_searched >= 3) // late move pruning
@@ -630,7 +630,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
             }
         }
         position.make_move<true>(move);
-        td.tt.prefetch(position.get_hash());
+        td.tt.prefetch(position.hash());
 
         ++moves_searched;
         ++td.height;
@@ -656,7 +656,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     }
 
     BoundType bound = best_score >= beta ? LOWER : UPPER;
-    td.tt.store(position.get_hash(), 0, best_move, best_score, raw_eval, bound, ttpv, td.tt.age());
+    td.tt.store(position.hash(), 0, best_move, best_score, raw_eval, bound, ttpv, td.tt.age());
 
     return best_score;
 }
@@ -667,8 +667,8 @@ bool SEE(Position &position, const Move &move, int threshold) {
 
     Square from = move.from();
     Square to = move.to();
-    Piece target = move.is_ep() ? WHITE_PAWN : position.consult(to); // piece color does not matter
-    Piece attacker = position.consult(from);
+    Piece target = move.is_ep() ? WHITE_PAWN : position.piece_at(to); // piece color does not matter
+    Piece attacker = position.piece_at(from);
 
     int score = SEE_VALUES[target] - threshold;
     if (move.is_promotion())
@@ -681,22 +681,22 @@ bool SEE(Position &position, const Move &move, int threshold) {
         return true;
 
     Bitboard attackers = position.attackers(to);
-    Bitboard occupancy = position.get_occupancy() ^ Bitboard(from); // Removed already used attacker
-    Bitboard diagonal_attackers = position.get_piece_bb(BISHOP) | position.get_piece_bb(QUEEN);
-    Bitboard line_attackers = position.get_piece_bb(ROOK) | position.get_piece_bb(QUEEN);
-    Color stm = static_cast<Color>(!position.get_stm());
+    Bitboard occupancy = position.occ_bb() ^ Bitboard(from); // Removed already used attacker
+    Bitboard diagonal_attackers = position.piece_bb(BISHOP) | position.piece_bb(QUEEN);
+    Bitboard line_attackers = position.piece_bb(ROOK) | position.piece_bb(QUEEN);
+    Color stm = static_cast<Color>(!position.stm());
 
     while (true) {
         attackers &= occupancy; // Remove used piece from attackers bitboard
 
-        Bitboard my_attackers = attackers & position.get_occupancy(static_cast<Color>(stm));
+        Bitboard my_attackers = attackers & position.occ_bb(static_cast<Color>(stm));
         if (!my_attackers) // There is no attacker from stm
             break;
 
         // Get cheapest attacker
         int cheapest_attacker;
         for (cheapest_attacker = PAWN; cheapest_attacker <= KING; ++cheapest_attacker) {
-            if ((my_attackers = attackers & position.get_piece_bb(static_cast<PieceType>(cheapest_attacker), stm)))
+            if ((my_attackers = attackers & position.piece_bb(static_cast<PieceType>(cheapest_attacker), stm)))
                 break;
         }
         stm = static_cast<Color>(!stm);
@@ -704,7 +704,7 @@ bool SEE(Position &position, const Move &move, int threshold) {
         score = -score - SEE_VALUES[cheapest_attacker] - 1; // Updating negamaxed score
 
         if (score >= 0) { // Score beats threshold
-            if (cheapest_attacker == KING && (attackers & position.get_occupancy(static_cast<Color>(!stm))))
+            if (cheapest_attacker == KING && (attackers & position.occ_bb(static_cast<Color>(!stm))))
                 // King is the only attacker and square is still attacked by opponent, so we don't have a valid attacker
                 stm = static_cast<Color>(!stm);
             break;
@@ -731,5 +731,5 @@ bool SEE(Position &position, const Move &move, int threshold) {
         }
     }
 
-    return stm != position.get_stm();
+    return stm != position.stm();
 }

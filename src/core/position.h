@@ -81,55 +81,55 @@ class Position {
 
     inline bool last_was_null() const { return m_curr_state.ply_from_null == 0; }
     inline bool has_non_pawns() const {
-        return get_piece_bb(KNIGHT) || get_piece_bb(BISHOP) || get_piece_bb(ROOK) || get_piece_bb(QUEEN);
+        return piece_bb(KNIGHT) || piece_bb(BISHOP) || piece_bb(ROOK) || piece_bb(QUEEN);
     }
-    inline bool draw() { return insufficient_material() || repetition() || fifty_move_draw(); }
+    inline bool is_draw() { return insufficient_material() || repetition() || is_fifty_move_draw(); }
     inline ScoreType eval() { return m_nnue.eval(*this); }
 
     int legal_move_amount();
     bool no_legal_moves();
     void print() const;
 
-    inline Bitboard get_occupancy() const { return m_occupancies[WHITE] | m_occupancies[BLACK]; }
-    inline Bitboard get_occupancy(const Color &color) const {
+    inline Bitboard occ_bb() const { return m_occupancies[WHITE] | m_occupancies[BLACK]; }
+    inline Bitboard occ_bb(const Color &color) const {
         assert(color == WHITE || color == BLACK);
         return m_occupancies[color];
     }
-    inline Bitboard get_piece_bb(const Piece &piece) const {
+    inline Bitboard piece_bb(const Piece &piece) const {
         assert(piece >= WHITE_PAWN && piece <= BLACK_KING);
         return m_pieces[piece];
     }
-    inline Bitboard get_piece_bb(const PieceType &piece_type, const Color &color) const {
-        return get_piece_bb(static_cast<Piece>(piece_type + color * COLOR_OFFSET));
+    inline Bitboard piece_bb(const PieceType &piece_type, const Color &color) const {
+        return piece_bb(static_cast<Piece>(piece_type + color * COLOR_OFFSET));
     }
-    inline Bitboard get_piece_bb(const PieceType &piece_type) const {
+    inline Bitboard piece_bb(const PieceType &piece_type) const {
         return m_pieces[piece_type] | m_pieces[piece_type + COLOR_OFFSET];
     }
-    inline Square get_king_placement(const Color &color) const { return m_pieces[KING + color * COLOR_OFFSET].lsb(); }
-    inline uint8_t get_castling_rights() const { return m_curr_state.castling_rights; }
-    inline Color get_stm() const { return m_stm; }
-    inline Color get_adversary() const { return static_cast<Color>(m_stm ^ 1); }
-    inline Square get_en_passant() const { return m_curr_state.en_passant; }
-    inline HashType get_hash() const { return m_position_hash; }
-    inline HashType get_pawn_hash() const { return m_pawn_hash; }
-    inline HashType get_white_nonpawn_hash() const { return m_white_non_pawn_hash; }
-    inline HashType get_black_nonpawn_hash() const { return m_black_non_pawn_hash; }
-    inline int get_game_ply() const { return m_game_clock_ply; }
-    inline int get_fifty_move_ply() const { return m_curr_state.fifty_move_ply; }
-    inline int get_material_count(const Piece &piece) const { return get_piece_bb(piece).popcount(); }
-    inline int get_material_count(const PieceType &piece_type, const Color &color) const {
-        return get_material_count(static_cast<Piece>(piece_type + color * COLOR_OFFSET));
+    inline Square king_sq(const Color &color) const { return m_pieces[KING + color * COLOR_OFFSET].lsb(); }
+    inline uint8_t castling_rights() const { return m_curr_state.castling_rights; }
+    inline Color stm() const { return m_stm; }
+    inline Color nstm() const { return static_cast<Color>(m_stm ^ 1); }
+    inline Square ep_sq() const { return m_curr_state.en_passant; }
+    inline HashType hash() const { return m_position_hash; }
+    inline HashType pawn_hash() const { return m_pawn_hash; }
+    inline HashType white_nonpawn_hash() const { return m_white_non_pawn_hash; }
+    inline HashType black_nonpawn_hash() const { return m_black_non_pawn_hash; }
+    inline int game_ply() const { return m_game_clock_ply; }
+    inline int halfmove_clock() const { return m_curr_state.fifty_move_ply; }
+    inline int material_count(const Piece &piece) const { return piece_bb(piece).popcount(); }
+    inline int material_count(const PieceType &piece_type, const Color &color) const {
+        return material_count(static_cast<Piece>(piece_type + color * COLOR_OFFSET));
     }
-    inline int get_material_count(const PieceType &piece_type) const {
+    inline int material_count(const PieceType &piece_type) const {
         return (m_pieces[piece_type] | m_pieces[piece_type + COLOR_OFFSET]).popcount();
     }
-    inline int get_material_count() const { return get_occupancy().popcount(); }
-    inline Piece consult(const Square &sq) const { return m_board[sq]; }
-    inline int get_history_ply() const { return m_history_ply; }
-    inline BoardState get_board_state() const { return m_curr_state; };
-    inline Bitboard get_checkers() const { return m_curr_state.checkers; }
-    inline Bitboard get_pins() const { return m_curr_state.pins; }
-    inline Bitboard get_castle_rooks() const { return m_curr_state.castle_rooks; }
+    inline int material_count() const { return occ_bb().popcount(); }
+    inline Piece piece_at(const Square &sq) const { return m_board[sq]; }
+    inline int history_ply() const { return m_history_ply; }
+    inline BoardState board_state() const { return m_curr_state; };
+    inline Bitboard checkers_bb() const { return m_curr_state.checkers; }
+    inline Bitboard pins_bb() const { return m_curr_state.pins; }
+    inline Bitboard castle_rooks_bb() const { return m_curr_state.castle_rooks; }
     inline void reset_history() { m_history_ply = 0; }
 
     // if there is more that 100 positions in the game history stacks, clean up the first ones by shift the array
@@ -166,7 +166,7 @@ class Position {
 
     bool insufficient_material() const;
     bool repetition() const;
-    bool fifty_move_draw();
+    bool is_fifty_move_draw();
 
     bool pawn_pseudo_legal(const Square &from, const Square &to, const Move &move) const;
     bool castling_pseudo_legal(const Square &from, const Square &to, const PieceType &moved_piece_type) const;

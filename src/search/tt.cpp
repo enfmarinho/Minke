@@ -59,10 +59,10 @@ size_t TranspositionTable::table_index_from_hash(const HashType hash) {
 }
 
 bool TranspositionTable::probe(const Position &position, TTEntry &tte) {
-    size_t table_index = table_index_from_hash(position.get_hash());
+    size_t table_index = table_index_from_hash(position.hash());
     for (TTEntry &entry : m_table[table_index].entry) {
         tte = entry;
-        if (tte.key() == key_from_hash(position.get_hash()))
+        if (tte.key() == key_from_hash(position.hash()))
             return true;
     }
     return false;

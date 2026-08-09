@@ -38,11 +38,11 @@ void CorrectionHistory::reset() {
 void CorrectionHistory::update(const ThreadData& td, const int depth, const int diff) {
     const HistoryType bonus = std::clamp(diff * depth / 8, -CORRHIST_MAX / 4, CORRHIST_MAX / 4);
 
-    PovTables& tables = m_pov_tables[td.position.get_stm()];
+    PovTables& tables = m_pov_tables[td.position.stm()];
 
-    tables.pawn[td.position.get_pawn_hash() % CORRHIST_SIZE].update(bonus);
-    tables.white_nonpawn[td.position.get_white_nonpawn_hash() % CORRHIST_SIZE].update(bonus);
-    tables.black_nonpawn[td.position.get_black_nonpawn_hash() % CORRHIST_SIZE].update(bonus);
+    tables.pawn[td.position.pawn_hash() % CORRHIST_SIZE].update(bonus);
+    tables.white_nonpawn[td.position.white_nonpawn_hash() % CORRHIST_SIZE].update(bonus);
+    tables.black_nonpawn[td.position.black_nonpawn_hash() % CORRHIST_SIZE].update(bonus);
 
     auto update_cont = [&](int offset) {
         if (td.height >= offset + 1) {
@@ -59,11 +59,11 @@ void CorrectionHistory::update(const ThreadData& td, const int depth, const int 
 }
 
 HistoryType CorrectionHistory::correction(const ThreadData& td) const {
-    const PovTables& tables = m_pov_tables[td.position.get_stm()];
+    const PovTables& tables = m_pov_tables[td.position.stm()];
 
-    int adjustment = pawn_corr_factor() * tables.pawn[td.position.get_pawn_hash() % CORRHIST_SIZE];
-    adjustment += nonpawn_corr_factor() * tables.white_nonpawn[td.position.get_white_nonpawn_hash() % CORRHIST_SIZE];
-    adjustment += nonpawn_corr_factor() * tables.black_nonpawn[td.position.get_black_nonpawn_hash() % CORRHIST_SIZE];
+    int adjustment = pawn_corr_factor() * tables.pawn[td.position.pawn_hash() % CORRHIST_SIZE];
+    adjustment += nonpawn_corr_factor() * tables.white_nonpawn[td.position.white_nonpawn_hash() % CORRHIST_SIZE];
+    adjustment += nonpawn_corr_factor() * tables.black_nonpawn[td.position.black_nonpawn_hash() % CORRHIST_SIZE];
 
     auto adjust_cont = [&](int offset) {
         if (td.height >= offset + 1) {
