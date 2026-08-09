@@ -637,32 +637,32 @@ void Position::update_threats() {
     Bitboard &threats = m_curr_state.threats;
     threats = 0;
 
-    const Color stm = nstm();
-    const Bitboard occupancy_bb = occ_bb() ^ piece_bb(KING, stm);
+    const Color opp = nstm();
+    const Bitboard occupancy_bb = occ_bb() ^ piece_bb(KING, stm());
 
-    const Bitboard pawn_bb = piece_bb(PAWN, stm);
-    threats |= pawn_bb.shift_up_east_pov(stm);
-    threats |= pawn_bb.shift_up_west_pov(stm);
+    const Bitboard pawn_bb = piece_bb(PAWN, opp);
+    threats |= pawn_bb.shift_up_east_pov(opp);
+    threats |= pawn_bb.shift_up_west_pov(opp);
 
-    Bitboard knights_bb = piece_bb(KNIGHT, stm);
+    Bitboard knights_bb = piece_bb(KNIGHT, opp);
     while (knights_bb) {
         const Square sq = knights_bb.poplsb();
         threats |= knight_attacks[sq];
     }
 
-    Bitboard bishop_bb = piece_bb(BISHOP, stm) | piece_bb(QUEEN, stm);
+    Bitboard bishop_bb = piece_bb(BISHOP, opp) | piece_bb(QUEEN, opp);
     while (bishop_bb) {
         const Square sq = bishop_bb.poplsb();
         threats |= get_piece_attacks(sq, occupancy_bb, BISHOP);
     }
 
-    Bitboard rook_bb = piece_bb(ROOK, stm) | piece_bb(QUEEN, stm);
+    Bitboard rook_bb = piece_bb(ROOK, opp) | piece_bb(QUEEN, opp);
     while (rook_bb) {
         const Square sq = rook_bb.poplsb();
         threats |= get_piece_attacks(sq, occupancy_bb, ROOK);
     }
 
-    threats |= knight_attacks[king_sq(stm)];
+    threats |= king_attacks[king_sq(opp)];
 }
 
 bool Position::is_attacked(const Square &sq) const {
