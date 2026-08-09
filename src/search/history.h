@@ -28,7 +28,7 @@ constexpr HistoryType HISTORY_DIVISOR = 16384;
 
 class History {
   public:
-    History();
+    History() = default;
     ~History() = default;
 
     void reset();
@@ -44,7 +44,7 @@ class History {
         PieceType captured_pt = get_piece_type(position.piece_at(to));
         if (captured_pt == NONE)
             captured_pt = PAWN;
-        return m_capture_history[position.stm()][moved_pt][to][captured_pt][position.is_threatened(to)];
+        return m_capture_history[position.stm()][moved_pt][to][captured_pt][position.is_threatened(to)].value;
     }
 
     inline void clear_killers(const int &height) {
@@ -64,6 +64,12 @@ class History {
     inline bool is_counter(const Move &move, const Move &past_move) const { return move == consult_counter(past_move); }
 
   private:
+    struct HistoryEntry {
+        HistoryType value{};
+
+        inline void update_score(int bonus) { value += bonus - value * std::abs(bonus) / HISTORY_DIVISOR; }
+    };
+
     void update_capture_history_score(const Position &position, const Move &move, int bonus);
     void update_history_heuristic_score(const Position &position, const Move &move, int bonus);
     void update_continuation_history_table(const ThreadData &td, const PieceMove &pmove, int bonus);
@@ -83,9 +89,9 @@ class History {
             m_counter_moves[past_move.from_and_to()] = move;
     }
 
-    HistoryType m_capture_history[2][6][64][5][2];
-    HistoryType m_search_history_table[2][64 * 64][2][2];
-    HistoryType m_continuation_history[12 * 64][12 * 64];
+    HistoryEntry m_capture_history[2][6][64][5][2];
+    HistoryEntry m_search_history_table[2][64 * 64][2][2];
+    HistoryEntry m_continuation_history[12 * 64][12 * 64];
     Move m_counter_moves[64 * 64];
     Move m_killer_moves[MAX_SEARCH_DEPTH][2];
 };
