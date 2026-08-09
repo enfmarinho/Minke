@@ -24,7 +24,6 @@
 
 struct ThreadData;
 
-using HistoryType = int;
 constexpr HistoryType HISTORY_DIVISOR = 16384;
 
 class History {
@@ -37,7 +36,7 @@ class History {
     void update_history(const ThreadData &td, const Move &best_move, int depth, const PieceMoveList &quiets_tried,
                         const PieceMoveList &tacticals_tried);
 
-    HistoryType get_history(const ThreadData &td, const Move &move) const;
+    int get_history(const ThreadData &td, const Move &move) const;
 
     inline HistoryType get_capture_history(const Position &position, const Move &move) {
         Square to = move.to();
@@ -71,7 +70,7 @@ class History {
 
     void update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int offset);
     HistoryType get_history_heuristic_score(const Position &position, const Move &move) const;
-    HistoryType get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const;
+    int get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const;
     HistoryType get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const;
 
     inline void save_killer(const Move &move, const int height) {

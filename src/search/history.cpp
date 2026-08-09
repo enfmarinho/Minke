@@ -57,7 +57,7 @@ void History::reset() {
     }
 };
 
-HistoryType History::get_history(const ThreadData &td, const Move &move) const {
+int History::get_history(const ThreadData &td, const Move &move) const {
     PieceMove pmove = {move, td.position.consult(move.from())};
     return get_history_heuristic_score(td.position, move) + get_continuation_history_score(td, pmove);
 }
@@ -137,8 +137,8 @@ HistoryType History::get_history_heuristic_score(const Position &position, const
     return m_search_history_table[position.get_stm()][move.from_and_to()][from_threatened][to_threatened];
 }
 
-HistoryType History::get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const {
-    HistoryType conthist = 0;
+int History::get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const {
+    int conthist = 0;
     conthist += get_continuation_history_entry(td, pmove, 1) * conthist_1ply_weight();
     conthist += get_continuation_history_entry(td, pmove, 2) * conthist_2ply_weight();
     conthist += get_continuation_history_entry(td, pmove, 4) * conthist_4ply_weight();
