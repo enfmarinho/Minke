@@ -35,7 +35,7 @@ enum GameResult : uint8_t {
 class __attribute__((packed)) PackedPosition {
   public:
     PackedPosition(const Position &position, ScoreType score) {
-        m_occupancy = position.get_occupancy();
+        m_occupancy = static_cast<uint64_t>(position.get_occupancy());
 
         Bitboard occ = m_occupancy;
         int idx = 0;
@@ -43,11 +43,11 @@ class __attribute__((packed)) PackedPosition {
 
         std::memset(m_pieces, 0, sizeof(m_pieces));
         while (occ) {
-            Square sq = poplsb(occ);
+            Square sq = occ.poplsb();
             Piece pc = position.consult(sq);
             uint8_t piece_type = get_piece_type(pc);
 
-            if (piece_type == ROOK && (position.get_castle_rooks() & (1ULL << sq)))
+            if (piece_type == ROOK && (position.get_castle_rooks().is_set(sq)))
                 piece_type = 6; // special "unmoved rook" id
 
             uint8_t color = (get_color(pc) == BLACK);

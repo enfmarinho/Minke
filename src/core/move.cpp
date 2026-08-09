@@ -18,6 +18,7 @@
 
 #include "core/move.h"
 
+#include "core/bitboard.h"
 #include "core/types.h"
 #include "utils/utils.h"
 
@@ -28,11 +29,11 @@ std::string Move::to_uci(const bool chess960, const Bitboard castle_rooks) const
     int move_type = type() & (~CAPTURE);
 
     if (chess960 && move_type == CASTLING) {
-        Bitboard bb = castle_rooks & RANK_MASKS[get_rank(source)];
+        Bitboard bb = castle_rooks & (get_rank(source) == 0 ? Bitboard::RANK_1 : Bitboard::RANK_8);
         if (source > target)
-            target = lsb(bb);
+            target = bb.lsb();
         else
-            target = msb(bb);
+            target = bb.msb();
     }
     algebraic_notation.push_back('a' + get_file(source));
     algebraic_notation.push_back('1' + get_rank(source));

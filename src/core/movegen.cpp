@@ -21,6 +21,7 @@
 #include <cassert>
 
 #include "core/attacks.h"
+#include "core/bitboard.h"
 #include "core/move.h"
 #include "core/position.h"
 #include "core/types.h"
@@ -31,7 +32,7 @@ namespace Movegen {
 template <MoveType move_t>
 static inline void push_regular_moves(ScoredMoveList& move_list, const Square from_sq, Bitboard to_sqs) {
     while (to_sqs) {
-        Square to = poplsb(to_sqs);
+        Square to = to_sqs.poplsb();
         move_list.push({Move(from_sq, to, move_t), 0});
     }
 }
@@ -39,7 +40,7 @@ static inline void push_regular_moves(ScoredMoveList& move_list, const Square fr
 template <MoveType move_t>
 static inline void push_pawn_moves(ScoredMoveList& move_list, const Direction offset, Bitboard to_sqs) {
     while (to_sqs) {
-        Square to = poplsb(to_sqs);
+        Square to = to_sqs.poplsb();
         Square from = static_cast<Square>(static_cast<int>(to) - offset);
         move_list.push({Move(from, to, move_t), 0});
     }
@@ -49,7 +50,7 @@ static inline void push_pawn_promotions(ScoredMoveList& move_list, const Directi
                                         const bool is_capture) {
     while (to_sqs) {
         MoveType capture = is_capture ? CAPTURE : REGULAR;
-        Square to = poplsb(to_sqs);
+        Square to = to_sqs.poplsb();
         Square from = static_cast<Square>(static_cast<int>(to) - offset);
         move_list.push({Move(from, to, static_cast<MoveType>(PAWN_PROMOTION_QUEEN | capture)), 0});
         move_list.push({Move(from, to, static_cast<MoveType>(PAWN_PROMOTION_KNIGHT | capture)), 0});
@@ -59,17 +60,18 @@ static inline void push_pawn_promotions(ScoredMoveList& move_list, const Directi
 }
 
 static inline void gen_pawn_noisies(ScoredMoveList& move_list, const Position& pos, Bitboard dst_mask) {
-    const Direction push = get_pawn_offset(pos.get_stm());
+    const Color stm = pos.get_stm();
+    const Direction push = get_pawn_offset(stm);
     const Direction west_push = static_cast<Direction>(WEST + push);
     const Direction east_push = static_cast<Direction>(EAST + push);
 
-    const Bitboard pawn_promotion_rank = get_pawn_promotion_rank_mask(pos.get_stm());
+    const Bitboard pawn_promotion_rank = Bitboard::pawn_promotion_rank(stm);
     const Bitboard theirs = pos.get_occupancy(pos.get_adversary());
 
     Bitboard pawns_bb = pos.get_piece_bb(PAWN, pos.get_stm());
 
-    Bitboard west_captures_bb = shift(pawns_bb & NOT_A_FILE, west_push) & dst_mask;
-    Bitboard east_captures_bb = shift(pawns_bb & NOT_H_FILE, east_push) & dst_mask;
+    Bitboard west_captures_bb = pawns_bb.shift_up_west_pov(stm) & dst_mask;
+    Bitboard east_captures_bb = pawns_bb.shift_up_east_pov(stm) & dst_mask;
 
     // Promotions captures
     Bitboard west_captures_promos_bb = west_captures_bb & pawn_promotion_rank & theirs;
@@ -78,7 +80,7 @@ static inline void gen_pawn_noisies(ScoredMoveList& move_list, const Position& p
     push_pawn_promotions(move_list, east_push, east_captures_promos_bb, true);
 
     // Promotions
-    Bitboard pawn_promos_bb = shift(pawns_bb, push) & dst_mask & ~theirs;
+    Bitboard pawn_promos_bb = pawns_bb.shift_up_pov(stm) & dst_mask & ~theirs;
     push_pawn_promotions(move_list, push, pawn_promos_bb, false);
 
     // Captures that aren't promotions
@@ -90,10 +92,10 @@ static inline void gen_pawn_noisies(ScoredMoveList& move_list, const Position& p
     // En-passant
     Square ep_sq = pos.get_en_passant();
     if (ep_sq != NO_SQ) {
-        Bitboard ep_sq_mask = 1ull << ep_sq;
+        Bitboard ep_sq_mask(ep_sq);
 
-        Bitboard west_attacker_bb = shift(pawns_bb & NOT_A_FILE, west_push) & ep_sq_mask;
-        Bitboard east_attacker_bb = shift(pawns_bb & NOT_H_FILE, east_push) & ep_sq_mask;
+        Bitboard west_attacker_bb = pawns_bb.shift_up_west_pov(stm) & ep_sq_mask;
+        Bitboard east_attacker_bb = pawns_bb.shift_up_east_pov(stm) & ep_sq_mask;
 
         push_pawn_moves<EP>(move_list, west_push, west_attacker_bb);
         push_pawn_moves<EP>(move_list, east_push, east_attacker_bb);
@@ -101,17 +103,18 @@ static inline void gen_pawn_noisies(ScoredMoveList& move_list, const Position& p
 }
 
 static inline void gen_pawn_quiets(ScoredMoveList& move_list, const Position& pos, Bitboard dst_mask) {
+    const Color stm = pos.get_stm();
     const Bitboard occ = pos.get_occupancy();
-    const Direction push = get_pawn_offset(pos.get_stm());
+    const Direction push = get_pawn_offset(stm);
     const Direction double_push = static_cast<Direction>(2 * push);
-    const Bitboard third_pov_rank = (pos.get_stm() == WHITE ? RANK_MASKS[2] : RANK_MASKS[5]);
+    const Bitboard third_pov_rank = (stm == WHITE ? Bitboard::RANK_3 : Bitboard::RANK_6);
 
-    Bitboard pawn_bb = pos.get_piece_bb(PAWN, pos.get_stm());
+    Bitboard pawn_bb = pos.get_piece_bb(PAWN, stm);
 
-    Bitboard single_push_bb = shift(pawn_bb, push) & ~occ;
+    Bitboard single_push_bb = pawn_bb.shift_up_pov(stm) & ~occ;
     push_pawn_moves<REGULAR>(move_list, push, single_push_bb & dst_mask);
 
-    Bitboard double_push_bb = shift(single_push_bb & third_pov_rank, push);
+    Bitboard double_push_bb = (single_push_bb & third_pov_rank).shift_up_pov(stm);
     push_pawn_moves<REGULAR>(move_list, double_push, double_push_bb & dst_mask);
 }
 
@@ -119,7 +122,7 @@ template <MoveType move_t>
 static inline void gen_knights(ScoredMoveList& move_list, const Position& pos, Bitboard dst_mask) {
     Bitboard not_pinned_knights = pos.get_piece_bb(KNIGHT, pos.get_stm()) & ~pos.get_pins();
     while (not_pinned_knights) {
-        const Square from = poplsb(not_pinned_knights);
+        const Square from = not_pinned_knights.poplsb();
         const Bitboard attacks = knight_attacks[from];
         push_regular_moves<move_t>(move_list, from, attacks & dst_mask);
     }
@@ -127,18 +130,19 @@ static inline void gen_knights(ScoredMoveList& move_list, const Position& pos, B
 
 template <MoveType move_t>
 static inline void gen_sliders(ScoredMoveList& move_list, const Position& pos, Bitboard dst_mask) {
+    const Color stm = pos.get_stm();
     const Bitboard occ = pos.get_occupancy();
     const Bitboard pins = pos.get_pins();
-    const Square king_sq = pos.get_king_placement(pos.get_stm());
+    const Square king_sq = pos.get_king_placement(stm);
 
-    Bitboard queen_bb = pos.get_piece_bb(QUEEN, pos.get_stm());
-    Bitboard rook_bb = pos.get_piece_bb(ROOK, pos.get_stm()) | queen_bb;
-    Bitboard bishop_bb = pos.get_piece_bb(BISHOP, pos.get_stm()) | queen_bb;
+    Bitboard queen_bb = pos.get_piece_bb(QUEEN, stm);
+    Bitboard rook_bb = pos.get_piece_bb(ROOK, stm) | queen_bb;
+    Bitboard bishop_bb = pos.get_piece_bb(BISHOP, stm) | queen_bb;
 
     auto gen_not_pinned = [&](Bitboard bb, PieceType pt) {
         Bitboard not_pinned_bb = bb & ~pins;
         while (not_pinned_bb) {
-            Square from = poplsb(not_pinned_bb);
+            Square from = not_pinned_bb.poplsb();
             Bitboard attacks = get_piece_attacks(from, occ, pt);
             push_regular_moves<move_t>(move_list, from, attacks & dst_mask);
         }
@@ -146,7 +150,7 @@ static inline void gen_sliders(ScoredMoveList& move_list, const Position& pos, B
     auto gen_pinned = [&](Bitboard bb, PieceType pt) {
         Bitboard pinned_bb = bb & pins;
         while (pinned_bb) {
-            Square from = poplsb(pinned_bb);
+            Square from = pinned_bb.poplsb();
             Bitboard attacks = get_piece_attacks(from, occ, pt);
             const Bitboard ray_mask = passing_rays[king_sq][from];
             push_regular_moves<move_t>(move_list, from, attacks & dst_mask & ray_mask);
@@ -168,24 +172,25 @@ static inline void gen_kings(ScoredMoveList& move_list, const Position& pos, Bit
 }
 
 static inline void gen_castling(ScoredMoveList& move_list, const Position& pos) {
-    Bitboard castle_rooks_stm = pos.get_castle_rooks() & pos.get_occupancy(pos.get_stm());
-    Square king_from = pos.get_king_placement(pos.get_stm());
+    const Color stm = pos.get_stm();
+    Bitboard castle_rooks_stm = pos.get_castle_rooks() & pos.get_occupancy(stm);
+    Square king_from = pos.get_king_placement(stm);
     while (castle_rooks_stm) {
-        Square rook_from = poplsb(castle_rooks_stm);
+        Square rook_from = castle_rooks_stm.poplsb();
         Square king_to, rook_to;
         if (rook_from > king_from) {
             king_to = g1, rook_to = f1;
         } else {
             king_to = c1, rook_to = d1;
         }
-        if (pos.get_stm() == BLACK) {
+        if (stm == BLACK) {
             king_to = static_cast<Square>(king_to ^ 56);
             rook_to = static_cast<Square>(rook_to ^ 56);
         }
 
         Bitboard crossing_mask = between_squares[king_from][king_to] | between_squares[rook_from][rook_to] |
-                                 (1ULL << king_to) | (1ULL << rook_to);
-        crossing_mask &= ~((1ULL << king_from) | (1ULL << rook_from));
+                                 Bitboard(king_to) | Bitboard(rook_to);
+        crossing_mask &= ~(Bitboard(king_from) | Bitboard(rook_from));
 
         if (crossing_mask & pos.get_occupancy()) // There is a blocker
             continue;
@@ -193,7 +198,7 @@ static inline void gen_castling(ScoredMoveList& move_list, const Position& pos) 
         Bitboard king_crossing = between_squares[king_from][king_to];
         bool illegal = false;
         while (king_crossing) {
-            Square sq = poplsb(king_crossing);
+            Square sq = king_crossing.poplsb();
             if (pos.is_attacked(sq)) {
                 illegal = true;
                 break;
@@ -209,15 +214,16 @@ static inline void gen_castling(ScoredMoveList& move_list, const Position& pos) 
 }
 
 void noisies(ScoredMoveList& move_list, const Position& pos) {
-    Bitboard king_dst_mask = pos.get_occupancy(pos.get_adversary());
+    const Color stm = pos.get_stm();
+    const Bitboard king_dst_mask = pos.get_occupancy(pos.get_adversary());
     Bitboard dst_mask = king_dst_mask;
 
     // Promotions are noisy no matter if its a capture or not
-    Bitboard pawn_push_promotions = ~pos.get_occupancy(pos.get_stm()) & get_pawn_promotion_rank_mask(pos.get_stm());
+    Bitboard pawn_push_promotions = ~pos.get_occupancy(stm) & Bitboard::pawn_promotion_rank(stm);
     Bitboard pawn_dst_mask = dst_mask | pawn_push_promotions;
 
     if (pos.in_check()) {
-        if (count_bits(pos.get_checkers()) > 1) {
+        if (pos.get_checkers().popcount() > 1) {
             gen_kings<CAPTURE>(move_list, pos, king_dst_mask);
             return;
         }
@@ -225,8 +231,7 @@ void noisies(ScoredMoveList& move_list, const Position& pos) {
         dst_mask = pos.get_checkers();
 
         pawn_dst_mask = dst_mask;
-        pawn_dst_mask |=
-            pawn_push_promotions & between_squares[pos.get_king_placement(pos.get_stm())][lsb(pos.get_checkers())];
+        pawn_dst_mask |= pawn_push_promotions & between_squares[pos.get_king_placement(stm)][pos.get_checkers().lsb()];
     }
 
     gen_pawn_noisies(move_list, pos, pawn_dst_mask);
@@ -236,21 +241,22 @@ void noisies(ScoredMoveList& move_list, const Position& pos) {
 }
 
 void quiets(ScoredMoveList& move_list, const Position& pos) {
+    const Color stm = pos.get_stm();
     Bitboard king_dst_mask = ~pos.get_occupancy();
     Bitboard dst_mask = king_dst_mask;
 
     if (pos.in_check()) {
-        if (count_bits(pos.get_checkers()) > 1) {
+        if (pos.get_checkers().popcount() > 1) {
             gen_kings<REGULAR>(move_list, pos, king_dst_mask);
             return;
         }
 
-        dst_mask = between_squares[pos.get_king_placement(pos.get_stm())][lsb(pos.get_checkers())];
+        dst_mask = between_squares[pos.get_king_placement(stm)][pos.get_checkers().lsb()];
     } else {
         gen_castling(move_list, pos);
     }
 
-    gen_pawn_quiets(move_list, pos, dst_mask & ~get_pawn_promotion_rank_mask(pos.get_stm()));
+    gen_pawn_quiets(move_list, pos, dst_mask & ~Bitboard::pawn_promotion_rank(stm));
     gen_knights<REGULAR>(move_list, pos, dst_mask);
     gen_sliders<REGULAR>(move_list, pos, dst_mask);
     gen_kings<REGULAR>(move_list, pos, king_dst_mask);

@@ -167,8 +167,8 @@ void init_between_squares() {
         for (int sqi2 = a1; sqi2 <= h8; ++sqi2) {
             Square sq1 = static_cast<Square>(sqi1);
             Square sq2 = static_cast<Square>(sqi2);
-            Bitboard occ1 = (1ULL << sq1);
-            Bitboard occ2 = (1ULL << sq2);
+            Bitboard occ1(sq1);
+            Bitboard occ2(sq2);
             if (get_bishop_attacks(sq1, 0) & occ2) {
                 between_squares[sq1][sq2] = get_bishop_attacks(sq1, occ2) & get_bishop_attacks(sq2, occ1);
             } else if (get_rook_attacks(sq1, 0) & occ2) {
@@ -181,7 +181,7 @@ void init_between_squares() {
 void init_passing_rays() {
     for (int src = a1; src <= h8; ++src) {
         Square src_sq = static_cast<Square>(src);
-        Bitboard src_mask = (1ull << src_sq);
+        Bitboard src_mask(src_sq);
 
         Bitboard rook_attack = get_rook_attacks(src_sq, 0);
         Bitboard bishop_attack = get_bishop_attacks(src_sq, 0);
@@ -190,7 +190,7 @@ void init_passing_rays() {
                 continue;
 
             Square to_sq = static_cast<Square>(to);
-            Bitboard to_mask = (1ull << to_sq);
+            Bitboard to_mask(to_sq);
 
             if (rook_attack & to_mask) {
                 passing_rays[src][to] = rook_attack & (get_rook_attacks(to_sq, src_mask) | to_mask);

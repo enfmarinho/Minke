@@ -49,19 +49,19 @@ const PovAccumulator &FinnyTable::update(const Position &pos, const Color pov) {
 
             // fused updates
             while (added && removed) {
-                const Square add_sq = poplsb(added);
-                const Square sub_sq = poplsb(removed);
+                const Square add_sq = added.poplsb();
+                const Square sub_sq = removed.poplsb();
                 cached_entry.pov_accumulator.self_add_sub(feature_idx(piece, add_sq, king_sq, pov),
                                                           feature_idx(piece, sub_sq, king_sq, pov));
             }
 
             while (added) {
-                const Square sq = poplsb(added);
+                const Square sq = added.poplsb();
                 cached_entry.pov_accumulator.self_add(feature_idx(piece, sq, king_sq, pov));
             }
 
             while (removed) {
-                const Square sq = poplsb(removed);
+                const Square sq = removed.poplsb();
                 cached_entry.pov_accumulator.self_sub(feature_idx(piece, sq, king_sq, pov));
             }
         }

@@ -293,11 +293,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
         // Reverse futility pruning
         const ScoreType rfp_margin = [&]() {
-            ScoreType rfp_margin = 0;
-            rfp_margin += rfp_depth_factor() * depth;
-            rfp_margin += rfp_improving_margin() * improving;
-            rfp_margin += rfp_complexity_factor() * complexity / 1024;
-            return rfp_margin;
+            ScoreType margin = 0;
+            margin += rfp_depth_factor() * depth;
+            margin += rfp_improving_margin() * improving;
+            margin += rfp_complexity_factor() * complexity / 1024;
+            return margin;
         }();
         if (depth < rfp_max_depth() && eval - rfp_margin >= beta) {
             return eval;
@@ -681,7 +681,7 @@ bool SEE(Position &position, const Move &move, int threshold) {
         return true;
 
     Bitboard attackers = position.attackers(to);
-    Bitboard occupancy = position.get_occupancy() ^ (1ULL << from); // Removed already used attacker
+    Bitboard occupancy = position.get_occupancy() ^ Bitboard(from); // Removed already used attacker
     Bitboard diagonal_attackers = position.get_piece_bb(BISHOP) | position.get_piece_bb(QUEEN);
     Bitboard line_attackers = position.get_piece_bb(ROOK) | position.get_piece_bb(QUEEN);
     Color stm = static_cast<Color>(!position.get_stm());
@@ -710,7 +710,7 @@ bool SEE(Position &position, const Move &move, int threshold) {
             break;
         }
 
-        occupancy ^= (my_attackers & -my_attackers); // Remove used piece, i.e. unset lsb
+        occupancy ^= my_attackers.isolate_lsb();
 
         // Add x-ray attackers, if there is any
         switch (cheapest_attacker) {

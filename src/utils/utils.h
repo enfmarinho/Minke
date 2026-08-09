@@ -18,133 +18,22 @@
 
 #pragma once
 
-#include <bit>
 #include <cassert>
 #include <cstddef>
-#include <iostream>
 
 #include "core/types.h"
-
-inline void print_bb(Bitboard bb) {
-    for (int line = 7; line >= 0; --line) {
-        for (int column = 0; column < 8; ++column) {
-            int sq = line * 8 + column;
-            if (!column)
-                std::cout << "  " << line + 1 << "  ";
-            std::cout << (bb & (1ULL << sq) ? "\033[32m1\033[0m" : "0") << " ";
-        }
-        std::cout << "\n";
-    }
-    std::cout << "\n     a b c d e f g h\n\n";
-}
-
-inline void set_bit(Bitboard &bitboard, const Square &sq) { bitboard |= (1ULL << sq); }
-inline void set_bit(Bitboard &bitboard, const int &sq) { bitboard |= (1ULL << sq); }
-
-inline void unset_bit(Bitboard &bitboard, const Square &sq) { bitboard &= ~(1ULL << sq); }
-inline void unset_bit(Bitboard &bitboard, const int &sq) { bitboard &= ~(1ULL << sq); }
 
 template <typename TYPE>
 inline void set_bits(TYPE &bits, const TYPE &mask) {
     bits |= mask;
 }
 template void set_bits<uint8_t>(uint8_t &bits, const uint8_t &mask);
-template void set_bits<Bitboard>(Bitboard &bits, const Bitboard &mask);
 
 template <typename TYPE>
 inline void unset_mask(TYPE &bits, const TYPE &mask) {
     bits &= (~mask);
 }
 template void unset_mask<uint8_t>(uint8_t &bits, const uint8_t &mask);
-template void unset_mask<Bitboard>(Bitboard &bits, const Bitboard &mask);
-
-// Returns the number of '1' bit in bitboard, just like popcount
-inline int count_bits(const Bitboard &bitboard) { return std::popcount(bitboard); }
-
-// Compiler specific definitions, taken from Stockfish
-#if defined(__GNUC__) // GCC, Clang, ICX
-
-// Returns the least significant bit in a non-zero bitboard.
-inline Square lsb(Bitboard b) {
-    assert(b);
-    return Square(__builtin_ctzll(b));
-}
-
-// Returns the most significant bit in a non-zero bitboard.
-inline Square msb(Bitboard b) {
-    assert(b);
-    return Square(63 ^ __builtin_clzll(b));
-}
-
-#elif defined(_MSC_VER)
-inline Square lsb(Bitboard b) {
-    assert(b);
-#ifdef _WIN64 // MSVC, WIN64
-
-    unsigned long idx;
-    _BitScanForward64(&idx, b);
-    return Square(idx);
-
-#else // MSVC, WIN32
-    unsigned long idx;
-
-    if (b & 0xffffffff) {
-        _BitScanForward(&idx, int32_t(b));
-        return Square(idx);
-    } else {
-        _BitScanForward(&idx, int32_t(b >> 32));
-        return Square(idx + 32);
-    }
-#endif
-}
-
-inline Square msb(Bitboard b) {
-    assert(b);
-#ifdef _WIN64 // MSVC, WIN64
-
-    unsigned long idx;
-    _BitScanReverse64(&idx, b);
-    return Square(idx);
-
-#else // MSVC, WIN32
-
-    unsigned long idx;
-
-    if (b >> 32) {
-        _BitScanReverse(&idx, int32_t(b >> 32));
-        return Square(idx + 32);
-    } else {
-        _BitScanReverse(&idx, int32_t(b));
-        return Square(idx);
-    }
-#endif
-}
-#else
-#error "Compiler not suported."
-#endif
-
-// Returns the least significant bit in a non-zero bitboard and sets it to 0.
-inline Square poplsb(Bitboard &bitboard) {
-    Square sq = lsb(bitboard);
-    bitboard &= bitboard - 1;
-    return sq;
-}
-
-inline Bitboard shift(const Bitboard &bitboard, const int &direction) {
-    if (bitboard == 0)
-        return 0;
-
-    if (direction < 0) {
-        assert(lsb(bitboard) + direction >= a1); // Checks for overflow
-        return bitboard >> std::abs(direction);
-    } else {
-        assert(msb(bitboard) + direction <= h8); // Checks for overflow
-        return bitboard << direction;
-    }
-}
-inline Bitboard shift(const Bitboard &bitboard, const Direction &direction) {
-    return shift(bitboard, static_cast<int>(direction));
-}
 
 // Returns the rank of "sq"
 inline int get_rank(Square sq) { return sq >> 3; }
@@ -174,8 +63,6 @@ inline Square get_square(const int file, const int rank) { return static_cast<Sq
 inline int get_pawn_start_rank(const Color &color) { return color == WHITE ? 1 : 6; }
 
 inline int get_pawn_promotion_rank(const Color &color) { return color == WHITE ? 7 : 0; }
-
-inline Bitboard get_pawn_promotion_rank_mask(const Color &color) { return RANK_MASKS[get_pawn_promotion_rank(color)]; }
 
 inline Direction get_pawn_offset(const Color &color) { return color == WHITE ? NORTH : SOUTH; }
 
