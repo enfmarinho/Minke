@@ -32,8 +32,8 @@ class Bitboard {
     constexpr Bitboard(uint64_t bb = 0) : m_bb(bb) {}
     constexpr Bitboard(Square sq) : m_bb(1ULL << sq) {}
 
-    constexpr void set_mask(Bitboard mask) { m_bb |= mask; }
-    constexpr void unset_mask(Bitboard mask) { m_bb &= ~mask; }
+    constexpr void set_mask(Bitboard mask) { m_bb |= mask.m_bb; }
+    constexpr void unset_mask(Bitboard mask) { m_bb &= ~mask.m_bb; }
 
     constexpr void set_sq(Square sq) { m_bb |= (1ULL << sq); }
     constexpr void unset_sq(Square sq) { m_bb &= ~(1ULL << sq); }
@@ -57,6 +57,10 @@ class Bitboard {
         m_bb &= m_bb - 1;
         return sq;
     }
+
+    constexpr Bitboard isolate_lsb() const { return m_bb & -m_bb; }
+
+    constexpr UnderlyingT raw() const { return m_bb; }
 
     ///=== Shifts
     // rays
@@ -107,22 +111,22 @@ class Bitboard {
     }
     ///===
 
-    constexpr operator uint64_t() const { return uint64_t(m_bb); }
+    constexpr explicit operator uint64_t() const { return uint64_t(m_bb); }
     constexpr explicit operator bool() const { return m_bb != 0; }
 
-    constexpr Bitboard operator&(const Bitboard rhs) const { return m_bb & rhs; }
+    constexpr Bitboard operator&(const Bitboard rhs) const { return m_bb & rhs.m_bb; }
     constexpr Bitboard operator&(const UnderlyingT rhs) const { return m_bb & rhs; }
 
-    constexpr Bitboard operator|(const Bitboard rhs) const { return m_bb | rhs; }
+    constexpr Bitboard operator|(const Bitboard rhs) const { return m_bb | rhs.m_bb; }
     constexpr Bitboard operator|(const UnderlyingT rhs) const { return m_bb | rhs; }
 
-    constexpr Bitboard operator^(const Bitboard rhs) const { return m_bb ^ rhs; }
+    constexpr Bitboard operator^(const Bitboard rhs) const { return m_bb ^ rhs.m_bb; }
     constexpr Bitboard operator^(const UnderlyingT rhs) const { return m_bb ^ rhs; }
 
     constexpr Bitboard operator~() const { return ~m_bb; }
 
     constexpr Bitboard operator&=(const Bitboard rhs) {
-        m_bb &= rhs;
+        m_bb &= rhs.m_bb;
         return *this;
     }
     constexpr Bitboard operator&=(const UnderlyingT rhs) {
@@ -131,7 +135,7 @@ class Bitboard {
     }
 
     constexpr Bitboard operator|=(const Bitboard rhs) {
-        m_bb |= rhs;
+        m_bb |= rhs.m_bb;
         return *this;
     }
     constexpr Bitboard operator|=(const UnderlyingT rhs) {
@@ -140,7 +144,7 @@ class Bitboard {
     }
 
     constexpr Bitboard operator^=(const Bitboard rhs) {
-        m_bb ^= rhs;
+        m_bb ^= rhs.m_bb;
         return *this;
     }
     constexpr Bitboard operator^=(const UnderlyingT rhs) {

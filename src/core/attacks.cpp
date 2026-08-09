@@ -20,6 +20,7 @@
 
 #include <bit>
 #include <cassert>
+#include <cstdint>
 
 #include "core/types.h"
 #include "utils/hash.h"
@@ -28,11 +29,11 @@
 Bitboard bishop_masks[64];
 Bitboard rook_masks[64];
 
-Bitboard bishop_shifts[64];
-Bitboard rook_shifts[64];
+int bishop_shifts[64];
+int rook_shifts[64];
 
-Bitboard bishop_magic_numbers[64];
-Bitboard rook_magic_numbers[64];
+uint64_t bishop_magic_numbers[64];
+uint64_t rook_magic_numbers[64];
 
 Bitboard pawn_attacks[2][64];
 Bitboard knight_attacks[64];
@@ -56,7 +57,8 @@ void init_magic_table(PieceType piece_type) {
     for (int sqi = a1; sqi <= h8; ++sqi) {
         Square sq = static_cast<Square>(sqi);
 
-        Bitboard mask, *magic, *attacks;
+        Bitboard mask, *attacks;
+        uint64_t* magic;
         int n_shifts;
         if (piece_type == BISHOP) {
             mask = bishop_masks[sq] = generate_bishop_mask(sq);
@@ -88,7 +90,7 @@ void init_magic_table(PieceType piece_type) {
         // Find a magic for square picking up an (almost) random number
         // until we find the one that passes the verification test.
         for (int i = 0; i < size;) {
-            for (*magic = 0; std::popcount(((*magic) * mask) >> 56) < 6;)
+            for (*magic = 0; std::popcount(((*magic) * mask.raw()) >> 56) < 6;)
                 *magic = prng.sparse_rand<Bitboard::UnderlyingT>();
 
             for (++cnt, i = 0; i < size; ++i) {

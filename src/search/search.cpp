@@ -710,7 +710,7 @@ bool SEE(Position &position, const Move &move, int threshold) {
             break;
         }
 
-        occupancy ^= (my_attackers & Bitboard(-my_attackers)); // Remove used piece, i.e. unset lsb
+        occupancy ^= my_attackers.isolate_lsb();
 
         // Add x-ray attackers, if there is any
         switch (cheapest_attacker) {
