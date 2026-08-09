@@ -28,6 +28,7 @@
 #include "eval/nnue/arch.h"
 #include "eval/nnue/finny_table.h"
 #include "eval/nnue/pov_accumulator.h"
+#include "eval/nnue/sparse_iterator.h"
 
 class Position;
 
@@ -44,6 +45,10 @@ class NNUE {
 
     ScoreType eval(const Position &pos);
 
+#ifdef TRACK_ACTIVATIONS
+    const std::array<size_t, PAIR_COUNT> &activation_table();
+#endif // TRACK_ACTIVATIONS
+
   private:
     void update(const Position &pos);
     void update_pov(const Position &pos, const Color &pov);
@@ -52,10 +57,19 @@ class NNUE {
                       const int bucket);
 
     void activate_ft(std::span<const int16_t, L1_SIZE> stm_acc, std::span<const int16_t, L1_SIZE> ntm_acc,
-                     std::span<uint8_t, L1_SIZE> outputs);
-    void propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs, std::span<int32_t, ACTUAL_L2_SIZE> outputs);
+                     std::span<uint8_t, L1_SIZE> outputs, SparseIterator &si);
+    void propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs, std::span<int32_t, ACTUAL_L2_SIZE> outputs,
+                      const SparseIterator &si);
     void propagate_l2(int bucket, std::span<const int32_t, ACTUAL_L2_SIZE> inputs, std::span<int32_t, L3_SIZE> outputs);
     void propagate_l3(int bucket, std::span<const int32_t, L3_SIZE> inputs, int32_t &output);
+
+#ifdef TRACK_ACTIVATIONS
+
+    void track_activations(std::span<const uint8_t, L1_SIZE> ft_out);
+
+    std::array<size_t, PAIR_COUNT> m_activation_table;
+
+#endif // TRACK_ACTIVATIONS
 
     FinnyTable m_finny_table;
     std::vector<Accumulator> m_accumulators;

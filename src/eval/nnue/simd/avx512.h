@@ -45,6 +45,10 @@ constexpr size_t CHUNK_SIZE_32BIT = sizeof(vepi32) / sizeof(int32_t);
 
 inline void store_u8(void* ptr, vepu8 v) { _mm512_store_si512(static_cast<vepu8*>(ptr), v); }
 
+inline vepu8 load_u8(const void* ptr) { return _mm512_load_si512(static_cast<const vepu8*>(ptr)); }
+
+inline uint32_t nonzero_mask_u8(vepu8 v) { return _mm512_cmpneq_epi32_mask(v, _mm512_setzero_si512()); }
+
 /// i8
 
 inline vepi8 zero_i8() { return _mm512_setzero_si512(); }
@@ -94,12 +98,7 @@ inline vepi16 shiftleft_i16(const vepi16 a, const int c) { return _mm512_slli_ep
 
 inline vepi16 shiftright_i16(const vepi16 a, const int c) { return _mm512_srai_epi16(a, c); }
 
-inline vepu8 packus_i16(const vepi16 a, const vepi16 b) {
-    vepu8 packed = _mm512_packus_epi16(a, b);
-
-    const __m512i permute_mask = _mm512_set_epi64(7, 5, 3, 1, 6, 4, 2, 0);
-    return _mm512_permutexvar_epi64(permute_mask, packed);
-}
+inline vepu8 packus_i16(const vepi16 a, const vepi16 b) { return _mm512_packus_epi16(a, b); }
 
 /// i32
 

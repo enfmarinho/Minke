@@ -44,6 +44,13 @@ constexpr size_t CHUNK_SIZE_32BIT = sizeof(vepi32) / sizeof(int32_t);
 /// u8
 inline void store_u8(void* ptr, vepu8 v) { _mm256_store_si256(static_cast<vepu8*>(ptr), v); }
 
+inline vepu8 load_u8(const void* ptr) { return _mm256_load_si256(static_cast<const vepu8*>(ptr)); }
+
+inline uint32_t nonzero_mask_u8(vepu8 v) {
+    const auto nz = _mm256_cmpgt_epi32(v, _mm256_setzero_si256());
+    return _mm256_movemask_ps(_mm256_castsi256_ps(nz));
+}
+
 /// i8
 
 inline vepi8 zero_i8() { return _mm256_setzero_si256(); }
@@ -93,10 +100,7 @@ inline vepi16 shiftleft_i16(const vepi16 a, const int c) { return _mm256_slli_ep
 
 inline vepi16 shiftright_i16(const vepi16 a, const int c) { return _mm256_srai_epi16(a, c); }
 
-inline vepu8 packus_i16(const vepi16 a, const vepi16 b) {
-    vepu8 packed = _mm256_packus_epi16(a, b);
-    return _mm256_permute4x64_epi64(packed, _MM_SHUFFLE(3, 1, 2, 0));
-}
+inline vepu8 packus_i16(const vepi16 a, const vepi16 b) { return _mm256_packus_epi16(a, b); }
 
 /// i32
 

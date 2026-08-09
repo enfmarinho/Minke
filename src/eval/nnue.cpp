@@ -96,9 +96,10 @@ int32_t NNUE::propagate(std::span<const int16_t, L1_SIZE> stm_inputs, std::span<
     alignas(64) int32_t l1_outputs[ACTUAL_L2_SIZE];
     alignas(64) int32_t l2_outputs[L3_SIZE];
     int32_t l3_output;
+    SparseIterator si;
 
-    activate_ft(stm_inputs, ntm_inputs, ft_outputs);
-    propagate_l1(bucket, ft_outputs, l1_outputs);
+    activate_ft(stm_inputs, ntm_inputs, ft_outputs, si);
+    propagate_l1(bucket, ft_outputs, l1_outputs, si);
     propagate_l2(bucket, l1_outputs, l2_outputs);
     propagate_l3(bucket, l2_outputs, l3_output);
 
@@ -106,8 +107,7 @@ int32_t NNUE::propagate(std::span<const int16_t, L1_SIZE> stm_inputs, std::span<
 }
 
 void NNUE::activate_ft(std::span<const int16_t, L1_SIZE> stm_acc, std::span<const int16_t, L1_SIZE> ntm_acc,
-                       std::span<uint8_t, L1_SIZE> outputs) {
-    constexpr size_t PAIR_COUNT = L1_SIZE / 2;
+                       std::span<uint8_t, L1_SIZE> outputs, [[maybe_unused]] SparseIterator &si) {
     const auto pov_activate = [&](std::span<const int16_t, L1_SIZE> acc, int output_offset) {
 #if USE_SIMD
         using namespace simd;
@@ -151,33 +151,80 @@ void NNUE::activate_ft(std::span<const int16_t, L1_SIZE> stm_acc, std::span<cons
 
     pov_activate(stm_acc, 0);
     pov_activate(ntm_acc, PAIR_COUNT);
+
+#if USE_SIMD
+    using namespace simd;
+    for (size_t out = 0; out < L1_SIZE; out += CHUNK_SIZE_8BIT * 2) {
+        const vepu8 a = load_u8(&outputs[out + CHUNK_SIZE_8BIT * 0]);
+        const vepu8 b = load_u8(&outputs[out + CHUNK_SIZE_8BIT * 1]);
+        si.update(a, b);
+    }
+#endif // USE_SIMD
+
+#ifdef TRACK_ACTIVATIONS
+    track_activations(outputs);
+#endif // TRACK_ACTIVATIONS
 }
 
 void NNUE::propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs,
-                        std::span<int32_t, ACTUAL_L2_SIZE> outputs) {
+                        std::span<int32_t, ACTUAL_L2_SIZE> outputs, [[maybe_unused]] const SparseIterator &si) {
     constexpr int shift = 8;
 
 #if USE_SIMD
     using namespace simd;
 
     const int32_t *packed_input = reinterpret_cast<const int32_t *>(inputs.data());
+    const size_t nnz = si.count();
+    const size_t nnz_quad_chunk = (nnz / 4) * 4;
 
     // Number of registers needed for L2 propagation
     constexpr size_t NUM_REGISTERS = L2_SIZE / CHUNK_SIZE_32BIT;
-    vepi32 l2_regs[NUM_REGISTERS];
+    vepi32 l2_regs[NUM_REGISTERS][4];
 
     // Init registers with L2 biases
     for (size_t i = 0; i < NUM_REGISTERS; ++i) {
-        l2_regs[i] = load_i32(&network.l1_biases[bucket][i * CHUNK_SIZE_32BIT]);
+        l2_regs[i][0] = load_i32(&network.l1_biases[bucket][i * CHUNK_SIZE_32BIT]);
+        l2_regs[i][1] = zero_i32();
+        l2_regs[i][2] = zero_i32();
+        l2_regs[i][3] = zero_i32();
     }
 
     // Accumulate dot products
-    for (size_t chunk_idx = 0; chunk_idx < L1_SIZE / 4; ++chunk_idx) {
-        vepi32 input = set_i32(packed_input[chunk_idx]);
+    for (size_t nnz_id = 0; nnz_id < nnz_quad_chunk; nnz_id += 4) {
+        const size_t idx0 = si.chunk(nnz_id + 0);
+        const size_t idx1 = si.chunk(nnz_id + 1);
+        const size_t idx2 = si.chunk(nnz_id + 2);
+        const size_t idx3 = si.chunk(nnz_id + 3);
 
-        for (size_t i = 0; i < NUM_REGISTERS; ++i) {
-            vepi8 weights = load_i8(&network.l1_weights[bucket][chunk_idx][i * CHUNK_SIZE_32BIT][0]);
-            l2_regs[i] = dpbusd_i32(l2_regs[i], input, weights);
+        const vepi32 in0 = set_i32(packed_input[idx0]);
+        const vepi32 in1 = set_i32(packed_input[idx1]);
+        const vepi32 in2 = set_i32(packed_input[idx2]);
+        const vepi32 in3 = set_i32(packed_input[idx3]);
+
+        for (size_t out_idx = 0; out_idx < L2_SIZE; out_idx += CHUNK_SIZE_32BIT) {
+            auto &reg = l2_regs[out_idx / CHUNK_SIZE_32BIT];
+
+            const vepi8 w0 = load_i8(&network.l1_weights[bucket][idx0][out_idx][0]);
+            const vepi8 w1 = load_i8(&network.l1_weights[bucket][idx1][out_idx][0]);
+            const vepi8 w2 = load_i8(&network.l1_weights[bucket][idx2][out_idx][0]);
+            const vepi8 w3 = load_i8(&network.l1_weights[bucket][idx3][out_idx][0]);
+
+            reg[0] = dpbusd_i32(reg[0], in0, w0);
+            reg[1] = dpbusd_i32(reg[1], in1, w1);
+            reg[2] = dpbusd_i32(reg[2], in2, w2);
+            reg[3] = dpbusd_i32(reg[3], in3, w3);
+        }
+    }
+
+    for (size_t chunk = nnz_quad_chunk; chunk < nnz; ++chunk) {
+        const uint16_t idx = si.chunk(chunk);
+        const vepi32 input = set_i32(packed_input[idx]);
+
+        for (size_t out_idx = 0; out_idx < L2_SIZE; out_idx += CHUNK_SIZE_32BIT) {
+            auto &reg = l2_regs[out_idx / CHUNK_SIZE_32BIT];
+            const vepi8 w = load_i8(&network.l1_weights[bucket][idx][out_idx][0]);
+
+            reg[0] = dpbusd_i32(reg[0], input, w);
         }
     }
 
@@ -187,7 +234,10 @@ void NNUE::propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs,
     const vepi32 one_sq = set_i32(QC * QC);
 
     for (size_t i = 0; i < NUM_REGISTERS; ++i) {
-        vepi32 x = shiftright_i32(l2_regs[i], shift);
+        vepi32 tmp0 = add_i32(l2_regs[i][0], l2_regs[i][1]);
+        vepi32 tmp1 = add_i32(l2_regs[i][2], l2_regs[i][3]);
+        vepi32 x = add_i32(tmp0, tmp1);
+        x = shiftright_i32(x, shift);
 
         if constexpr (DUAL_ACTIVATION) {
             vepi32 out0 = clamp_i32(x, zero, one);
@@ -316,3 +366,17 @@ void NNUE::propagate_l3(int bucket, std::span<const int32_t, L3_SIZE> inputs, in
 
     output = static_cast<int32_t>(rescaled_out);
 }
+
+#ifdef TRACK_ACTIVATIONS
+
+void NNUE::track_activations(std::span<const uint8_t, L1_SIZE> ft_out) {
+    for (size_t idx = 0; idx < L1_SIZE; ++idx) {
+        if (ft_out[idx] != 0) {
+            ++m_activation_table[idx % (PAIR_COUNT)];
+        }
+    }
+}
+
+const std::array<size_t, PAIR_COUNT> &NNUE::activation_table() { return m_activation_table; }
+
+#endif // TRACK_ACTIVATIONS

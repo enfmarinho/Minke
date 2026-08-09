@@ -273,6 +273,10 @@ void UCI::bench(int depth) {
 
     std::cout << "info time " << total_time << "ms\n";
     std::cout << nodes_searched << " nodes " << nodes_searched * 1000 / total_time << " nps\n";
+
+#ifdef TRACK_ACTIVATIONS
+    m_td->position.write_activation_data();
+#endif // TRACK_ACTIVATIONS
 }
 
 int64_t UCI::perft(Position &position, CounterType depth, bool root) {
