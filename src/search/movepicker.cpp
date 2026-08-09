@@ -151,7 +151,7 @@ void MovePicker::score_noisy_moves() {
             if (move.is_ep())
                 return WHITE_PAWN; // color does not matter
             else
-                return m_td->position.consult(move.to());
+                return m_td->position.piece_at(move.to());
         }();
 
         score = 20 * SEE_VALUES[captured] + m_td->search_history.get_capture_history(m_td->position, move);

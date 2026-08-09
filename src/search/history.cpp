@@ -58,7 +58,7 @@ void History::reset() {
 };
 
 int History::get_history(const ThreadData &td, const Move &move) const {
-    PieceMove pmove = {move, td.position.consult(move.from())};
+    PieceMove pmove = {move, td.position.piece_at(move.from())};
     return get_history_heuristic_score(td.position, move) + get_continuation_history_score(td, pmove);
 }
 
@@ -100,18 +100,18 @@ void History::update_history(const ThreadData &td, const Move &best_move, int de
 
 void History::update_capture_history_score(const Position &position, const Move &move, int bonus) {
     Square to = move.to();
-    PieceType moved_pt = get_piece_type(position.consult(move.from()));
-    PieceType captured_pt = get_piece_type(position.consult(to));
+    PieceType moved_pt = get_piece_type(position.piece_at(move.from()));
+    PieceType captured_pt = get_piece_type(position.piece_at(to));
     if (captured_pt == NONE)
         captured_pt = PAWN;
-    HistoryType *ptr = &m_capture_history[position.get_stm()][moved_pt][to][captured_pt][position.is_threatened(to)];
+    HistoryType *ptr = &m_capture_history[position.stm()][moved_pt][to][captured_pt][position.is_threatened(to)];
     update_score(ptr, bonus);
 }
 
 void History::update_history_heuristic_score(const Position &position, const Move &move, int bonus) {
     const bool from_threatened = position.is_threatened(move.from());
     const bool to_threatened = position.is_threatened(move.to());
-    HistoryType *ptr = &m_search_history_table[position.get_stm()][move.from_and_to()][from_threatened][to_threatened];
+    HistoryType *ptr = &m_search_history_table[position.stm()][move.from_and_to()][from_threatened][to_threatened];
     update_score(ptr, bonus);
 }
 
@@ -134,7 +134,7 @@ void History::update_continuation_history_score(const ThreadData &td, const Piec
 HistoryType History::get_history_heuristic_score(const Position &position, const Move &move) const {
     const bool from_threatened = position.is_threatened(move.from());
     const bool to_threatened = position.is_threatened(move.to());
-    return m_search_history_table[position.get_stm()][move.from_and_to()][from_threatened][to_threatened];
+    return m_search_history_table[position.stm()][move.from_and_to()][from_threatened][to_threatened];
 }
 
 int History::get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const {

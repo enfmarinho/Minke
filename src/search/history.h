@@ -40,11 +40,11 @@ class History {
 
     inline HistoryType get_capture_history(const Position &position, const Move &move) {
         Square to = move.to();
-        PieceType moved_pt = get_piece_type(position.consult(move.from()));
-        PieceType captured_pt = get_piece_type(position.consult(to));
+        PieceType moved_pt = get_piece_type(position.piece_at(move.from()));
+        PieceType captured_pt = get_piece_type(position.piece_at(to));
         if (captured_pt == NONE)
             captured_pt = PAWN;
-        return m_capture_history[position.get_stm()][moved_pt][to][captured_pt][position.is_threatened(to)];
+        return m_capture_history[position.stm()][moved_pt][to][captured_pt][position.is_threatened(to)];
     }
 
     inline void clear_killers(const int &height) {

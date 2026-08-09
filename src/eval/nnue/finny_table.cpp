@@ -34,7 +34,7 @@ void FinnyTable::reset() {
 }
 
 const PovAccumulator &FinnyTable::update(const Position &pos, const Color pov) {
-    const Square king_sq = pos.get_king_placement(pov);
+    const Square king_sq = pos.king_sq(pov);
     FinnyTableCache &cached_entry = get_cache(should_flip(king_sq), king_bucket_idx(king_sq, pov), pov);
 
     for (size_t color_idx = WHITE; color_idx <= BLACK; ++color_idx) {
@@ -44,8 +44,8 @@ const PovAccumulator &FinnyTable::update(const Position &pos, const Color pov) {
             const Piece piece = get_piece(pt, color);
             const Bitboard piece_bb = cached_entry.pt_bb[pt_idx] & cached_entry.color_bb[color_idx];
 
-            Bitboard added = ~piece_bb & pos.get_piece_bb(piece);
-            Bitboard removed = piece_bb & ~pos.get_piece_bb(piece);
+            Bitboard added = ~piece_bb & pos.piece_bb(piece);
+            Bitboard removed = piece_bb & ~pos.piece_bb(piece);
 
             // fused updates
             while (added && removed) {
@@ -69,10 +69,10 @@ const PovAccumulator &FinnyTable::update(const Position &pos, const Color pov) {
 
     // update cached bbs
     for (size_t color_idx = WHITE; color_idx <= BLACK; ++color_idx) {
-        cached_entry.color_bb[color_idx] = pos.get_occupancy(static_cast<Color>(color_idx));
+        cached_entry.color_bb[color_idx] = pos.occ_bb(static_cast<Color>(color_idx));
     }
     for (size_t pt_idx = PAWN; pt_idx <= KING; ++pt_idx) {
-        cached_entry.pt_bb[pt_idx] = pos.get_piece_bb(static_cast<PieceType>(pt_idx));
+        cached_entry.pt_bb[pt_idx] = pos.piece_bb(static_cast<PieceType>(pt_idx));
     }
 
     assert(cached_entry.pov_accumulator == PovAccumulator(pos, pov));

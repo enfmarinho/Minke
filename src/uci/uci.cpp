@@ -142,7 +142,7 @@ void UCI::print_debug_info() {
     Move ttmove = Move::none();
     if (tthit) {
         ttmove = tte.best_move();
-        std::cout << "Best move: " << ttmove.to_uci(m_td->chess960, m_td->position.get_castle_rooks()) << std::endl;
+        std::cout << "Best move: " << ttmove.to_uci(m_td->chess960, m_td->position.castle_rooks_bb()) << std::endl;
     }
     Movegen::ScoredMoveList move_list;
     Movegen::all(move_list, m_td->position);
@@ -150,7 +150,7 @@ void UCI::print_debug_info() {
     for (ScoredMove scored_move : move_list) {
         if (!m_td->position.is_legal(scored_move.move))
             std::cout << "*";
-        std::cout << scored_move.move.to_uci(m_td->chess960, m_td->position.get_castle_rooks()) << "("
+        std::cout << scored_move.move.to_uci(m_td->chess960, m_td->position.castle_rooks_bb()) << "("
                   << scored_move.score << ") ";
     }
     std::cout << "\nNNUE eval: " << m_td->position.eval() << std::endl;
@@ -184,14 +184,14 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
     for (unsigned int index = 0; index < moves.size(); ++index) {
         // Make sure to only save the game history for the last 100 positions, more than that is completely unnecessary
         // Moreover, the second conditional assures that the history stacks don't overflow
-        if (moves.size() - index == 100 || m_td->position.get_history_ply() > 100)
+        if (moves.size() - index == 100 || m_td->position.history_ply() > 100)
             m_td->position.reset_history();
 
         Movegen::ScoredMoveList move_list;
         Movegen::all(move_list, m_td->position);
 
         for (auto scored_move : move_list) {
-            if (moves[index] == scored_move.move.to_uci(m_td->chess960, m_td->position.get_castle_rooks())) {
+            if (moves[index] == scored_move.move.to_uci(m_td->chess960, m_td->position.castle_rooks_bb())) {
                 m_td->position.make_move<false>(scored_move.move);
                 break;
             }
@@ -297,7 +297,7 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
         position.unmake_move<false>(move);
 
         if (root)
-            std::cout << move.to_uci(m_td->chess960, m_td->position.get_castle_rooks()) << ": " << count << std::endl;
+            std::cout << move.to_uci(m_td->chess960, m_td->position.castle_rooks_bb()) << ": " << count << std::endl;
     }
 
     if (root)
@@ -332,13 +332,13 @@ bool UCI::parse_go(std::istringstream &iss, bool bench) {
             m_td->search_limits.maximum_node = option;
         } else if (token == "movetime") {
             movetime = option;
-        } else if (token == "wtime" && m_td->position.get_stm() == WHITE) {
+        } else if (token == "wtime" && m_td->position.stm() == WHITE) {
             time = option;
-        } else if (token == "btime" && m_td->position.get_stm() == BLACK) {
+        } else if (token == "btime" && m_td->position.stm() == BLACK) {
             time = option;
-        } else if (token == "winc" && m_td->position.get_stm() == WHITE) {
+        } else if (token == "winc" && m_td->position.stm() == WHITE) {
             inc = option;
-        } else if (token == "binc" && m_td->position.get_stm() == BLACK) {
+        } else if (token == "binc" && m_td->position.stm() == BLACK) {
             inc = option;
         } else if (token == "movestogo") {
             movestogo = option;

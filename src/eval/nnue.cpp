@@ -38,8 +38,7 @@ void NNUE::refresh(const Position &pos) {
     const auto &black_pov_acc = m_finny_table.update(pos, BLACK);
 
     m_accumulators.clear();
-    m_accumulators.emplace_back(pos.get_king_placement(WHITE), pos.get_king_placement(BLACK), white_pov_acc,
-                                black_pov_acc);
+    m_accumulators.emplace_back(pos.king_sq(WHITE), pos.king_sq(BLACK), white_pov_acc, black_pov_acc);
 
     assert(m_accumulators.back().updated(WHITE));
     assert(m_accumulators.back().updated(BLACK));
@@ -58,9 +57,9 @@ ScoreType NNUE::eval(const Position &pos) {
     update(pos); // ensure accumulator is up-to date
 
     const Accumulator &acc = m_accumulators.back();
-    const int bucket = (pos.get_material_count() - 2) / BUCKET_SIZE;
+    const int bucket = (pos.material_count() - 2) / BUCKET_SIZE;
 
-    return propagate(acc.pov(pos.get_stm()).neurons(), acc.pov(pos.get_adversary()).neurons(), bucket);
+    return propagate(acc.pov(pos.stm()).neurons(), acc.pov(pos.nstm()).neurons(), bucket);
 }
 
 void NNUE::update(const Position &pos) {
@@ -75,7 +74,7 @@ void NNUE::update_pov(const Position &pos, const Color &pov) {
         return;
 
     for (auto iter = m_accumulators.rbegin() + 1; iter != m_accumulators.rend(); ++iter) {
-        if (iter->needs_refresh(pov, pos.get_king_placement(pov))) {
+        if (iter->needs_refresh(pov, pos.king_sq(pov))) {
             const PovAccumulator &acc = m_finny_table.update(pos, pov);
             head->refresh(pov, acc);
             break;
