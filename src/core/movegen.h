@@ -21,7 +21,7 @@
 #include "core/move.h"
 #include "core/position.h"
 #include "core/types.h"
-#include "utils/utils.h"
+#include "utils/static_vector.h"
 
 namespace Movegen {
 
