@@ -61,7 +61,7 @@ void CorrectionHistory::update(const ThreadData& td, const int depth, const int 
 HistoryType CorrectionHistory::correction(const ThreadData& td) const {
     const PovTables& tables = m_pov_tables[td.position.get_stm()];
 
-    HistoryType adjustment = pawn_corr_factor() * tables.pawn[td.position.get_pawn_hash() % CORRHIST_SIZE];
+    int adjustment = pawn_corr_factor() * tables.pawn[td.position.get_pawn_hash() % CORRHIST_SIZE];
     adjustment += nonpawn_corr_factor() * tables.white_nonpawn[td.position.get_white_nonpawn_hash() % CORRHIST_SIZE];
     adjustment += nonpawn_corr_factor() * tables.black_nonpawn[td.position.get_black_nonpawn_hash() % CORRHIST_SIZE];
 

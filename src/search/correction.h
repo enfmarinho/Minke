@@ -41,8 +41,8 @@ class CorrectionHistory {
         HistoryType value{0};
 
         inline void update(const HistoryType bonus) {
-            const HistoryType scaled_bonus = bonus - value * std::abs(bonus) / CORRHIST_MAX;
-            value = std::clamp(value + scaled_bonus, -CORRHIST_MAX, CORRHIST_MAX);
+            const int scaled_bonus = bonus - value * std::abs(bonus) / CORRHIST_MAX;
+            value = std::clamp<int>(value + scaled_bonus, -CORRHIST_MAX, CORRHIST_MAX);
         }
 
         [[nodiscard]] inline operator HistoryType() const { return value; }
