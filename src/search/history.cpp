@@ -109,17 +109,19 @@ void History::update_history_heuristic_score(const Position &position, const Mov
 }
 
 void History::update_continuation_history_table(const ThreadData &td, const PieceMove &pmove, int bonus) {
-    update_continuation_history_score(td, pmove, bonus, 1); // Counter Moves History (1-ply)
-    update_continuation_history_score(td, pmove, bonus, 2); // Follow Up History (2-ply)
-    update_continuation_history_score(td, pmove, bonus, 4); // 4-ply
+    const int base = get_continuation_history_score(td, pmove);
+    update_continuation_history_score(td, pmove, bonus, base, 1); // Counter Moves History (1-ply)
+    update_continuation_history_score(td, pmove, bonus, base, 2); // Follow Up History (2-ply)
+    update_continuation_history_score(td, pmove, bonus, base, 4); // 4-ply
 }
 
-void History::update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int offset) {
+void History::update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int base,
+                                                int offset) {
     int past_node_idx = td.height - offset;
     if (past_node_idx >= 0 && td.nodes[past_node_idx].curr_pmove) {
         const size_t past_conthist_idx = cont_hist_idx(td.nodes[past_node_idx].curr_pmove);
         const size_t curr_conthist_idx = cont_hist_idx(pmove);
-        m_continuation_history[past_conthist_idx][curr_conthist_idx].update_score(bonus);
+        m_continuation_history[past_conthist_idx][curr_conthist_idx].update_with_base(bonus, base);
     }
 }
 

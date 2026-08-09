@@ -68,13 +68,15 @@ class History {
         HistoryType value{};
 
         inline void update_score(int bonus) { value += bonus - value * std::abs(bonus) / HISTORY_DIVISOR; }
+        inline void update_with_base(int bonus, int base) { value += bonus - base * std::abs(bonus) / HISTORY_DIVISOR; }
     };
 
     void update_capture_history_score(const Position &position, const Move &move, int bonus);
     void update_history_heuristic_score(const Position &position, const Move &move, int bonus);
     void update_continuation_history_table(const ThreadData &td, const PieceMove &pmove, int bonus);
 
-    void update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int offset);
+    void update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int base,
+                                           int offset);
     HistoryType get_history_heuristic_score(const Position &position, const Move &move) const;
     int get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const;
     HistoryType get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const;
