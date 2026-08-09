@@ -47,9 +47,6 @@ void History::reset() {
         moves[0] = Move::none();
         moves[1] = Move::none();
     }
-    for (Move &move : m_counter_moves) {
-        move = Move::none();
-    }
 };
 
 int History::get_history(const ThreadData &td, const Move &move) const {
@@ -69,8 +66,6 @@ void History::update_history(const ThreadData &td, const Move &best_move, int de
         calculate_score(depth, capt_hist_penalty_mult(), capt_hist_penalty_offset(), capt_hist_penalty_max());
     if (best_move.is_quiet()) {
         save_killer(best_move, td.height);
-        if (td.height > 0)
-            save_counter(td.nodes[td.height - 1].curr_pmove.move, best_move);
 
         // Increase the score of the move that caused the beta cutoff
         update_history_heuristic_score(td.position, best_move, quiet_bonus);
