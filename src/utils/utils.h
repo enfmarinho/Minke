@@ -36,10 +36,10 @@ inline void unset_mask(TYPE &bits, const TYPE &mask) {
 template void unset_mask<uint8_t>(uint8_t &bits, const uint8_t &mask);
 
 // Returns the rank of "sq"
-inline int get_rank(Square sq) { return sq >> 3; }
+constexpr inline int get_rank(Square sq) { return sq >> 3; }
 
 // Returns the file of "sq"
-inline int get_file(Square sq) { return sq & 0b111; }
+constexpr inline int get_file(Square sq) { return sq & 0b111; }
 
 inline Piece get_piece(const PieceType &piece_type, const Color &color) {
     return static_cast<Piece>(piece_type + color * COLOR_OFFSET);
