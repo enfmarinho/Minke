@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include "core/types.h"
+#include "utils/utils.h"
 
 class Bitboard {
   public:
@@ -200,6 +201,16 @@ class Bitboard {
 
     static inline UnderlyingT pov_first_rank(Color color) { return (color == WHITE ? RANK_1 : RANK_8); }
     static inline UnderlyingT pawn_promotion_rank(Color color) { return (color == WHITE ? RANK_8 : RANK_1); }
+
+    constexpr static Bitboard rank(Square sq) {
+        assert(sq >= a1 && sq <= h8);
+        return {RANK_1 << (get_rank(sq) * 8)};
+    }
+
+    constexpr static Bitboard file(Square sq) {
+        assert(sq >= a1 && sq <= h8);
+        return {FILE_A << get_file(sq)};
+    }
 
   private:
     UnderlyingT m_bb;
