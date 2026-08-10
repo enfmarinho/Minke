@@ -171,14 +171,14 @@ static inline void gen_kings(ScoredMoveList& move_list, const Position& pos, Bit
     const Square king_sq = pos.king_sq(pos.stm());
     const Bitboard attacks = king_attacks[king_sq];
 
-    // NOTE: illegal moves may be generated, the king may go to an attacked sq
-    push_regular_moves<move_t>(move_list, king_sq, attacks & dst_mask);
+    push_regular_moves<move_t>(move_list, king_sq, attacks & dst_mask & ~pos.threats_bb());
 }
 
 static inline void gen_castling(ScoredMoveList& move_list, const Position& pos) {
     const Color stm = pos.stm();
+    const Square king_from = pos.king_sq(stm);
+
     Bitboard castle_rooks_stm = pos.castle_rooks_bb() & pos.occ_bb(stm);
-    Square king_from = pos.king_sq(stm);
     while (castle_rooks_stm) {
         Square rook_from = castle_rooks_stm.poplsb();
         Square king_to, rook_to;
@@ -188,32 +188,22 @@ static inline void gen_castling(ScoredMoveList& move_list, const Position& pos) 
             king_to = c1, rook_to = d1;
         }
         if (stm == BLACK) {
+            // flip sq, to make it from other players pov
             king_to = static_cast<Square>(king_to ^ 56);
             rook_to = static_cast<Square>(rook_to ^ 56);
         }
 
-        Bitboard crossing_mask = between_squares[king_from][king_to] | between_squares[rook_from][rook_to] |
-                                 Bitboard(king_to) | Bitboard(rook_to);
-        crossing_mask &= ~(Bitboard(king_from) | Bitboard(rook_from));
+        const Bitboard crossing_mask = (between_squares[king_from][king_to] | between_squares[rook_from][rook_to] |
+                                        Bitboard(king_to) | Bitboard(rook_to)) &
+                                       ~(Bitboard(king_from) | Bitboard(rook_from));
 
-        if (crossing_mask & pos.occ_bb()) // There is a blocker
-            continue;
-
-        Bitboard king_crossing = between_squares[king_from][king_to];
-        bool illegal = false;
-        while (king_crossing) {
-            Square sq = king_crossing.poplsb();
-            if (pos.is_attacked(sq)) {
-                illegal = true;
-                break;
-            }
+        const Bitboard king_crossing = between_squares[king_from][king_to] | Bitboard(king_to);
+        if (!(crossing_mask & pos.occ_bb())        // no blocker
+            && !(king_crossing & pos.threats_bb()) // no passing square is attacked
+        ) {
+            // TODO, for datagen FRC compatibility its better to encode castling as king takes rook
+            move_list.push({Move(king_from, king_to, CASTLING), 0});
         }
-
-        if (illegal) {
-            continue;
-        }
-
-        move_list.push({Move(king_from, king_to, CASTLING), 0});
     }
 }
 
