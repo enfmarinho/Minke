@@ -43,6 +43,10 @@ extern Bitboard rook_attacks[64][4096];
 extern Bitboard inbetween_masks[64][64];
 extern Bitboard passing_masks[64][64];
 
+// indexed as [sq]
+extern Bitboard diagonal_masks[64];
+extern Bitboard antidiagonal_masks[64];
+
 void init_magic_table(PieceType piece_type);
 
 Bitboard generate_bishop_mask(Square sq);

@@ -31,3 +31,5 @@ void init_magic_attack_tables();
 void init_inbetween_masks();
 
 void init_passing_masks();
+
+void init_diagonal_antidiagonal_masks();

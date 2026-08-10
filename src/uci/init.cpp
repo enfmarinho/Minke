@@ -34,8 +34,11 @@ int LMR_TABLE[64][64];
 int LMP_TABLE[2][LMP_DEPTH];
 HashKeys hash_keys;
 Network network;
+
 Bitboard inbetween_masks[64][64];
 Bitboard passing_masks[64][64];
+Bitboard diagonal_masks[64];
+Bitboard antidiagonal_masks[64];
 
 void init_all() {
     init_search_params();
@@ -44,6 +47,7 @@ void init_all() {
     init_magic_attack_tables();
     init_inbetween_masks();
     init_passing_masks();
+    init_diagonal_antidiagonal_masks();
 }
 
 void init_search_params() {
@@ -133,5 +137,25 @@ void init_passing_masks() {
                 passing_masks[src][to] = bishop_attack & (get_bishop_attacks(to_sq, src_mask) | to_mask);
             }
         }
+    }
+}
+
+void init_diagonal_antidiagonal_masks() {
+    for (int sqi = a1; sqi <= h8; ++sqi) {
+        Square sq = static_cast<Square>(sqi);
+
+        Bitboard diag(sq); // south_west to north_east
+        for (Bitboard mask = diag.shift_north_east(); mask; mask = mask.shift_north_east())
+            diag |= mask;
+        for (Bitboard mask = diag.shift_south_west(); mask; mask = mask.shift_south_west())
+            diag |= mask;
+        diagonal_masks[sq] = diag;
+
+        Bitboard antidiag(sq); // north_west to south_east
+        for (Bitboard mask = antidiag.shift_north_west(); mask; mask = mask.shift_north_west())
+            antidiag |= mask;
+        for (Bitboard mask = antidiag.shift_south_east(); mask; mask = mask.shift_south_east())
+            antidiag |= mask;
+        antidiagonal_masks[sq] = antidiag;
     }
 }
