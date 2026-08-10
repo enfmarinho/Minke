@@ -53,15 +53,9 @@ class History {
     }
     inline Move consult_killer1(const int &height) const { return m_killer_moves[height][0]; }
     inline Move consult_killer2(const int &height) const { return m_killer_moves[height][1]; }
-    inline Move consult_counter(const Move &past_move) const {
-        if (!past_move)
-            return Move::none();
-        return m_counter_moves[past_move.from_and_to()];
-    }
     inline bool is_killer(const Move &move, const int &height) const {
         return move == consult_killer1(height) || move == consult_killer2(height);
     }
-    inline bool is_counter(const Move &move, const Move &past_move) const { return move == consult_counter(past_move); }
 
   private:
     struct HistoryEntry {
@@ -86,14 +80,8 @@ class History {
         m_killer_moves[height][0] = move;
     }
 
-    inline void save_counter(const Move &past_move, const Move &move) {
-        if (past_move)
-            m_counter_moves[past_move.from_and_to()] = move;
-    }
-
     HistoryEntry m_capture_history[2][6][64][5][2];
     HistoryEntry m_search_history_table[2][64 * 64][2][2];
     HistoryEntry m_continuation_history[12 * 64][12 * 64];
-    Move m_counter_moves[64 * 64];
     Move m_killer_moves[MAX_SEARCH_DEPTH][2];
 };
