@@ -107,14 +107,18 @@ static inline void gen_pawn_quiets(ScoredMoveList& move_list, const Position& po
     const Bitboard occ = pos.occ_bb();
     const Direction push = get_pawn_offset(stm);
     const Direction double_push = static_cast<Direction>(2 * push);
-    const Bitboard third_pov_rank = (stm == WHITE ? Bitboard::RANK_3 : Bitboard::RANK_6);
 
-    Bitboard pawn_bb = pos.piece_bb(PAWN, stm);
+    const Bitboard pov_third_rank_mask = (stm == WHITE ? Bitboard::RANK_3 : Bitboard::RANK_6);
+    const Bitboard forward_pin_mask = Bitboard::file(pos.king_sq(stm));
+    const Bitboard pins_bb = pos.pins_bb();
 
-    Bitboard single_push_bb = pawn_bb.shift_up_pov(stm) & ~occ;
+    const Bitboard pawns_bb = pos.piece_bb(PAWN, stm);
+    const Bitboard movable_pawns_bb = (pawns_bb & ~pins_bb) | (pawns_bb & forward_pin_mask);
+
+    const Bitboard single_push_bb = movable_pawns_bb.shift_up_pov(stm) & ~occ;
     push_pawn_moves<REGULAR>(move_list, push, single_push_bb & dst_mask);
 
-    Bitboard double_push_bb = (single_push_bb & third_pov_rank).shift_up_pov(stm);
+    const Bitboard double_push_bb = (single_push_bb & pov_third_rank_mask).shift_up_pov(stm) & ~occ;
     push_pawn_moves<REGULAR>(move_list, double_push, double_push_bb & dst_mask);
 }
 
