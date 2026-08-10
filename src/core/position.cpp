@@ -622,7 +622,7 @@ void Position::update_aux_bbs() {
     while (slider_checkers) {
         Square sq = slider_checkers.poplsb();
 
-        Bitboard blockers = between_squares[ksq][sq] & occ_bb();
+        Bitboard blockers = inbetween_masks[ksq][sq] & occ_bb();
         if (!blockers) {
             m_curr_state.checkers.set_sq(sq);
         } else if (blockers.popcount() == 1) {
@@ -769,10 +769,10 @@ bool Position::is_legal(const Move &move) {
         return false;
 
     if (pins_bb().is_set(from)) // if piece is pinned, it must keep blocking the check
-        return !checkers_bb() && (between_squares[ksq][to].is_set(from) || between_squares[ksq][from].is_set(to));
+        return !checkers_bb() && (inbetween_masks[ksq][to].is_set(from) || inbetween_masks[ksq][from].is_set(to));
 
     if (checkers_bb()) // If in check and not moving the king, it must either block the check or take the attacker
-        return (checkers_bb() | between_squares[checkers_bb().lsb()][ksq]).is_set(to);
+        return (checkers_bb() | inbetween_masks[checkers_bb().lsb()][ksq]).is_set(to);
 
     return true;
 }

@@ -28,6 +28,6 @@ void init_hash_keys();
 
 void init_magic_attack_tables();
 
-void init_between_squares();
+void init_inbetween_masks();
 
-void init_passing_rays();
+void init_passing_masks();

@@ -34,16 +34,16 @@ int LMR_TABLE[64][64];
 int LMP_TABLE[2][LMP_DEPTH];
 HashKeys hash_keys;
 Network network;
-Bitboard between_squares[64][64];
-Bitboard passing_rays[64][64];
+Bitboard inbetween_masks[64][64];
+Bitboard passing_masks[64][64];
 
 void init_all() {
     init_search_params();
     init_network_params();
     init_hash_keys();
     init_magic_attack_tables();
-    init_between_squares();
-    init_passing_rays();
+    init_inbetween_masks();
+    init_passing_masks();
 }
 
 void init_search_params() {
@@ -97,7 +97,7 @@ void init_magic_attack_tables() {
     }
 }
 
-void init_between_squares() {
+void init_inbetween_masks() {
     for (int sqi1 = a1; sqi1 <= h8; ++sqi1) {
         for (int sqi2 = a1; sqi2 <= h8; ++sqi2) {
             Square sq1 = static_cast<Square>(sqi1);
@@ -105,15 +105,15 @@ void init_between_squares() {
             Bitboard occ1(sq1);
             Bitboard occ2(sq2);
             if (get_bishop_attacks(sq1, 0) & occ2) {
-                between_squares[sq1][sq2] = get_bishop_attacks(sq1, occ2) & get_bishop_attacks(sq2, occ1);
+                inbetween_masks[sq1][sq2] = get_bishop_attacks(sq1, occ2) & get_bishop_attacks(sq2, occ1);
             } else if (get_rook_attacks(sq1, 0) & occ2) {
-                between_squares[sq1][sq2] = get_rook_attacks(sq1, occ2) & get_rook_attacks(sq2, occ1);
+                inbetween_masks[sq1][sq2] = get_rook_attacks(sq1, occ2) & get_rook_attacks(sq2, occ1);
             }
         }
     }
 }
 
-void init_passing_rays() {
+void init_passing_masks() {
     for (int src = a1; src <= h8; ++src) {
         Square src_sq = static_cast<Square>(src);
         Bitboard src_mask(src_sq);
@@ -128,9 +128,9 @@ void init_passing_rays() {
             Bitboard to_mask(to_sq);
 
             if (rook_attack & to_mask) {
-                passing_rays[src][to] = rook_attack & (get_rook_attacks(to_sq, src_mask) | to_mask);
+                passing_masks[src][to] = rook_attack & (get_rook_attacks(to_sq, src_mask) | to_mask);
             } else if (bishop_attack & to_mask) {
-                passing_rays[src][to] = bishop_attack & (get_bishop_attacks(to_sq, src_mask) | to_mask);
+                passing_masks[src][to] = bishop_attack & (get_bishop_attacks(to_sq, src_mask) | to_mask);
             }
         }
     }

@@ -156,8 +156,8 @@ static inline void gen_sliders(ScoredMoveList& move_list, const Position& pos, B
         while (pinned_bb) {
             Square from = pinned_bb.poplsb();
             Bitboard attacks = get_piece_attacks(from, occ, pt);
-            const Bitboard ray_mask = passing_rays[king_sq][from];
-            push_regular_moves<move_t>(move_list, from, attacks & dst_mask & ray_mask);
+            const Bitboard passing_mask = passing_masks[king_sq][from];
+            push_regular_moves<move_t>(move_list, from, attacks & dst_mask & passing_mask);
         }
     };
     gen_not_pinned(rook_bb, ROOK);
@@ -193,11 +193,11 @@ static inline void gen_castling(ScoredMoveList& move_list, const Position& pos) 
             rook_to = static_cast<Square>(rook_to ^ 56);
         }
 
-        const Bitboard crossing_mask = (between_squares[king_from][king_to] | between_squares[rook_from][rook_to] |
+        const Bitboard crossing_mask = (inbetween_masks[king_from][king_to] | inbetween_masks[rook_from][rook_to] |
                                         Bitboard(king_to) | Bitboard(rook_to)) &
                                        ~(Bitboard(king_from) | Bitboard(rook_from));
 
-        const Bitboard king_crossing = between_squares[king_from][king_to] | Bitboard(king_to);
+        const Bitboard king_crossing = inbetween_masks[king_from][king_to] | Bitboard(king_to);
         if (!(crossing_mask & pos.occ_bb())        // no blocker
             && !(king_crossing & pos.threats_bb()) // no passing square is attacked
         ) {
@@ -225,7 +225,7 @@ void noisies(ScoredMoveList& move_list, const Position& pos) {
         dst_mask = pos.checkers_bb();
 
         pawn_dst_mask = dst_mask;
-        pawn_dst_mask |= pawn_push_promotions & between_squares[pos.king_sq(stm)][pos.checkers_bb().lsb()];
+        pawn_dst_mask |= pawn_push_promotions & inbetween_masks[pos.king_sq(stm)][pos.checkers_bb().lsb()];
     }
 
     gen_pawn_noisies(move_list, pos, pawn_dst_mask);
@@ -245,7 +245,7 @@ void quiets(ScoredMoveList& move_list, const Position& pos) {
             return;
         }
 
-        dst_mask = between_squares[pos.king_sq(stm)][pos.checkers_bb().lsb()];
+        dst_mask = inbetween_masks[pos.king_sq(stm)][pos.checkers_bb().lsb()];
     } else {
         gen_castling(move_list, pos);
     }
