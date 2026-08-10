@@ -148,8 +148,6 @@ void UCI::print_debug_info() {
     Movegen::all(move_list, m_td->position);
     std::cout << "Move list(" << move_list.size() << "): ";
     for (ScoredMove scored_move : move_list) {
-        if (!m_td->position.is_legal(scored_move.move))
-            std::cout << "*";
         std::cout << scored_move.move.to_uci(m_td->chess960, m_td->position.castle_rooks_bb()) << "("
                   << scored_move.score << ") ";
     }
@@ -287,9 +285,6 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
     Movegen::all(move_list, m_td->position);
     for (ScoredMove score_move : move_list) {
         Move move = score_move.move;
-        if (!position.is_legal(move)) {
-            continue;
-        }
         position.make_move<false>(move);
 
         if (root && depth <= 1)

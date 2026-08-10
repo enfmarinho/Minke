@@ -710,22 +710,7 @@ Bitboard Position::attackers(const Square &sq) const {
 int Position::legal_move_amount() {
     Movegen::ScoredMoveList move_list;
     Movegen::all(move_list, *this);
-    int legal_amount = 0;
-    for (ScoredMove scored_move : move_list) {
-        if (is_legal(scored_move.move))
-            ++legal_amount;
-    }
-    return legal_amount;
-}
-
-bool Position::no_legal_moves() {
-    Movegen::ScoredMoveList move_list;
-    Movegen::all(move_list, *this);
-    for (ScoredMove scored_move : move_list) {
-        if (is_legal(scored_move.move))
-            return false;
-    }
-    return true;
+    return move_list.size();
 }
 
 bool Position::is_legal(const Move &move) {
@@ -962,11 +947,7 @@ bool Position::is_fifty_move_draw() {
     if (m_curr_state.fifty_move_ply >= 100) {
         Movegen::ScoredMoveList move_list;
         Movegen::all(move_list, *this);
-        for (ScoredMove scored_move : move_list) {
-            bool legal = is_legal(scored_move.move);
-            if (legal)
-                return true;
-        }
+        return !move_list.empty(); // if there is at least one legal move, its not checkmate
     }
 
     return false;

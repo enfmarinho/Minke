@@ -88,7 +88,6 @@ class Position {
     inline ScoreType eval() { return m_nnue.eval(*this); }
 
     int legal_move_amount();
-    bool no_legal_moves();
     void print() const;
 
     inline Bitboard occ_bb() const { return m_occupancies[WHITE] | m_occupancies[BLACK]; }
