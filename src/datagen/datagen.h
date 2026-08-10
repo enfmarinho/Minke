@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <algorithm>
 #include <atomic>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
@@ -192,21 +192,12 @@ class DatagenThread {
             Movegen::ScoredMoveList move_list;
             Movegen::all(move_list, m_td->position);
 
-            std::shuffle(move_list.begin(), move_list.end(), prng);
-
-            bool legal_found = false;
-            for (const ScoredMove score_move : move_list) {
-                const Move move = score_move.move;
-                if (m_td->position.is_legal(move)) {
-                    m_td->position.make_move<false>(move);
-                    legal_found = true;
-                    break;
-                }
-            }
-
-            if (!legal_found) {
+            if (move_list.empty()) {
                 m_td->position.set_fen<false>(START_FEN);
                 i = -1; // increment is happening after the loop, so this will be 0
+            } else {
+                const Move move = move_list[prng.rand<size_t>() % move_list.size()].move;
+                m_td->position.make_move<false>(move);
             }
         }
 

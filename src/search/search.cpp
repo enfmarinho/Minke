@@ -343,11 +343,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             MovePicker move_picker(ttmove, td, PROBCUT, pc_beta - node.static_eval);
             while (true) { // iterate through all moves in move_picker
                 const Move move = move_picker.next_move(true);
-                if (!move) {
+                if (!move) { // no more moves
                     break;
                 }
 
-                if (move == excluded_move || !position.is_legal(move)) { // Avoid excluded or illegal moves
+                if (move == excluded_move) { // skip excluded moves
                     continue;
                 }
 
@@ -383,10 +383,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     PieceMoveList quiets_tried, tacticals_tried;
     while (true) { // iterate through all moves in move_picker
         const Move move = move_picker.next_move(skip_quiets);
-        if (!move) {
+        if (!move) { // no more moves
             break;
         }
-        if (move == excluded_move || !position.is_legal(move)) { // Skip excluded and illegal moves
+
+        if (move == excluded_move) { // skip excluded moves
             continue;
         }
 
@@ -608,11 +609,8 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     int moves_searched = 0;
     while (true) { // iterate through all moves in move_picker
         const Move move = move_picker.next_move(!in_check);
-        if (!move) {
+        if (!move) { // no more moves
             break;
-        }
-        if (!position.is_legal(move)) { // Avoid illegal moves
-            continue;
         }
         node.curr_pmove = {move, position.piece_at(move.from())};
 

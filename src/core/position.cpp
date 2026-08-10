@@ -622,7 +622,7 @@ void Position::update_aux_bbs() {
     while (slider_checkers) {
         Square sq = slider_checkers.poplsb();
 
-        Bitboard blockers = between_squares[ksq][sq] & occ_bb();
+        Bitboard blockers = inbetween_masks[ksq][sq] & occ_bb();
         if (!blockers) {
             m_curr_state.checkers.set_sq(sq);
         } else if (blockers.popcount() == 1) {
@@ -637,32 +637,32 @@ void Position::update_threats() {
     Bitboard &threats = m_curr_state.threats;
     threats = 0;
 
-    const Color stm = nstm();
-    const Bitboard occupancy_bb = occ_bb() ^ piece_bb(KING, stm);
+    const Color opp = nstm();
+    const Bitboard occupancy_bb = occ_bb() ^ piece_bb(KING, stm());
 
-    const Bitboard pawn_bb = piece_bb(PAWN, stm);
-    threats |= pawn_bb.shift_up_east_pov(stm);
-    threats |= pawn_bb.shift_up_west_pov(stm);
+    const Bitboard pawn_bb = piece_bb(PAWN, opp);
+    threats |= pawn_bb.shift_up_east_pov(opp);
+    threats |= pawn_bb.shift_up_west_pov(opp);
 
-    Bitboard knights_bb = piece_bb(KNIGHT, stm);
+    Bitboard knights_bb = piece_bb(KNIGHT, opp);
     while (knights_bb) {
         const Square sq = knights_bb.poplsb();
         threats |= knight_attacks[sq];
     }
 
-    Bitboard bishop_bb = piece_bb(BISHOP, stm) | piece_bb(QUEEN, stm);
+    Bitboard bishop_bb = piece_bb(BISHOP, opp) | piece_bb(QUEEN, opp);
     while (bishop_bb) {
         const Square sq = bishop_bb.poplsb();
         threats |= get_piece_attacks(sq, occupancy_bb, BISHOP);
     }
 
-    Bitboard rook_bb = piece_bb(ROOK, stm) | piece_bb(QUEEN, stm);
+    Bitboard rook_bb = piece_bb(ROOK, opp) | piece_bb(QUEEN, opp);
     while (rook_bb) {
         const Square sq = rook_bb.poplsb();
         threats |= get_piece_attacks(sq, occupancy_bb, ROOK);
     }
 
-    threats |= knight_attacks[king_sq(stm)];
+    threats |= king_attacks[king_sq(opp)];
 }
 
 bool Position::is_attacked(const Square &sq) const {
@@ -710,22 +710,7 @@ Bitboard Position::attackers(const Square &sq) const {
 int Position::legal_move_amount() {
     Movegen::ScoredMoveList move_list;
     Movegen::all(move_list, *this);
-    int legal_amount = 0;
-    for (ScoredMove scored_move : move_list) {
-        if (is_legal(scored_move.move))
-            ++legal_amount;
-    }
-    return legal_amount;
-}
-
-bool Position::no_legal_moves() {
-    Movegen::ScoredMoveList move_list;
-    Movegen::all(move_list, *this);
-    for (ScoredMove scored_move : move_list) {
-        if (is_legal(scored_move.move))
-            return false;
-    }
-    return true;
+    return move_list.size();
 }
 
 bool Position::is_legal(const Move &move) {
@@ -769,10 +754,10 @@ bool Position::is_legal(const Move &move) {
         return false;
 
     if (pins_bb().is_set(from)) // if piece is pinned, it must keep blocking the check
-        return !checkers_bb() && (between_squares[ksq][to].is_set(from) || between_squares[ksq][from].is_set(to));
+        return !checkers_bb() && (inbetween_masks[ksq][to].is_set(from) || inbetween_masks[ksq][from].is_set(to));
 
     if (checkers_bb()) // If in check and not moving the king, it must either block the check or take the attacker
-        return (checkers_bb() | between_squares[checkers_bb().lsb()][ksq]).is_set(to);
+        return (checkers_bb() | inbetween_masks[checkers_bb().lsb()][ksq]).is_set(to);
 
     return true;
 }
@@ -962,11 +947,7 @@ bool Position::is_fifty_move_draw() {
     if (m_curr_state.fifty_move_ply >= 100) {
         Movegen::ScoredMoveList move_list;
         Movegen::all(move_list, *this);
-        for (ScoredMove scored_move : move_list) {
-            bool legal = is_legal(scored_move.move);
-            if (legal)
-                return true;
-        }
+        return !move_list.empty(); // if there is at least one legal move, its not checkmate
     }
 
     return false;

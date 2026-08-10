@@ -52,7 +52,8 @@ Move MovePicker::next_move(bool skip_quiets) {
     switch (m_stage) {
         case PICK_TT:
             m_stage = GEN_NOISY;
-            if ((!skip_quiets || m_ttmove.is_noisy()) && m_td->position.is_pseudo_legal(m_ttmove)) {
+            if ((!skip_quiets || m_ttmove.is_noisy()) && m_td->position.is_pseudo_legal(m_ttmove) &&
+                m_td->position.is_legal(m_ttmove)) {
                 return m_ttmove;
             } else {
             }

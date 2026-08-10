@@ -74,6 +74,7 @@ class Position {
 
     inline bool in_check() const { return m_curr_state.checkers != Bitboard::EMPTY; }
     inline bool is_threatened(const Square &sq) const { return m_curr_state.threats.is_set(sq); }
+    inline Bitboard threats_bb() const { return m_curr_state.threats; }
     bool is_attacked(const Square &sq) const;
     bool is_legal(const Move &move);
     bool is_pseudo_legal(const Move &move) const;
@@ -87,7 +88,6 @@ class Position {
     inline ScoreType eval() { return m_nnue.eval(*this); }
 
     int legal_move_amount();
-    bool no_legal_moves();
     void print() const;
 
     inline Bitboard occ_bb() const { return m_occupancies[WHITE] | m_occupancies[BLACK]; }
