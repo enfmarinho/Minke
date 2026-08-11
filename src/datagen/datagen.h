@@ -40,6 +40,7 @@
 #include "datagen/packed_position.h"
 #include "datagen/viriformat.h"
 #include "search/search.h"
+#include "search/time_manager.h"
 #include "utils/hash.h"
 
 class DatagenThread {
@@ -106,7 +107,11 @@ class DatagenThread {
 
         // Search deeper to verify position before generating data from it
         m_td->reset_search_parameters();
-        m_td->set_search_limits({VERIFICATION_MAX_DEPTH, VERIFICATION_SOFT_NODE_LIMIT, VERIFICATION_HARD_NODE_LIMIT});
+        SearchLimits verification_sl;
+        verification_sl.depth = VERIFICATION_MAX_DEPTH;
+        verification_sl.optimum_node = VERIFICATION_SOFT_NODE_LIMIT;
+        verification_sl.maximum_node = VERIFICATION_HARD_NODE_LIMIT;
+        m_td->search_limiter.init(verification_sl);
 
         ScoreType verification_score = iterative_deepening(*m_td);
         if (std::abs(verification_score) > VERIFICATION_MAX_SCORE) {
@@ -118,9 +123,14 @@ class DatagenThread {
         int draw_count = 0;
         uint64_t position_count = 0;
 
+        SearchLimits sl;
+        sl.depth = MAX_SEARCH_DEPTH;
+        sl.optimum_node = SOFT_NODE_LIMIT;
+        sl.maximum_node = HARD_NODE_LIMIT;
+
         while (!m_stop_flag) {
             m_td->reset_search_parameters();
-            m_td->set_search_limits({MAX_SEARCH_DEPTH, SOFT_NODE_LIMIT, HARD_NODE_LIMIT});
+            m_td->search_limiter.init(sl);
 
             ScoreType score = iterative_deepening(*m_td);
             ScoreType normalized_score = normalize_score(score);

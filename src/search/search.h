@@ -32,17 +32,6 @@ constexpr int LMP_DEPTH = 32;
 extern int LMP_TABLE[2][LMP_DEPTH];
 extern int LMR_TABLE[64][64];
 
-struct SearchLimits {
-    int depth;
-    int optimum_node;
-    int maximum_node;
-
-    SearchLimits();
-    SearchLimits(int _depth, int _optimum_node, int _maximum_node);
-
-    inline void reset();
-};
-
 struct NodeData {
     PieceMove curr_pmove;
     Move excluded_move;
@@ -67,8 +56,7 @@ struct ThreadData {
     NodeData nodes[MAX_SEARCH_DEPTH];
     Move best_move;
 
-    SearchLimits search_limits;
-    TimeManager time_manager;
+    SearchLimiter search_limiter;
     int64_t nodes_searched;
     int64_t node_table[64 * 64];
     int height;
@@ -79,7 +67,6 @@ struct ThreadData {
 
     ThreadData();
     void reset_search_parameters();
-    void set_search_limits(const SearchLimits sl);
 };
 
 ScoreType normalize_score(ScoreType score);
