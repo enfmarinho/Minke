@@ -40,7 +40,7 @@
 #include "datagen/packed_position.h"
 #include "datagen/viriformat.h"
 #include "search/search.h"
-#include "utils/hash.h"
+#include "utils/random.h"
 
 class DatagenThread {
   private:

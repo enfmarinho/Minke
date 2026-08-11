@@ -24,8 +24,6 @@ void init_search_params();
 
 void init_network_params();
 
-void init_hash_keys();
-
 void init_magic_attack_tables();
 
 void init_inbetween_masks();
