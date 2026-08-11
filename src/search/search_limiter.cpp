@@ -18,6 +18,7 @@
 
 #include "search/search_limiter.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <limits>
 
@@ -57,10 +58,10 @@ void SearchLimiter::init(const SearchLimits& sl) {
         return;
     }
 
-    const TimeType limit = std::max(std::max(time - overhead, time / 2),
-                                    1);       // Decrease the overhead from total time and ensure limit its positive
-    inc = std::max(inc, 0);                   // Ensure inc is non negative
-    mtg = (mtg > 0 ? mtg : tm_default_mtg()); // set mtg to default if invalid, i.e. if non-positive
+    const TimeType limit = std::max<uint64_t>(std::max(time - overhead, time / 2),
+                                              1); // Decrease the overhead from total time and ensure limit its positive
+    inc = std::max<uint64_t>(inc, 0);             // Ensure inc is non negative
+    mtg = (mtg > 0 ? mtg : tm_default_mtg());     // set mtg to default if invalid, i.e. if non-positive
 
     const double base_time = limit / static_cast<double>(mtg) + inc * tm_increment_factor() / 100.0;
 
