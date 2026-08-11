@@ -20,6 +20,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <limits>
 #include <random>
 
 // Implements the Splitmix64 algorithm to generate seeds for the xorshift64star PRNG

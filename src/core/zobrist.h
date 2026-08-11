@@ -38,7 +38,7 @@ constexpr HashKeys HASH_KEYS = []() {
     constexpr uint64_t SEED = 1070372;
 
     PRNG prng(SEED);
-    HashKeys hash_keys;
+    HashKeys hash_keys{};
     for (int piece = WHITE_PAWN; piece <= BLACK_KING; ++piece) {
         for (int sqi = a1; sqi <= h8; ++sqi) {
             hash_keys.pieces[piece][sqi] = prng.rand<HashType>();
