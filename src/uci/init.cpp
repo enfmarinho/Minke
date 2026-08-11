@@ -27,6 +27,7 @@
 #include "uci/tune.h"
 #include "utils/hash.h"
 #include "utils/incbin.h"
+#include "utils/random.h"
 
 INCBIN(NetParameters, EVALFILE);
 

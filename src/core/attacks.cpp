@@ -23,7 +23,7 @@
 #include <cstdint>
 
 #include "core/types.h"
-#include "utils/hash.h"
+#include "utils/random.h"
 #include "utils/utils.h"
 
 Bitboard bishop_masks[64];
