@@ -35,7 +35,7 @@ class SeedGenerator {
     SeedGenerator() = delete;
     SeedGenerator(uint64_t seed = master_seed()) : m_state(seed) {}
 
-    uint64_t next() {
+    constexpr uint64_t next() {
         m_state += 0x9e3779b97f4a7c15ULL;
 
         uint64_t z = m_state;
@@ -67,28 +67,28 @@ class PRNG {
   public:
     using result_type = uint64_t;
 
-    PRNG(result_type seed) : s(seed) { assert(seed); }
+    constexpr PRNG(result_type seed) : s(seed) { assert(seed); }
 
     template <typename T>
-    T rand() {
+    constexpr T rand() {
         return T(rand64());
     }
 
     // Special generator used to fast init magic numbers.
     // Output values only have 1/8th of their bits set on average.
     template <typename T>
-    T sparse_rand() {
+    constexpr T sparse_rand() {
         return T(rand64() & rand64() & rand64());
     }
 
-    result_type operator()() { return rand64(); }
+    constexpr result_type operator()() { return rand64(); }
     static constexpr result_type min() { return std::numeric_limits<result_type>::min(); }
     static constexpr result_type max() { return std::numeric_limits<result_type>::max(); }
 
   public:
     result_type s;
 
-    result_type rand64() {
+    constexpr result_type rand64() {
         s ^= s >> 12, s ^= s << 25, s ^= s >> 27;
         return s * 2685821657736338717LL;
     }
