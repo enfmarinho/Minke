@@ -956,29 +956,34 @@ bool Position::is_fifty_move_draw() {
 void Position::hash_piece_key(const PieceSquare &ps) {
     assert(ps.piece >= WHITE_PAWN && ps.piece <= BLACK_KING);
     assert(ps.sq >= a1 && ps.sq <= h8);
-    m_position_hash ^= hash_keys.pieces[ps.piece][ps.sq];
+
+    const HashType psq_key = Zobrist::piece_square_key(ps);
+    m_position_hash ^= psq_key;
     if (ps.piece == WHITE_PAWN || ps.piece == BLACK_PAWN) {
-        m_pawn_hash ^= hash_keys.pieces[ps.piece][ps.sq];
+        m_pawn_hash ^= psq_key;
     } else if (get_color(ps.piece) == WHITE) {
-        m_white_non_pawn_hash ^= hash_keys.pieces[ps.piece][ps.sq];
+        m_white_non_pawn_hash ^= psq_key;
     } else {
         assert(get_color(ps.piece) == BLACK);
-        m_black_non_pawn_hash ^= hash_keys.pieces[ps.piece][ps.sq];
+        m_black_non_pawn_hash ^= psq_key;
     }
 }
 
 void Position::hash_castle_key() {
     assert(m_curr_state.castling_rights >= 0 && m_curr_state.castling_rights <= ANY_CASTLING);
-    m_position_hash ^= hash_keys.castle[m_curr_state.castling_rights];
+
+    m_position_hash ^= Zobrist::castle_key(m_curr_state.castling_rights);
 }
 
 void Position::hash_ep_key() {
     assert(get_file(m_curr_state.en_passant) >= 0 && get_file(m_curr_state.en_passant) < 8);
-    m_position_hash ^= hash_keys.en_passant[get_file(m_curr_state.en_passant)];
-    m_pawn_hash ^= hash_keys.en_passant[get_file(m_curr_state.en_passant)];
+
+    const HashType ep_key = Zobrist::ep_key(get_file(m_curr_state.en_passant));
+    m_position_hash ^= ep_key;
+    m_pawn_hash ^= ep_key;
 }
 
-void Position::hash_side_key() { m_position_hash ^= hash_keys.side; }
+void Position::hash_side_key() { m_position_hash ^= Zobrist::color_key(); }
 
 #ifdef TRACK_ACTIVATIONS
 void Position::write_activation_data() {

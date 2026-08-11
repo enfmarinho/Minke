@@ -21,6 +21,9 @@
 #include <cassert>
 
 #include "core/types.h"
+#include "utils/random.h"
+
+namespace Zobrist {
 
 // Randoms uint64_t for performing Zobrist Hashing.
 struct HashKeys {
@@ -29,4 +32,35 @@ struct HashKeys {
     HashType en_passant[8];
     HashType side;
 };
-extern HashKeys hash_keys;
+
+constexpr HashKeys HASH_KEYS = []() {
+    HashKeys hash_keys;
+    PRNG prng(1070372);
+    for (int piece = WHITE_PAWN; piece <= BLACK_KING; ++piece) {
+        for (int sqi = a1; sqi <= h8; ++sqi) {
+            hash_keys.pieces[piece][sqi] = prng.rand<HashType>();
+        }
+    }
+
+    for (int castle = 0; castle < 16; ++castle) {
+        hash_keys.castle[castle] = prng.rand<HashType>();
+    }
+
+    for (int rank = 0; rank < 8; ++rank) {
+        hash_keys.en_passant[rank] = prng.rand<HashType>();
+    }
+
+    hash_keys.side = prng.rand<HashType>();
+
+    return hash_keys;
+}();
+
+inline HashType piece_square_key(PieceSquare psq) { return HASH_KEYS.pieces[psq.piece][psq.sq]; }
+
+inline HashType castle_key(uint8_t castling_rights) { return HASH_KEYS.castle[castling_rights]; }
+
+inline HashType ep_key(int ep_file) { return HASH_KEYS.en_passant[ep_file]; }
+
+inline HashType color_key() { return HASH_KEYS.side; }
+
+}; // namespace Zobrist
