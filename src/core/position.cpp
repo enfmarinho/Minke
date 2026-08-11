@@ -33,8 +33,8 @@
 #include "core/movegen.h"
 #include "core/types.h"
 #include "eval/nnue.h"
-#include "utils/hash.h"
 #include "utils/utils.h"
+#include "utils/zobrist.h"
 
 Position::Position() { set_fen<true>(START_FEN); }
 
