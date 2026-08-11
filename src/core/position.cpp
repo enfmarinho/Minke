@@ -32,9 +32,9 @@
 #include "core/move.h"
 #include "core/movegen.h"
 #include "core/types.h"
+#include "core/zobrist.h"
 #include "eval/nnue.h"
 #include "utils/utils.h"
-#include "utils/zobrist.h"
 
 Position::Position() { set_fen<true>(START_FEN); }
 
