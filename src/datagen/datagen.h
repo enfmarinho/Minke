@@ -40,7 +40,7 @@
 #include "datagen/packed_position.h"
 #include "datagen/viriformat.h"
 #include "search/search.h"
-#include "search/time_manager.h"
+#include "search/search_limiter.h"
 #include "utils/hash.h"
 
 class DatagenThread {

@@ -25,7 +25,7 @@
 #include "search/correction.h"
 #include "search/history.h"
 #include "search/pv_list.h"
-#include "search/time_manager.h"
+#include "search/search_limiter.h"
 #include "search/tt.h"
 
 constexpr int LMP_DEPTH = 32;

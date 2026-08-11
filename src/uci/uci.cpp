@@ -33,7 +33,7 @@
 #include "core/types.h"
 #include "search/movepicker.h"
 #include "search/search.h"
-#include "search/time_manager.h"
+#include "search/search_limiter.h"
 #include "search/tt.h"
 #include "uci/benchmark.h"
 #include "uci/init.h"

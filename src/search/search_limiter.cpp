@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "search/time_manager.h"
+#include "search/search_limiter.h"
 
 #include <cstdint>
 #include <limits>
