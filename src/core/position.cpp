@@ -676,12 +676,6 @@ Bitboard Position::attackers(const Square &sq) const {
     return attackers;
 }
 
-int Position::legal_move_amount() {
-    Movegen::ScoredMoveList move_list;
-    Movegen::all(move_list, *this);
-    return move_list.size();
-}
-
 bool Position::is_legal(const Move &move) {
     Square ksq = king_sq(m_stm);
     Square from = move.from();

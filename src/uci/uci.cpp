@@ -303,21 +303,26 @@ void UCI::bench(int depth) {
 }
 
 int64_t UCI::perft(Position &position, CounterType depth, bool root) {
-    bool is_leaf = (depth == 2);
+    const bool is_leaf = (depth == 2);
     int64_t count = 0, nodes = 0;
 
     Movegen::ScoredMoveList move_list;
     Movegen::all(move_list, m_td->position);
     for (ScoredMove score_move : move_list) {
-        Move move = score_move.move;
+        const Move move = score_move.move;
         position.make_move(move);
 
-        if (root && depth <= 1)
-            count = 1, ++nodes;
-        else {
-            count = is_leaf ? position.legal_move_amount() : perft(position, depth - 1, false);
-            nodes += count;
+        if (root && depth <= 1) {
+            count = 1;
+        } else if (is_leaf) {
+            Movegen::ScoredMoveList tmp;
+            Movegen::all(tmp, position);
+            count = tmp.size();
+        } else {
+            count = perft(position, depth - 1, false);
         }
+        nodes += count;
+
         position.unmake_move(move);
 
         if (root)

@@ -81,7 +81,6 @@ class Position {
     }
     inline bool is_draw() { return insufficient_material() || repetition() || is_fifty_move_draw(); }
 
-    int legal_move_amount();
     void print() const;
 
     inline Bitboard occ_bb() const { return m_occupancies[WHITE] | m_occupancies[BLACK]; }
