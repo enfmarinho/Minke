@@ -21,6 +21,7 @@
 #include <cassert>
 #include <cstdint>
 #include <exception>
+#include <fstream>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -283,7 +284,21 @@ void UCI::bench(int depth) {
     std::cout << nodes_searched << " nodes " << nodes_searched * 1000 / total_time << " nps\n";
 
 #ifdef TRACK_ACTIVATIONS
-    m_td->position.write_activation_data();
+    std::ofstream out_file("activations_table.txt");
+    if (!out_file) {
+        std::cerr << "Failed to open file to write activations table data\n";
+        return;
+    }
+
+    const auto table = m_td->nnue.activation_table();
+    bool first = true;
+    for (auto e : table) {
+        if (!first)
+            out_file << ", ";
+        out_file << e;
+
+        first = false;
+    }
 #endif // TRACK_ACTIVATIONS
 }
 

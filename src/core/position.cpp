@@ -23,7 +23,6 @@
 #include <cctype>
 #include <cstdint>
 #include <cstring>
-#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -954,23 +953,3 @@ void Position::hash_ep_key() {
 }
 
 void Position::hash_side_key() { m_position_hash ^= Zobrist::color_key(); }
-
-#ifdef TRACK_ACTIVATIONS
-void Position::write_activation_data() {
-    std::ofstream out_file("activations_table.txt");
-    if (!out_file) {
-        std::cerr << "Failed to open file to write activations table data\n";
-        return;
-    }
-
-    const auto table = m_nnue.activation_table();
-    bool first = true;
-    for (auto e : table) {
-        if (!first)
-            out_file << ", ";
-        out_file << e;
-
-        first = false;
-    }
-}
-#endif // TRACK_ACTIVATIONS

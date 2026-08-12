@@ -137,10 +137,6 @@ class Position {
         m_history_ply = 100;
     }
 
-#ifdef TRACK_ACTIVATIONS
-    void write_activation_data();
-#endif
-
   private:
     void add_piece(const PieceSquare &ps);
     void remove_piece(const PieceSquare &ps);
