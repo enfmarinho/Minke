@@ -53,20 +53,15 @@ struct BoardState {
 
 class Position {
   public:
-    Position();
+    Position() = default;
     ~Position() = default;
 
-    template <bool UPDATE>
     bool set_fen(const std::string &fen);
     std::string get_fen() const;
 
-    template <bool UPDATE>
     void reset();
-    void reset_nnue();
 
-    template <bool UPDATE>
-    void make_move(const Move &move);
-    template <bool UPDATE>
+    DirtyPiece make_move(const Move &move);
     void unmake_move(const Move &move);
 
     void make_null_move();
@@ -85,7 +80,6 @@ class Position {
         return piece_bb(KNIGHT) || piece_bb(BISHOP) || piece_bb(ROOK) || piece_bb(QUEEN);
     }
     inline bool is_draw() { return insufficient_material() || repetition() || is_fifty_move_draw(); }
-    inline ScoreType eval() { return m_nnue.eval(*this); }
 
     int legal_move_amount();
     void print() const;
@@ -148,20 +142,13 @@ class Position {
 #endif
 
   private:
-    template <bool UPDATE>
     void add_piece(const PieceSquare &ps);
-    template <bool UPDATE>
     void remove_piece(const PieceSquare &ps);
 
-    template <bool UPDATE>
     DirtyPiece make_regular(const Move &move);
-    template <bool UPDATE>
     DirtyPiece make_capture(const Move &move);
-    template <bool UPDATE>
     DirtyPiece make_castle(const Move &move);
-    template <bool UPDATE>
     DirtyPiece make_promotion(const Move &move);
-    template <bool UPDATE>
     DirtyPiece make_en_passant(const Move &move);
 
     void update_castling_rights(const Move &move);
@@ -197,6 +184,4 @@ class Position {
     BoardState m_curr_state;
     BoardState m_history_stack[MAX_PLY];
     HashType m_played_positions[MAX_PLY];
-
-    NNUE m_nnue;
 };

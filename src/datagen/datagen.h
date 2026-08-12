@@ -182,7 +182,7 @@ class DatagenThread {
             if (result != NO_RESULT)
                 break;
 
-            m_td->position.make_move<true>(move);
+            make_move(*m_td, move);
             m_td->position.update_game_history();
         }
 
@@ -195,7 +195,7 @@ class DatagenThread {
     }
 
     void init_pos_randomly() {
-        m_td->position.set_fen<false>(START_FEN);
+        m_td->position.set_fen(START_FEN);
 
         int move_count = 8 + (prng.rand<uint32_t>() % 5);
         for (int i = 0; i < move_count; ++i) {
@@ -203,15 +203,15 @@ class DatagenThread {
             Movegen::all(move_list, m_td->position);
 
             if (move_list.empty()) {
-                m_td->position.set_fen<false>(START_FEN);
+                m_td->position.set_fen(START_FEN);
                 i = -1; // increment is happening after the loop, so this will be 0
             } else {
                 const Move move = move_list[prng.rand<size_t>() % move_list.size()].move;
-                m_td->position.make_move<false>(move);
+                m_td->position.make_move(move);
             }
         }
 
-        m_td->position.reset_nnue();
+        m_td->nnue.refresh(m_td->position);
         m_td->search_history.reset();
         m_td->tt.clear();
         m_games.reset(m_td->position);
