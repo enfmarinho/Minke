@@ -25,14 +25,12 @@
 #include "eval/nnue/arch.h"
 #include "search/search.h"
 #include "uci/tune.h"
-#include "utils/hash.h"
 #include "utils/incbin.h"
 
 INCBIN(NetParameters, EVALFILE);
 
 int LMR_TABLE[64][64];
 int LMP_TABLE[2][LMP_DEPTH];
-HashKeys hash_keys;
 Network network;
 
 Bitboard inbetween_masks[64][64];
@@ -43,7 +41,6 @@ Bitboard antidiagonal_masks[64];
 void init_all() {
     init_search_params();
     init_network_params();
-    init_hash_keys();
     init_magic_attack_tables();
     init_inbetween_masks();
     init_passing_masks();
@@ -65,25 +62,6 @@ void init_search_params() {
 }
 
 void init_network_params() { network = *reinterpret_cast<const Network *>(&gNetParametersData); }
-
-void init_hash_keys() {
-    PRNG prng(1070372);
-    for (int piece = WHITE_PAWN; piece <= BLACK_KING; ++piece) {
-        for (int sqi = a1; sqi <= h8; ++sqi) {
-            hash_keys.pieces[piece][sqi] = prng.rand<HashType>();
-        }
-    }
-
-    for (int castle = 0; castle < 16; ++castle) {
-        hash_keys.castle[castle] = prng.rand<HashType>();
-    }
-
-    for (int rank = 0; rank < 8; ++rank) {
-        hash_keys.en_passant[rank] = prng.rand<HashType>();
-    }
-
-    hash_keys.side = prng.rand<HashType>();
-}
 
 void init_magic_attack_tables() {
     // This initializes all attacks, masks, magics and shifts for Bishop and Rook as a side effect

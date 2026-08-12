@@ -41,7 +41,7 @@
 #include "datagen/viriformat.h"
 #include "search/search.h"
 #include "search/search_limiter.h"
-#include "utils/hash.h"
+#include "utils/random.h"
 
 class DatagenThread {
   private:
