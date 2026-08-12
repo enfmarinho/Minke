@@ -57,7 +57,7 @@ ScoreType NNUE::eval(const Position &pos) {
     update(pos); // ensure accumulator is up-to date
 
     const Accumulator &acc = m_accumulators.back();
-    const int bucket = (pos.material_count() - 2) / BUCKET_SIZE;
+    const int bucket = (pos.piece_count() - 2) / BUCKET_SIZE;
 
     return propagate(acc.pov(pos.stm()).neurons(), acc.pov(pos.nstm()).neurons(), bucket);
 }

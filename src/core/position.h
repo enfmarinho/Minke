@@ -109,14 +109,11 @@ class Position {
     inline HashType black_nonpawn_hash() const { return m_black_non_pawn_hash; }
     inline int game_ply() const { return m_game_clock_ply; }
     inline int halfmove_clock() const { return m_curr_state.fifty_move_ply; }
-    inline int material_count(const Piece &piece) const { return piece_bb(piece).popcount(); }
-    inline int material_count(const PieceType &piece_type, const Color &color) const {
-        return material_count(static_cast<Piece>(piece_type + color * COLOR_OFFSET));
-    }
-    inline int material_count(const PieceType &piece_type) const {
+    inline int piece_count(const Piece &piece) const { return piece_bb(piece).popcount(); }
+    inline int piece_count(const PieceType &piece_type) const {
         return (m_pieces[piece_type] | m_pieces[piece_type + COLOR_OFFSET]).popcount();
     }
-    inline int material_count() const { return occ_bb().popcount(); }
+    inline int piece_count() const { return occ_bb().popcount(); }
     inline Piece piece_at(const Square &sq) const { return m_board[sq]; }
     inline int history_ply() const { return m_history_ply; }
     inline BoardState board_state() const { return m_curr_state; };
