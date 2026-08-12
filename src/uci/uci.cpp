@@ -51,9 +51,6 @@ UCI::UCI() {
     m_td->tt.resize(EngineOptions::HASH_DEFAULT);
     m_td->reset_search_parameters();
     m_td->report = true;
-
-    m_td->position.set_fen(START_FEN);
-    m_td->nnue.refresh(m_td->position);
 }
 
 UCI::~UCI() {
@@ -67,6 +64,7 @@ UCI::~UCI() {
 void UCI::loop() {
     std::cout << "Minke Chess Engine by Eduardo Marinho" << std::endl;
 
+    ucinewgame();
     std::string input, token;
     do {
         if (!std::getline(std::cin, input))
