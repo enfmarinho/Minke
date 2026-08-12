@@ -148,8 +148,8 @@ class Position {
     DirtyPiece make_en_passant(const Move &move);
 
     void update_castling_rights(const Move &move);
-    void update_aux_bbs();
-    void update_threats();
+    void calculate_aux_bbs();
+    void calculate_threats_bb();
 
     bool insufficient_material() const;
     bool repetition() const;

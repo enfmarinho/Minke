@@ -140,7 +140,7 @@ bool Position::set_fen(const std::string &fen) {
         std::cerr << "INVALID FEN: game clock is not a number." << std::endl;
         return false;
     }
-    update_aux_bbs();
+    calculate_aux_bbs();
 
     return true;
 }
@@ -302,7 +302,7 @@ DirtyPiece Position::make_move(const Move &move) {
     hash_side_key();
 
     change_side();
-    update_aux_bbs();
+    calculate_aux_bbs();
 
     return dp;
 }
@@ -567,7 +567,7 @@ void Position::make_null_move() {
     }
     hash_side_key();
     change_side();
-    update_aux_bbs();
+    calculate_aux_bbs();
 }
 
 void Position::unmake_null_move() {
@@ -578,7 +578,7 @@ void Position::unmake_null_move() {
     change_side();
 }
 
-void Position::update_aux_bbs() {
+void Position::calculate_aux_bbs() {
     Color adversary = nstm();
     Square ksq = king_sq(m_stm);
     m_curr_state.pins = 0;
@@ -599,10 +599,10 @@ void Position::update_aux_bbs() {
         }
     }
 
-    update_threats();
+    calculate_threats_bb();
 }
 
-void Position::update_threats() {
+void Position::calculate_threats_bb() {
     Bitboard &threats = m_curr_state.threats;
     threats = 0;
 
