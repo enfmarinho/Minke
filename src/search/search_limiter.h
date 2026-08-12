@@ -18,20 +18,39 @@
 
 #pragma once
 
+#include <cstdint>
+#include <optional>
+
 #include "core/types.h"
 
 struct ThreadData;
 
-class TimeManager {
-  public:
-    TimeManager();
-    ~TimeManager() = default;
+struct SearchLimits {
+    std::optional<uint64_t> time_remaining;
+    std::optional<uint64_t> time_increment;
+    std::optional<uint64_t> movetime;
+    std::optional<uint64_t> mtg;
 
-    void reset(CounterType inc, CounterType time, CounterType movestogo, CounterType movetime, bool infinite);
-    void reset();
-    void update(const ThreadData &td, CounterType pv_stability, CounterType score_stability);
-    bool stop_early() const;
-    bool time_over() const;
+    std::optional<uint64_t> optimum_node;
+    std::optional<uint64_t> maximum_node;
+    std::optional<int> depth;
+
+    std::optional<bool> infinite;
+};
+
+class SearchLimiter {
+  public:
+    SearchLimiter();
+    ~SearchLimiter() = default;
+
+    void init();
+    void init(const SearchLimits& sl);
+    void update(const ThreadData& td, CounterType pv_stability, CounterType score_stability);
+
+    bool stop_early(uint64_t nodes) const;
+    bool time_over(uint64_t nodes) const;
+    CounterType max_depth() const;
+
     TimeType time_passed() const;
     void can_stop();
 
@@ -39,8 +58,13 @@ class TimeManager {
     TimeType m_start_time;
     TimeType m_optimum_time;
     TimeType m_maximum_time;
-
     double m_scale;
+
+    uint64_t m_optimum_nodes;
+    uint64_t m_maximum_nodes;
+
+    CounterType m_max_depth;
+
     bool m_movetime;
     bool m_time_set;
     bool m_can_stop;

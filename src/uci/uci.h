@@ -51,8 +51,8 @@ class UCI {
 
     void set_option(std::istringstream &);
 
-    /// Returns true if perft argument was passed and false otherwise.
-    bool parse_go(std::istringstream &, bool bench = false);
+    /// Returns perft depth or 0 if should not perft
+    CounterType parse_go(std::istringstream &, bool bench = false);
     int64_t perft(Position &position, CounterType depth, bool root = true);
     void go();
 

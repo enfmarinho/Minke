@@ -55,21 +55,10 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
         std::cout << " score cp " << normalize_score(eval);
     }
     // Add 1 to time_passed() to avoid division by 0
-    std::cout << " time " << td.time_manager.time_passed() << " nodes " << td.nodes_searched << " nps "
-              << td.nodes_searched * 1000 / (td.time_manager.time_passed() + 1) << " pv ";
+    std::cout << " time " << td.search_limiter.time_passed() << " nodes " << td.nodes_searched << " nps "
+              << td.nodes_searched * 1000 / (td.search_limiter.time_passed() + 1) << " pv ";
     pv_list.print(td.chess960, td.position.castle_rooks_bb());
     std::cout << std::endl;
-}
-
-SearchLimits::SearchLimits() { reset(); }
-
-SearchLimits::SearchLimits(int _depth, int _optimum_node, int _maximum_node)
-    : depth(_depth), optimum_node(_optimum_node), maximum_node(_maximum_node) {}
-
-inline void SearchLimits::reset() {
-    depth = MAX_SEARCH_DEPTH;
-    optimum_node = std::numeric_limits<int>::max();
-    maximum_node = std::numeric_limits<int>::max();
 }
 
 ThreadData::ThreadData() {
@@ -84,19 +73,13 @@ void ThreadData::reset_search_parameters() {
     height = 0;
     nodes_searched = -1; // Avoid counting the root
     std::memset(node_table, 0, sizeof(node_table));
-    time_manager.reset();
-    search_limits.reset();
+    search_limiter.init();
     // TODO i dont think this is necessary
     for (int i = 0; i < MAX_SEARCH_DEPTH; ++i)
         nodes[i].reset();
 }
 
-void ThreadData::set_search_limits(const SearchLimits sl) { this->search_limits = sl; }
-
-inline bool stop_search(const ThreadData &td) {
-    return ((td.nodes_searched & 2047) == 2047 && td.time_manager.time_over()) || td.stop ||
-           td.nodes_searched > td.search_limits.maximum_node;
-}
+inline bool stop_search(const ThreadData &td) { return td.stop || td.search_limiter.time_over(td.nodes_searched); }
 
 ScoreType iterative_deepening(ThreadData &td) {
     td.stop = false;
@@ -106,7 +89,7 @@ ScoreType iterative_deepening(ThreadData &td) {
     ScoreType avg_score = SCORE_NONE;
     CounterType pv_stability = 0;
     CounterType score_stability = 0;
-    for (CounterType depth = 1; depth <= std::min(td.search_limits.depth, MAX_SEARCH_DEPTH - 1); ++depth) {
+    for (CounterType depth = 1; depth <= std::min(td.search_limiter.max_depth(), MAX_SEARCH_DEPTH - 1); ++depth) {
         ScoreType score = aspiration(depth, past_score, td);
         if (stop_search(td)) // Search did not finished completely
             break;
@@ -138,11 +121,11 @@ ScoreType iterative_deepening(ThreadData &td) {
             print_search_info(depth, score, td.nodes[0].pv_list, td);
 
         if (depth > 5)
-            td.time_manager.update(td, pv_stability, score_stability);
-        if (td.time_manager.stop_early() || td.nodes_searched >= td.search_limits.optimum_node)
+            td.search_limiter.update(td, pv_stability, score_stability);
+        if (td.search_limiter.stop_early(td.nodes_searched))
             break;
 
-        td.time_manager.can_stop(); // Avoids stopping before depth 1 has been searched through
+        td.search_limiter.can_stop(); // Avoids stopping before depth 1 has been searched through
     }
 
     if (td.report)
