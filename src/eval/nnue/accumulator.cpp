@@ -18,6 +18,7 @@
 
 #include "eval/nnue/accumulator.h"
 
+#include "core/types.h"
 #include "eval/nnue/pov_accumulator.h"
 
 Accumulator::Accumulator(const Square white_king_sq, const Square black_king_sq, const PovAccumulator &white_pov_acc,
@@ -47,18 +48,18 @@ void Accumulator::update(const Color pov, const PovAccumulator &prev_pov_acc) {
 
     // clang-format off
     switch (m_dirty_piece.move_type) {
-        case REGULAR:
+        case ADD_SUB:
             m_pov_accumulators[pov].add_sub(prev_pov_acc, 
                                             feature_idx(m_dirty_piece.add0, m_king_sqs[pov], pov),
                                             feature_idx(m_dirty_piece.sub0, m_king_sqs[pov], pov));
             break;
-        case CAPTURE:
+        case ADD_SUB2:
             m_pov_accumulators[pov].add_sub2(prev_pov_acc, 
                                              feature_idx(m_dirty_piece.add0, m_king_sqs[pov], pov),
                                              feature_idx(m_dirty_piece.sub0, m_king_sqs[pov], pov),
                                              feature_idx(m_dirty_piece.sub1, m_king_sqs[pov], pov));
             break;
-        case CASTLING:
+        case ADD2_SUB2:
             m_pov_accumulators[pov].add2_sub2(prev_pov_acc, 
                                               feature_idx(m_dirty_piece.add0, m_king_sqs[pov], pov), 
                                               feature_idx(m_dirty_piece.add1, m_king_sqs[pov], pov),

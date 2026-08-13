@@ -90,7 +90,6 @@ bool Position::set_fen(const std::string &fen) {
         m_stm = WHITE;
     } else if (fen_arguments[1] == "b" || fen_arguments[1] == "B") {
         m_stm = BLACK;
-        hash_side_key();
     } else {
         std::cerr << "INVALID FEN: invalid player, it should be 'w' or 'b'." << std::endl;
         return false;
@@ -119,13 +118,11 @@ bool Position::set_fen(const std::string &fen) {
             m_curr_state.castle_rooks.set_sq(sq);
         }
     }
-    hash_castle_key();
 
     if (fen_arguments[3] == "-") {
         m_curr_state.en_passant = NO_SQ;
     } else {
         m_curr_state.en_passant = get_square(fen_arguments[3][0] - 'a', fen_arguments[3][1] - '1');
-        hash_ep_key();
     }
 
     try {
@@ -140,7 +137,9 @@ bool Position::set_fen(const std::string &fen) {
         std::cerr << "INVALID FEN: game clock is not a number." << std::endl;
         return false;
     }
+
     calculate_aux_bbs();
+    calculate_hashes();
 
     return true;
 }
@@ -234,10 +233,6 @@ void Position::reset() {
         m_occupancies[i] = Bitboard::EMPTY;
     }
 
-    m_position_hash = 0ULL;
-    m_pawn_hash = 0ULL;
-    m_white_non_pawn_hash = 0ULL;
-    m_black_non_pawn_hash = 0ULL;
     m_history_ply = 0;
     m_curr_state.reset();
 }
@@ -250,8 +245,6 @@ void Position::add_piece(const PieceSquare &ps) {
     m_occupancies[color].set_sq(ps.sq);
     m_pieces[ps.piece].set_sq(ps.sq);
     m_board[ps.sq] = ps.piece;
-
-    hash_piece_key(ps);
 }
 
 void Position::remove_piece(const PieceSquare &ps) {
@@ -262,12 +255,9 @@ void Position::remove_piece(const PieceSquare &ps) {
     m_occupancies[color].unset_sq(ps.sq);
     m_pieces[ps.piece].unset_sq(ps.sq);
     m_board[ps.sq] = EMPTY;
-
-    hash_piece_key(ps);
 }
 
 DirtyPiece Position::make_move(const Move &move) {
-    m_played_positions[m_history_ply] = m_position_hash;
     m_history_stack[m_history_ply] = m_curr_state;
     ++m_history_ply;
     ++m_game_clock_ply;
@@ -299,6 +289,8 @@ DirtyPiece Position::make_move(const Move &move) {
     hash_castle_key();
     update_castling_rights(move);
     hash_castle_key();
+
+    hash_dirty_piece(dp);
     hash_side_key();
 
     change_side();
@@ -313,7 +305,7 @@ DirtyPiece Position::make_regular(const Move &move) {
     Piece piece = piece_at(from);
 
     DirtyPiece dp;
-    dp.move_type = REGULAR;
+    dp.move_type = ADD_SUB;
     dp.sub0 = {piece, from};
     dp.add0 = {piece, to};
 
@@ -344,7 +336,7 @@ DirtyPiece Position::make_capture(const Move &move) {
     assert(m_curr_state.captured != EMPTY && get_piece_type(m_curr_state.captured) != KING);
 
     DirtyPiece dp;
-    dp.move_type = CAPTURE;
+    dp.move_type = ADD_SUB2;
     dp.sub0 = {piece, from};
     dp.sub1 = {m_curr_state.captured, to};
     dp.add0 = {piece, to};
@@ -389,7 +381,7 @@ DirtyPiece Position::make_castle(const Move &move) {
     }();
 
     DirtyPiece dp;
-    dp.move_type = CASTLING;
+    dp.move_type = ADD2_SUB2;
     dp.sub0 = {king, from};
     dp.sub1 = {rook, rook_from};
     dp.add0 = {king, to};
@@ -410,7 +402,7 @@ DirtyPiece Position::make_promotion(const Move &move) {
     m_curr_state.fifty_move_ply = 0;
 
     DirtyPiece dp;
-    dp.move_type = REGULAR;
+    dp.move_type = ADD_SUB;
     dp.sub0 = {piece_at(from), from};
     dp.add0 = {get_piece(move.promotee(), m_stm), to};
 
@@ -431,7 +423,7 @@ DirtyPiece Position::make_en_passant(const Move &move) {
     m_curr_state.captured = captured;
 
     DirtyPiece dp;
-    dp.move_type = CAPTURE;
+    dp.move_type = ADD_SUB2;
     dp.sub0 = {piece, from};
     dp.sub1 = {captured, captured_square};
     dp.add0 = {piece, to};
@@ -542,21 +534,11 @@ void Position::unmake_move(const Move &move) {
         add_piece({m_curr_state.captured, captured_square});
     }
 
-    if (m_curr_state.en_passant != NO_SQ)
-        hash_ep_key();
-    hash_castle_key();
-
     m_curr_state = m_history_stack[--m_history_ply];
-
-    if (m_curr_state.en_passant != NO_SQ)
-        hash_ep_key();
-    hash_castle_key();
-    hash_side_key();
 }
 
 void Position::make_null_move() {
     m_history_stack[m_history_ply] = m_curr_state;
-    m_played_positions[m_history_ply] = m_position_hash;
     ++m_history_ply;
 
     m_curr_state.ply_from_null = 0;
@@ -575,7 +557,6 @@ void Position::make_null_move() {
 void Position::unmake_null_move() {
     --m_history_ply;
     m_curr_state = m_history_stack[m_history_ply];
-    m_position_hash = m_played_positions[m_history_ply];
     --m_game_clock_ply;
     change_side();
 }
@@ -634,6 +615,31 @@ void Position::calculate_threats_bb() {
     }
 
     threats |= king_attacks[king_sq(opp)];
+}
+
+void Position::calculate_hashes() {
+    BoardState &board_s = board_state();
+
+    board_s.position_hash = 0ull;
+    board_s.pawn_hash = 0ull;
+    board_s.white_non_pawn_hash = 0ull;
+    board_s.black_non_pawn_hash = 0ull;
+
+    for (int sqi = a1; sqi <= h8; sqi++) {
+        const Square sq = static_cast<Square>(sqi);
+        const Piece piece = piece_at(sq);
+        if (piece != EMPTY) {
+            hash_piece_key({piece, sq});
+        }
+    }
+
+    hash_castle_key();
+
+    if (board_s.en_passant != NO_SQ)
+        hash_ep_key();
+
+    if (stm() == BLACK)
+        hash_side_key();
 }
 
 bool Position::is_attacked(const Square &sq) const {
@@ -873,7 +879,7 @@ void Position::print() const {
         std::cout << "  " << rank_simbol << " ";
 
     std::cout << "\n\nFEN: " << get_fen();
-    std::cout << "\nHash: " << m_position_hash << "\n";
+    std::cout << "\nHash: " << board_state().position_hash << "\n";
 }
 
 bool Position::insufficient_material() const {
@@ -895,8 +901,9 @@ bool Position::repetition() const {
     int distance = std::min(m_curr_state.fifty_move_ply, m_curr_state.ply_from_null);
     int starting_index = m_history_ply;
 
+    const HashType position_hash = hash();
     for (int index = 4; index <= distance; index += 2)
-        if (m_played_positions[starting_index - index] == m_position_hash) {
+        if (m_history_stack[starting_index - index].position_hash == position_hash) {
             if (index < m_history_ply) // 2-fold repetition within the search tree, this avoids cycles
                 return true;
 
@@ -917,35 +924,57 @@ bool Position::is_fifty_move_draw() {
 
     return false;
 }
+void Position::hash_dirty_piece(const DirtyPiece &dp) {
+    switch (dp.move_type) {
+        case ADD_SUB:
+            hash_piece_key(dp.add0);
+            hash_piece_key(dp.sub0);
+            break;
+        case ADD_SUB2:
+            hash_piece_key(dp.add0);
+            hash_piece_key(dp.sub0);
+            hash_piece_key(dp.sub1);
+            break;
+        case ADD2_SUB2:
+            hash_piece_key(dp.add0);
+            hash_piece_key(dp.add1);
+            hash_piece_key(dp.sub0);
+            hash_piece_key(dp.sub1);
+            break;
+        default:
+            assert(false);
+            __builtin_unreachable();
+    }
+}
 
 void Position::hash_piece_key(const PieceSquare &ps) {
     assert(ps.piece >= WHITE_PAWN && ps.piece <= BLACK_KING);
     assert(ps.sq >= a1 && ps.sq <= h8);
 
     const HashType psq_key = Zobrist::piece_square_key(ps);
-    m_position_hash ^= psq_key;
+    board_state().position_hash ^= psq_key;
     if (ps.piece == WHITE_PAWN || ps.piece == BLACK_PAWN) {
-        m_pawn_hash ^= psq_key;
+        board_state().pawn_hash ^= psq_key;
     } else if (get_color(ps.piece) == WHITE) {
-        m_white_non_pawn_hash ^= psq_key;
+        board_state().white_non_pawn_hash ^= psq_key;
     } else {
         assert(get_color(ps.piece) == BLACK);
-        m_black_non_pawn_hash ^= psq_key;
+        board_state().black_non_pawn_hash ^= psq_key;
     }
 }
 
 void Position::hash_castle_key() {
     assert(m_curr_state.castling_rights >= 0 && m_curr_state.castling_rights <= ANY_CASTLING);
 
-    m_position_hash ^= Zobrist::castle_key(m_curr_state.castling_rights);
+    board_state().position_hash ^= Zobrist::castle_key(m_curr_state.castling_rights);
 }
 
 void Position::hash_ep_key() {
     assert(get_file(m_curr_state.en_passant) >= 0 && get_file(m_curr_state.en_passant) < 8);
 
     const HashType ep_key = Zobrist::ep_key(get_file(m_curr_state.en_passant));
-    m_position_hash ^= ep_key;
-    m_pawn_hash ^= ep_key;
+    board_state().position_hash ^= ep_key;
+    board_state().pawn_hash ^= ep_key;
 }
 
-void Position::hash_side_key() { m_position_hash ^= Zobrist::color_key(); }
+void Position::hash_side_key() { board_state().position_hash ^= Zobrist::color_key(); }
