@@ -407,6 +407,8 @@ DirtyPiece Position::make_promotion(const Move &move) {
     const Square from = move.from();
     const Square to = move.to();
 
+    m_curr_state.fifty_move_ply = 0;
+
     DirtyPiece dp;
     dp.move_type = REGULAR;
     dp.sub0 = {piece_at(from), from};
