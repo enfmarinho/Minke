@@ -175,7 +175,13 @@ struct PieceSquare {
     inline PieceSquare(Piece _piece, Square _sq) : piece(_piece), sq(_sq) {}
 };
 
+enum DirtyPieceType {
+    ADD_SUB,
+    ADD_SUB2,
+    ADD2_SUB2,
+};
+
 struct DirtyPiece {
     PieceSquare add0, add1, sub0, sub1;
-    MoveType move_type;
+    DirtyPieceType move_type;
 };
