@@ -70,7 +70,7 @@ ThreadData::ThreadData() {
 void ThreadData::reset_search_parameters() {
     best_move = Move::none();
     stop = true;
-    height = 0;
+    ply = 0;
     nodes_searched = -1; // Avoid counting the root
     std::memset(node_table, 0, sizeof(node_table));
     search_limiter.init();
@@ -182,23 +182,23 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     ++td.nodes_searched;
 
     const bool pv_node = alpha != beta - 1;
-    const Move excluded_move = td.nodes[td.height].excluded_move;
+    const Move excluded_move = td.nodes[td.ply].excluded_move;
     const bool singular_search = !excluded_move.is_none();
     Position &position = td.position;
-    NodeData &node = td.nodes[td.height];
+    NodeData &node = td.nodes[td.ply];
 
     // Early return conditions
-    bool root = td.height == 0;
+    bool root = td.ply == 0;
     if (!root) {
         if (position.is_draw())
             return 0;
 
-        if (td.height >= MAX_SEARCH_DEPTH - 1)
+        if (td.ply >= MAX_SEARCH_DEPTH - 1)
             return position.in_check() ? 0 : td.nnue.eval(position);
 
         // Mate distance pruning
-        alpha = std::max(alpha, static_cast<ScoreType>(-MATE_SCORE + td.height));
-        beta = std::min(beta, static_cast<ScoreType>(MATE_SCORE - td.height - 1));
+        alpha = std::max(alpha, static_cast<ScoreType>(-MATE_SCORE + td.ply));
+        beta = std::min(beta, static_cast<ScoreType>(MATE_SCORE - td.ply - 1));
         if (alpha >= beta)
             return alpha;
     }
@@ -246,24 +246,24 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     }
 
     // Clean killer moves for the next ply
-    td.nodes[td.height + 1].excluded_move = Move::none();
-    td.search_history.clear_killers(td.height + 1);
+    td.nodes[td.ply + 1].excluded_move = Move::none();
+    td.search_history.clear_killers(td.ply + 1);
 
     bool improving = [&]() -> bool {
         if (!in_check) {
-            if (td.height >= 2 && td.nodes[td.height - 2].static_eval != SCORE_NONE)
-                return node.static_eval > td.nodes[td.height - 2].static_eval;
-            if (td.height >= 4 && td.nodes[td.height - 4].static_eval != SCORE_NONE)
-                return node.static_eval > td.nodes[td.height - 4].static_eval;
+            if (td.ply >= 2 && td.nodes[td.ply - 2].static_eval != SCORE_NONE)
+                return node.static_eval > td.nodes[td.ply - 2].static_eval;
+            if (td.ply >= 4 && td.nodes[td.ply - 4].static_eval != SCORE_NONE)
+                return node.static_eval > td.nodes[td.ply - 4].static_eval;
         }
         return false;
     }();
 
     // Forward pruning methods
     if (!in_check && !pv_node && !root && !singular_search) {
-        if (td.height >= 1 && td.nodes[td.height - 1].static_eval != SCORE_NONE) {
-            ScoreType eval_delta = node.static_eval + td.nodes[td.height - 1].static_eval;
-            CounterType reduction = td.nodes[td.height - 1].reduction;
+        if (td.ply >= 1 && td.nodes[td.ply - 1].static_eval != SCORE_NONE) {
+            ScoreType eval_delta = node.static_eval + td.nodes[td.ply - 1].static_eval;
+            CounterType reduction = td.nodes[td.ply - 1].reduction;
 
             // Hindsight extension
             if (reduction > 1 && eval_delta < 0)
@@ -309,11 +309,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
             make_null_move(td);
             td.tt.prefetch(position.hash());
-            ++td.height;
+            ++td.ply;
             node.curr_pmove = PieceMove::none();
             ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, !cutnode, td);
             unmake_null_move(td);
-            --td.height;
+            --td.ply;
 
             if (null_score >= beta)
                 return null_score;
@@ -337,7 +337,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 node.curr_pmove = {move, position.piece_at(move.from())};
                 make_move(td, move);
 
-                ++td.height;
+                ++td.ply;
 
                 td.tt.prefetch(position.hash());
 
@@ -345,7 +345,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 if (pc_score >= pc_beta)
                     pc_score = -negamax(-pc_beta, -pc_beta + 1, depth - 4, !cutnode, td);
 
-                --td.height;
+                --td.ply;
                 unmake_move(td, move);
 
                 if (pc_score >= pc_beta) {
@@ -416,9 +416,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
             td.tt.prefetch(position.hash());
 
-            td.nodes[td.height].excluded_move = ttmove;
+            td.nodes[td.ply].excluded_move = ttmove;
             ScoreType singular_score = negamax(singular_beta - 1, singular_beta, singular_depth, cutnode, td);
-            td.nodes[td.height].excluded_move = Move::none();
+            td.nodes[td.ply].excluded_move = Move::none();
 
             if (singular_score < singular_beta) {
                 extension = 1;
@@ -446,11 +446,11 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         else
             tacticals_tried.push(node.curr_pmove);
 
-        ++td.height;
+        ++td.ply;
         ++moves_searched;
 
         int64_t nodes_before_search = td.nodes_searched;
-        td.nodes[td.height].pv_list.clear();
+        td.nodes[td.ply].pv_list.clear();
         ScoreType score;
         if (moves_searched == 1) {
             score = -negamax(-beta, -alpha, new_depth, false, td);
@@ -467,7 +467,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 scaled_reduction += cutnode * lmr_cutnode_delta();          // Reduce cutnodes more
 
                 // Reduce less if move is killer
-                scaled_reduction -= td.search_history.is_killer(move, td.height - 1) * lmr_killer_delta();
+                scaled_reduction -= td.search_history.is_killer(move, td.ply - 1) * lmr_killer_delta();
 
                 // Reduce less if this move is or was a principal variation
                 scaled_reduction -= ttpv * lmr_ttpv_delta();
@@ -480,9 +480,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             const int reduction = scaled_reduction / 1024;
             const int lmr_depth = std::min(std::max(new_depth - reduction, 1), new_depth);
 
-            td.nodes[td.height - 1].reduction = reduction;
+            td.nodes[td.ply - 1].reduction = reduction;
             score = -negamax(-alpha - 1, -alpha, lmr_depth, true, td);
-            td.nodes[td.height - 1].reduction = 0;
+            td.nodes[td.ply - 1].reduction = 0;
 
             if (score > alpha && lmr_depth < new_depth) {
                 new_depth += score > best_score + lmr_deeper_margin() + lmr_deeper_depth_factor() * new_depth;
@@ -496,7 +496,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             }
         }
 
-        --td.height;
+        --td.ply;
         unmake_move(td, move);
         assert(score >= -MAX_SCORE);
         td.node_table[move.from_and_to()] += td.nodes_searched - nodes_before_search;
@@ -507,7 +507,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             if (score > alpha) {
                 best_move = move;
                 if (pv_node)
-                    node.pv_list.update(best_move, td.nodes[td.height + 1].pv_list);
+                    node.pv_list.update(best_move, td.nodes[td.ply + 1].pv_list);
 
                 if (score >= beta) { // Failed high
                     td.search_history.update_history(td, best_move, depth, quiets_tried, tacticals_tried);
@@ -520,7 +520,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
 
     if (moves_searched == 0) { // handle positions under stalemate or checkmate,
                                // i.e. positions with no legal moves to be made
-        return position.in_check() ? -MATE_SCORE + td.height : 0;
+        return position.in_check() ? -MATE_SCORE + td.ply : 0;
     }
 
     const BoundType bound = best_score >= beta ? LOWER : (alpha != old_alpha ? EXACT : UPPER);
@@ -545,11 +545,11 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         return -MAX_SCORE;
     else if (position.is_draw())
         return 0;
-    else if (td.height >= MAX_SEARCH_DEPTH - 1)
+    else if (td.ply >= MAX_SEARCH_DEPTH - 1)
         return position.in_check() ? 0 : td.nnue.eval(position);
 
     bool pv_node = alpha != beta - 1;
-    NodeData &node = td.nodes[td.height];
+    NodeData &node = td.nodes[td.ply];
     TTEntry tte;
     bool tthit = td.tt.probe(position, tte);
     Move ttmove = tthit ? tte.best_move() : Move::none();
@@ -611,9 +611,9 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         td.tt.prefetch(position.hash());
 
         ++moves_searched;
-        ++td.height;
+        ++td.ply;
         ScoreType score = -quiescence(-beta, -alpha, td);
-        --td.height;
+        --td.ply;
 
         unmake_move(td, move);
 
@@ -630,7 +630,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     }
 
     if (moves_searched == 0 && in_check) {
-        return -MATE_SCORE + td.height;
+        return -MATE_SCORE + td.ply;
     }
 
     BoundType bound = best_score >= beta ? LOWER : UPPER;

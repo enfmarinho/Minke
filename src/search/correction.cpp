@@ -45,9 +45,9 @@ void CorrectionHistory::update(const ThreadData& td, const int depth, const int 
     tables.black_nonpawn[td.position.black_nonpawn_hash() % CORRHIST_SIZE].update(bonus);
 
     auto update_cont = [&](int offset) {
-        if (td.height >= offset + 1) {
-            const PieceMove curr_pmove = td.nodes[td.height - 1].curr_pmove;
-            const PieceMove past_pmove = td.nodes[td.height - offset - 1].curr_pmove;
+        if (td.ply >= offset + 1) {
+            const PieceMove curr_pmove = td.nodes[td.ply - 1].curr_pmove;
+            const PieceMove past_pmove = td.nodes[td.ply - offset - 1].curr_pmove;
 
             if (curr_pmove && past_pmove) {
                 m_cont_corr[cont_corr_idx(curr_pmove)][cont_corr_idx(past_pmove)].update(bonus);
@@ -66,9 +66,9 @@ HistoryType CorrectionHistory::correction(const ThreadData& td) const {
     adjustment += nonpawn_corr_factor() * tables.black_nonpawn[td.position.black_nonpawn_hash() % CORRHIST_SIZE];
 
     auto adjust_cont = [&](int offset) {
-        if (td.height >= offset + 1) {
-            const PieceMove pmove1 = td.nodes[td.height - 1].curr_pmove;
-            const PieceMove pmove2 = td.nodes[td.height - offset - 1].curr_pmove;
+        if (td.ply >= offset + 1) {
+            const PieceMove pmove1 = td.nodes[td.ply - 1].curr_pmove;
+            const PieceMove pmove2 = td.nodes[td.ply - offset - 1].curr_pmove;
             if (pmove1 && pmove2) {
                 adjustment += cont_corr_factor() * m_cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)];
             }

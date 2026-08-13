@@ -65,7 +65,7 @@ void History::update_history(const ThreadData &td, const Move &best_move, int de
     HistoryType capture_penalty =
         calculate_score(depth, capt_hist_penalty_mult(), capt_hist_penalty_offset(), capt_hist_penalty_max());
     if (best_move.is_quiet()) {
-        save_killer(best_move, td.height);
+        save_killer(best_move, td.ply);
 
         // Increase the score of the move that caused the beta cutoff
         update_history_heuristic_score(td.position, best_move, quiet_bonus);
@@ -112,7 +112,7 @@ void History::update_continuation_history_table(const ThreadData &td, const Piec
 
 void History::update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int base,
                                                 int offset) {
-    int past_node_idx = td.height - offset;
+    int past_node_idx = td.ply - offset;
     if (past_node_idx >= 0 && td.nodes[past_node_idx].curr_pmove) {
         const size_t past_conthist_idx = cont_hist_idx(td.nodes[past_node_idx].curr_pmove);
         const size_t curr_conthist_idx = cont_hist_idx(pmove);
@@ -136,7 +136,7 @@ int History::get_continuation_history_score(const ThreadData &td, const PieceMov
 }
 
 HistoryType History::get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const {
-    int past_node_idx = td.height - offset;
+    int past_node_idx = td.ply - offset;
     if (past_node_idx < 0 || !td.nodes[past_node_idx].curr_pmove)
         return 0;
 

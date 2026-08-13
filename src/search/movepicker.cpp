@@ -42,8 +42,8 @@ void MovePicker::init(Move ttmove, ThreadData &td, MovePickerType mp_type, Score
     else
         m_stage = GEN_NOISY;
 
-    m_killer1 = m_td->search_history.consult_killer1(m_td->height);
-    m_killer2 = m_td->search_history.consult_killer2(m_td->height);
+    m_killer1 = m_td->search_history.consult_killer1(m_td->ply);
+    m_killer2 = m_td->search_history.consult_killer2(m_td->ply);
 
     m_idx = m_end = m_bad_noisy_end = 0;
 }
