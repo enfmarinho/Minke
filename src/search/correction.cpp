@@ -35,7 +35,7 @@ void CorrectionHistory::reset() {
     m_cont_corr = {};
 }
 
-void CorrectionHistory::update(const ThreadData& td, const int depth, const int diff) {
+void CorrectionHistory::update(const ThreadData& td, int depth, int ply, int diff) {
     const HistoryType bonus = std::clamp(diff * depth / 8, -CORRHIST_MAX / 4, CORRHIST_MAX / 4);
 
     PovTables& tables = m_pov_tables[td.position.stm()];
@@ -45,9 +45,9 @@ void CorrectionHistory::update(const ThreadData& td, const int depth, const int 
     tables.black_nonpawn[td.position.black_nonpawn_hash() % CORRHIST_SIZE].update(bonus);
 
     auto update_cont = [&](int offset) {
-        if (td.ply >= offset + 1) {
-            const PieceMove curr_pmove = td.nodes[td.ply - 1].curr_pmove;
-            const PieceMove past_pmove = td.nodes[td.ply - offset - 1].curr_pmove;
+        if (ply >= offset + 1) {
+            const PieceMove curr_pmove = td.nodes[ply - 1].curr_pmove;
+            const PieceMove past_pmove = td.nodes[ply - offset - 1].curr_pmove;
 
             if (curr_pmove && past_pmove) {
                 m_cont_corr[cont_corr_idx(curr_pmove)][cont_corr_idx(past_pmove)].update(bonus);
@@ -58,7 +58,7 @@ void CorrectionHistory::update(const ThreadData& td, const int depth, const int 
     update_cont(2);
 }
 
-HistoryType CorrectionHistory::correction(const ThreadData& td) const {
+HistoryType CorrectionHistory::correction(const ThreadData& td, int ply) const {
     const PovTables& tables = m_pov_tables[td.position.stm()];
 
     int adjustment = pawn_corr_factor() * tables.pawn[td.position.pawn_hash() % CORRHIST_SIZE];
@@ -66,9 +66,9 @@ HistoryType CorrectionHistory::correction(const ThreadData& td) const {
     adjustment += nonpawn_corr_factor() * tables.black_nonpawn[td.position.black_nonpawn_hash() % CORRHIST_SIZE];
 
     auto adjust_cont = [&](int offset) {
-        if (td.ply >= offset + 1) {
-            const PieceMove pmove1 = td.nodes[td.ply - 1].curr_pmove;
-            const PieceMove pmove2 = td.nodes[td.ply - offset - 1].curr_pmove;
+        if (ply >= offset + 1) {
+            const PieceMove pmove1 = td.nodes[ply - 1].curr_pmove;
+            const PieceMove pmove2 = td.nodes[ply - offset - 1].curr_pmove;
             if (pmove1 && pmove2) {
                 adjustment += cont_corr_factor() * m_cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)];
             }

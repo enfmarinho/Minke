@@ -61,7 +61,6 @@ struct ThreadData {
     SearchLimiter search_limiter;
     int64_t nodes_searched;
     int64_t node_table[64 * 64];
-    int ply;
     bool stop;
     bool datagen;
     bool report;
@@ -89,6 +88,7 @@ ScoreType normalize_score(ScoreType score);
 
 ScoreType iterative_deepening(ThreadData &td);
 ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);
-ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool cutnode, ThreadData &td);
-ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td);
+ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterType ply, const bool cutnode,
+                  ThreadData &td);
+ScoreType quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadData &td);
 bool SEE(Position &position, const Move &move, int threshold);
