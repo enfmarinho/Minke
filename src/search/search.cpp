@@ -35,8 +35,8 @@
 #include "search/tt.h"
 #include "uci/tune.h"
 
-static void print_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
-                              const ThreadData &td) {
+static void report_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
+                               const ThreadData &td) {
     std::cout << "info depth " << depth;
     if (std::abs(eval) > MATE_FOUND) {
         std::cout << " score mate " << (eval < 0 ? "-" : "") << (MATE_SCORE - std::abs(eval) + 1) / 2;
@@ -48,6 +48,11 @@ static void print_search_info(const CounterType &depth, const ScoreType &eval, c
               << td.nodes_searched * 1000 / (td.search_limiter.time_passed() + 1) << " pv ";
     pv_list.print(td.chess960, td.position.castle_rooks_bb());
     std::cout << std::endl;
+}
+
+static void report_search_result(const ThreadData &td, Move best_move) {
+    std::cout << "bestmove " << (!best_move ? "none" : best_move.to_uci(td.chess960, td.position.castle_rooks_bb()))
+              << std::endl;
 }
 
 ThreadData::ThreadData() {
@@ -106,7 +111,7 @@ ScoreType iterative_deepening(ThreadData &td) {
             break;
 
         if (td.report)
-            print_search_info(depth, score, td.search_stack[0].pv_list, td);
+            report_search_info(depth, score, td.search_stack[0].pv_list, td);
 
         if (depth > 5)
             td.search_limiter.update(td, pv_stability, score_stability);
@@ -116,13 +121,13 @@ ScoreType iterative_deepening(ThreadData &td) {
         td.search_limiter.can_stop(); // Avoids stopping before depth 1 has been searched through
     }
 
-    if (td.report)
-        std::cout << "bestmove " << (!best_move ? "none" : best_move.to_uci(td.chess960, td.position.castle_rooks_bb()))
-                  << std::endl;
-
     td.stop = true;
     td.best_move = best_move; // A partial search would mess this up
     td.tt.update_age();       // Update tt age
+
+    if (td.report)
+        report_search_result(td, best_move);
+
     return past_score;
 }
 
