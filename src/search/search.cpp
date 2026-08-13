@@ -38,7 +38,7 @@
 static void report_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
                                const ThreadData &td) {
     std::cout << "info depth " << depth;
-    if (std::abs(eval) > MATE_FOUND) {
+    if (is_decisive(eval)) {
         std::cout << " score mate " << (eval < 0 ? "-" : "") << (MATE_SCORE - std::abs(eval) + 1) / 2;
     } else {
         std::cout << " score cp " << normalize_score(eval);
@@ -313,7 +313,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
 
         // Prob Cut
         ScoreType pc_beta = std::min(beta + probcut_margin(), MATE_FOUND - 1);
-        if (depth >= probcut_min_depth() && std::abs(beta) < MATE_FOUND &&
+        if (depth >= probcut_min_depth() && !is_decisive(beta) &&
             (!tthit || ttdepth < depth - 3 || (ttscore != SCORE_NONE && ttscore >= pc_beta))) {
             MovePicker move_picker(ttmove, td, ply, PROBCUT, pc_beta - node.static_eval);
             while (true) { // iterate through all moves in move_picker
@@ -363,7 +363,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
             continue;
         }
 
-        if (!root && best_score >= -MATE_FOUND && !skip_quiets) {
+        if (!root && !is_mated(best_score) && !skip_quiets) {
             const CounterType lmr_scaled_depth =
                 depth * 1024 - LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
             const CounterType lmr_depth = lmr_scaled_depth / 1024;
@@ -584,7 +584,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadDat
         }
         node.curr_pmove = {move, position.piece_at(move.from())};
 
-        if (best_score > -MATE_FOUND) {
+        if (!is_mated(best_score)) {
             if (moves_searched >= 3) // late move pruning
                 break;
 
