@@ -40,7 +40,7 @@ struct SearchLimits {
 
 class SearchLimiter {
   public:
-    SearchLimiter();
+    SearchLimiter() = default;
     ~SearchLimiter() = default;
 
     void init();

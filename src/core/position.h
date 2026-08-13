@@ -53,20 +53,15 @@ struct BoardState {
 
 class Position {
   public:
-    Position();
+    Position() = default;
     ~Position() = default;
 
-    template <bool UPDATE>
     bool set_fen(const std::string &fen);
     std::string get_fen() const;
 
-    template <bool UPDATE>
     void reset();
-    void reset_nnue();
 
-    template <bool UPDATE>
-    void make_move(const Move &move);
-    template <bool UPDATE>
+    DirtyPiece make_move(const Move &move);
     void unmake_move(const Move &move);
 
     void make_null_move();
@@ -85,9 +80,7 @@ class Position {
         return piece_bb(KNIGHT) || piece_bb(BISHOP) || piece_bb(ROOK) || piece_bb(QUEEN);
     }
     inline bool is_draw() { return insufficient_material() || repetition() || is_fifty_move_draw(); }
-    inline ScoreType eval() { return m_nnue.eval(*this); }
 
-    int legal_move_amount();
     void print() const;
 
     inline Bitboard occ_bb() const { return m_occupancies[WHITE] | m_occupancies[BLACK]; }
@@ -116,14 +109,11 @@ class Position {
     inline HashType black_nonpawn_hash() const { return m_black_non_pawn_hash; }
     inline int game_ply() const { return m_game_clock_ply; }
     inline int halfmove_clock() const { return m_curr_state.fifty_move_ply; }
-    inline int material_count(const Piece &piece) const { return piece_bb(piece).popcount(); }
-    inline int material_count(const PieceType &piece_type, const Color &color) const {
-        return material_count(static_cast<Piece>(piece_type + color * COLOR_OFFSET));
-    }
-    inline int material_count(const PieceType &piece_type) const {
+    inline int piece_count(const Piece &piece) const { return piece_bb(piece).popcount(); }
+    inline int piece_count(const PieceType &piece_type) const {
         return (m_pieces[piece_type] | m_pieces[piece_type + COLOR_OFFSET]).popcount();
     }
-    inline int material_count() const { return occ_bb().popcount(); }
+    inline int piece_count() const { return occ_bb().popcount(); }
     inline Piece piece_at(const Square &sq) const { return m_board[sq]; }
     inline int history_ply() const { return m_history_ply; }
     inline BoardState board_state() const { return m_curr_state; };
@@ -143,30 +133,19 @@ class Position {
         m_history_ply = 100;
     }
 
-#ifdef TRACK_ACTIVATIONS
-    void write_activation_data();
-#endif
-
   private:
-    template <bool UPDATE>
     void add_piece(const PieceSquare &ps);
-    template <bool UPDATE>
     void remove_piece(const PieceSquare &ps);
 
-    template <bool UPDATE>
     DirtyPiece make_regular(const Move &move);
-    template <bool UPDATE>
     DirtyPiece make_capture(const Move &move);
-    template <bool UPDATE>
     DirtyPiece make_castle(const Move &move);
-    template <bool UPDATE>
     DirtyPiece make_promotion(const Move &move);
-    template <bool UPDATE>
     DirtyPiece make_en_passant(const Move &move);
 
     void update_castling_rights(const Move &move);
-    void update_aux_bbs();
-    void update_threats();
+    void calculate_aux_bbs();
+    void calculate_threats_bb();
 
     bool insufficient_material() const;
     bool repetition() const;
@@ -197,6 +176,4 @@ class Position {
     BoardState m_curr_state;
     BoardState m_history_stack[MAX_PLY];
     HashType m_played_positions[MAX_PLY];
-
-    NNUE m_nnue;
 };

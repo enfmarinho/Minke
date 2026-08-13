@@ -26,8 +26,6 @@
 #include "search/search.h"
 #include "uci/tune.h"
 
-SearchLimiter::SearchLimiter() { init(); }
-
 void SearchLimiter::init(const SearchLimits& sl) {
     constexpr uint64_t overhead = 50;
 

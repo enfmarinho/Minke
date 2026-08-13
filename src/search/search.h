@@ -22,6 +22,7 @@
 
 #include "core/move.h"
 #include "core/types.h"
+#include "eval/nnue.h"
 #include "search/correction.h"
 #include "search/history.h"
 #include "search/pv_list.h"
@@ -51,6 +52,7 @@ struct ThreadData {
     TranspositionTable tt;
 
     Position position;
+    NNUE nnue;
     History search_history;
     CorrectionHistory correction_history;
     NodeData nodes[MAX_SEARCH_DEPTH];
@@ -68,6 +70,20 @@ struct ThreadData {
     ThreadData();
     void reset_search_parameters();
 };
+
+inline void make_move(ThreadData &td, const Move move) {
+    DirtyPiece dp = td.position.make_move(move);
+    td.nnue.push(dp, td.position.king_sq(WHITE), td.position.king_sq(BLACK));
+}
+
+inline void unmake_move(ThreadData &td, const Move move) {
+    td.position.unmake_move(move);
+    td.nnue.pop();
+}
+
+inline void make_null_move(ThreadData &td) { td.position.make_null_move(); }
+
+inline void unmake_null_move(ThreadData &td) { td.position.unmake_null_move(); }
 
 ScoreType normalize_score(ScoreType score);
 

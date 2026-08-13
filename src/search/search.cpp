@@ -194,7 +194,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             return 0;
 
         if (td.height >= MAX_SEARCH_DEPTH - 1)
-            return position.in_check() ? 0 : position.eval();
+            return position.in_check() ? 0 : td.nnue.eval(position);
 
         // Mate distance pruning
         alpha = std::max(alpha, static_cast<ScoreType>(-MATE_SCORE + td.height));
@@ -233,14 +233,14 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
     } else if (singular_search) {
         eval = raw_eval = node.static_eval;
     } else if (tthit) {
-        raw_eval = tteval != SCORE_NONE ? tteval : position.eval();
+        raw_eval = tteval != SCORE_NONE ? tteval : td.nnue.eval(position);
         eval = node.static_eval = adjust_eval(position, raw_eval, correction_value);
         if (ttscore != SCORE_NONE &&
             (ttbound == EXACT || (ttbound == UPPER && ttscore < eval) || (ttbound == LOWER && ttscore > eval)))
             eval = ttscore;
 
     } else {
-        raw_eval = position.eval();
+        raw_eval = td.nnue.eval(position);
         eval = node.static_eval = adjust_eval(position, raw_eval, correction_value);
         td.tt.store(position.hash(), 0, Move::none(), SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age());
     }
@@ -307,12 +307,12 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
             && node.static_eval >= beta + nmp_beta_margin) {
             const int reduction = (nmp_base_reduction() + depth * nmp_depth_factor()) / 64;
 
-            position.make_null_move();
+            make_null_move(td);
             td.tt.prefetch(position.hash());
             ++td.height;
             node.curr_pmove = PieceMove::none();
             ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, !cutnode, td);
-            position.unmake_null_move();
+            unmake_null_move(td);
             --td.height;
 
             if (null_score >= beta)
@@ -335,7 +335,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                 }
 
                 node.curr_pmove = {move, position.piece_at(move.from())};
-                position.make_move<true>(move);
+                make_move(td, move);
 
                 ++td.height;
 
@@ -346,7 +346,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
                     pc_score = -negamax(-pc_beta, -pc_beta + 1, depth - 4, !cutnode, td);
 
                 --td.height;
-                position.unmake_move<true>(move);
+                unmake_move(td, move);
 
                 if (pc_score >= pc_beta) {
                     td.tt.store(position.hash(), depth - 3, move, pc_score, raw_eval, LOWER, ttpv, td.tt.age());
@@ -435,7 +435,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         }
 
         node.curr_pmove = {move, position.piece_at(move.from())};
-        position.make_move<true>(move);
+        make_move(td, move);
 
         td.tt.prefetch(position.hash());
         int new_depth = depth + extension - 1;
@@ -497,7 +497,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool
         }
 
         --td.height;
-        position.unmake_move<true>(move);
+        unmake_move(td, move);
         assert(score >= -MAX_SCORE);
         td.node_table[move.from_and_to()] += td.nodes_searched - nodes_before_search;
 
@@ -546,7 +546,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
     else if (position.is_draw())
         return 0;
     else if (td.height >= MAX_SEARCH_DEPTH - 1)
-        return position.in_check() ? 0 : position.eval();
+        return position.in_check() ? 0 : td.nnue.eval(position);
 
     bool pv_node = alpha != beta - 1;
     NodeData &node = td.nodes[td.height];
@@ -568,7 +568,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         node.static_eval = raw_eval = SCORE_NONE;
         best_score = -MAX_SCORE;
     } else if (tthit) {
-        raw_eval = tteval != SCORE_NONE ? tteval : position.eval();
+        raw_eval = tteval != SCORE_NONE ? tteval : td.nnue.eval(position);
         best_score = node.static_eval = adjust_eval(position, raw_eval, td.correction_history.correction(td));
 
         if (ttscore != SCORE_NONE && (ttbound == EXACT || (ttbound == UPPER && ttscore < best_score) ||
@@ -577,7 +577,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         }
 
     } else {
-        raw_eval = position.eval();
+        raw_eval = td.nnue.eval(position);
         best_score = node.static_eval = adjust_eval(position, raw_eval, td.correction_history.correction(td));
         td.tt.store(position.hash(), 0, Move::none(), SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age());
     }
@@ -607,7 +607,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
                 continue;
             }
         }
-        position.make_move<true>(move);
+        make_move(td, move);
         td.tt.prefetch(position.hash());
 
         ++moves_searched;
@@ -615,7 +615,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td) {
         ScoreType score = -quiescence(-beta, -alpha, td);
         --td.height;
 
-        position.unmake_move<true>(move);
+        unmake_move(td, move);
 
         if (score > best_score) {
             best_score = score;

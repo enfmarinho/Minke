@@ -21,6 +21,7 @@
 #include <cassert>
 #include <cstdint>
 #include <exception>
+#include <fstream>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -64,6 +65,7 @@ UCI::~UCI() {
 void UCI::loop() {
     std::cout << "Minke Chess Engine by Eduardo Marinho" << std::endl;
 
+    ucinewgame();
     std::string input, token;
     do {
         if (!std::getline(std::cin, input))
@@ -154,7 +156,7 @@ void UCI::print_debug_info() {
         std::cout << scored_move.move.to_uci(m_td->chess960, m_td->position.castle_rooks_bb()) << "("
                   << scored_move.score << ") ";
     }
-    std::cout << "\nNNUE eval: " << m_td->position.eval() << std::endl;
+    std::cout << "\nNNUE eval: " << m_td->nnue.eval(m_td->position) << std::endl;
 }
 
 void UCI::position(std::istringstream &iss) {
@@ -177,7 +179,7 @@ void UCI::position(std::istringstream &iss) {
 }
 
 void UCI::set_position(const std::string &fen, const std::vector<std::string> &moves) {
-    if (!m_td->position.set_fen<true>(fen)) {
+    if (!m_td->position.set_fen(fen)) {
         std::cerr << "Invalid FEN!" << std::endl;
         return;
     }
@@ -193,19 +195,20 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
 
         for (auto scored_move : move_list) {
             if (moves[index] == scored_move.move.to_uci(m_td->chess960, m_td->position.castle_rooks_bb())) {
-                m_td->position.make_move<false>(scored_move.move);
+                m_td->position.make_move(scored_move.move);
                 break;
             }
         }
     }
-    m_td->position.reset_nnue();
+    m_td->nnue.refresh(m_td->position);
 }
 
 void UCI::ucinewgame() {
     m_td->search_history.reset();
     m_td->correction_history.reset();
     m_td->search_limiter.init();
-    m_td->position.set_fen<true>(START_FEN);
+    m_td->position.set_fen(START_FEN);
+    m_td->nnue.refresh(m_td->position);
     m_td->reset_search_parameters();
     m_td->tt.clear();
 }
@@ -261,7 +264,8 @@ void UCI::bench(int depth) {
     m_td->report = false;
     for (const std::string &fen : BENCHMARK_FEN_LIST) {
         ucinewgame();
-        m_td->position.set_fen<true>(fen);
+        m_td->position.set_fen(fen);
+        m_td->nnue.refresh(m_td->position);
         m_td->reset_search_parameters();
 
         SearchLimits sl;
@@ -280,27 +284,46 @@ void UCI::bench(int depth) {
     std::cout << nodes_searched << " nodes " << nodes_searched * 1000 / total_time << " nps\n";
 
 #ifdef TRACK_ACTIVATIONS
-    m_td->position.write_activation_data();
+    std::ofstream out_file("activations_table.txt");
+    if (!out_file) {
+        std::cerr << "Failed to open file to write activations table data\n";
+        return;
+    }
+
+    const auto table = m_td->nnue.activation_table();
+    bool first = true;
+    for (auto e : table) {
+        if (!first)
+            out_file << ", ";
+        out_file << e;
+
+        first = false;
+    }
 #endif // TRACK_ACTIVATIONS
 }
 
 int64_t UCI::perft(Position &position, CounterType depth, bool root) {
-    bool is_leaf = (depth == 2);
+    const bool is_leaf = (depth == 2);
     int64_t count = 0, nodes = 0;
 
     Movegen::ScoredMoveList move_list;
     Movegen::all(move_list, m_td->position);
     for (ScoredMove score_move : move_list) {
-        Move move = score_move.move;
-        position.make_move<false>(move);
+        const Move move = score_move.move;
+        position.make_move(move);
 
-        if (root && depth <= 1)
-            count = 1, ++nodes;
-        else {
-            count = is_leaf ? position.legal_move_amount() : perft(position, depth - 1, false);
-            nodes += count;
+        if (root && depth <= 1) {
+            count = 1;
+        } else if (is_leaf) {
+            Movegen::ScoredMoveList tmp;
+            Movegen::all(tmp, position);
+            count = tmp.size();
+        } else {
+            count = perft(position, depth - 1, false);
         }
-        position.unmake_move<false>(move);
+        nodes += count;
+
+        position.unmake_move(move);
 
         if (root)
             std::cout << move.to_uci(m_td->chess960, m_td->position.castle_rooks_bb()) << ": " << count << std::endl;
@@ -311,7 +334,7 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
     return nodes;
 }
 
-void UCI::eval() { std::cout << "The position evaluation is " << m_td->position.eval() << std::endl; }
+void UCI::eval() { std::cout << "The position evaluation is " << m_td->nnue.eval(m_td->position) << std::endl; }
 
 CounterType UCI::parse_go(std::istringstream &iss, bool bench) {
     std::string token;
