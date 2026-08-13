@@ -35,17 +35,6 @@
 #include "search/tt.h"
 #include "uci/tune.h"
 
-ScoreType normalize_score(ScoreType score) {
-    // TODO scores should be normalize such that +100/-100 means 50% chance of wining or losing
-    return score / 2;
-}
-
-static bool is_mate(const ScoreType score) { return score > MATE_FOUND; }
-
-static bool is_mated(const ScoreType score) { return score < -MATE_FOUND; }
-
-static bool is_decisive(const ScoreType score) { return is_mate(score) || is_mated(score); }
-
 static void print_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
                               const ThreadData &td) {
     std::cout << "info depth " << depth;
