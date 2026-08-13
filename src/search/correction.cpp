@@ -46,8 +46,8 @@ void CorrectionHistory::update(const ThreadData& td, int depth, int ply, int dif
 
     auto update_cont = [&](int offset) {
         if (ply >= offset + 1) {
-            const PieceMove curr_pmove = td.nodes[ply - 1].curr_pmove;
-            const PieceMove past_pmove = td.nodes[ply - offset - 1].curr_pmove;
+            const PieceMove curr_pmove = td.search_stack[ply - 1].curr_pmove;
+            const PieceMove past_pmove = td.search_stack[ply - offset - 1].curr_pmove;
 
             if (curr_pmove && past_pmove) {
                 m_cont_corr[cont_corr_idx(curr_pmove)][cont_corr_idx(past_pmove)].update(bonus);
@@ -67,8 +67,8 @@ HistoryType CorrectionHistory::correction(const ThreadData& td, int ply) const {
 
     auto adjust_cont = [&](int offset) {
         if (ply >= offset + 1) {
-            const PieceMove pmove1 = td.nodes[ply - 1].curr_pmove;
-            const PieceMove pmove2 = td.nodes[ply - offset - 1].curr_pmove;
+            const PieceMove pmove1 = td.search_stack[ply - 1].curr_pmove;
+            const PieceMove pmove2 = td.search_stack[ply - offset - 1].curr_pmove;
             if (pmove1 && pmove2) {
                 adjustment += cont_corr_factor() * m_cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)];
             }

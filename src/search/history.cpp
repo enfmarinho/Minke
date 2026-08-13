@@ -114,8 +114,8 @@ void History::update_continuation_history_table(const ThreadData &td, const Piec
 void History::update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int base,
                                                 CounterType ply, int offset) {
     int past_node_idx = ply - offset;
-    if (past_node_idx >= 0 && td.nodes[past_node_idx].curr_pmove) {
-        const size_t past_conthist_idx = cont_hist_idx(td.nodes[past_node_idx].curr_pmove);
+    if (past_node_idx >= 0 && td.search_stack[past_node_idx].curr_pmove) {
+        const size_t past_conthist_idx = cont_hist_idx(td.search_stack[past_node_idx].curr_pmove);
         const size_t curr_conthist_idx = cont_hist_idx(pmove);
         m_continuation_history[past_conthist_idx][curr_conthist_idx].update_with_base(bonus, base);
     }
@@ -139,10 +139,10 @@ int History::get_continuation_history_score(const ThreadData &td, const PieceMov
 HistoryType History::get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, CounterType ply,
                                                     int offset) const {
     int past_node_idx = ply - offset;
-    if (past_node_idx < 0 || !td.nodes[past_node_idx].curr_pmove)
+    if (past_node_idx < 0 || !td.search_stack[past_node_idx].curr_pmove)
         return 0;
 
-    const size_t past_conthist_idx = cont_hist_idx(td.nodes[past_node_idx].curr_pmove);
+    const size_t past_conthist_idx = cont_hist_idx(td.search_stack[past_node_idx].curr_pmove);
     const size_t curr_conthist_idx = cont_hist_idx(pmove);
     return m_continuation_history[past_conthist_idx][curr_conthist_idx].value;
 }

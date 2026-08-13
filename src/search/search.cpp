@@ -75,7 +75,7 @@ void ThreadData::reset_search_parameters() {
     search_limiter.init();
     // TODO i dont think this is necessary
     for (int i = 0; i < MAX_SEARCH_DEPTH; ++i)
-        nodes[i].reset();
+        search_stack[i].reset();
 }
 
 inline bool stop_search(const ThreadData &td) { return td.stop || td.search_limiter.time_over(td.nodes_searched); }
@@ -117,7 +117,7 @@ ScoreType iterative_deepening(ThreadData &td) {
             break;
 
         if (td.report)
-            print_search_info(depth, score, td.nodes[0].pv_list, td);
+            print_search_info(depth, score, td.search_stack[0].pv_list, td);
 
         if (depth > 5)
             td.search_limiter.update(td, pv_stability, score_stability);
@@ -182,10 +182,10 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
     ++td.nodes_searched;
 
     const bool pv_node = alpha != beta - 1;
-    const Move excluded_move = td.nodes[ply].excluded_move;
+    const Move excluded_move = td.search_stack[ply].excluded_move;
     const bool singular_search = !excluded_move.is_none();
     Position &position = td.position;
-    NodeData &node = td.nodes[ply];
+    SearchStackEntry &node = td.search_stack[ply];
 
     // Early return conditions
     bool root = ply == 0;
@@ -246,24 +246,24 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
     }
 
     // Clean excluded and killer moves for the next ply
-    td.nodes[ply + 1].excluded_move = Move::none();
+    td.search_stack[ply + 1].excluded_move = Move::none();
     td.search_history.clear_killers(ply + 1);
 
     bool improving = [&]() -> bool {
         if (!in_check) {
-            if (ply >= 2 && td.nodes[ply - 2].static_eval != SCORE_NONE)
-                return node.static_eval > td.nodes[ply - 2].static_eval;
-            if (ply >= 4 && td.nodes[ply - 4].static_eval != SCORE_NONE)
-                return node.static_eval > td.nodes[ply - 4].static_eval;
+            if (ply >= 2 && td.search_stack[ply - 2].static_eval != SCORE_NONE)
+                return node.static_eval > td.search_stack[ply - 2].static_eval;
+            if (ply >= 4 && td.search_stack[ply - 4].static_eval != SCORE_NONE)
+                return node.static_eval > td.search_stack[ply - 4].static_eval;
         }
         return false;
     }();
 
     // Forward pruning methods
     if (!in_check && !pv_node && !root && !singular_search) {
-        if (ply >= 1 && td.nodes[ply - 1].static_eval != SCORE_NONE) {
-            ScoreType eval_delta = node.static_eval + td.nodes[ply - 1].static_eval;
-            CounterType reduction = td.nodes[ply - 1].reduction;
+        if (ply >= 1 && td.search_stack[ply - 1].static_eval != SCORE_NONE) {
+            ScoreType eval_delta = node.static_eval + td.search_stack[ply - 1].static_eval;
+            CounterType reduction = td.search_stack[ply - 1].reduction;
 
             // Hindsight extension
             if (reduction > 1 && eval_delta < 0)
@@ -411,9 +411,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
 
             td.tt.prefetch(position.hash());
 
-            td.nodes[ply].excluded_move = ttmove;
+            td.search_stack[ply].excluded_move = ttmove;
             ScoreType singular_score = negamax(singular_beta - 1, singular_beta, singular_depth, ply, cutnode, td);
-            td.nodes[ply].excluded_move = Move::none();
+            td.search_stack[ply].excluded_move = Move::none();
 
             if (singular_score < singular_beta) {
                 extension = 1;
@@ -444,7 +444,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
         ++moves_searched;
 
         int64_t nodes_before_search = td.nodes_searched;
-        td.nodes[ply + 1].pv_list.clear();
+        td.search_stack[ply + 1].pv_list.clear();
         ScoreType score;
         if (moves_searched == 1) {
             score = -negamax(-beta, -alpha, new_depth, ply + 1, false, td);
@@ -474,9 +474,9 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
             const int reduction = scaled_reduction / 1024;
             const int lmr_depth = std::min(std::max(new_depth - reduction, 1), new_depth);
 
-            td.nodes[ply].reduction = reduction;
+            td.search_stack[ply].reduction = reduction;
             score = -negamax(-alpha - 1, -alpha, lmr_depth, ply + 1, true, td);
-            td.nodes[ply].reduction = 0;
+            td.search_stack[ply].reduction = 0;
 
             if (score > alpha && lmr_depth < new_depth) {
                 new_depth += score > best_score + lmr_deeper_margin() + lmr_deeper_depth_factor() * new_depth;
@@ -500,7 +500,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
             if (score > alpha) {
                 best_move = move;
                 if (pv_node)
-                    node.pv_list.update(best_move, td.nodes[ply + 1].pv_list);
+                    node.pv_list.update(best_move, td.search_stack[ply + 1].pv_list);
 
                 if (score >= beta) { // Failed high
                     td.search_history.update_history(td, best_move, depth, ply, quiets_tried, tacticals_tried);
@@ -542,7 +542,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadDat
         return position.in_check() ? 0 : td.nnue.eval(position);
 
     bool pv_node = alpha != beta - 1;
-    NodeData &node = td.nodes[ply];
+    SearchStackEntry &node = td.search_stack[ply];
     TTEntry tte;
     bool tthit = td.tt.probe(position, tte);
     Move ttmove = tthit ? tte.best_move() : Move::none();
