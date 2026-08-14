@@ -254,12 +254,13 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
     td.search_history.clear_killers(ply + 1);
 
     const bool improving = [&]() -> bool {
-        if (!in_check) {
-            if (ply >= 2 && td.search_stack[ply - 2].static_eval != SCORE_NONE)
-                return node.static_eval > td.search_stack[ply - 2].static_eval;
-            if (ply >= 4 && td.search_stack[ply - 4].static_eval != SCORE_NONE)
-                return node.static_eval > td.search_stack[ply - 4].static_eval;
-        }
+        if (in_check)
+            return false;
+        if (ply >= 2 && td.search_stack[ply - 2].static_eval != SCORE_NONE)
+            return node.static_eval > td.search_stack[ply - 2].static_eval;
+        if (ply >= 4 && td.search_stack[ply - 4].static_eval != SCORE_NONE)
+            return node.static_eval > td.search_stack[ply - 4].static_eval;
+
         return false;
     }();
 
