@@ -33,10 +33,10 @@ class History {
 
     void reset();
 
-    void update_history(const ThreadData &td, const Move &best_move, int depth, const PieceMoveList &quiets_tried,
-                        const PieceMoveList &tacticals_tried);
+    void update_history(const ThreadData &td, const Move &best_move, int depth, CounterType ply,
+                        const PieceMoveList &quiets_tried, const PieceMoveList &tacticals_tried);
 
-    int get_history(const ThreadData &td, const Move &move) const;
+    int get_history(const ThreadData &td, const Move &move, CounterType ply) const;
 
     inline HistoryType get_capture_history(const Position &position, const Move &move) {
         Square to = move.to();
@@ -67,13 +67,14 @@ class History {
 
     void update_capture_history_score(const Position &position, const Move &move, int bonus);
     void update_history_heuristic_score(const Position &position, const Move &move, int bonus);
-    void update_continuation_history_table(const ThreadData &td, const PieceMove &pmove, int bonus);
+    void update_continuation_history_table(const ThreadData &td, const PieceMove &pmove, int bonus, CounterType ply);
 
     void update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int base,
-                                           int offset);
+                                           CounterType ply, int offset);
     HistoryType get_history_heuristic_score(const Position &position, const Move &move) const;
-    int get_continuation_history_score(const ThreadData &td, const PieceMove &pmove) const;
-    HistoryType get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, int offset) const;
+    int get_continuation_history_score(const ThreadData &td, const PieceMove &pmove, CounterType ply) const;
+    HistoryType get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, CounterType ply,
+                                               int offset) const;
 
     inline void save_killer(const Move &move, const int height) {
         m_killer_moves[height][1] = m_killer_moves[height][0];

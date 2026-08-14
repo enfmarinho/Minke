@@ -33,7 +33,7 @@ constexpr int LMP_DEPTH = 32;
 extern int LMP_TABLE[2][LMP_DEPTH];
 extern int LMR_TABLE[64][64];
 
-struct NodeData {
+struct SearchStackEntry {
     PieceMove curr_pmove;
     Move excluded_move;
     CounterType reduction;
@@ -43,6 +43,7 @@ struct NodeData {
     inline void reset() {
         curr_pmove = PieceMove::none();
         excluded_move = Move::none();
+        reduction = 0;
         static_eval = SCORE_NONE;
         pv_list.clear();
     }
@@ -55,13 +56,12 @@ struct ThreadData {
     NNUE nnue;
     History search_history;
     CorrectionHistory correction_history;
-    NodeData nodes[MAX_SEARCH_DEPTH];
+    SearchStackEntry search_stack[MAX_SEARCH_DEPTH];
     Move best_move;
 
     SearchLimiter search_limiter;
     int64_t nodes_searched;
     int64_t node_table[64 * 64];
-    int height;
     bool stop;
     bool datagen;
     bool report;
@@ -85,10 +85,9 @@ inline void make_null_move(ThreadData &td) { td.position.make_null_move(); }
 
 inline void unmake_null_move(ThreadData &td) { td.position.unmake_null_move(); }
 
-ScoreType normalize_score(ScoreType score);
-
 ScoreType iterative_deepening(ThreadData &td);
 ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);
-ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, const bool cutnode, ThreadData &td);
-ScoreType quiescence(ScoreType alpha, ScoreType beta, ThreadData &td);
+ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterType ply, const bool cutnode,
+                  ThreadData &td);
+ScoreType quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadData &td);
 bool SEE(Position &position, const Move &move, int threshold);

@@ -167,6 +167,17 @@ inline TimeType now() {
         .count();
 }
 
+inline ScoreType normalize_score(ScoreType score) {
+    // TODO scores should be normalize such that +100/-100 means 50% chance of wining or losing
+    return score / 2;
+}
+
+inline static bool is_mate(const ScoreType score) { return score > MATE_FOUND; }
+
+inline static bool is_mated(const ScoreType score) { return score < -MATE_FOUND; }
+
+inline static bool is_decisive(const ScoreType score) { return is_mate(score) || is_mated(score); }
+
 struct PieceSquare {
     Piece piece;
     Square sq;

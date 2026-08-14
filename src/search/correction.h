@@ -35,9 +35,9 @@ class CorrectionHistory {
 
     void reset();
 
-    void update(const ThreadData& td, const int depth, const int diff);
+    void update(const ThreadData& td, int depth, int ply, int diff);
 
-    HistoryType correction(const ThreadData& td) const;
+    HistoryType correction(const ThreadData& td, int ply) const;
 
   private:
     struct CorrectionEntry {
