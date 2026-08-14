@@ -43,6 +43,7 @@ struct SearchStackEntry {
     inline void reset() {
         curr_pmove = PieceMove::none();
         excluded_move = Move::none();
+        reduction = 0;
         static_eval = SCORE_NONE;
         pv_list.clear();
     }
@@ -83,8 +84,6 @@ inline void unmake_move(ThreadData &td, const Move move) {
 inline void make_null_move(ThreadData &td) { td.position.make_null_move(); }
 
 inline void unmake_null_move(ThreadData &td) { td.position.unmake_null_move(); }
-
-ScoreType normalize_score(ScoreType score);
 
 ScoreType iterative_deepening(ThreadData &td);
 ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);

@@ -69,7 +69,6 @@ void ThreadData::reset_search_parameters() {
     nodes_searched = -1; // Avoid counting the root
     std::memset(node_table, 0, sizeof(node_table));
     search_limiter.init();
-    // TODO i dont think this is necessary
     for (int i = 0; i < MAX_SEARCH_DEPTH; ++i)
         search_stack[i].reset();
 }
@@ -163,7 +162,7 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, Threa
             break;
         }
 
-        delta += delta * (aw_widening_factor() / 100.0);
+        delta += delta * aw_widening_factor() / 100;
     }
 
     return score;
@@ -173,7 +172,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
                   ThreadData &td) {
     if (stop_search(td)) // Out of time
         return -MAX_SCORE;
-    else if (depth <= 0)
+    if (depth <= 0)
         return quiescence(alpha, beta, ply, td);
     ++td.nodes_searched;
 
@@ -239,9 +238,13 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
     } else if (tthit) {
         raw_eval = tteval != SCORE_NONE ? tteval : td.nnue.eval(position);
         eval = node.static_eval = adjust_eval(position, raw_eval, correction_value);
-        if (ttscore != SCORE_NONE &&
-            (ttbound == EXACT || (ttbound == UPPER && ttscore < eval) || (ttbound == LOWER && ttscore > eval)))
+        if (ttscore != SCORE_NONE                        //
+            && (ttbound == EXACT                         //
+                || (ttbound == UPPER && ttscore < eval)  //
+                || (ttbound == LOWER && ttscore > eval)) //
+        ) {
             eval = ttscore;
+        }
 
     } else {
         raw_eval = td.nnue.eval(position);
@@ -488,8 +491,6 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
 
                 // Reduce based on correction history.
                 scaled_reduction -= complexity / lmr_corrhist_divisor();
-            } else {
-                // reduce noisy
             }
             const int reduction = scaled_reduction / 1024;
             const int lmr_depth = std::min(std::max(new_depth - reduction, 1), new_depth);
