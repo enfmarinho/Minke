@@ -73,7 +73,7 @@ Move MovePicker::next_move(bool skip_quiets) {
                 const ScoreType see_threshold =
                     m_mp_type == PROBCUT ? m_threshold : -score / 32 + mp_see_threshold_base();
 
-                if (!SEE(m_td->position, move, see_threshold)) // Bad noisy
+                if (!Engine::SEE(m_td->position, move, see_threshold)) // Bad noisy
                     m_move_list[m_bad_noisy_end++] = m_move_list[idx];
                 else if (move != m_ttmove)
                     return move;

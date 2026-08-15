@@ -33,14 +33,14 @@ static constexpr CounterType HASH_MIN = 1;
 static constexpr CounterType HASH_MAX = 2097152;
 static constexpr CounterType THREADS_DEFAULT = 1;
 static constexpr CounterType THREADS_MIN = 1;
-static constexpr CounterType THREADS_MAX = 1;
+static constexpr CounterType THREADS_MAX = 2048;
 void print();
 } // namespace EngineOptions
 
 class UCI {
   public:
     UCI();
-    ~UCI();
+    ~UCI() = default;
     void loop();
     void bench(int depth);
 
@@ -60,5 +60,6 @@ class UCI {
     void eval();
 
     std::thread m_thread;
-    ThreadData *m_td;
+    Position m_pos;
+    Engine m_engine;
 };
