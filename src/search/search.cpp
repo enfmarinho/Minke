@@ -66,7 +66,7 @@ ThreadData::ThreadData() { reset_search_parameters(); }
 
 void ThreadData::reset_search_parameters() {
     best_move = Move::none();
-    nodes_searched = -1; // Avoid counting the root
+    nodes_searched = 0;
     std::memset(node_table, 0, sizeof(node_table));
     for (int i = 0; i < MAX_SEARCH_DEPTH; ++i)
         search_stack[i].reset();
