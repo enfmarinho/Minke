@@ -106,7 +106,7 @@ ScoreType Engine::iterative_deepening(ThreadData &td) {
         if (!best_move) // No legal moves
             break;
 
-        if (td.id == 0) { // main thread
+        if (td.is_main()) { // main thread
             if (m_report)
                 report_search_info(depth, score, td.search_stack[0].pv_list, td);
 
@@ -121,7 +121,7 @@ ScoreType Engine::iterative_deepening(ThreadData &td) {
 
     td.best_move = best_move; // A partial search would mess this up
 
-    if (m_report && td.id == 0) {
+    if (m_report && td.is_main()) {
         report_search_result(td, best_move);
     }
 

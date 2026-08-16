@@ -70,6 +70,7 @@ struct ThreadData {
 
     ThreadData();
     void reset_search_parameters();
+    inline bool is_main() const { return id == 0; }
 };
 
 inline void make_move(ThreadData &td, const Move move) {
@@ -207,7 +208,7 @@ class Engine {
     ScoreType quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadData &td);
 
     inline bool time_over(const ThreadData &td) {
-        return m_stop || (td.id == 0 && m_search_limiter.time_over(td.nodes_searched));
+        return m_stop || (td.is_main() && m_search_limiter.time_over(td.nodes_searched));
     }
 
     void report_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
