@@ -35,41 +35,109 @@
 #include "search/tt.h"
 #include "uci/tune.h"
 
-void Engine::report_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
-                                const ThreadData &td) {
-    std::cout << "info depth " << depth;
-    if (is_decisive(eval)) {
-        std::cout << " score mate " << (eval < 0 ? "-" : "") << (MATE_SCORE - std::abs(eval) + 1) / 2;
-    } else {
-        std::cout << " score cp " << normalize_score(eval);
-    }
-
-    size_t nodes = td.nodes_searched;
-    for (const auto &helpers_td : m_threads_data) {
-        nodes += helpers_td.nodes_searched;
-    }
-
-    // Add 1 to time_passed() to avoid division by 0
-    std::cout << " time " << m_search_limiter.time_passed() << " nodes " << nodes << " nps "
-              << nodes * 1000 / (m_search_limiter.time_passed() + 1) << " pv ";
-
-    pv_list.print(m_is_chess960, td.position.castle_rooks_bb());
-    std::cout << std::endl;
+void SearchStackEntry::init() {
+    curr_pmove = PieceMove::none();
+    excluded_move = Move::none();
+    reduction = 0;
+    static_eval = SCORE_NONE;
+    pv_list.clear();
 }
 
-void Engine::report_search_result(const ThreadData &td, Move best_move) {
-    std::cout << "bestmove " << (!best_move ? "none" : best_move.to_uci(m_is_chess960, td.position.castle_rooks_bb()))
-              << std::endl;
-}
-
-ThreadData::ThreadData() { reset_search_parameters(); }
-
-void ThreadData::reset_search_parameters() {
+void ThreadData::init() {
     best_move = Move::none();
     nodes_searched = 0;
     std::memset(node_table, 0, sizeof(node_table));
     for (int i = 0; i < MAX_SEARCH_DEPTH; ++i)
-        search_stack[i].reset();
+        search_stack[i].init();
+}
+
+Engine::Engine() {
+    // init main thread data
+    m_main_thread_data = std::make_unique<ThreadData>();
+    m_main_thread_data->id = 0;
+    m_main_thread_data->init();
+}
+
+void Engine::new_game() {
+    clear_tt();
+    m_search_limiter.init();
+    for (auto &m_td : m_threads_data) {
+        m_td.search_history.reset();
+        m_td.correction_history.reset();
+        m_td.init();
+    }
+    m_main_thread_data->search_history.reset();
+    m_main_thread_data->correction_history.reset();
+    m_main_thread_data->init();
+}
+
+void Engine::prepare_search() {
+    for (auto &td : m_threads_data) {
+        td.init();
+    }
+    m_main_thread_data->init();
+}
+
+void Engine::prepare_search(const Position &pos) {
+    for (auto &td : m_threads_data) {
+        td.position = pos;
+        td.nnue.refresh(pos);
+        td.init();
+    }
+    m_main_thread_data->position = pos;
+    m_main_thread_data->nnue.refresh(pos);
+    m_main_thread_data->init();
+}
+
+std::pair<Move, ScoreType> Engine::search() {
+    assert(m_threads.size() == m_threads_data.size());
+
+    m_stop = false;
+    for (size_t i = 0; i < m_threads.size(); ++i) {
+        m_threads[i] = std::thread(&Engine::iterative_deepening, this, std::ref(m_threads_data[i]));
+    }
+    const ScoreType score = iterative_deepening(*m_main_thread_data);
+    m_stop = true;
+
+    m_tt.update_age();
+
+    wait_until_idle(); // join helper threads
+
+    return {m_main_thread_data->best_move, score};
+}
+
+void Engine::wait_until_idle() {
+    for (auto &t : m_threads) {
+        if (t.joinable()) {
+            t.join();
+        }
+    }
+}
+
+void Engine::resize_threads(size_t new_size) {
+    assert(new_size >= 1);
+
+    --new_size; // the caller thread is already a search thread, so -1
+    m_threads.resize(new_size);
+    m_threads_data.resize(new_size);
+
+    // SAFETY: m_main_thread_data is guaranteed to have been allocated by the constructor, so its safe to
+    // dereference it
+    const ThreadData &main_td = *m_main_thread_data;
+    for (size_t i = 0; i < m_threads_data.size(); ++i) {
+        m_threads_data[i].id = i + 1;
+        m_threads_data[i].position = main_td.position;
+        m_threads_data[i].nnue = main_td.nnue;
+        m_threads_data[i].init();
+    }
+}
+
+size_t Engine::nodes_searched() const {
+    size_t total_nodes = m_main_thread_data->nodes_searched;
+    for (const auto &td : m_threads_data) {
+        total_nodes += td.nodes_searched;
+    }
+    return total_nodes;
 }
 
 ScoreType Engine::iterative_deepening(ThreadData &td) {
@@ -737,4 +805,28 @@ bool Engine::SEE(Position &position, const Move &move, int threshold) {
     }
 
     return stm != position.stm();
+}
+
+void Engine::report_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
+                                const ThreadData &td) {
+    std::cout << "info depth " << depth;
+    if (is_decisive(eval)) {
+        std::cout << " score mate " << (eval < 0 ? "-" : "") << (MATE_SCORE - std::abs(eval) + 1) / 2;
+    } else {
+        std::cout << " score cp " << normalize_score(eval);
+    }
+
+    const size_t nodes = nodes_searched();
+
+    // Add 1 to time_passed() to avoid division by 0
+    std::cout << " time " << m_search_limiter.time_passed() << " nodes " << nodes << " nps "
+              << nodes * 1000 / (m_search_limiter.time_passed() + 1) << " pv ";
+
+    pv_list.print(m_is_chess960, td.position.castle_rooks_bb());
+    std::cout << std::endl;
+}
+
+void Engine::report_search_result(const ThreadData &td, Move best_move) {
+    std::cout << "bestmove " << (!best_move ? "none" : best_move.to_uci(m_is_chess960, td.position.castle_rooks_bb()))
+              << std::endl;
 }
