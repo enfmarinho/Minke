@@ -96,9 +96,8 @@ class Engine {
     }
     ~Engine() = default;
 
-    void init(SearchLimits sl = SearchLimits()) {
-        limit_search(sl);
-        for (ThreadData &td : m_threads_data) {
+    void prepare_search() {
+        for (auto &td : m_threads_data) {
             td.reset_search_parameters();
         }
         m_main_thread_data->reset_search_parameters();
@@ -108,9 +107,11 @@ class Engine {
         for (auto &td : m_threads_data) {
             td.position = pos;
             td.nnue.refresh(pos);
+            td.reset_search_parameters();
         }
         m_main_thread_data->position = pos;
         m_main_thread_data->nnue.refresh(pos);
+        m_main_thread_data->reset_search_parameters();
     }
 
     std::pair<Move, ScoreType> search() {

@@ -104,11 +104,11 @@ class DatagenThread {
         init_pos_randomly();
 
         // Search deeper to verify position before generating data from it
-        m_engine.init();
         SearchLimits verification_sl;
         verification_sl.depth = VERIFICATION_MAX_DEPTH;
         verification_sl.optimum_node = VERIFICATION_SOFT_NODE_LIMIT;
         verification_sl.maximum_node = VERIFICATION_HARD_NODE_LIMIT;
+        m_engine.prepare_search();
         m_engine.limit_search(verification_sl);
 
         auto [_, verification_score] = m_engine.search();
@@ -127,7 +127,8 @@ class DatagenThread {
         sl.maximum_node = HARD_NODE_LIMIT;
 
         while (!m_stop_flag) {
-            m_engine.init(sl);
+            m_engine.prepare_search();
+            m_engine.limit_search(sl);
 
             auto [move, score] = m_engine.search();
             const ScoreType normalized_score = normalize_score(score);

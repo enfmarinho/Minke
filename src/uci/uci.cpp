@@ -72,7 +72,7 @@ void UCI::loop() {
                 continue;
             else if (m_thread.joinable())
                 m_thread.join();
-            m_engine.init();
+            m_engine.prepare_search();
             const CounterType perft_depth = parse_go(iss);
             if (perft_depth != 0) {
                 perft(m_pos, perft_depth);
