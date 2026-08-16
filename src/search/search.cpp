@@ -73,10 +73,6 @@ void ThreadData::reset_search_parameters() {
 }
 
 ScoreType Engine::iterative_deepening(ThreadData &td) {
-    if (td.id == 0) {
-        m_stop = false;
-    }
-
     Move best_move = Move::none();
     ScoreType past_score = -MAX_SCORE;
     ScoreType avg_score = SCORE_NONE;
@@ -123,10 +119,6 @@ ScoreType Engine::iterative_deepening(ThreadData &td) {
         }
     }
 
-    if (td.id == 0) {
-        m_stop = true;
-        m_tt.update_age();
-    }
     td.best_move = best_move; // A partial search would mess this up
 
     if (m_report && td.id == 0) {

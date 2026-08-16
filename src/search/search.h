@@ -116,12 +116,17 @@ class Engine {
     std::pair<Move, ScoreType> search() {
         assert(m_threads.size() == m_threads_data.size());
 
+        m_stop = false;
         for (size_t i = 0; i < m_threads.size(); ++i) {
             m_threads[i] = std::thread(&Engine::iterative_deepening, this, std::ref(m_threads_data[i]));
         }
-
         const ScoreType score = iterative_deepening(*m_main_thread_data);
-        wait_until_idle();
+        m_stop = true;
+
+        m_tt.update_age();
+
+        wait_until_idle(); // join helper threads
+
         return {m_main_thread_data->best_move, score};
     }
 
@@ -129,7 +134,6 @@ class Engine {
 
     void resize_threads(size_t new_size) {
         assert(new_size >= 1);
-        wait_until_idle();
 
         --new_size; // the caller thread is already a search thread, so -1
         m_threads.resize(new_size);
