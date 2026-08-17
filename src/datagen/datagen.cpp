@@ -69,7 +69,7 @@ DatagenThread::DatagenThread(int id, int tt_size_mb, std::filesystem::path& dir_
 DatagenThread::~DatagenThread() { m_file_out.close(); }
 
 void DatagenThread::run() {
-    m_stop_flag = false;
+    m_stop_flag.store(false, std::memory_order_relaxed);
     while (!stopped()) {
         play_game();
     }
