@@ -112,8 +112,6 @@ void DatagenThread::play_game() {
         m_engine.limit_search(sl);
 
         auto [move, score] = m_engine.search();
-        const ScoreType normalized_score = normalize_score(score);
-        ++position_count;
 
         if (!move) {
             if (m_engine.position().in_check())
@@ -124,8 +122,10 @@ void DatagenThread::play_game() {
             break;
         }
 
-        if (m_engine.position().stm() == BLACK)
+        if (m_engine.position().stm() == BLACK) {
             score *= -1;
+        }
+        const ScoreType normalized_score = normalize_score(score);
 
         if (std::abs(score) >= MATE_FOUND) {
             result = score > 0 ? WIN : LOSS;
@@ -153,7 +153,7 @@ void DatagenThread::play_game() {
                 result = WIN;
             } else if (draw_count >= DRAW_ADJ_PLY) {
                 result = DRAW;
-            } else if (loss_count >= WIN_ADJ_SCORE) {
+            } else if (loss_count >= WIN_ADJ_PLY) {
                 result = LOSS;
             }
         }
@@ -164,6 +164,7 @@ void DatagenThread::play_game() {
         }
 
         m_games.push(move, score);
+        ++position_count;
 
         if (result != NO_RESULT)
             break;
@@ -228,8 +229,8 @@ void DatagenEngine::datagen_loop(int thread_count, int tt_size_mb, std::filesyst
         }
     }
 
-    stop();
     report();
+    stop();
 
     std::cout << "Datagen ran successfully!\n";
 }
