@@ -99,6 +99,7 @@ void DatagenThread::play_game() {
     GameResult result = NO_RESULT;
     int win_count = 0;
     int draw_count = 0;
+    int loss_count = 0;
     uint64_t position_count = 0;
 
     SearchLimits sl;
@@ -129,22 +130,31 @@ void DatagenThread::play_game() {
         if (std::abs(score) >= MATE_FOUND) {
             result = score > 0 ? WIN : LOSS;
         } else {
-            if (std::abs(normalized_score) > WIN_ADJ_SCORE) {
+            if (normalized_score > WIN_ADJ_SCORE) {
                 ++win_count;
                 draw_count = 0;
+                loss_count = 0;
             } else if (std::abs(normalized_score) < DRAW_ADJ_SCORE &&
                        m_engine.position().game_ply() >= DRAW_ADJ_MIN_PLY) {
                 win_count = 0;
                 ++draw_count;
+                loss_count = 0;
+            } else if (normalized_score < -WIN_ADJ_SCORE) {
+                win_count = 0;
+                draw_count = 0;
+                ++loss_count;
             } else {
                 win_count = 0;
                 draw_count = 0;
+                loss_count = 0;
             }
 
             if (win_count >= WIN_ADJ_PLY) {
-                result = score > 0 ? WIN : LOSS;
+                result = WIN;
             } else if (draw_count >= DRAW_ADJ_PLY) {
                 result = DRAW;
+            } else if (loss_count >= WIN_ADJ_SCORE) {
+                result = LOSS;
             }
         }
 
