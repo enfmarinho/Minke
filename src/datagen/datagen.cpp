@@ -30,6 +30,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <system_error>
 #include <thread>
 #include <vector>
 
@@ -43,14 +44,24 @@
 #include "search/search_limiter.h"
 #include "utils/random.h"
 
-DatagenThread::DatagenThread(int id, int tt_size_mb, std::string& dir_path, uint64_t seed)
+DatagenThread::DatagenThread(int id, int tt_size_mb, std::filesystem::path& dir_path, uint64_t seed)
     : m_id(id), m_stop_flag(false), m_game_count(0), m_position_count(0), prng(seed) {
-    std::filesystem::path path(dir_path + "/minke_data" + std::to_string(m_id) + ".vf");
+    std::filesystem::path path = std::filesystem::path(dir_path) / ("minke_data" + std::to_string(m_id) + ".vf");
 
     // Ensure path is valid for the creation of the output file
-    std::filesystem::create_directories(path.parent_path());
+    std::error_code ec;
+    std::filesystem::create_directories(path.parent_path(), ec);
+    if (ec) {
+        std::cerr << "Err: Datagen Thread " << m_id << " failed to create directory " << path.parent_path() << ": "
+                  << ec.message() << '\n';
+        std::exit(EXIT_FAILURE);
+    }
 
     m_file_out.open(path, std::ios::app | std::ios::binary);
+    if (!m_file_out.is_open()) {
+        std::cerr << "Err: Datagen Thread " << m_id << " failed to open file: " << path << '\n';
+        std::exit(EXIT_FAILURE);
+    }
 
     m_engine.report(false);
     m_engine.resize_tt(tt_size_mb);
@@ -185,7 +196,7 @@ void DatagenThread::init_pos_randomly() {
     m_games.reset(pos);
 }
 
-void DatagenEngine::datagen_loop(int thread_count, int tt_size_mb, std::string& dir_path) {
+void DatagenEngine::datagen_loop(int thread_count, int tt_size_mb, std::filesystem::path& dir_path) {
     const uint64_t master_seed = SeedGenerator::master_seed();
     start(thread_count, tt_size_mb, dir_path, master_seed);
     std::cout << "Datagen started with " << thread_count << " thread(s) and " << master_seed << " seed\n";
@@ -244,7 +255,7 @@ void DatagenEngine::report() const {
     std::cout << line;
 }
 
-void DatagenEngine::start(int thread_count, int tt_size_mb, std::string& dir, uint64_t master_seed) {
+void DatagenEngine::start(int thread_count, int tt_size_mb, std::filesystem::path& dir, uint64_t master_seed) {
     SeedGenerator seed_gen(master_seed);
     m_datagen_threads.reserve(thread_count);
     for (int id = 0; id < thread_count; ++id)

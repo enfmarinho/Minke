@@ -17,6 +17,7 @@
  */
 
 #include <cstdlib>
+#include <filesystem>
 
 #include "datagen/datagen.h"
 #include "uci/init.h"
@@ -38,7 +39,7 @@ int main(int argc, char *argv[]) {
         }
 
         int concurrency = std::stoi(argv[2]);
-        std::string directory = std::string(argv[3]);
+        std::filesystem::path directory = argv[3];
 
         DatagenEngine dt_engine;
         dt_engine.datagen_loop(concurrency, EngineOptions::HASH_DEFAULT, directory);

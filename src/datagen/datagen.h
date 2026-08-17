@@ -22,9 +22,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <memory>
-#include <string>
 #include <thread>
 #include <vector>
 
@@ -51,7 +51,7 @@ class DatagenThread {
 
   public:
     DatagenThread() = delete;
-    DatagenThread(int id, int tt_size_mb, std::string& dir_path, uint64_t seed);
+    DatagenThread(int id, int tt_size_mb, std::filesystem::path& dir_path, uint64_t seed);
     ~DatagenThread();
 
     void run();
@@ -80,12 +80,12 @@ class DatagenThread {
 
 class DatagenEngine {
   public:
-    void datagen_loop(int thread_count, int tt_size_mb, std::string& dir_path);
+    void datagen_loop(int thread_count, int tt_size_mb, std::filesystem::path& dir_path);
 
   private:
     void report() const;
 
-    void start(int thread_count, int tt_size_mb, std::string& dir, uint64_t master_seed);
+    void start(int thread_count, int tt_size_mb, std::filesystem::path& dir, uint64_t master_seed);
     void stop();
 
     TimeType m_start_time;
