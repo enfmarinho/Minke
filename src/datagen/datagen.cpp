@@ -65,9 +65,9 @@ void DatagenThread::run() {
 }
 
 void DatagenThread::stop() {
-    m_stop_flag = true;
+    m_stop_flag.store(true, std::memory_order_relaxed);
     m_engine.stop_search();
-};
+}
 
 void DatagenThread::play_game() {
     init_pos_randomly();

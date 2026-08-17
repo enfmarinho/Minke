@@ -60,7 +60,7 @@ class DatagenThread {
     inline int id() const { return m_id; }
     inline uint64_t game_count() const { return m_game_count.load(std::memory_order_relaxed); }
     inline uint64_t positions_count() const { return m_position_count.load(std::memory_order_relaxed); }
-    inline bool stopped() const { return m_stop_flag; }
+    inline bool stopped() const { return m_stop_flag.load(std::memory_order_relaxed); }
 
   private:
     void init_pos_randomly();
@@ -69,7 +69,7 @@ class DatagenThread {
     Engine m_engine;
 
     int m_id;
-    bool m_stop_flag;
+    std::atomic<bool> m_stop_flag;
     std::atomic<uint64_t> m_game_count;
     std::atomic<uint64_t> m_position_count;
     PRNG prng;
