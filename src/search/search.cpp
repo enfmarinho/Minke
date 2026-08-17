@@ -35,57 +35,120 @@
 #include "search/tt.h"
 #include "uci/tune.h"
 
-static void report_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
-                               const ThreadData &td) {
-    std::cout << "info depth " << depth;
-    if (is_decisive(eval)) {
-        std::cout << " score mate " << (eval < 0 ? "-" : "") << (MATE_SCORE - std::abs(eval) + 1) / 2;
-    } else {
-        std::cout << " score cp " << normalize_score(eval);
-    }
-
-    // Add 1 to time_passed() to avoid division by 0
-    std::cout << " time " << td.search_limiter.time_passed() << " nodes " << td.nodes_searched << " nps "
-              << td.nodes_searched * 1000 / (td.search_limiter.time_passed() + 1) << " pv ";
-
-    pv_list.print(td.chess960, td.position.castle_rooks_bb());
-    std::cout << std::endl;
+void SearchStackEntry::init() {
+    curr_pmove = PieceMove::none();
+    excluded_move = Move::none();
+    reduction = 0;
+    static_eval = SCORE_NONE;
+    pv_list.clear();
 }
 
-static void report_search_result(const ThreadData &td, Move best_move) {
-    std::cout << "bestmove " << (!best_move ? "none" : best_move.to_uci(td.chess960, td.position.castle_rooks_bb()))
-              << std::endl;
-}
-
-ThreadData::ThreadData() {
-    datagen = false;
-    report = true;
-    reset_search_parameters();
-}
-
-void ThreadData::reset_search_parameters() {
+void ThreadData::init() {
     best_move = Move::none();
-    stop = true;
-    nodes_searched = -1; // Avoid counting the root
+    nodes_searched = 0;
     std::memset(node_table, 0, sizeof(node_table));
-    search_limiter.init();
     for (int i = 0; i < MAX_SEARCH_DEPTH; ++i)
-        search_stack[i].reset();
+        search_stack[i].init();
 }
 
-inline bool stop_search(const ThreadData &td) { return td.stop || td.search_limiter.time_over(td.nodes_searched); }
+Engine::Engine() {
+    // init main thread data
+    m_main_thread_data = std::make_unique<ThreadData>();
+    m_main_thread_data->id = 0;
+    m_main_thread_data->init();
+}
 
-ScoreType iterative_deepening(ThreadData &td) {
-    td.stop = false;
+void Engine::new_game() {
+    clear_tt();
+    m_search_limiter.init();
+    for (auto &m_td : m_threads_data) {
+        m_td.search_history.reset();
+        m_td.correction_history.reset();
+        m_td.init();
+    }
+    m_main_thread_data->search_history.reset();
+    m_main_thread_data->correction_history.reset();
+    m_main_thread_data->init();
+}
 
+void Engine::prepare_search() {
+    for (auto &td : m_threads_data) {
+        td.init();
+    }
+    m_main_thread_data->init();
+}
+
+void Engine::prepare_search(const Position &pos) {
+    for (auto &td : m_threads_data) {
+        td.position = pos;
+        td.nnue.refresh(pos);
+        td.init();
+    }
+    m_main_thread_data->position = pos;
+    m_main_thread_data->nnue.refresh(pos);
+    m_main_thread_data->init();
+}
+
+std::pair<Move, ScoreType> Engine::search() {
+    assert(m_threads.size() == m_threads_data.size());
+
+    m_stop = false;
+    for (size_t i = 0; i < m_threads.size(); ++i) {
+        m_threads[i] = std::thread(&Engine::iterative_deepening, this, std::ref(m_threads_data[i]));
+    }
+    const ScoreType score = iterative_deepening(*m_main_thread_data);
+    m_stop = true;
+
+    m_tt.update_age();
+
+    wait_until_idle(); // join helper threads
+
+    return {m_main_thread_data->best_move, score};
+}
+
+void Engine::wait_until_idle() {
+    for (auto &t : m_threads) {
+        if (t.joinable()) {
+            t.join();
+        }
+    }
+}
+
+void Engine::resize_threads(size_t new_size) {
+    assert(new_size >= 1);
+
+    --new_size; // the caller thread is already a search thread, so -1
+    m_threads.resize(new_size);
+    m_threads_data.resize(new_size);
+
+    // SAFETY: m_main_thread_data is guaranteed to have been allocated by the constructor, so its safe to
+    // dereference it
+    const ThreadData &main_td = *m_main_thread_data;
+    for (size_t i = 0; i < m_threads_data.size(); ++i) {
+        m_threads_data[i].id = i + 1;
+        m_threads_data[i].position = main_td.position;
+        m_threads_data[i].nnue = main_td.nnue;
+        m_threads_data[i].init();
+    }
+}
+
+size_t Engine::nodes_searched() const {
+    size_t total_nodes = m_main_thread_data->nodes_searched;
+    for (const auto &td : m_threads_data) {
+        total_nodes += td.nodes_searched;
+    }
+    return total_nodes;
+}
+
+ScoreType Engine::iterative_deepening(ThreadData &td) {
     Move best_move = Move::none();
     ScoreType past_score = -MAX_SCORE;
     ScoreType avg_score = SCORE_NONE;
     CounterType pv_stability = 0;
     CounterType score_stability = 0;
-    for (CounterType depth = 1; depth <= std::min(td.search_limiter.max_depth(), MAX_SEARCH_DEPTH - 1); ++depth) {
+    for (CounterType depth = 1; depth <= std::min(m_search_limiter.max_depth(), MAX_SEARCH_DEPTH - 1); ++depth) {
         const ScoreType score = aspiration(depth, past_score, td);
-        if (stop_search(td)) // Search did not finished completely
+        if (time_over(td)) // Search did not finished completely
             break;
 
         if (avg_score == SCORE_NONE) {
@@ -111,28 +174,29 @@ ScoreType iterative_deepening(ThreadData &td) {
         if (!best_move) // No legal moves
             break;
 
-        if (td.report)
-            report_search_info(depth, score, td.search_stack[0].pv_list, td);
+        if (td.is_main()) { // main thread
+            if (m_report)
+                report_search_info(depth, score, td.search_stack[0].pv_list, td);
 
-        if (depth > 5)
-            td.search_limiter.update(td, pv_stability, score_stability);
-        if (td.search_limiter.stop_early(td.nodes_searched))
-            break;
+            if (depth > 5)
+                m_search_limiter.update(td, pv_stability, score_stability);
+            if (m_search_limiter.stop_early(td.nodes_searched))
+                break;
 
-        td.search_limiter.can_stop(); // Avoids stopping before depth 1 has been searched through
+            m_search_limiter.can_stop(); // Avoids stopping before depth 1 has been searched through
+        }
     }
 
-    td.stop = true;
     td.best_move = best_move; // A partial search would mess this up
-    td.tt.update_age();
 
-    if (td.report)
+    if (m_report && td.is_main()) {
         report_search_result(td, best_move);
+    }
 
     return past_score;
 }
 
-ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td) {
+ScoreType Engine::aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td) {
     int alpha = -MAX_SCORE;
     int beta = MAX_SCORE;
     int delta = aw_first_window();
@@ -146,7 +210,7 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, Threa
     while (true) {
         const ScoreType curr_score = negamax(alpha, beta, curr_depth, 0, false, td);
 
-        if (stop_search(td))
+        if (time_over(td))
             break;
 
         score = curr_score;
@@ -168,9 +232,9 @@ ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, Threa
     return score;
 }
 
-ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterType ply, const bool cutnode,
-                  ThreadData &td) {
-    if (stop_search(td)) // Out of time
+ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterType ply, const bool cutnode,
+                          ThreadData &td) {
+    if (time_over(td)) // Out of time
         return -MAX_SCORE;
     if (depth <= 0)
         return quiescence(alpha, beta, ply, td);
@@ -201,7 +265,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
     // Transposition table probe
     TTEntry tte;
 
-    const bool tthit = !singular_search && td.tt.probe(position, tte); // Don't use ttentry result if in singular search
+    const bool tthit = !singular_search && m_tt.probe(position, tte); // Don't use ttentry result if in singular search
 
     // Extraction data from ttentry if tthit
     const Move ttmove = (tthit ? tte.best_move() : Move::none());
@@ -249,7 +313,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
     } else {
         raw_eval = td.nnue.eval(position);
         eval = node.static_eval = adjust_eval(position, raw_eval, correction_value);
-        td.tt.store(position.hash(), 0, Move::none(), SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age());
+        m_tt.store(position.hash(), 0, Move::none(), SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, m_tt.age());
     }
 
     // Clean excluded and killer moves for the next ply
@@ -317,7 +381,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
             const int reduction = (nmp_base_reduction() + depth * nmp_depth_factor()) / 64;
 
             make_null_move(td);
-            td.tt.prefetch(position.hash());
+            m_tt.prefetch(position.hash());
             node.curr_pmove = PieceMove::none();
             const ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, ply + 1, !cutnode, td);
             unmake_null_move(td);
@@ -346,7 +410,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
                 node.curr_pmove = {move, position.piece_at(move.from())};
                 make_move(td, move);
 
-                td.tt.prefetch(position.hash());
+                m_tt.prefetch(position.hash());
 
                 int pc_score = -quiescence(-pc_beta, -pc_beta + 1, ply + 1, td);
                 if (pc_score >= pc_beta)
@@ -355,7 +419,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
                 unmake_move(td, move);
 
                 if (pc_score >= pc_beta) {
-                    td.tt.store(position.hash(), depth - 3, move, pc_score, raw_eval, LOWER, ttpv, td.tt.age());
+                    m_tt.store(position.hash(), depth - 3, move, pc_score, raw_eval, LOWER, ttpv, m_tt.age());
                     return pc_score;
                 }
             }
@@ -432,7 +496,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
             const ScoreType singular_beta = ttscore - depth * singular_extension_depth_factor() / 16;
             const ScoreType singular_depth = (depth - 1) / 2;
 
-            td.tt.prefetch(position.hash());
+            m_tt.prefetch(position.hash());
 
             td.search_stack[ply].excluded_move = ttmove;
             const ScoreType singular_score =
@@ -455,7 +519,7 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
         node.curr_pmove = {move, position.piece_at(move.from())};
         make_move(td, move);
 
-        td.tt.prefetch(position.hash());
+        m_tt.prefetch(position.hash());
         int new_depth = depth + extension - 1;
 
         // Add move to tried list
@@ -547,18 +611,18 @@ ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterTyp
         td.correction_history.update(td, depth, ply, best_score - node.static_eval);
     }
 
-    if (!stop_search(td) && !singular_search) {
-        td.tt.store(position.hash(), depth, best_move, best_score, raw_eval, bound, ttpv, td.tt.age());
+    if (!time_over(td) && !singular_search) {
+        m_tt.store(position.hash(), depth, best_move, best_score, raw_eval, bound, ttpv, m_tt.age());
         td.best_move = best_move;
     }
 
     return best_score;
 }
 
-ScoreType quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadData &td) {
+ScoreType Engine::quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadData &td) {
     ++td.nodes_searched;
     Position &position = td.position;
-    if (stop_search(td))
+    if (time_over(td))
         return -MAX_SCORE;
     else if (position.is_draw())
         return 0;
@@ -569,7 +633,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadDat
     SearchStackEntry &node = td.search_stack[ply];
 
     TTEntry tte;
-    const bool tthit = td.tt.probe(position, tte);
+    const bool tthit = m_tt.probe(position, tte);
     const Move ttmove = tthit ? tte.best_move() : Move::none();
     const ScoreType ttscore = tthit ? tte.score() : SCORE_NONE;
     const ScoreType tteval = tthit ? tte.eval() : SCORE_NONE;
@@ -605,7 +669,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadDat
     } else {
         raw_eval = td.nnue.eval(position);
         best_score = node.static_eval = adjust_eval(position, raw_eval, td.correction_history.correction(td, ply));
-        td.tt.store(position.hash(), 0, Move::none(), SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, td.tt.age());
+        m_tt.store(position.hash(), 0, Move::none(), SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, m_tt.age());
     }
 
     // Stand-pat
@@ -639,7 +703,7 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadDat
             }
         }
         make_move(td, move);
-        td.tt.prefetch(position.hash());
+        m_tt.prefetch(position.hash());
 
         ++moves_searched;
         const ScoreType score = -quiescence(-beta, -alpha, ply + 1, td);
@@ -665,12 +729,12 @@ ScoreType quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadDat
         return -MATE_SCORE + ply;
     }
 
-    td.tt.store(position.hash(), 0, best_move, best_score, raw_eval, bound, ttpv, td.tt.age());
+    m_tt.store(position.hash(), 0, best_move, best_score, raw_eval, bound, ttpv, m_tt.age());
 
     return best_score;
 }
 
-bool SEE(Position &position, const Move &move, int threshold) {
+bool Engine::SEE(Position &position, const Move &move, int threshold) {
     if (move.is_castle()) // Cannot win or lose material by castling
         return threshold <= 0;
 
@@ -741,4 +805,28 @@ bool SEE(Position &position, const Move &move, int threshold) {
     }
 
     return stm != position.stm();
+}
+
+void Engine::report_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
+                                const ThreadData &td) {
+    std::cout << "info depth " << depth;
+    if (is_decisive(eval)) {
+        std::cout << " score mate " << (eval < 0 ? "-" : "") << (MATE_SCORE - std::abs(eval) + 1) / 2;
+    } else {
+        std::cout << " score cp " << normalize_score(eval);
+    }
+
+    const size_t nodes = nodes_searched();
+
+    // Add 1 to time_passed() to avoid division by 0
+    std::cout << " time " << m_search_limiter.time_passed() << " nodes " << nodes << " nps "
+              << nodes * 1000 / (m_search_limiter.time_passed() + 1) << " pv ";
+
+    pv_list.print(m_is_chess960, td.position.castle_rooks_bb());
+    std::cout << std::endl;
+}
+
+void Engine::report_search_result(const ThreadData &td, Move best_move) {
+    std::cout << "bestmove " << (!best_move ? "none" : best_move.to_uci(m_is_chess960, td.position.castle_rooks_bb()))
+              << std::endl;
 }

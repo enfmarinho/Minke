@@ -63,7 +63,6 @@ class DatagenThread {
     DatagenThread() = delete;
     DatagenThread(int id, int tt_size_mb, std::string& dir_path, uint64_t seed)
         : m_id(id), m_game_count(0), m_position_count(0), m_stop_flag(false), prng(seed) {
-        m_td = std::make_unique<ThreadData>();
         init(tt_size_mb, dir_path);
     }
     ~DatagenThread() { m_file_out.close(); }
@@ -76,9 +75,8 @@ class DatagenThread {
 
         m_file_out.open(path, std::ios_base::ios_base::app | std::ios_base::ios_base::binary);
 
-        m_td->datagen = true;
-        m_td->report = false;
-        m_td->tt.resize(tt_size_mb);
+        m_engine.report(false);
+        m_engine.resize_tt(tt_size_mb);
     }
 
     void run() {
@@ -94,7 +92,7 @@ class DatagenThread {
 
     void stop() {
         m_stop_flag = true;
-        m_td->stop = true;
+        m_engine.stop_search();
     };
 
     int get_id() const { return m_id; }
@@ -106,14 +104,14 @@ class DatagenThread {
         init_pos_randomly();
 
         // Search deeper to verify position before generating data from it
-        m_td->reset_search_parameters();
         SearchLimits verification_sl;
         verification_sl.depth = VERIFICATION_MAX_DEPTH;
         verification_sl.optimum_node = VERIFICATION_SOFT_NODE_LIMIT;
         verification_sl.maximum_node = VERIFICATION_HARD_NODE_LIMIT;
-        m_td->search_limiter.init(verification_sl);
+        m_engine.prepare_search();
+        m_engine.limit_search(verification_sl);
 
-        ScoreType verification_score = iterative_deepening(*m_td);
+        auto [_, verification_score] = m_engine.search();
         if (std::abs(verification_score) > VERIFICATION_MAX_SCORE) {
             return;
         }
@@ -129,25 +127,23 @@ class DatagenThread {
         sl.maximum_node = HARD_NODE_LIMIT;
 
         while (!m_stop_flag) {
-            m_td->reset_search_parameters();
-            m_td->search_limiter.init(sl);
+            m_engine.prepare_search();
+            m_engine.limit_search(sl);
 
-            ScoreType score = iterative_deepening(*m_td);
-            ScoreType normalized_score = normalize_score(score);
+            auto [move, score] = m_engine.search();
+            const ScoreType normalized_score = normalize_score(score);
             ++position_count;
 
-            Move move = m_td->best_move;
-
             if (!move) {
-                if (m_td->position.in_check())
-                    result = m_td->position.stm() == WHITE ? LOSS : WIN;
+                if (m_engine.position().in_check())
+                    result = m_engine.position().stm() == WHITE ? LOSS : WIN;
                 else
                     result = DRAW;
 
                 break;
             }
 
-            if (m_td->position.stm() == BLACK)
+            if (m_engine.position().stm() == BLACK)
                 score *= -1;
 
             if (std::abs(score) >= MATE_FOUND) {
@@ -157,7 +153,7 @@ class DatagenThread {
                     ++win_count;
                     draw_count = 0;
                 } else if (std::abs(normalized_score) < DRAW_ADJ_SCORE &&
-                           m_td->position.game_ply() >= DRAW_ADJ_MIN_PLY) {
+                           m_engine.position().game_ply() >= DRAW_ADJ_MIN_PLY) {
                     win_count = 0;
                     ++draw_count;
                 } else {
@@ -172,7 +168,7 @@ class DatagenThread {
                 }
             }
 
-            if (m_td->position.is_draw()) {
+            if (m_engine.position().is_draw()) {
                 result = DRAW;
                 score = 0;
             }
@@ -182,8 +178,8 @@ class DatagenThread {
             if (result != NO_RESULT)
                 break;
 
-            make_move(*m_td, move);
-            m_td->position.update_game_history();
+            make_move(m_engine.main_td(), move);
+            m_engine.position().update_game_history();
         }
 
         if (result != NO_RESULT) {
@@ -195,29 +191,29 @@ class DatagenThread {
     }
 
     void init_pos_randomly() {
-        m_td->position.set_fen(START_FEN);
+        Position& pos = m_engine.position();
+        pos.set_fen(START_FEN);
 
         int move_count = 8 + (prng.rand<uint32_t>() % 5);
         for (int i = 0; i < move_count; ++i) {
             Movegen::ScoredMoveList move_list;
-            Movegen::all(move_list, m_td->position);
+            Movegen::all(move_list, pos);
 
             if (move_list.empty()) {
-                m_td->position.set_fen(START_FEN);
+                pos.set_fen(START_FEN);
                 i = -1; // increment is happening after the loop, so this will be 0
             } else {
                 const Move move = move_list[prng.rand<size_t>() % move_list.size()].move;
-                m_td->position.make_move(move);
+                pos.make_move(move);
             }
         }
 
-        m_td->nnue.refresh(m_td->position);
-        m_td->search_history.reset();
-        m_td->tt.clear();
-        m_games.reset(m_td->position);
+        m_engine.main_td().nnue.refresh(pos);
+        m_engine.new_game();
+        m_games.reset(pos);
     }
 
-    std::unique_ptr<ThreadData> m_td;
+    Engine m_engine;
 
     int m_id;
     std::atomic<uint64_t> m_game_count;
@@ -285,7 +281,7 @@ class DatagenEngine {
 
         uint64_t game_count = 0;
         uint64_t position_count = 0;
-        for (const std::unique_ptr<DatagenThread>& dt_ptr : m_datagen_thread_ptrs) {
+        for (const std::unique_ptr<DatagenThread>& dt_ptr : m_datagen_threads) {
             print_info_line(std::to_string(dt_ptr->get_id()), dt_ptr->get_game_count(), dt_ptr->get_positions_count());
 
             position_count += dt_ptr->get_positions_count();
@@ -301,13 +297,13 @@ class DatagenEngine {
         m_stop_flag = false;
 
         SeedGenerator seed_gen(master_seed);
-        m_datagen_thread_ptrs.reserve(thread_count);
+        m_datagen_threads.reserve(thread_count);
         for (int id = 0; id < thread_count; ++id)
-            m_datagen_thread_ptrs.emplace_back(std::make_unique<DatagenThread>(id, tt_size_mb, dir, seed_gen.next()));
+            m_datagen_threads.emplace_back(std::make_unique<DatagenThread>(id, tt_size_mb, dir, seed_gen.next()));
 
         m_threads.reserve(thread_count);
         for (int id = 0; id < thread_count; ++id)
-            m_threads.emplace_back(&DatagenThread::run, m_datagen_thread_ptrs[id].get());
+            m_threads.emplace_back(&DatagenThread::run, m_datagen_threads[id].get());
     }
 
     void run() {
@@ -316,7 +312,7 @@ class DatagenEngine {
 
         m_stop_flag = false;
         for (unsigned int i = 0; i < m_threads.size(); ++i)
-            m_threads[i] = std::thread(&DatagenThread::run, m_datagen_thread_ptrs[i].get());
+            m_threads[i] = std::thread(&DatagenThread::run, m_datagen_threads[i].get());
     }
 
     void stop() {
@@ -324,7 +320,7 @@ class DatagenEngine {
             return;
 
         m_stop_flag = true;
-        for (std::unique_ptr<DatagenThread>& dt_ptr : m_datagen_thread_ptrs)
+        for (std::unique_ptr<DatagenThread>& dt_ptr : m_datagen_threads)
             dt_ptr->stop();
 
         for (auto& thread : m_threads)
@@ -334,6 +330,6 @@ class DatagenEngine {
     bool m_stop_flag = true;
     TimeType m_start_time;
 
-    std::vector<std::unique_ptr<DatagenThread>> m_datagen_thread_ptrs;
+    std::vector<std::unique_ptr<DatagenThread>> m_datagen_threads;
     std::vector<std::thread> m_threads;
 };

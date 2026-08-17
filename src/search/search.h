@@ -18,9 +18,15 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <memory>
+#include <thread>
+#include <vector>
 
 #include "core/move.h"
+#include "core/position.h"
 #include "core/types.h"
 #include "eval/nnue.h"
 #include "search/correction.h"
@@ -40,17 +46,11 @@ struct SearchStackEntry {
     ScoreType static_eval;
     PvList pv_list;
 
-    inline void reset() {
-        curr_pmove = PieceMove::none();
-        excluded_move = Move::none();
-        reduction = 0;
-        static_eval = SCORE_NONE;
-        pv_list.clear();
-    }
+    inline void init();
 };
 
 struct ThreadData {
-    TranspositionTable tt;
+    size_t id;
 
     Position position;
     NNUE nnue;
@@ -59,16 +59,11 @@ struct ThreadData {
     SearchStackEntry search_stack[MAX_SEARCH_DEPTH];
     Move best_move;
 
-    SearchLimiter search_limiter;
     int64_t nodes_searched;
     int64_t node_table[64 * 64];
-    bool stop;
-    bool datagen;
-    bool report;
-    bool chess960;
 
-    ThreadData();
-    void reset_search_parameters();
+    void init();
+    inline bool is_main() const { return id == 0; }
 };
 
 inline void make_move(ThreadData &td, const Move move) {
@@ -85,9 +80,62 @@ inline void make_null_move(ThreadData &td) { td.position.make_null_move(); }
 
 inline void unmake_null_move(ThreadData &td) { td.position.unmake_null_move(); }
 
-ScoreType iterative_deepening(ThreadData &td);
-ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);
-ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterType ply, const bool cutnode,
-                  ThreadData &td);
-ScoreType quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadData &td);
-bool SEE(Position &position, const Move &move, int threshold);
+class Engine {
+  public:
+    Engine();
+    ~Engine() = default;
+
+    void new_game();
+    void prepare_search();
+    void prepare_search(const Position &pos);
+    inline void limit_search(const SearchLimits &sl) { m_search_limiter.init(sl); }
+
+    std::pair<Move, ScoreType> search();
+    inline void stop_search() { m_stop = true; }
+    inline bool stopped() const { return m_stop; }
+    void wait_until_idle();
+
+    void resize_threads(size_t new_size);
+    void resize_tt(size_t MB) { m_tt.resize(MB); }
+    void clear_tt() { m_tt.clear(); }
+
+    void report(bool r) { m_report = r; }
+
+    bool is_chess960() const { return m_is_chess960; }
+    void set_chess960(bool c) { m_is_chess960 = c; }
+
+    inline ScoreType static_eval() { return m_main_thread_data->nnue.eval(m_main_thread_data->position); }
+    size_t nodes_searched() const;
+
+    Position &position() { return m_main_thread_data->position; }
+    const Position &position() const { return m_main_thread_data->position; }
+    ThreadData &main_td() { return *m_main_thread_data; }
+    const ThreadData &main_td() const { return *m_main_thread_data; }
+
+    static bool SEE(Position &position, const Move &move, int threshold);
+
+  private:
+    ScoreType iterative_deepening(ThreadData &td);
+    ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);
+    ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterType ply, const bool cutnode,
+                      ThreadData &td);
+    ScoreType quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadData &td);
+
+    inline bool time_over(const ThreadData &td) {
+        return m_stop || (td.is_main() && m_search_limiter.time_over(td.nodes_searched));
+    }
+
+    void report_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
+                            const ThreadData &td);
+    void report_search_result(const ThreadData &td, Move best_move);
+
+    std::vector<std::thread> m_threads;
+    std::vector<ThreadData> m_threads_data;
+    std::unique_ptr<ThreadData> m_main_thread_data;
+    SearchLimiter m_search_limiter;
+    TranspositionTable m_tt;
+
+    bool m_stop{true};
+    bool m_report{true};
+    bool m_is_chess960{false};
+};
