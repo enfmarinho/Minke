@@ -174,12 +174,6 @@ void DatagenEngine::datagen_loop(int thread_count, int tt_size_mb, std::string& 
             break;
         } else if (command == "report") {
             report();
-        } else if (command == "pause") {
-            stop();
-            std::cout << "Datagen paused" << std::endl;
-        } else if (command == "resume") {
-            run();
-            std::cout << "Datagen resumed" << std::endl;
         } else if (command == "isalive") {
             std::cout << "alive" << std::endl;
         }
