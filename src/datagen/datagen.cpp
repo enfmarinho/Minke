@@ -196,6 +196,8 @@ void DatagenThread::init_pos_randomly() {
     m_games.reset(pos);
 }
 
+DatagenEngine::~DatagenEngine() { stop(); }
+
 void DatagenEngine::datagen_loop(int thread_count, int tt_size_mb, std::filesystem::path& dir_path) {
     const uint64_t master_seed = SeedGenerator::master_seed();
     start(thread_count, tt_size_mb, dir_path, master_seed);
@@ -267,9 +269,17 @@ void DatagenEngine::start(int thread_count, int tt_size_mb, std::filesystem::pat
 }
 
 void DatagenEngine::stop() {
-    for (auto& datagen_thread : m_datagen_threads)
-        datagen_thread->stop();
+    for (auto& datagen_thread : m_datagen_threads) {
+        if (datagen_thread) {
+            datagen_thread->stop();
+        }
+    }
 
-    for (auto& thread : m_threads)
-        thread.join();
+    for (auto& thread : m_threads) {
+        if (thread.joinable()) {
+            thread.join();
+        }
+    }
+    m_threads.clear();
+    m_datagen_threads.clear();
 }

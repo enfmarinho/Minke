@@ -80,6 +80,9 @@ class DatagenThread {
 
 class DatagenEngine {
   public:
+    DatagenEngine() = default;
+    ~DatagenEngine();
+
     void datagen_loop(int thread_count, int tt_size_mb, std::filesystem::path& dir_path);
 
   private:
