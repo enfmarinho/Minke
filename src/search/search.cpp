@@ -178,8 +178,11 @@ std::pair<Move, ScoreType> Engine::iterative_deepening(ThreadData &td) {
             if (m_report)
                 report_search_info(depth, score, td.search_stack[0].pv_list, td);
 
-            if (depth > 5)
-                m_search_limiter.update(td, pv_stability, score_stability);
+            if (depth > 5) {
+                const double node_fraction =
+                    td.node_table[best_move.from_and_to()] / static_cast<double>(td.nodes_searched);
+                m_search_limiter.update(pv_stability, score_stability, node_fraction);
+            }
             if (m_search_limiter.stop_early(td.nodes_searched))
                 break;
 

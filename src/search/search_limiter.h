@@ -45,7 +45,7 @@ class SearchLimiter {
 
     void init();
     void init(const SearchLimits& sl);
-    void update(const ThreadData& td, CounterType pv_stability, CounterType score_stability);
+    void update(CounterType pv_stability, CounterType score_stability, double node_fraction);
 
     bool stop_early(uint64_t nodes) const;
     bool time_over(uint64_t nodes) const;
