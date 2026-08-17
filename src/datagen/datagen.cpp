@@ -43,7 +43,8 @@
 #include "search/search_limiter.h"
 #include "utils/random.h"
 
-void DatagenThread::init(int tt_size_mb, std::string& dir_path) {
+DatagenThread::DatagenThread(int id, int tt_size_mb, std::string& dir_path, uint64_t seed)
+    : m_id(id), m_stop_flag(false), m_game_count(0), m_position_count(0), prng(seed) {
     std::filesystem::path path(dir_path + "/minke_data" + std::to_string(m_id) + ".vf");
 
     // Ensure path is valid for the creation of the output file
@@ -54,10 +55,11 @@ void DatagenThread::init(int tt_size_mb, std::string& dir_path) {
     m_engine.report(false);
     m_engine.resize_tt(tt_size_mb);
 }
+DatagenThread::~DatagenThread() { m_file_out.close(); }
 
 void DatagenThread::run() {
     m_stop_flag = false;
-    while (!m_stop_flag) {
+    while (!stopped()) {
         play_game();
     }
 }
@@ -93,7 +95,7 @@ void DatagenThread::play_game() {
     sl.optimum_node = SOFT_NODE_LIMIT;
     sl.maximum_node = HARD_NODE_LIMIT;
 
-    while (!m_stop_flag) {
+    while (!stopped()) {
         m_engine.prepare_search();
         m_engine.limit_search(sl);
 
@@ -149,7 +151,7 @@ void DatagenThread::play_game() {
         m_engine.position().update_game_history();
     }
 
-    if (result != NO_RESULT) {
+    if (result != NO_RESULT && !stopped()) {
         m_games.write(m_file_out, result);
 
         m_position_count.fetch_add(position_count, std::memory_order_relaxed);
@@ -161,20 +163,23 @@ void DatagenThread::init_pos_randomly() {
     Position& pos = m_engine.position();
     pos.set_fen(START_FEN);
 
-    int move_count = 8 + (prng.rand<uint32_t>() % 5);
+    // apply `move_count` random moves to opening. If not reached `move_count` and there is no legal moves restart
+    const int move_count = 8 + (prng.rand<uint32_t>() % 5);
     for (int i = 0; i < move_count; ++i) {
         Movegen::ScoredMoveList move_list;
         Movegen::all(move_list, pos);
 
-        if (move_list.empty()) {
+        if (move_list.empty()) { // no legal moves, restart from new opening
             pos.set_fen(START_FEN);
             i = -1; // increment is happening after the loop, so this will be 0
         } else {
+            // apply random move
             const Move move = move_list[prng.rand<size_t>() % move_list.size()].move;
             pos.make_move(move);
         }
     }
 
+    // initialize engine for search
     m_engine.main_td().nnue.refresh(pos);
     m_engine.new_game();
     m_games.reset(pos);
@@ -182,8 +187,8 @@ void DatagenThread::init_pos_randomly() {
 
 void DatagenEngine::datagen_loop(int thread_count, int tt_size_mb, std::string& dir_path) {
     const uint64_t master_seed = SeedGenerator::master_seed();
-    std::cout << "Datagen started with " << thread_count << " thread(s) and " << master_seed << " seed\n";
     start(thread_count, tt_size_mb, dir_path, master_seed);
+    std::cout << "Datagen started with " << thread_count << " thread(s) and " << master_seed << " seed\n";
 
     m_start_time = now();
     std::string input, command;
@@ -227,7 +232,7 @@ void DatagenEngine::report() const {
 
     uint64_t game_count = 0;
     uint64_t position_count = 0;
-    for (const std::unique_ptr<DatagenThread>& dt_ptr : m_datagen_threads) {
+    for (const auto& dt_ptr : m_datagen_threads) {
         print_info_line(std::to_string(dt_ptr->id()), dt_ptr->game_count(), dt_ptr->positions_count());
 
         position_count += dt_ptr->positions_count();
@@ -240,8 +245,6 @@ void DatagenEngine::report() const {
 }
 
 void DatagenEngine::start(int thread_count, int tt_size_mb, std::string& dir, uint64_t master_seed) {
-    m_stop_flag = false;
-
     SeedGenerator seed_gen(master_seed);
     m_datagen_threads.reserve(thread_count);
     for (int id = 0; id < thread_count; ++id)
@@ -252,22 +255,9 @@ void DatagenEngine::start(int thread_count, int tt_size_mb, std::string& dir, ui
         m_threads.emplace_back(&DatagenThread::run, m_datagen_threads[id].get());
 }
 
-void DatagenEngine::run() {
-    if (!m_stop_flag)
-        return;
-
-    m_stop_flag = false;
-    for (unsigned int i = 0; i < m_threads.size(); ++i)
-        m_threads[i] = std::thread(&DatagenThread::run, m_datagen_threads[i].get());
-}
-
 void DatagenEngine::stop() {
-    if (m_stop_flag)
-        return;
-
-    m_stop_flag = true;
-    for (std::unique_ptr<DatagenThread>& dt_ptr : m_datagen_threads)
-        dt_ptr->stop();
+    for (auto& datagen_thread : m_datagen_threads)
+        datagen_thread->stop();
 
     for (auto& thread : m_threads)
         thread.join();

@@ -51,21 +51,16 @@ class DatagenThread {
 
   public:
     DatagenThread() = delete;
-    DatagenThread(int id, int tt_size_mb, std::string& dir_path, uint64_t seed)
-        : m_id(id), m_game_count(0), m_position_count(0), m_stop_flag(false), prng(seed) {
-        init(tt_size_mb, dir_path);
-    }
-    ~DatagenThread() { m_file_out.close(); }
-
-    void init(int tt_size_mb, std::string& dir_path);
+    DatagenThread(int id, int tt_size_mb, std::string& dir_path, uint64_t seed);
+    ~DatagenThread();
 
     void run();
-
     void stop();
 
-    int id() const { return m_id; }
-    uint64_t game_count() const { return m_game_count.load(std::memory_order_relaxed); }
-    uint64_t positions_count() const { return m_position_count.load(std::memory_order_relaxed); }
+    inline int id() const { return m_id; }
+    inline uint64_t game_count() const { return m_game_count.load(std::memory_order_relaxed); }
+    inline uint64_t positions_count() const { return m_position_count.load(std::memory_order_relaxed); }
+    inline bool stopped() const { return m_stop_flag; }
 
   private:
     void init_pos_randomly();
@@ -74,9 +69,9 @@ class DatagenThread {
     Engine m_engine;
 
     int m_id;
+    bool m_stop_flag;
     std::atomic<uint64_t> m_game_count;
     std::atomic<uint64_t> m_position_count;
-    bool m_stop_flag;
     PRNG prng;
 
     std::ofstream m_file_out;
@@ -89,11 +84,10 @@ class DatagenEngine {
 
   private:
     void report() const;
+
     void start(int thread_count, int tt_size_mb, std::string& dir, uint64_t master_seed);
-    void run();
     void stop();
 
-    bool m_stop_flag = true;
     TimeType m_start_time;
 
     std::vector<std::unique_ptr<DatagenThread>> m_datagen_threads;
