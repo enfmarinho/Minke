@@ -44,7 +44,6 @@ void SearchStackEntry::init() {
 }
 
 void ThreadData::init() {
-    best_move = Move::none();
     nodes_searched = 0;
     std::memset(node_table, 0, sizeof(node_table));
     for (int i = 0; i < MAX_SEARCH_DEPTH; ++i)
@@ -96,14 +95,14 @@ std::pair<Move, ScoreType> Engine::search() {
     for (size_t i = 0; i < m_threads.size(); ++i) {
         m_threads[i] = std::thread(&Engine::iterative_deepening, this, std::ref(m_threads_data[i]));
     }
-    const ScoreType score = iterative_deepening(*m_main_thread_data);
+    const auto search_result = iterative_deepening(*m_main_thread_data);
     m_stop = true;
 
     m_tt.update_age();
 
     wait_until_idle(); // join helper threads
 
-    return {m_main_thread_data->best_move, score};
+    return search_result;
 }
 
 void Engine::wait_until_idle() {
@@ -140,14 +139,15 @@ size_t Engine::nodes_searched() const {
     return total_nodes;
 }
 
-ScoreType Engine::iterative_deepening(ThreadData &td) {
-    Move best_move = Move::none();
+std::pair<Move, ScoreType> Engine::iterative_deepening(ThreadData &td) {
+    Move past_best_move = Move::none();
     ScoreType past_score = -MAX_SCORE;
     ScoreType avg_score = SCORE_NONE;
     CounterType pv_stability = 0;
     CounterType score_stability = 0;
     for (CounterType depth = 1; depth <= std::min(m_search_limiter.max_depth(), MAX_SEARCH_DEPTH - 1); ++depth) {
         const ScoreType score = aspiration(depth, past_score, td);
+        const Move best_move = td.search_stack[0].pv_list.best_move();
         if (time_over(td)) // Search did not finished completely
             break;
 
@@ -163,15 +163,15 @@ ScoreType Engine::iterative_deepening(ThreadData &td) {
             score_stability = 0;
         }
 
-        if (best_move == td.best_move) { // prev best move is the same as current
+        if (past_best_move == best_move) { // prev best move is the same as current
             ++pv_stability;
         } else {
             pv_stability = 0;
         }
 
-        best_move = td.best_move;
+        past_best_move = best_move;
         past_score = score;
-        if (!best_move) // No legal moves
+        if (!past_best_move) // No legal moves
             break;
 
         if (td.is_main()) { // main thread
@@ -187,13 +187,11 @@ ScoreType Engine::iterative_deepening(ThreadData &td) {
         }
     }
 
-    td.best_move = best_move; // A partial search would mess this up
-
     if (m_report && td.is_main()) {
-        report_search_result(td, best_move);
+        report_search_result(td, past_best_move);
     }
 
-    return past_score;
+    return {past_best_move, past_score};
 }
 
 ScoreType Engine::aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td) {
@@ -613,7 +611,6 @@ ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, Co
 
     if (!time_over(td) && !singular_search) {
         m_tt.store(position.hash(), depth, best_move, best_score, raw_eval, bound, ttpv, m_tt.age());
-        td.best_move = best_move;
     }
 
     return best_score;

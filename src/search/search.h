@@ -20,7 +20,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <thread>
 #include <vector>
@@ -57,7 +56,6 @@ struct ThreadData {
     History search_history;
     CorrectionHistory correction_history;
     SearchStackEntry search_stack[MAX_SEARCH_DEPTH];
-    Move best_move;
 
     int64_t nodes_searched;
     int64_t node_table[64 * 64];
@@ -115,7 +113,7 @@ class Engine {
     static bool SEE(Position &position, const Move &move, int threshold);
 
   private:
-    ScoreType iterative_deepening(ThreadData &td);
+    std::pair<Move, ScoreType> iterative_deepening(ThreadData &td);
     ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);
     ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterType ply, const bool cutnode,
                       ThreadData &td);
