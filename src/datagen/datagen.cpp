@@ -1,0 +1,259 @@
+/*
+ *  Minke is a UCI chess engine
+ *  Copyright (C) 2026 Eduardo Marinho <eduardomarinho@pm.me>
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#include "datagen/datagen.h"
+
+void DatagenThread::init(int tt_size_mb, std::string& dir_path) {
+    std::filesystem::path path(dir_path + "/minke_data" + std::to_string(m_id) + ".vf");
+
+    // Ensure path is valid for the creation of the output file
+    std::filesystem::create_directories(path.parent_path());
+
+    m_file_out.open(path, std::ios_base::ios_base::app | std::ios_base::ios_base::binary);
+
+    m_engine.report(false);
+    m_engine.resize_tt(tt_size_mb);
+}
+
+void DatagenThread::run() {
+    m_stop_flag = false;
+    while (!m_stop_flag) {
+        play_game();
+        if (m_position_count % 10'000 == 0)
+            m_file_out.flush();
+    }
+
+    m_file_out.flush();
+}
+
+void DatagenThread::stop() {
+    m_stop_flag = true;
+    m_engine.stop_search();
+};
+
+void DatagenThread::play_game() {
+    init_pos_randomly();
+
+    // Search deeper to verify position before generating data from it
+    SearchLimits verification_sl;
+    verification_sl.depth = VERIFICATION_MAX_DEPTH;
+    verification_sl.optimum_node = VERIFICATION_SOFT_NODE_LIMIT;
+    verification_sl.maximum_node = VERIFICATION_HARD_NODE_LIMIT;
+    m_engine.prepare_search();
+    m_engine.limit_search(verification_sl);
+
+    auto [_, verification_score] = m_engine.search();
+    if (std::abs(verification_score) > VERIFICATION_MAX_SCORE) {
+        return;
+    }
+
+    GameResult result = NO_RESULT;
+    int win_count = 0;
+    int draw_count = 0;
+    uint64_t position_count = 0;
+
+    SearchLimits sl;
+    sl.depth = MAX_SEARCH_DEPTH;
+    sl.optimum_node = SOFT_NODE_LIMIT;
+    sl.maximum_node = HARD_NODE_LIMIT;
+
+    while (!m_stop_flag) {
+        m_engine.prepare_search();
+        m_engine.limit_search(sl);
+
+        auto [move, score] = m_engine.search();
+        const ScoreType normalized_score = normalize_score(score);
+        ++position_count;
+
+        if (!move) {
+            if (m_engine.position().in_check())
+                result = m_engine.position().stm() == WHITE ? LOSS : WIN;
+            else
+                result = DRAW;
+
+            break;
+        }
+
+        if (m_engine.position().stm() == BLACK)
+            score *= -1;
+
+        if (std::abs(score) >= MATE_FOUND) {
+            result = score > 0 ? WIN : LOSS;
+        } else {
+            if (std::abs(normalized_score) > WIN_ADJ_SCORE) {
+                ++win_count;
+                draw_count = 0;
+            } else if (std::abs(normalized_score) < DRAW_ADJ_SCORE &&
+                       m_engine.position().game_ply() >= DRAW_ADJ_MIN_PLY) {
+                win_count = 0;
+                ++draw_count;
+            } else {
+                win_count = 0;
+                draw_count = 0;
+            }
+
+            if (win_count >= WIN_ADJ_PLY) {
+                result = score > 0 ? WIN : LOSS;
+            } else if (draw_count >= DRAW_ADJ_PLY) {
+                result = DRAW;
+            }
+        }
+
+        if (m_engine.position().is_draw()) {
+            result = DRAW;
+            score = 0;
+        }
+
+        m_games.push(move, score);
+
+        if (result != NO_RESULT)
+            break;
+
+        make_move(m_engine.main_td(), move);
+        m_engine.position().update_game_history();
+    }
+
+    if (result != NO_RESULT) {
+        m_games.write(m_file_out, result);
+
+        m_position_count.fetch_add(position_count, std::memory_order_relaxed);
+        m_game_count.fetch_add(1, std::memory_order_relaxed);
+    }
+}
+
+void DatagenThread::init_pos_randomly() {
+    Position& pos = m_engine.position();
+    pos.set_fen(START_FEN);
+
+    int move_count = 8 + (prng.rand<uint32_t>() % 5);
+    for (int i = 0; i < move_count; ++i) {
+        Movegen::ScoredMoveList move_list;
+        Movegen::all(move_list, pos);
+
+        if (move_list.empty()) {
+            pos.set_fen(START_FEN);
+            i = -1; // increment is happening after the loop, so this will be 0
+        } else {
+            const Move move = move_list[prng.rand<size_t>() % move_list.size()].move;
+            pos.make_move(move);
+        }
+    }
+
+    m_engine.main_td().nnue.refresh(pos);
+    m_engine.new_game();
+    m_games.reset(pos);
+}
+
+void DatagenEngine::datagen_loop(int thread_count, int tt_size_mb, std::string& dir_path) {
+    uint64_t master_seed = SeedGenerator::master_seed();
+    std::cout << "Datagen started with " << thread_count << " thread(s) and " << master_seed << " seed\n";
+    start(thread_count, tt_size_mb, dir_path, master_seed);
+
+    m_start_time = now();
+    std::string input, command;
+    while (getline(std::cin, input)) {
+        std::istringstream iss(input);
+        iss >> command;
+
+        if (command == "stop") {
+            break;
+        } else if (command == "report") {
+            report();
+        } else if (command == "pause") {
+            stop();
+            std::cout << "Datagen paused" << std::endl;
+        } else if (command == "resume") {
+            run();
+            std::cout << "Datagen resumed" << std::endl;
+        } else if (command == "isalive") {
+            std::cout << "alive" << std::endl;
+        }
+    }
+
+    stop();
+    report();
+
+    std::cout << "Datagen ran successfully!\n";
+}
+
+void DatagenEngine::report() const {
+    constexpr char line[] = "+------------+------------+------------+------------+------------+\n";
+
+    TimeType elapsed_time = now() - m_start_time + 1; // plus 1 to avoid divisions by 0
+
+    auto print_info_line = [elapsed_time](std::string id, uint64_t game_count, uint64_t fen_count) {
+        std::cout << "|";
+        std::cout << std::setw(11) << std::right << id << " |";
+        std::cout << std::setw(11) << std::right << game_count << " |";
+        std::cout << std::setw(11) << std::right << fen_count << " |";
+        std::cout << std::setw(11) << std::right << 3600ull * game_count * 1000ull / elapsed_time << " |";
+        std::cout << std::setw(11) << std::right << 3600ull * fen_count * 1000ull / elapsed_time << " |";
+        std::cout << "\n";
+    };
+
+    std::cout << line;
+    std::cout << "| thread id  | game count | fen count  |  games/h   |   fens/h   |\n";
+    std::cout << line;
+
+    uint64_t game_count = 0;
+    uint64_t position_count = 0;
+    for (const std::unique_ptr<DatagenThread>& dt_ptr : m_datagen_threads) {
+        print_info_line(std::to_string(dt_ptr->get_id()), dt_ptr->get_game_count(), dt_ptr->get_positions_count());
+
+        position_count += dt_ptr->get_positions_count();
+        game_count += dt_ptr->get_game_count();
+    }
+
+    std::cout << line;
+    print_info_line("total", game_count, position_count);
+    std::cout << line;
+}
+
+void DatagenEngine::start(int thread_count, int tt_size_mb, std::string& dir, uint64_t master_seed) {
+    m_stop_flag = false;
+
+    SeedGenerator seed_gen(master_seed);
+    m_datagen_threads.reserve(thread_count);
+    for (int id = 0; id < thread_count; ++id)
+        m_datagen_threads.emplace_back(std::make_unique<DatagenThread>(id, tt_size_mb, dir, seed_gen.next()));
+
+    m_threads.reserve(thread_count);
+    for (int id = 0; id < thread_count; ++id)
+        m_threads.emplace_back(&DatagenThread::run, m_datagen_threads[id].get());
+}
+
+void DatagenEngine::run() {
+    if (!m_stop_flag)
+        return;
+
+    m_stop_flag = false;
+    for (unsigned int i = 0; i < m_threads.size(); ++i)
+        m_threads[i] = std::thread(&DatagenThread::run, m_datagen_threads[i].get());
+}
+
+void DatagenEngine::stop() {
+    if (m_stop_flag)
+        return;
+
+    m_stop_flag = true;
+    for (std::unique_ptr<DatagenThread>& dt_ptr : m_datagen_threads)
+        dt_ptr->stop();
+
+    for (auto& thread : m_threads)
+        thread.join();
+}
