@@ -22,25 +22,15 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <filesystem>
 #include <fstream>
-#include <iomanip>
-#include <ios>
-#include <iostream>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
 
-#include "core/move.h"
-#include "core/movegen.h"
-#include "core/position.h"
 #include "core/types.h"
-#include "datagen/packed_position.h"
 #include "datagen/viriformat.h"
 #include "search/search.h"
-#include "search/search_limiter.h"
 #include "utils/random.h"
 
 class DatagenThread {
@@ -73,14 +63,13 @@ class DatagenThread {
 
     void stop();
 
-    int get_id() const { return m_id; }
-    uint64_t get_game_count() const { return m_game_count.load(std::memory_order_relaxed); }
-    uint64_t get_positions_count() const { return m_position_count.load(std::memory_order_relaxed); }
+    int id() const { return m_id; }
+    uint64_t game_count() const { return m_game_count.load(std::memory_order_relaxed); }
+    uint64_t positions_count() const { return m_position_count.load(std::memory_order_relaxed); }
 
   private:
-    void play_game();
-
     void init_pos_randomly();
+    void play_game();
 
     Engine m_engine;
 

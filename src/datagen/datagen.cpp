@@ -18,6 +18,31 @@
 
 #include "datagen/datagen.h"
 
+#include <atomic>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <ios>
+#include <iostream>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <vector>
+
+#include "core/move.h"
+#include "core/movegen.h"
+#include "core/position.h"
+#include "core/types.h"
+#include "datagen/packed_position.h"
+#include "datagen/viriformat.h"
+#include "search/search.h"
+#include "search/search_limiter.h"
+#include "utils/random.h"
+
 void DatagenThread::init(int tt_size_mb, std::string& dir_path) {
     std::filesystem::path path(dir_path + "/minke_data" + std::to_string(m_id) + ".vf");
 
@@ -160,7 +185,7 @@ void DatagenThread::init_pos_randomly() {
 }
 
 void DatagenEngine::datagen_loop(int thread_count, int tt_size_mb, std::string& dir_path) {
-    uint64_t master_seed = SeedGenerator::master_seed();
+    const uint64_t master_seed = SeedGenerator::master_seed();
     std::cout << "Datagen started with " << thread_count << " thread(s) and " << master_seed << " seed\n";
     start(thread_count, tt_size_mb, dir_path, master_seed);
 
@@ -172,7 +197,7 @@ void DatagenEngine::datagen_loop(int thread_count, int tt_size_mb, std::string& 
 
         if (command == "stop") {
             break;
-        } else if (command == "report") {
+        } else if (command == "report" || command == "r") {
             report();
         } else if (command == "isalive") {
             std::cout << "alive" << std::endl;
@@ -207,10 +232,10 @@ void DatagenEngine::report() const {
     uint64_t game_count = 0;
     uint64_t position_count = 0;
     for (const std::unique_ptr<DatagenThread>& dt_ptr : m_datagen_threads) {
-        print_info_line(std::to_string(dt_ptr->get_id()), dt_ptr->get_game_count(), dt_ptr->get_positions_count());
+        print_info_line(std::to_string(dt_ptr->id()), dt_ptr->game_count(), dt_ptr->positions_count());
 
-        position_count += dt_ptr->get_positions_count();
-        game_count += dt_ptr->get_game_count();
+        position_count += dt_ptr->positions_count();
+        game_count += dt_ptr->game_count();
     }
 
     std::cout << line;
