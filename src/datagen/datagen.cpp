@@ -50,7 +50,7 @@ DatagenThread::DatagenThread(int id, int tt_size_mb, std::string& dir_path, uint
     // Ensure path is valid for the creation of the output file
     std::filesystem::create_directories(path.parent_path());
 
-    m_file_out.open(path, std::ios_base::ios_base::app | std::ios_base::ios_base::binary);
+    m_file_out.open(path, std::ios::app | std::ios::binary);
 
     m_engine.report(false);
     m_engine.resize_tt(tt_size_mb);
