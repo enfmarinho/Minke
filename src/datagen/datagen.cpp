@@ -59,11 +59,7 @@ void DatagenThread::run() {
     m_stop_flag = false;
     while (!m_stop_flag) {
         play_game();
-        if (m_position_count % 10'000 == 0)
-            m_file_out.flush();
     }
-
-    m_file_out.flush();
 }
 
 void DatagenThread::stop() {
