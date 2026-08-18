@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
 
         int concurrency = std::stoi(argv[2]);
         std::filesystem::path directory = argv[3];
-        std::optional<std::filesystem::path> opening_book = (argc == 5 ? std::optional(argv[5]) : std::nullopt);
+        std::optional<std::filesystem::path> opening_book = (argc == 5 ? std::optional(argv[4]) : std::nullopt);
 
         DatagenEngine dt_engine;
         dt_engine.datagen_loop(concurrency, EngineOptions::HASH_DEFAULT, directory, opening_book);

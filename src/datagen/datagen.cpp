@@ -243,6 +243,8 @@ void DatagenEngine::datagen_loop(int thread_count, int tt_size_mb, const std::fi
         } else if (command == "isalive") {
             std::cout << "alive" << std::endl;
         }
+
+        command.clear();
     }
 
     report();

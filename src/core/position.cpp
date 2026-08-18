@@ -359,15 +359,7 @@ DirtyPiece Position::make_castle(const Move &move) {
     Square rook_from = move.to(); // castling is encoded as king takes rook
     Piece rook = piece_at(rook_from);
 
-    auto [king_to, rook_to] = [&]() {
-        const int pov_flip = stm() == WHITE ? 0 : 56;
-        if (king_from > rook_from) {
-            // castle long
-            return std::make_pair(static_cast<Square>(g1 ^ pov_flip), static_cast<Square>(f1 ^ pov_flip));
-        }
-        // castle short
-        return std::make_pair(static_cast<Square>(c1 ^ pov_flip), static_cast<Square>(d1 ^ pov_flip));
-    }();
+    auto [king_to, rook_to] = castling_to_sqs(king_from, rook_from);
 
     DirtyPiece dp;
     dp.move_type = ADD2_SUB2;
@@ -487,30 +479,15 @@ void Position::unmake_move(const Move &move) {
         }
         add_piece({piece, from});
     } else if (move.is_castle()) {
-        remove_piece({piece, to});
-        Bitboard rook_castle_bb =
-            m_history_stack[m_history_ply - 1].castle_rooks & (stm() == WHITE ? Bitboard::RANK_1 : Bitboard::RANK_8);
-        switch (to) {
-            case g1: // White castle short
-                remove_piece({get_piece(ROOK, stm()), f1});
-                add_piece({WHITE_ROOK, rook_castle_bb.msb()});
-                break;
-            case c1: // White castle long
-                remove_piece({get_piece(ROOK, stm()), d1});
-                add_piece({WHITE_ROOK, rook_castle_bb.lsb()});
-                break;
-            case g8: // Black castle short
-                remove_piece({get_piece(ROOK, stm()), f8});
-                add_piece({BLACK_ROOK, rook_castle_bb.msb()});
-                break;
-            case c8: // Black castle long
-                remove_piece({get_piece(ROOK, stm()), d8});
-                add_piece({BLACK_ROOK, rook_castle_bb.lsb()});
-                break;
-            default:
-                __builtin_unreachable();
-        }
-        add_piece({piece, from});
+        const Square king_from = from;
+        const Square rook_from = to;
+        const auto [king_to, rook_to] = castling_to_sqs(from, to);
+        const Piece rook = get_piece(ROOK, stm());
+
+        remove_piece({piece, king_to});
+        remove_piece({rook, rook_to});
+        add_piece({piece, king_from});
+        add_piece({piece, rook_from});
     } else if (move.is_promotion()) {
         remove_piece({piece, to});
         piece = get_piece(PAWN, m_stm);
@@ -680,11 +657,7 @@ bool Position::is_legal(const Move &move) {
     PieceType moved_pt = get_piece_type(piece_at(from));
 
     if (move.is_castle()) {
-        Bitboard stm_castling_rooks = m_curr_state.castle_rooks & Bitboard::pov_first_rank(stm());
-        Square rook_from = stm_castling_rooks.msb();
-        if (to == c1 || to == c8) {
-            rook_from = stm_castling_rooks.lsb();
-        }
+        Square rook_from = move.to();
         return !is_attacked(to) && !pins_bb().is_set(rook_from); // Other clauses were checked by movegen
     }
     if (move.is_ep()) {
@@ -964,3 +937,13 @@ void Position::hash_ep_key() {
 }
 
 void Position::hash_side_key() { board_state().position_hash ^= Zobrist::color_key(); }
+
+std::pair<Square, Square> Position::castling_to_sqs(const Square king_from, const Square rook_from) {
+    const int pov_flip = stm() == WHITE ? 0 : 56;
+    if (king_from > rook_from) {
+        // castle long
+        return std::make_pair(static_cast<Square>(c1 ^ pov_flip), static_cast<Square>(d1 ^ pov_flip));
+    }
+    // castle short
+    return std::make_pair(static_cast<Square>(g1 ^ pov_flip), static_cast<Square>(f1 ^ pov_flip));
+}

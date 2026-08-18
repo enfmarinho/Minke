@@ -173,6 +173,7 @@ class Position {
     void hash_side_key();
 
     inline void change_side() { m_stm = static_cast<Color>(m_stm ^ 1); }
+    std::pair<Square, Square> castling_to_sqs(const Square king_from, const Square rook_from);
 
     Piece m_board[64];
     Bitboard m_occupancies[2];

@@ -34,7 +34,8 @@ EpdBook::EpdBook() { m_book.push_back(START_FEN); }
 EpdBook::EpdBook(const std::filesystem::path &path) {
     std::ifstream file_in(path);
     if (!file_in.is_open()) {
-        std::cerr << "Warning: could not open EPD opening book " << path << std::endl;
+        std::cerr << "Warning: could not open EPD opening book " << path << ". Defaulting to startpos" << std::endl;
+        m_book.push_back(START_FEN);
         return;
     }
 
@@ -47,7 +48,8 @@ EpdBook::EpdBook(const std::filesystem::path &path) {
     }
 
     if (m_book.empty()) {
-        std::cerr << "Warning: could not read any valid openenings from EPD book " << path << std::endl;
+        std::cerr << "Warning: could not read any valid openenings from EPD book " << path << ". Defaulting to startpos"
+                  << std::endl;
         m_book.push_back(START_FEN);
     } else {
         std::cout << m_book.size() << " openings read from " << path << std::endl;
