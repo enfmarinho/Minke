@@ -263,7 +263,7 @@ void UCI::bench(int depth) {
         return;
     }
 
-    const auto table = m_td->nnue.activation_table();
+    const auto table = m_engine.main_td().nnue.activation_table();
     bool first = true;
     for (auto e : table) {
         if (!first)
