@@ -241,8 +241,7 @@ static inline void gen_castling(ScoredMoveList& move_list, const Position& pos) 
         if (!(crossing_mask & pos.occ_bb())        // no blocker
             && !(king_crossing & pos.threats_bb()) // no passing square is attacked
         ) {
-            // TODO, for datagen FRC compatibility its better to encode castling as king takes rook
-            move_list.push({Move(king_from, king_to, CASTLING), 0});
+            move_list.push({Move(king_from, rook_from, CASTLING), 0});
         }
     }
 }

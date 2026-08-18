@@ -25,6 +25,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <utility>
 
 #include "core/attacks.h"
 #include "core/bitboard.h"
@@ -352,39 +353,27 @@ DirtyPiece Position::make_capture(const Move &move) {
 }
 
 DirtyPiece Position::make_castle(const Move &move) {
-    Square from = move.from();
-    Square to = move.to();
-    Piece king = piece_at(from);
-    Piece rook = get_piece(ROOK, stm());
+    Square king_from = move.from();
+    Piece king = piece_at(king_from);
 
-    Bitboard stm_castling_rooks = m_curr_state.castle_rooks & (stm() == WHITE ? Bitboard::RANK_1 : Bitboard::RANK_8);
+    Square rook_from = move.to(); // castling is encoded as king takes rook
+    Piece rook = piece_at(rook_from);
 
-    Square rook_from = [&]() {
-        if (to == c1 || to == c8)
-            return stm_castling_rooks.lsb();
-        else
-            return stm_castling_rooks.msb();
-    }();
-    Square rook_to = [&]() {
-        switch (to) { // TODO: incompatible with FRC
-            case g1:  // White castle short
-                return f1;
-            case c1: // White castle long
-                return d1;
-            case g8: // Black castle short
-                return f8;
-            case c8: // Black castle long
-                return d8;
-            default:
-                __builtin_unreachable();
+    auto [king_to, rook_to] = [&]() {
+        const int pov_flip = stm() == WHITE ? 0 : 56;
+        if (king_from > rook_from) {
+            // castle long
+            return std::make_pair(static_cast<Square>(g1 ^ pov_flip), static_cast<Square>(f1 ^ pov_flip));
         }
+        // castle short
+        return std::make_pair(static_cast<Square>(c1 ^ pov_flip), static_cast<Square>(d1 ^ pov_flip));
     }();
 
     DirtyPiece dp;
     dp.move_type = ADD2_SUB2;
-    dp.sub0 = {king, from};
+    dp.sub0 = {king, king_from};
     dp.sub1 = {rook, rook_from};
-    dp.add0 = {king, to};
+    dp.add0 = {king, king_to};
     dp.add1 = {rook, rook_to};
 
     remove_piece(dp.sub0);

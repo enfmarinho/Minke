@@ -185,11 +185,8 @@ void DatagenThread::play_game() {
 }
 
 void DatagenThread::init_pos_randomly() {
-    auto random_startpos = [&]() -> std::string {
-        if (m_book.has_value()) {
-            return m_book->opening(m_prng.rand<size_t>());
-        }
-        return std::string(START_FEN);
+    auto random_startpos = [&]() -> const std::string& {
+        return m_book.opening(m_prng.rand<size_t>()); //
     };
 
     Position& pos = m_engine.position();

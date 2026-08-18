@@ -71,7 +71,7 @@ class DatagenThread {
 
     Engine m_engine;
 
-    int m_id;
+    const int m_id;
     std::atomic<bool> m_stop_flag;
     std::atomic<uint64_t> m_game_count;
     std::atomic<uint64_t> m_position_count;
