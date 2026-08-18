@@ -375,8 +375,22 @@ void NNUE::track_activations(std::span<const uint8_t, L1_SIZE> ft_out) {
             ++m_activation_table[idx % (PAIR_COUNT)];
         }
     }
+
+    for (size_t ft_idx = 0; ft_idx < L1_SIZE; ft_idx += 4) {
+        for (size_t block_idx = 0; block_idx < 4; block_idx++) {
+            if (ft_out[ft_idx + block_idx] != 0) {
+                ++m_nnz_count;
+                break;
+            }
+        }
+    }
+    ++m_activations_tracked_count;
 }
 
 const std::array<size_t, PAIR_COUNT> &NNUE::activation_table() { return m_activation_table; }
+
+const double NNUE::avarege_nnz() const {
+    return static_cast<double>(m_nnz_count) / m_activations_tracked_count / (L1_SIZE / 4);
+}
 
 #endif // TRACK_ACTIVATIONS

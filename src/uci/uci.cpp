@@ -272,6 +272,7 @@ void UCI::bench(int depth) {
 
         first = false;
     }
+    std::cout << "percentage of non-zero NNUE blocks: " << m_engine.main_td().nnue.avarege_nnz() * 100 << std::endl;
 #endif // TRACK_ACTIVATIONS
 }
 

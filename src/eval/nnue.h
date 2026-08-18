@@ -19,6 +19,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <span>
 #include <vector>
@@ -47,6 +48,7 @@ class NNUE {
 
 #ifdef TRACK_ACTIVATIONS
     const std::array<size_t, PAIR_COUNT> &activation_table();
+    const double avarege_nnz() const;
 #endif // TRACK_ACTIVATIONS
 
   private:
@@ -67,7 +69,9 @@ class NNUE {
 
     void track_activations(std::span<const uint8_t, L1_SIZE> ft_out);
 
-    std::array<size_t, PAIR_COUNT> m_activation_table;
+    std::array<size_t, PAIR_COUNT> m_activation_table{};
+    size_t m_nnz_count{0};
+    size_t m_activations_tracked_count{0};
 
 #endif // TRACK_ACTIVATIONS
 
