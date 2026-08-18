@@ -25,10 +25,12 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <optional>
 #include <thread>
 #include <vector>
 
 #include "core/types.h"
+#include "datagen/book.h"
 #include "datagen/viriformat.h"
 #include "search/search.h"
 #include "utils/random.h"
@@ -51,7 +53,8 @@ class DatagenThread {
 
   public:
     DatagenThread() = delete;
-    DatagenThread(int id, int tt_size_mb, std::filesystem::path& dir_path, uint64_t seed);
+    DatagenThread(int id, int tt_size_mb, const std::filesystem::path& outdir_path, const EpdBook& opening_book,
+                  uint64_t seed);
     ~DatagenThread();
 
     void run();
@@ -72,7 +75,8 @@ class DatagenThread {
     std::atomic<bool> m_stop_flag;
     std::atomic<uint64_t> m_game_count;
     std::atomic<uint64_t> m_position_count;
-    PRNG prng;
+    const EpdBook& m_book;
+    PRNG m_prng;
 
     std::ofstream m_file_out;
     Viriformat m_games;
@@ -83,12 +87,14 @@ class DatagenEngine {
     DatagenEngine() = default;
     ~DatagenEngine();
 
-    void datagen_loop(int thread_count, int tt_size_mb, std::filesystem::path& dir_path);
+    void datagen_loop(int thread_count, int tt_size_mb, const std::filesystem::path& outdir_path,
+                      const std::optional<std::filesystem::path> opening_book_path);
 
   private:
     void report() const;
 
-    void start(int thread_count, int tt_size_mb, std::filesystem::path& dir, uint64_t master_seed);
+    void start(int thread_count, int tt_size_mb, const std::filesystem::path& outdir_path, const EpdBook& opening_book,
+               uint64_t master_seed);
     void stop();
 
     TimeType m_start_time;

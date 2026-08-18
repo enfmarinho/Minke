@@ -28,6 +28,7 @@
 #include <ios>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <system_error>
@@ -38,15 +39,17 @@
 #include "core/movegen.h"
 #include "core/position.h"
 #include "core/types.h"
+#include "datagen/book.h"
 #include "datagen/packed_position.h"
 #include "datagen/viriformat.h"
 #include "search/search.h"
 #include "search/search_limiter.h"
 #include "utils/random.h"
 
-DatagenThread::DatagenThread(int id, int tt_size_mb, std::filesystem::path& dir_path, uint64_t seed)
-    : m_id(id), m_stop_flag(false), m_game_count(0), m_position_count(0), prng(seed) {
-    std::filesystem::path path = std::filesystem::path(dir_path) / ("minke_data" + std::to_string(m_id) + ".vf");
+DatagenThread::DatagenThread(int id, int tt_size_mb, const std::filesystem::path& outdir_path,
+                             const EpdBook& opening_book, uint64_t seed)
+    : m_id(id), m_stop_flag(false), m_game_count(0), m_position_count(0), m_book(opening_book), m_prng(seed) {
+    std::filesystem::path path = std::filesystem::path(outdir_path) / ("minke_data" + std::to_string(m_id) + ".vf");
 
     // Ensure path is valid for the creation of the output file
     std::error_code ec;
@@ -182,21 +185,28 @@ void DatagenThread::play_game() {
 }
 
 void DatagenThread::init_pos_randomly() {
+    auto random_startpos = [&]() -> std::string {
+        if (m_book.has_value()) {
+            return m_book->opening(m_prng.rand<size_t>());
+        }
+        return std::string(START_FEN);
+    };
+
     Position& pos = m_engine.position();
-    pos.set_fen(START_FEN);
+    pos.set_fen(random_startpos());
 
     // apply `move_count` random moves to opening. If not reached `move_count` and there is no legal moves restart
-    const int move_count = 8 + (prng.rand<uint32_t>() % 5);
+    const int move_count = 8 + (m_prng.rand<uint32_t>() % 5);
     for (int i = 0; i < move_count; ++i) {
         Movegen::ScoredMoveList move_list;
         Movegen::all(move_list, pos);
 
         if (move_list.empty()) { // no legal moves, restart from new opening
-            pos.set_fen(START_FEN);
+            pos.set_fen(random_startpos());
             i = -1; // increment is happening after the loop, so this will be 0
         } else {
             // apply random move
-            const Move move = move_list[prng.rand<size_t>() % move_list.size()].move;
+            const Move move = move_list[m_prng.rand<size_t>() % move_list.size()].move;
             pos.make_move(move);
         }
     }
@@ -209,9 +219,18 @@ void DatagenThread::init_pos_randomly() {
 
 DatagenEngine::~DatagenEngine() { stop(); }
 
-void DatagenEngine::datagen_loop(int thread_count, int tt_size_mb, std::filesystem::path& dir_path) {
+void DatagenEngine::datagen_loop(int thread_count, int tt_size_mb, const std::filesystem::path& outdir_path,
+                                 const std::optional<std::filesystem::path> opening_book_path) {
     const uint64_t master_seed = SeedGenerator::master_seed();
-    start(thread_count, tt_size_mb, dir_path, master_seed);
+
+    auto opening_book = [&opening_book_path]() {
+        if (opening_book_path.has_value()) {
+            return EpdBook(opening_book_path.value());
+        }
+        return EpdBook(); // book with startpos only
+    }();
+
+    start(thread_count, tt_size_mb, outdir_path, opening_book, master_seed);
     std::cout << "Datagen started with " << thread_count << " thread(s) and " << master_seed << " seed\n";
 
     m_start_time = now();
@@ -268,15 +287,19 @@ void DatagenEngine::report() const {
     std::cout << line;
 }
 
-void DatagenEngine::start(int thread_count, int tt_size_mb, std::filesystem::path& dir, uint64_t master_seed) {
+void DatagenEngine::start(int thread_count, int tt_size_mb, const std::filesystem::path& outdir_path,
+                          const EpdBook& opening_book, uint64_t master_seed) {
     SeedGenerator seed_gen(master_seed);
     m_datagen_threads.reserve(thread_count);
-    for (int id = 0; id < thread_count; ++id)
-        m_datagen_threads.emplace_back(std::make_unique<DatagenThread>(id, tt_size_mb, dir, seed_gen.next()));
+    for (int id = 0; id < thread_count; ++id) {
+        m_datagen_threads.emplace_back(
+            std::make_unique<DatagenThread>(id, tt_size_mb, outdir_path, opening_book, seed_gen.next()));
+    }
 
     m_threads.reserve(thread_count);
-    for (int id = 0; id < thread_count; ++id)
+    for (int id = 0; id < thread_count; ++id) {
         m_threads.emplace_back(&DatagenThread::run, m_datagen_threads[id].get());
+    }
 }
 
 void DatagenEngine::stop() {
