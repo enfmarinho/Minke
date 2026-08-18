@@ -680,10 +680,7 @@ bool Position::is_legal(const Move &move) {
     PieceType moved_pt = get_piece_type(piece_at(from));
 
     if (move.is_castle()) {
-        Piece rook = get_piece(ROOK, stm());
-        // TODO Unnecessary & get_piece_bb(rook)
-        Bitboard stm_castling_rooks =
-            m_curr_state.castle_rooks & piece_bb(rook) & Bitboard(stm() == WHITE ? Bitboard::RANK_1 : Bitboard::RANK_8);
+        Bitboard stm_castling_rooks = m_curr_state.castle_rooks & Bitboard::pov_first_rank(stm());
         Square rook_from = stm_castling_rooks.msb();
         if (to == c1 || to == c8) {
             rook_from = stm_castling_rooks.lsb();
