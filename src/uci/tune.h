@@ -124,143 +124,142 @@ class TunableParamList {
 
 // Aspiration Windows
 FIXED_PARAM(aw_min_depth, 3, 1, 10, 0.5, 0.002)
-TUNABLE_PARAM(aw_first_window, 8, 5, 25, 2, 0.002)
-TUNABLE_PARAM(aw_widening_factor, 40, 1, 100, 4, 0.002)
+TUNABLE_PARAM(aw_first_window, 6, 5, 25, 2, 0.002)
+TUNABLE_PARAM(aw_widening_factor, 38, 1, 100, 4, 0.002)
 
 // Null move pruning
-TUNABLE_PARAM(nmp_base_reduction, 315, 200, 400, 10, 0.002)
+TUNABLE_PARAM(nmp_base_reduction, 322, 200, 400, 10, 0.002)
 TUNABLE_PARAM(nmp_depth_factor, 21, 16, 63, 0.5, 0.002)
-TUNABLE_PARAM(nmp_beta_base_margin, 200, 10, 300, 20, 0.002)
-TUNABLE_PARAM(nmp_beta_improving_margin, 50, 0, 100, 5, 0.002)
-TUNABLE_PARAM(nmp_beta_depth_factor, 1300, 500, 2000, 50, 0.002)
+TUNABLE_PARAM(nmp_beta_base_margin, 208, 10, 300, 20, 0.002)
+TUNABLE_PARAM(nmp_beta_improving_margin, 51, 0, 100, 5, 0.002)
+TUNABLE_PARAM(nmp_beta_depth_factor, 1312, 500, 2000, 50, 0.002)
 FIXED_PARAM(nmp_min_depth, 2, 2, 8, 0.5, 0.002)
 
 // Hindsight
-TUNABLE_PARAM(hindsight_eval, 150, 50, 300, 10, 0.002)
+TUNABLE_PARAM(hindsight_eval, 158, 50, 300, 10, 0.002)
 
 // Reverse Futility Pruning
-TUNABLE_PARAM(rfp_depth_factor, 106, 50, 150, 5, 0.002)
-TUNABLE_PARAM(rfp_improving_margin, -106, -150, -50, 5, 0.002)
-TUNABLE_PARAM(rfp_complexity_factor, 250, 100, 400, 15, 0.002)
+TUNABLE_PARAM(rfp_depth_factor, 103, 50, 150, 5, 0.002)
+TUNABLE_PARAM(rfp_improving_margin, -105, -150, -50, 5, 0.002)
+TUNABLE_PARAM(rfp_complexity_factor, 256, 100, 400, 15, 0.002)
 FIXED_PARAM(rfp_max_depth, 10, 5, 15, 0.5, 0.002)
 
 // Late Move Reductions
-TUNABLE_PARAM(lmr_base, 89, 50, 1024, 64, 0.002)
-TUNABLE_PARAM(lmr_scale, 655, 256, 2048, 64, 0.002)
-TUNABLE_PARAM(lmr_gives_check_delta, 1022, 512, 2048, 128, 0.002)
-TUNABLE_PARAM(lmr_non_improving_delta, 1234, 512, 2048, 128, 0.002)
-TUNABLE_PARAM(lmr_cutnode_delta, 888, 512, 2048, 128, 0.002)
-TUNABLE_PARAM(lmr_killer_delta, 949, 512, 2048, 128, 0.002)
-TUNABLE_PARAM(lmr_counter_delta, 1387, 512, 2048, 128, 0.002)
-TUNABLE_PARAM(lmr_ttpv_delta, 1077, 512, 2048, 128, 0.002)
-TUNABLE_PARAM(lmr_corrhist_divisor, 414, 0, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_base, 92, 50, 1024, 64, 0.002)
+TUNABLE_PARAM(lmr_scale, 605, 256, 2048, 64, 0.002)
+TUNABLE_PARAM(lmr_gives_check_delta, 999, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_non_improving_delta, 1238, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_cutnode_delta, 901, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_killer_delta, 896, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_ttpv_delta, 1011, 512, 2048, 128, 0.002)
+TUNABLE_PARAM(lmr_corrhist_divisor, 309, 0, 2048, 128, 0.002)
 TUNABLE_PARAM(lmr_deeper_margin, 24, 20, 100, 5, 0.002)
 TUNABLE_PARAM(lmr_deeper_depth_factor, 2, 1, 10, 1, 0.002)
-TUNABLE_PARAM(lmr_shallower_margin, 10, 0, 40, 3, 0.002)
+TUNABLE_PARAM(lmr_shallower_margin, 9, 0, 40, 3, 0.002)
 TUNABLE_PARAM(lmr_shallower_depth_factor, 1, 0, 10, 1, 0.002)
 
 // Late Moves Pruning
-TUNABLE_PARAM(lmp_base, 126, 100, 200, 5, 0.002)
-TUNABLE_PARAM(lmp_scale, 38, 20, 120, 5, 0.002)
-TUNABLE_PARAM(lmp_improving_base, 259, 200, 400, 5, 0.002)
-TUNABLE_PARAM(lmp_improving_scale, 73, 40, 240, 5, 0.002)
+TUNABLE_PARAM(lmp_base, 128, 100, 200, 5, 0.002)
+TUNABLE_PARAM(lmp_scale, 40, 20, 120, 5, 0.002)
+TUNABLE_PARAM(lmp_improving_base, 257, 200, 400, 5, 0.002)
+TUNABLE_PARAM(lmp_improving_scale, 75, 40, 240, 5, 0.002)
 
 // Quiet History Pruning
-TUNABLE_PARAM(history_pruning_max_depth_scaled, 4907, 2500, 10000, 300, 0.002)
-TUNABLE_PARAM(quiet_hist_pruning_factor, -1448, -5000, -500, 100, 0.002)
-TUNABLE_PARAM(quiet_hist_pruning_base, -466, -2500, 0, 100, 0.002)
+TUNABLE_PARAM(history_pruning_max_depth_scaled, 4946, 2500, 10000, 300, 0.002)
+TUNABLE_PARAM(quiet_hist_pruning_factor, -1503, -5000, -500, 100, 0.002)
+TUNABLE_PARAM(quiet_hist_pruning_base, -475, -2500, 0, 100, 0.002)
 
 // SEE pruning
-TUNABLE_PARAM(see_quiet_pruning_factor, -104, -200, 50, 5, 0.002)
-TUNABLE_PARAM(see_noisy_pruning_factor, -23, -200, 50, 5, 0.002)
+TUNABLE_PARAM(see_quiet_pruning_factor, -102, -200, 50, 5, 0.002)
+TUNABLE_PARAM(see_noisy_pruning_factor, -25, -200, 50, 5, 0.002)
 
 // Singular Extension
 FIXED_PARAM(singular_extension_min_depth, 8, 4, 10, 0.5, 0.002)
 TUNABLE_PARAM(singular_extension_depth_factor, 17, 10, 25, 0.5, 0.002)
 TUNABLE_PARAM(double_extension_margin, 9, -20, 40, 3, 0.002)
-TUNABLE_PARAM(triple_ext_margin, 103, 40, 140, 5, 0.002)
+TUNABLE_PARAM(triple_ext_margin, 104, 40, 140, 5, 0.002)
 
 // Razoring
 TUNABLE_PARAM(razoring_max_depth, 5, 2, 6, 0.5, 0.002)
-TUNABLE_PARAM(razoring_mult, 237, 150, 300, 7.5, 0.002)
+TUNABLE_PARAM(razoring_mult, 240, 150, 300, 7.5, 0.002)
 
 // Futility Pruning
-TUNABLE_PARAM(fp_max_depth, 13100, 8196, 16384, 200, 0.002)
-TUNABLE_PARAM(fp_margin, 252, 100, 400, 10, 0.002)
-TUNABLE_PARAM(fp_depth_factor, 84, 40, 150, 10, 0.002)
-TUNABLE_PARAM(qs_futility_margin, 241, 150, 350, 10, 0.002)
+TUNABLE_PARAM(fp_max_depth, 13096, 8196, 16384, 200, 0.002)
+TUNABLE_PARAM(fp_margin, 245, 100, 400, 10, 0.002)
+TUNABLE_PARAM(fp_depth_factor, 91, 40, 150, 10, 0.002)
+TUNABLE_PARAM(qs_futility_margin, 245, 150, 350, 10, 0.002)
 
 // Prob Cut
-TUNABLE_PARAM(probcut_margin, 318, 250, 400, 10, 0.002)
+TUNABLE_PARAM(probcut_margin, 321, 250, 400, 10, 0.002)
 FIXED_PARAM(probcut_min_depth, 5, 4, 8, 0.5, 0.002)
 
 // History Formulas Parameters
 TUNABLE_PARAM(hist_bonus_mult, 275, 1, 512, 25, 0.002)
-TUNABLE_PARAM(hist_bonus_offset, 324, -512, 512, 50, 0.002)
-TUNABLE_PARAM(hist_bonus_max, 2462, 1500, 3500, 100, 0.002)
+TUNABLE_PARAM(hist_bonus_offset, 294, -512, 512, 50, 0.002)
+TUNABLE_PARAM(hist_bonus_max, 2438, 1500, 3500, 100, 0.002)
 
-TUNABLE_PARAM(hist_penalty_mult, -26, -512, -1, 25, 0.002)
-TUNABLE_PARAM(hist_penalty_offset, 98, -512, 512, 50, 0.002)
-TUNABLE_PARAM(hist_penalty_max, -1094, -3500, -500, 100, 0.002)
+TUNABLE_PARAM(hist_penalty_mult, -12, -512, -1, 25, 0.002)
+TUNABLE_PARAM(hist_penalty_offset, 102, -512, 512, 50, 0.002)
+TUNABLE_PARAM(hist_penalty_max, -1113, -3500, -500, 100, 0.002)
 
-TUNABLE_PARAM(cont_bonus_mult, 228, 1, 512, 25, 0.002)
-TUNABLE_PARAM(cont_bonus_offset, 477, -512, 512, 50, 0.002)
-TUNABLE_PARAM(cont_bonus_max, 2360, 1500, 3500, 100, 0.002)
+TUNABLE_PARAM(cont_bonus_mult, 229, 1, 512, 25, 0.002)
+TUNABLE_PARAM(cont_bonus_offset, 464, -512, 512, 50, 0.002)
+TUNABLE_PARAM(cont_bonus_max, 2354, 1500, 3500, 100, 0.002)
 
-TUNABLE_PARAM(cont_penalty_mult, -28, -512, -1, 25, 0.002)
-TUNABLE_PARAM(cont_penalty_offset, -47, -512, 512, 50, 0.002)
-TUNABLE_PARAM(cont_penalty_max, -976, -3500, -500, 100, 0.002)
+TUNABLE_PARAM(cont_penalty_mult, -35, -512, -1, 25, 0.002)
+TUNABLE_PARAM(cont_penalty_offset, -83, -512, 512, 50, 0.002)
+TUNABLE_PARAM(cont_penalty_max, -905, -3500, -500, 100, 0.002)
 
-TUNABLE_PARAM(capt_hist_bonus_mult, 309, 1, 512, 25, 0.002)
-TUNABLE_PARAM(capt_hist_bonus_offset, -132, -512, 512, 50, 0.002)
-TUNABLE_PARAM(capt_hist_bonus_max, 1465, 500, 3500, 100, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_mult, 312, 1, 512, 25, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_offset, -105, -512, 512, 50, 0.002)
+TUNABLE_PARAM(capt_hist_bonus_max, 1438, 500, 3500, 100, 0.002)
 
-TUNABLE_PARAM(capt_hist_penalty_mult, -378, -512, -1, 25, 0.002)
-TUNABLE_PARAM(capt_hist_penalty_offset, 11, -512, 512, 50, 0.002)
-TUNABLE_PARAM(capt_hist_penalty_max, -997, -3500, -500, 100, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_mult, -393, -512, -1, 25, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_offset, 9, -512, 512, 50, 0.002)
+TUNABLE_PARAM(capt_hist_penalty_max, -942, -3500, -500, 100, 0.002)
 
-TUNABLE_PARAM(pawn_corr_factor, 38, 1, 100, 5, 0.002)
-TUNABLE_PARAM(nonpawn_corr_factor, 37, 1, 100, 5, 0.002)
-TUNABLE_PARAM(cont_corr_factor, 34, 1, 100, 5, 0.002)
+TUNABLE_PARAM(pawn_corr_factor, 40, 1, 100, 5, 0.002)
+TUNABLE_PARAM(nonpawn_corr_factor, 35, 1, 100, 5, 0.002)
+TUNABLE_PARAM(cont_corr_factor, 36, 1, 100, 5, 0.002)
 
-TUNABLE_PARAM(conthist_1ply_weight, 989, 0, 1536, 50, 0.002)
-TUNABLE_PARAM(conthist_2ply_weight, 1144, 0, 1536, 50, 0.002)
-TUNABLE_PARAM(conthist_4ply_weight, 559, 0, 1536, 50, 0.002)
+TUNABLE_PARAM(conthist_1ply_weight, 992, 0, 1536, 50, 0.002)
+TUNABLE_PARAM(conthist_2ply_weight, 1149, 0, 1536, 50, 0.002)
+TUNABLE_PARAM(conthist_4ply_weight, 565, 0, 1536, 50, 0.002)
 
 // Time Manager
 TUNABLE_PARAM(tm_default_mtg, 29, 10, 60, 1, 0.002)
 TUNABLE_PARAM(tm_increment_factor, 74, 20, 120, 5, 0.002)
-TUNABLE_PARAM(tm_opt_time_factor, 80, 20, 100, 5, 0.002)
-TUNABLE_PARAM(tm_max_time_factor, 74, 20, 100, 5, 0.002)
+TUNABLE_PARAM(tm_opt_time_factor, 82, 20, 100, 5, 0.002)
+TUNABLE_PARAM(tm_max_time_factor, 75, 20, 100, 5, 0.002)
 
-TUNABLE_PARAM(tm_pv_stability_base, 1280, 500, 3000, 50, 0.002)
-TUNABLE_PARAM(tm_pv_stability_factor, 50, 10, 200, 5, 0.002)
-TUNABLE_PARAM(tm_pv_stability_min_scale, 728, 200, 2000, 50, 0.002)
+TUNABLE_PARAM(tm_pv_stability_base, 1315, 500, 3000, 50, 0.002)
+TUNABLE_PARAM(tm_pv_stability_factor, 47, 10, 200, 5, 0.002)
+TUNABLE_PARAM(tm_pv_stability_min_scale, 705, 200, 2000, 50, 0.002)
 
 TUNABLE_PARAM(tm_score_stability_delta, 12, 2, 40, 1, 0.002)
-TUNABLE_PARAM(tm_score_stability_base, 1280, 500, 3000, 50, 0.002)
+TUNABLE_PARAM(tm_score_stability_base, 1322, 500, 3000, 50, 0.002)
 TUNABLE_PARAM(tm_score_stability_factor, 50, 10, 200, 5, 0.002)
-TUNABLE_PARAM(tm_score_stability_min_scale, 728, 200, 2000, 50, 0.002)
+TUNABLE_PARAM(tm_score_stability_min_scale, 708, 200, 2000, 50, 0.002)
 
-TUNABLE_PARAM(tm_node_spent_base, 1516, 1000, 2000, 50, 0.002)
-TUNABLE_PARAM(tm_node_spent_factor, 1627, 1000, 3000, 50, 0.002)
-TUNABLE_PARAM(tm_min_scale, 527, 100, 1000, 50, 0.002)
-TUNABLE_PARAM(tm_max_scale, 2496, 1500, 3500, 50, 0.002)
+TUNABLE_PARAM(tm_node_spent_base, 1525, 1000, 2000, 50, 0.002)
+TUNABLE_PARAM(tm_node_spent_factor, 1679, 1000, 3000, 50, 0.002)
+TUNABLE_PARAM(tm_min_scale, 519, 100, 1000, 50, 0.002)
+TUNABLE_PARAM(tm_max_scale, 2528, 1500, 3500, 50, 0.002)
 
 // Material scale
-TUNABLE_PARAM(pawn_scaling_factor, 98, 20, 160, 5, 0.002)
-TUNABLE_PARAM(knight_scaling_factor, 303, 200, 400, 10, 0.002)
-TUNABLE_PARAM(bishop_scaling_factor, 335, 200, 400, 10, 0.002)
+TUNABLE_PARAM(pawn_scaling_factor, 95, 20, 160, 5, 0.002)
+TUNABLE_PARAM(knight_scaling_factor, 307, 200, 400, 10, 0.002)
+TUNABLE_PARAM(bishop_scaling_factor, 336, 200, 400, 10, 0.002)
 TUNABLE_PARAM(rook_scaling_factor, 522, 400, 700, 15, 0.002)
-TUNABLE_PARAM(queen_scaling_factor, 984, 800, 1400, 20, 0.002)
-TUNABLE_PARAM(material_scaling_base, 26153, 20000, 30000, 400, 0.002)
+TUNABLE_PARAM(queen_scaling_factor, 971, 800, 1400, 20, 0.002)
+TUNABLE_PARAM(material_scaling_base, 25962, 20000, 30000, 400, 0.002)
 
 // SEE values
-TUNABLE_PARAM(pawn_see_value, 100, 20, 160, 5, 0.002)
-TUNABLE_PARAM(knight_see_value, 297, 200, 400, 10, 0.002)
-TUNABLE_PARAM(bishop_see_value, 297, 200, 400, 10, 0.002)
+TUNABLE_PARAM(pawn_see_value, 99, 20, 160, 5, 0.002)
+TUNABLE_PARAM(knight_see_value, 298, 200, 400, 10, 0.002)
+TUNABLE_PARAM(bishop_see_value, 298, 200, 400, 10, 0.002)
 TUNABLE_PARAM(rook_see_value, 509, 400, 700, 15, 0.002)
-TUNABLE_PARAM(queen_see_value, 995, 800, 1400, 20, 0.002)
+TUNABLE_PARAM(queen_see_value, 993, 800, 1400, 20, 0.002)
 
 // clang-format off
 const int SEE_VALUES[PIECE_NB] = {pawn_see_value(), knight_see_value(), bishop_see_value(), rook_see_value(), queen_see_value(), 5000,
@@ -268,6 +267,6 @@ const int SEE_VALUES[PIECE_NB] = {pawn_see_value(), knight_see_value(), bishop_s
 // clang-format on
 
 // Move picker
-TUNABLE_PARAM(mp_see_threshold_base, 78, 0, 150, 5, 0.002)
-TUNABLE_PARAM(mp_killer1_bonus, 8591, 0, 16000, 400, 0.002)
-TUNABLE_PARAM(mp_killer2_bonus, 6387, 0, 16000, 400, 0.002)
+TUNABLE_PARAM(mp_see_threshold_base, 77, 0, 150, 5, 0.002)
+TUNABLE_PARAM(mp_killer1_bonus, 8515, 0, 16000, 400, 0.002)
+TUNABLE_PARAM(mp_killer2_bonus, 6375, 0, 16000, 400, 0.002)
