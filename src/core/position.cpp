@@ -273,18 +273,20 @@ DirtyPiece Position::make_move(const Move &move) {
     m_curr_state.captured = piece_at(move.to());
 
     const DirtyPiece dp = [&]() {
-        if (move.is_regular())
+        if (move.is_regular()) {
             return make_regular(move);
-        else if (move.is_capture() && !move.is_ep())
+        } else if (move.is_capture() && !move.is_ep()) {
             return make_capture(move);
-        else if (move.is_castle())
+        } else if (move.is_castle()) {
+            m_curr_state.captured = EMPTY;
             return make_castle(move);
-        else if (move.is_promotion())
+        } else if (move.is_promotion()) {
             return make_promotion(move);
-        else if (move.is_ep())
+        } else if (move.is_ep()) {
             return make_en_passant(move);
-        else
+        } else {
             __builtin_unreachable();
+        }
     }();
 
     hash_castle_key();
@@ -417,9 +419,14 @@ DirtyPiece Position::make_en_passant(const Move &move) {
 }
 
 void Position::update_castling_rights(const Move &move) {
-    Square from = move.from();
-    Square to = move.to();
-    PieceType moved_piece_type = get_piece_type(piece_at(to), m_stm); // Piece has already been moved
+    const Square from = move.from();
+    const Square to = move.to();
+    const PieceType moved_piece_type = [&]() {
+        if (move.is_castle()) {
+            return KING;
+        }
+        return get_piece_type(piece_at(to), m_stm); // Piece has already been moved
+    }();
 
     if (moved_piece_type == KING) { // Moved king
         switch (m_stm) {
@@ -464,8 +471,8 @@ void Position::unmake_move(const Move &move) {
 
     change_side();
 
-    Square from = move.from();
-    Square to = move.to();
+    const Square from = move.from();
+    const Square to = move.to();
     Piece piece = piece_at(to);
 
     if (move.is_regular()) {
@@ -482,12 +489,14 @@ void Position::unmake_move(const Move &move) {
         const Square king_from = from;
         const Square rook_from = to;
         const auto [king_to, rook_to] = castling_to_sqs(from, to);
-        const Piece rook = get_piece(ROOK, stm());
 
-        remove_piece({piece, king_to});
+        const Piece rook = piece_at(rook_to);
+        const Piece king = piece_at(king_to);
+
+        remove_piece({king, king_to});
         remove_piece({rook, rook_to});
-        add_piece({piece, king_from});
-        add_piece({piece, rook_from});
+        add_piece({king, king_from});
+        add_piece({rook, rook_from});
     } else if (move.is_promotion()) {
         remove_piece({piece, to});
         piece = get_piece(PAWN, m_stm);
@@ -496,7 +505,7 @@ void Position::unmake_move(const Move &move) {
         remove_piece({piece, to});
         add_piece({piece, from});
 
-        Square captured_square = static_cast<Square>(to - static_cast<int>(get_pawn_offset(m_stm)));
+        const Square captured_square = static_cast<Square>(to - static_cast<int>(get_pawn_offset(m_stm)));
         add_piece({m_curr_state.captured, captured_square});
     }
 
@@ -938,7 +947,7 @@ void Position::hash_ep_key() {
 
 void Position::hash_side_key() { board_state().position_hash ^= Zobrist::color_key(); }
 
-std::pair<Square, Square> Position::castling_to_sqs(const Square king_from, const Square rook_from) {
+std::pair<Square, Square> Position::castling_to_sqs(const Square king_from, const Square rook_from) const {
     const int pov_flip = stm() == WHITE ? 0 : 56;
     if (king_from > rook_from) {
         // castle long
