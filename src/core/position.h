@@ -144,6 +144,8 @@ class Position {
         m_history_ply = 100;
     }
 
+    std::pair<Square, Square> castling_to_sqs(const Square king_from, const Square rook_from) const;
+
   private:
     void add_piece(const PieceSquare &ps);
     void remove_piece(const PieceSquare &ps);
@@ -173,7 +175,6 @@ class Position {
     void hash_side_key();
 
     inline void change_side() { m_stm = static_cast<Color>(m_stm ^ 1); }
-    std::pair<Square, Square> castling_to_sqs(const Square king_from, const Square rook_from) const;
 
     Piece m_board[64];
     Bitboard m_occupancies[2];

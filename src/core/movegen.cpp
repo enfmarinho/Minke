@@ -221,22 +221,15 @@ static inline void gen_castling(ScoredMoveList& move_list, const Position& pos) 
     Bitboard castle_rooks_stm = pos.castle_rooks_bb() & pos.occ_bb(stm);
     while (castle_rooks_stm) {
         Square rook_from = castle_rooks_stm.poplsb();
-        Square king_to, rook_to;
-        if (rook_from > king_from) {
-            king_to = g1, rook_to = f1;
-        } else {
-            king_to = c1, rook_to = d1;
+        if (pos.pins_bb().is_set(rook_from)) {
+            continue;
         }
-        if (stm == BLACK) {
-            // flip sq, to make it from other players pov
-            king_to = static_cast<Square>(king_to ^ 56);
-            rook_to = static_cast<Square>(rook_to ^ 56);
-        }
+
+        auto [king_to, rook_to] = pos.castling_to_sqs(king_from, rook_from);
 
         const Bitboard crossing_mask = (inbetween_masks[king_from][king_to] | inbetween_masks[rook_from][rook_to] |
                                         Bitboard(king_to) | Bitboard(rook_to)) &
                                        ~(Bitboard(king_from) | Bitboard(rook_from));
-
         const Bitboard king_crossing = inbetween_masks[king_from][king_to] | Bitboard(king_to);
         if (!(crossing_mask & pos.occ_bb())        // no blocker
             && !(king_crossing & pos.threats_bb()) // no passing square is attacked
