@@ -794,8 +794,8 @@ bool Position::castling_pseudo_legal(const Square &from, const Square &to, const
     const Square rook_from = to;
     const auto [king_to, rook_to] = castling_to_sqs(king_from, rook_from);
 
-    bool castling_short = (king_from == e1 && king_to == g1) || (king_from == e8 && king_to == g8);
-    bool castling_long = (king_from == e1 && king_to == c1) || (king_from == e8 && king_to == c8);
+    bool castling_short = (king_to == g1 && rook_to == f1) || (king_to == g8 && rook_to == f8);
+    bool castling_long = (king_to == c1 && rook_to == d1) || (king_to == c8 && rook_to == d8);
 
     if (!castling_short && !castling_long)
         return false;
