@@ -28,12 +28,20 @@ std::string Move::to_uci(const bool chess960, const Bitboard castle_rooks) const
     Square target = to();
     int move_type = type() & (~CAPTURE);
 
-    if (chess960 && move_type == CASTLING) {
-        Bitboard bb = castle_rooks & (get_rank(source) == 0 ? Bitboard::RANK_1 : Bitboard::RANK_8);
-        if (source > target)
-            target = bb.lsb();
-        else
-            target = bb.msb();
+    if (move_type == CASTLING) {
+        bool white_move = get_rank(source) == 0;
+        const Bitboard bb = castle_rooks & (white_move ? Bitboard::RANK_1 : Bitboard::RANK_8);
+        if (chess960) {
+            if (source > target)
+                target = bb.lsb();
+            else
+                target = bb.msb();
+        } else {
+            if (source > target)
+                target = (white_move ? c1 : c8);
+            else
+                target = (white_move ? g1 : g8);
+        }
     }
     algebraic_notation.push_back('a' + get_file(source));
     algebraic_notation.push_back('1' + get_rank(source));
