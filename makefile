@@ -4,7 +4,7 @@
 #   make EVALFILE=net.nnue bmi2                     # use a custom network file
 
 VERSION := 6.0.0
-DEFAULT_EVALFILE := minke38
+DEFAULT_EVALFILE := minke39
 PREPROCESSOR_SRC := tools/preprocess_nnue.cpp
 
 PGO ?= off
