@@ -815,6 +815,44 @@ bool Position::castling_pseudo_legal(const Square &from, const Square &to, const
            && !(king_crossing & threats_bb()); // no passing square is attacked
 }
 
+std::string Position::move_to_uci(const Move move) const {
+    std::string algebraic_notation;
+    Square source = move.from();
+    Square target = move.to();
+    int move_type = move.type() & (~CAPTURE);
+
+    if (move_type == CASTLING) {
+        bool white_move = get_rank(source) == 0;
+        const Bitboard bb = castle_rooks_bb() & (white_move ? Bitboard::RANK_1 : Bitboard::RANK_8);
+        if (m_chess960) {
+            if (source > target)
+                target = bb.lsb();
+            else
+                target = bb.msb();
+        } else {
+            if (source > target)
+                target = (white_move ? c1 : c8);
+            else
+                target = (white_move ? g1 : g8);
+        }
+    }
+    algebraic_notation.push_back('a' + get_file(source));
+    algebraic_notation.push_back('1' + get_rank(source));
+    algebraic_notation.push_back('a' + get_file(target));
+    algebraic_notation.push_back('1' + get_rank(target));
+
+    if (move_type == MoveType::PAWN_PROMOTION_QUEEN)
+        algebraic_notation.push_back('q');
+    else if (move_type == MoveType::PAWN_PROMOTION_KNIGHT)
+        algebraic_notation.push_back('n');
+    else if (move_type == MoveType::PAWN_PROMOTION_ROOK)
+        algebraic_notation.push_back('r');
+    else if (move_type == MoveType::PAWN_PROMOTION_BISHOP)
+        algebraic_notation.push_back('b');
+
+    return algebraic_notation;
+}
+
 void Position::print() const {
     auto print_line = []() -> void {
         for (IndexType i = 0; i < 8; ++i) {

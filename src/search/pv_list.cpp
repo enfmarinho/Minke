@@ -20,6 +20,8 @@
 
 #include <iostream>
 
+#include "core/position.h"
+
 void PvList::update(Move new_move, const PvList &list) {
     std::copy(list.m_pv.begin(), list.m_pv.begin() + list.m_size, m_pv.begin() + 1);
     m_pv[0] = new_move;
@@ -27,9 +29,9 @@ void PvList::update(Move new_move, const PvList &list) {
     m_size = list.m_size + 1;
 }
 
-void PvList::print(const bool chess960, const Bitboard castle_rooks) const {
+void PvList::print(const Position &pos) const {
     for (int i = 0; i < m_size; ++i) {
-        std::cout << m_pv[i].to_uci(chess960, castle_rooks) << ' ';
+        std::cout << pos.move_to_uci(m_pv[i]) << ' ';
     }
 }
 

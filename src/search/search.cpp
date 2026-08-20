@@ -176,7 +176,7 @@ std::pair<Move, ScoreType> Engine::iterative_deepening(ThreadData &td) {
 
         if (td.is_main()) { // main thread
             if (m_report)
-                report_search_info(depth, score, td.search_stack[0].pv_list, td);
+                report_search_info(depth, score, td.search_stack[0].pv_list, td.position);
 
             if (depth > 5) {
                 const double node_fraction =
@@ -191,7 +191,7 @@ std::pair<Move, ScoreType> Engine::iterative_deepening(ThreadData &td) {
     }
 
     if (m_report && td.is_main()) {
-        report_search_result(td, past_best_move);
+        report_search_result(td.position, past_best_move);
     }
 
     return {past_best_move, past_score};
@@ -808,7 +808,7 @@ bool Engine::SEE(Position &position, const Move &move, int threshold) {
 }
 
 void Engine::report_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
-                                const ThreadData &td) {
+                                const Position &pos) {
     std::cout << "info depth " << depth;
     if (is_decisive(eval)) {
         std::cout << " score mate " << (eval < 0 ? "-" : "") << (MATE_SCORE - std::abs(eval) + 1) / 2;
@@ -822,11 +822,10 @@ void Engine::report_search_info(const CounterType &depth, const ScoreType &eval,
     std::cout << " time " << m_search_limiter.time_passed() << " nodes " << nodes << " nps "
               << nodes * 1000 / (m_search_limiter.time_passed() + 1) << " pv ";
 
-    pv_list.print(m_is_chess960, td.position.castle_rooks_bb());
+    pv_list.print(pos);
     std::cout << std::endl;
 }
 
-void Engine::report_search_result(const ThreadData &td, Move best_move) {
-    std::cout << "bestmove " << (!best_move ? "none" : best_move.to_uci(m_is_chess960, td.position.castle_rooks_bb()))
-              << std::endl;
+void Engine::report_search_result(const Position &pos, Move best_move) {
+    std::cout << "bestmove " << (!best_move ? "none" : pos.move_to_uci(best_move)) << std::endl;
 }

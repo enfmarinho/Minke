@@ -21,13 +21,14 @@
 #include <array>
 
 #include "core/move.h"
+#include "core/position.h"
 #include "core/types.h"
 
 class PvList {
   public:
     inline Move best_move() const { return m_size > 0 ? m_pv[0] : Move::none(); }
     void update(Move new_move, const PvList &list);
-    void print(const bool chess960, const Bitboard castle_rooks) const;
+    void print(const Position &pos) const;
     void clear();
 
   private:
