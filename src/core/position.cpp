@@ -779,9 +779,6 @@ bool Position::pawn_pseudo_legal(const Square &from, const Square &to, const Mov
             return false;
     } else if (from + pawn_offset != to) {
         return false;
-    } else if ((m_stm == WHITE && get_rank(to) == 7) ||
-               (m_stm == BLACK && get_rank(to) == 0)) { // No promotion flag in promotion rank
-        return false;
     }
 
     return true;
