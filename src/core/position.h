@@ -91,6 +91,7 @@ class Position {
     inline bool has_non_pawns() const {
         return piece_bb(KNIGHT) || piece_bb(BISHOP) || piece_bb(ROOK) || piece_bb(QUEEN);
     }
+    bool has_upcoming_repetition(const int ply) const;
     inline bool is_draw() { return insufficient_material() || repetition() || is_fifty_move_draw(); }
 
     std::string move_to_uci(const Move move) const;

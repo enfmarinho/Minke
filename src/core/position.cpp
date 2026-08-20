@@ -34,6 +34,7 @@
 #include "core/types.h"
 #include "core/zobrist.h"
 #include "eval/nnue.h"
+#include "search/cuckoo.h"
 #include "utils/utils.h"
 
 bool Position::set_fen(const std::string &fen) {
@@ -813,6 +814,56 @@ bool Position::castling_pseudo_legal(const Square &from, const Square &to, const
 
     return !(crossing_mask & occ_bb())         // no blocker
            && !(king_crossing & threats_bb()); // no passing square is attacked
+}
+
+bool Position::has_upcoming_repetition(const int ply) const {
+    int end = std::min(board_state().fifty_move_ply, board_state().ply_from_null);
+
+    if (end < 3)
+        return false;
+
+    const auto prev_key = [&](int offset) { return m_history_stack[m_history_ply - offset].position_hash; };
+
+    const Bitboard occ = occ_bb();
+    const HashType position_key = hash();
+    HashType other = position_key ^ prev_key(1) ^ Zobrist::color_key();
+
+    for (int i = 3; i <= end; i += 2) {
+        HashType curr_key = prev_key(i);
+        other ^= curr_key ^ prev_key(i - 1) ^ Zobrist::color_key();
+
+        if (other != 0) {
+            continue;
+        }
+
+        const auto diff = position_key ^ curr_key;
+        uint32_t slot = Cuckoo::h1(diff);
+        if (diff != Cuckoo::keys[slot]) {
+            slot = Cuckoo::h2(diff);
+        }
+
+        if (diff != Cuckoo::keys[slot]) {
+            continue;
+        }
+
+        const auto move = Cuckoo::moves[slot];
+        const Square from = move.from();
+        const Square to = move.to();
+
+        if (!((inbetween_masks[to][from] ^ 1ULL << to) & occ)) {
+            // repetition is after root, done
+            if (ply > i) {
+                return true;
+            }
+
+            Piece piece = piece_at(from);
+            assert(piece != EMPTY);
+
+            return get_color(piece) == stm();
+        }
+    }
+
+    return false;
 }
 
 std::string Position::move_to_uci(const Move move) const {
