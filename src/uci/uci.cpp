@@ -135,8 +135,7 @@ void UCI::print_debug_info() {
     Movegen::all(move_list, m_pos);
     std::cout << "Move list(" << move_list.size() << "): ";
     for (ScoredMove scored_move : move_list) {
-        std::cout << scored_move.move.to_uci(m_engine.is_chess960(), m_pos.castle_rooks_bb()) << "("
-                  << scored_move.score << ") ";
+        std::cout << m_pos.move_to_uci(scored_move.move) << " ";
     }
     std::cout << "\nNNUE eval: " << m_engine.static_eval() << std::endl;
 }
@@ -176,7 +175,7 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
         Movegen::all(move_list, m_pos);
 
         for (auto scored_move : move_list) {
-            if (moves[index] == scored_move.move.to_uci(m_engine.is_chess960(), m_pos.castle_rooks_bb())) {
+            if (moves[index] == m_pos.move_to_uci(scored_move.move)) {
                 m_pos.make_move(scored_move.move);
                 break;
             }
@@ -220,7 +219,7 @@ void UCI::set_option(std::istringstream &iss) {
     } else if (token == "Threads" && valid_int_value(EngineOptions::THREADS_MIN, EngineOptions::THREADS_MAX)) {
         m_engine.resize_threads(value_int);
     } else if (token == "UCI_Chess960" && valid_bool_value()) {
-        m_engine.set_chess960(value_bool);
+        m_pos.chess960(value_bool);
     }
 #ifdef TUNE
     else if (TunableParam *param_ptr = TunableParamList::get().find(token)) {
@@ -299,7 +298,7 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
         position.unmake_move(move);
 
         if (root)
-            std::cout << move.to_uci(m_engine.is_chess960(), m_pos.castle_rooks_bb()) << ": " << count << std::endl;
+            std::cout << position.move_to_uci(move) << ": " << count << std::endl;
     }
 
     if (root)

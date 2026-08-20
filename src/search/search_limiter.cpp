@@ -82,7 +82,7 @@ void SearchLimiter::init() {
     m_can_stop = false;
 }
 
-void SearchLimiter::update(const ThreadData& td, CounterType pv_stability, CounterType score_stability) {
+void SearchLimiter::update(CounterType pv_stability, CounterType score_stability, double node_fraction) {
     if (m_movetime || !m_time_set)
         return;
 
@@ -94,7 +94,6 @@ void SearchLimiter::update(const ThreadData& td, CounterType pv_stability, Count
         std::max(tm_score_stability_base() / 1000.0 - score_stability * tm_score_stability_factor() / 1000.0,
                  tm_score_stability_min_scale() / 1000.0);
 
-    const double node_fraction = td.node_table[td.best_move.from_and_to()] / static_cast<double>(td.nodes_searched);
     const double node_spent_scale = (tm_node_spent_base() / 1000.0 - node_fraction) * (tm_node_spent_factor() / 1000.0);
 
     m_scale = std::clamp<double>(node_spent_scale * pv_stability_scale * score_stability_scale, tm_min_scale() / 1000.0,

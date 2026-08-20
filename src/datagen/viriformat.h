@@ -27,57 +27,13 @@
 
 class Viriformat {
   public:
-    Viriformat() : m_initial_pos(PackedPosition(Position(), 0)) { m_moves_scores.reserve(MAX_MOVES_PER_POS); }
-
-    Viriformat(const Position &pos) : m_initial_pos(PackedPosition(pos, 0)) {
-        m_moves_scores.reserve(MAX_MOVES_PER_POS);
-    }
-
+    Viriformat();
+    Viriformat(const Position &pos);
     ~Viriformat() = default;
 
-    void reset(const Position &pos) {
-        m_initial_pos = PackedPosition(pos, 0);
-        m_moves_scores.clear();
-    }
-
-    void push(const Move &move, const ScoreType &score) {
-        uint16_t packed_move = 0;
-        packed_move = move.from_and_to();
-        if (move.is_ep()) {
-            packed_move |= 0b01 << 14;
-        } else if (move.is_castle()) {
-            packed_move = move.from();
-            // TODO this won't work for FRC
-            // Viriformat expects that a castling move destiny is the rook source sq
-            if (move.to() == g1) {
-                packed_move |= h1 << 6;
-            } else if (move.to() == c1) {
-                packed_move |= a1 << 6;
-            } else if (move.to() == g8) {
-                packed_move |= h8 << 6;
-            } else if (move.to() == c8) {
-                packed_move |= a8 << 6;
-            } else {
-                assert(false);
-            }
-            packed_move |= 0b10 << 14;
-        } else if (move.is_promotion()) {
-            packed_move |= (move.promotee() - 1) << 12;
-            packed_move |= 0b11 << 14;
-        }
-
-        m_moves_scores.emplace_back(packed_move, score);
-    }
-
-    void write(std::ofstream &file_out, GameResult result) {
-        constexpr char null_terminator[sizeof(MoveScore)] = {};
-
-        m_initial_pos.set_result(result);
-        file_out.write(reinterpret_cast<const char *>(&m_initial_pos), sizeof(PackedPosition));
-        file_out.write(reinterpret_cast<const char *>(m_moves_scores.data()),
-                       sizeof(MoveScore) * m_moves_scores.size());
-        file_out.write(reinterpret_cast<const char *>(null_terminator), sizeof(MoveScore));
-    }
+    void reset(const Position &pos);
+    void push(const Move &move, const ScoreType &score);
+    void write(std::ofstream &file_out, GameResult result);
 
   private:
     struct MoveScore {

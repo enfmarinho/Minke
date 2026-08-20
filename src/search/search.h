@@ -20,7 +20,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <thread>
 #include <vector>
@@ -57,7 +56,6 @@ struct ThreadData {
     History search_history;
     CorrectionHistory correction_history;
     SearchStackEntry search_stack[MAX_SEARCH_DEPTH];
-    Move best_move;
 
     int64_t nodes_searched;
     int64_t node_table[64 * 64];
@@ -101,9 +99,6 @@ class Engine {
 
     void report(bool r) { m_report = r; }
 
-    bool is_chess960() const { return m_is_chess960; }
-    void set_chess960(bool c) { m_is_chess960 = c; }
-
     inline ScoreType static_eval() { return m_main_thread_data->nnue.eval(m_main_thread_data->position); }
     size_t nodes_searched() const;
 
@@ -115,7 +110,7 @@ class Engine {
     static bool SEE(Position &position, const Move &move, int threshold);
 
   private:
-    ScoreType iterative_deepening(ThreadData &td);
+    std::pair<Move, ScoreType> iterative_deepening(ThreadData &td);
     ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);
     ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterType ply, const bool cutnode,
                       ThreadData &td);
@@ -126,8 +121,8 @@ class Engine {
     }
 
     void report_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
-                            const ThreadData &td);
-    void report_search_result(const ThreadData &td, Move best_move);
+                            const Position &pos);
+    void report_search_result(const Position &pos, Move best_move);
 
     std::vector<std::thread> m_threads;
     std::vector<ThreadData> m_threads_data;
@@ -137,5 +132,4 @@ class Engine {
 
     bool m_stop{true};
     bool m_report{true};
-    bool m_is_chess960{false};
 };

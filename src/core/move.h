@@ -20,9 +20,7 @@
 
 #include <cassert>
 #include <cstdint>
-#include <string>
 
-#include "core/bitboard.h"
 #include "core/types.h"
 #include "utils/static_vector.h"
 
@@ -41,8 +39,6 @@ class Move {
         assert(is_promotion());
         return static_cast<PieceType>((type() & 0b0011) + 1);
     }
-
-    std::string to_uci(bool chess960, Bitboard castle_rooks) const;
 
     constexpr bool is_regular() const { return type() == REGULAR; }
     constexpr bool is_castle() const { return type() == CASTLING; }

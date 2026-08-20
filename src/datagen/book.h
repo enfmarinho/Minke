@@ -18,20 +18,18 @@
 
 #pragma once
 
-#include <array>
+#include <cstddef>
+#include <filesystem>
+#include <string>
+#include <vector>
 
-#include "core/move.h"
-#include "core/position.h"
-#include "core/types.h"
-
-class PvList {
+class EpdBook {
   public:
-    inline Move best_move() const { return m_size > 0 ? m_pv[0] : Move::none(); }
-    void update(Move new_move, const PvList &list);
-    void print(const Position &pos) const;
-    void clear();
+    EpdBook();
+    EpdBook(const std::filesystem::path& path);
+
+    inline const std::string& opening(size_t rand_idx) const { return m_book[rand_idx % m_book.size()]; }
 
   private:
-    std::array<Move, MAX_SEARCH_DEPTH> m_pv;
-    CounterType m_size{0};
+    std::vector<std::string> m_book;
 };

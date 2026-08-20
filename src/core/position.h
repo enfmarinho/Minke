@@ -71,6 +71,7 @@ class Position {
     std::string get_fen() const;
 
     void reset();
+    inline void chess960(bool c) { m_chess960 = c; }
 
     DirtyPiece make_move(const Move &move);
     void unmake_move(const Move &move);
@@ -92,6 +93,7 @@ class Position {
     }
     inline bool is_draw() { return insufficient_material() || repetition() || is_fifty_move_draw(); }
 
+    std::string move_to_uci(const Move move) const;
     void print() const;
 
     inline Bitboard occ_bb() const { return m_occupancies[WHITE] | m_occupancies[BLACK]; }
@@ -144,6 +146,8 @@ class Position {
         m_history_ply = 100;
     }
 
+    std::pair<Square, Square> castling_to_sqs(const Square king_from, const Square rook_from) const;
+
   private:
     void add_piece(const PieceSquare &ps);
     void remove_piece(const PieceSquare &ps);
@@ -184,4 +188,6 @@ class Position {
     int m_history_ply;
     BoardState m_curr_state;
     BoardState m_history_stack[MAX_PLY];
+
+    bool m_chess960{false};
 };
