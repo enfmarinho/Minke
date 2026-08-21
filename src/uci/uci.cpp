@@ -21,7 +21,6 @@
 #include <cassert>
 #include <cstdint>
 #include <exception>
-#include <fstream>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -33,14 +32,19 @@
 #include "core/movegen.h"
 #include "core/position.h"
 #include "core/types.h"
-#include "search/movepicker.h"
 #include "search/search.h"
 #include "search/search_limiter.h"
 #include "search/tt.h"
 #include "uci/benchmark.h"
+
+#ifdef TRACK_ACTIVATIONS
+#include <fstream>
+#endif
+#ifdef TUNE
 #include "uci/init.h"
 #include "uci/tune.h"
 #include "utils/utils.h"
+#endif
 
 UCI::UCI() {
     m_pos.set_fen(START_FEN);
