@@ -521,6 +521,8 @@ ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, Co
                 extension = -2;
             } else if (cutnode) {
                 extension = -2;
+            } else if (ttscore <= alpha) {
+                extension = -1;
             }
         }
 
