@@ -256,6 +256,13 @@ ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, Co
         if (ply >= MAX_SEARCH_DEPTH - 1)
             return position.in_check() ? 0 : td.nnue.eval(position);
 
+        // Upcoming repetition detection
+        if (alpha < 0 && position.has_upcoming_repetition(ply)) {
+            alpha = 0;
+            if (alpha >= beta)
+                return alpha;
+        }
+
         // Mate distance pruning
         alpha = std::max<ScoreType>(alpha, (-MATE_SCORE + ply));
         beta = std::min<ScoreType>(beta, (MATE_SCORE - ply - 1));
@@ -628,6 +635,13 @@ ScoreType Engine::quiescence(ScoreType alpha, ScoreType beta, CounterType ply, T
         return 0;
     else if (ply >= MAX_SEARCH_DEPTH - 1)
         return position.in_check() ? 0 : td.nnue.eval(position);
+
+    // Upcoming repetition detection
+    if (alpha < 0 && position.has_upcoming_repetition(ply)) {
+        alpha = 0;
+        if (alpha >= beta)
+            return alpha;
+    }
 
     const bool pv_node = alpha != beta - 1;
     SearchStackEntry &node = td.search_stack[ply];

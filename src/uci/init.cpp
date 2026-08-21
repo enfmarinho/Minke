@@ -23,6 +23,7 @@
 #include "core/attacks.h"
 #include "core/types.h"
 #include "eval/nnue/arch.h"
+#include "search/cuckoo.h"
 #include "search/search.h"
 #include "uci/tune.h"
 #include "utils/incbin.h"
@@ -45,6 +46,7 @@ void init_all() {
     init_inbetween_masks();
     init_passing_masks();
     init_diagonal_antidiagonal_masks();
+    Cuckoo::init();
 }
 
 void init_search_params() {
