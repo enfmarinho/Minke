@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <optional>
+#include <string_view>
 
 #include "datagen/datagen.h"
 #include "uci/benchmark.h"
@@ -27,13 +28,13 @@
 
 int main(int argc, char *argv[]) {
     init_all();
-    if (argc > 1 && std::string(argv[1]) == "bench") {
+    if (argc > 1 && std::string_view(argv[1]) == "bench") {
         int depth = Benchmark::DEFAULT_BENCH_DEPTH;
         if (argc > 2)
             depth = std::stoi(argv[2]);
 
         Benchmark::run(depth);
-    } else if (argc > 1 && std::string(argv[1]) == "datagen") {
+    } else if (argc > 1 && std::string_view(argv[1]) == "datagen") {
         if (argc != 4 && argc != 5) {
             std::cerr << "usage: " << argv[0] << " datagen <threads> <output_directory> [opening_book.epd]\n";
             return EXIT_FAILURE;
