@@ -71,21 +71,36 @@ void Engine::new_game() {
 }
 
 void Engine::prepare_search() {
+    m_main_thread_data->init();
+
     for (auto &td : m_threads_data) {
         td.init();
     }
-    m_main_thread_data->init();
 }
 
 void Engine::prepare_search(const Position &pos) {
+    m_main_thread_data->position = pos;
+    m_main_thread_data->nnue.refresh(pos);
+    m_main_thread_data->init();
+
     for (auto &td : m_threads_data) {
         td.position = pos;
         td.nnue.refresh(pos);
         td.init();
     }
-    m_main_thread_data->position = pos;
+}
+
+void Engine::prepare_search(const std::string &fen) {
+    Position &pos = m_main_thread_data->position;
+    pos.set_fen(fen);
     m_main_thread_data->nnue.refresh(pos);
     m_main_thread_data->init();
+
+    for (auto &td : m_threads_data) {
+        td.position = pos;
+        td.nnue.refresh(pos);
+        td.init();
+    }
 }
 
 std::pair<Move, ScoreType> Engine::search() {

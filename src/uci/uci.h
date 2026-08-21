@@ -27,7 +27,6 @@
 #include "search/search.h"
 
 namespace EngineOptions {
-constexpr CounterType BENCH_DEPTH = 16;
 static constexpr CounterType HASH_DEFAULT = 16;
 static constexpr CounterType HASH_MIN = 1;
 static constexpr CounterType HASH_MAX = 2097152;
@@ -42,7 +41,6 @@ class UCI {
     UCI();
     ~UCI() = default;
     void loop();
-    void bench(int depth);
 
   private:
     void position(std::istringstream &);

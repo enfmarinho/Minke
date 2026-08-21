@@ -112,9 +112,9 @@ void UCI::loop() {
             else if (m_thread.joinable())
                 m_thread.join();
 
-            int bench_depth = EngineOptions::BENCH_DEPTH;
+            int bench_depth = Benchmark::DEFAULT_BENCH_DEPTH;
             iss >> std::skipws >> bench_depth;
-            bench(bench_depth);
+            Benchmark::run(bench_depth);
         }
 #ifdef TUNE
         else if (token == "tuneinfo") {

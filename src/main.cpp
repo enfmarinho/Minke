@@ -21,18 +21,18 @@
 #include <optional>
 
 #include "datagen/datagen.h"
+#include "uci/benchmark.h"
 #include "uci/init.h"
 #include "uci/uci.h"
 
 int main(int argc, char *argv[]) {
     init_all();
     if (argc > 1 && std::string(argv[1]) == "bench") {
-        int depth = EngineOptions::BENCH_DEPTH;
+        int depth = Benchmark::DEFAULT_BENCH_DEPTH;
         if (argc > 2)
             depth = std::stoi(argv[2]);
 
-        UCI uci;
-        uci.bench(depth);
+        Benchmark::run(depth);
     } else if (argc > 1 && std::string(argv[1]) == "datagen") {
         if (argc != 4 && argc != 5) {
             std::cerr << "usage: " << argv[0] << " datagen <threads> <output_directory> [opening_book.epd]\n";
