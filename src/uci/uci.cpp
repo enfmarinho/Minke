@@ -211,6 +211,11 @@ void UciHandler::handle_go(std::istringstream &iss) {
 }
 
 void UciHandler::handle_perft(std::istringstream &iss) {
+    if (!stopped()) {
+        std::cerr << "`perft` command is invalid while engine is running!\n";
+        return;
+    }
+
     int perft_depth;
     iss >> perft_depth;
     if (iss.fail()) {
