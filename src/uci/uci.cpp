@@ -89,7 +89,7 @@ UciHandler::UciHandler() {
 void UciHandler::run() {
     std::cout << "Minke Chess Engine by Eduardo Marinho" << std::endl;
 
-    ucinewgame();
+    handle_ucinewgame();
     std::string input, token;
     do {
         if (!std::getline(std::cin, input))
@@ -101,61 +101,28 @@ void UciHandler::run() {
         if (token == "quit" || token == "stop") {
             m_engine.stop_search();
         } else if (token == "go") {
-#ifdef TUNE
-            init_search_params();
-#endif
-            if (!m_engine.stopped())
-                continue;
-            else if (m_thread.joinable())
-                m_thread.join();
-            m_engine.prepare_search();
-            const CounterType perft_depth = parse_go(iss);
-            if (perft_depth != 0) {
-                perft(m_pos, perft_depth);
-            } else {
-                go();
-            }
+            handle_go(iss);
+        } else if (token == "perft") {
+            handle_perft(iss);
         } else if (token == "position") {
-            position(iss);
+            handle_position(iss);
         } else if (token == "ucinewgame") {
-            ucinewgame();
+            handle_ucinewgame();
         } else if (token == "setoption") {
-            if (!m_engine.stopped()) {
-                std::cerr << "Can not set an option while searching" << std::endl;
-                continue;
-            } else if (m_thread.joinable()) {
-                m_thread.join();
-            }
-            set_option(iss);
+            handle_setoption(iss);
         } else if (token == "eval") {
-            eval();
+            handle_eval();
         } else if (token == "uci") {
-            std::cout << "id name Minke 6.0.0 \n"
-                      << "id author Eduardo Marinho \n";
-            EngineOptions::print();
-            std::cout << "uciok" << std::endl;
+            handle_uci();
         } else if (token == "isready") {
-            std::cout << "readyok" << std::endl;
-        } else if (token == "d") {
-            print_debug_info();
+            handle_isready();
+        } else if (token == "debug" || token == "d") {
+            handle_debug();
         } else if (token == "bench") {
-            if (!m_engine.stopped())
-                continue;
-            else if (m_thread.joinable())
-                m_thread.join();
-
-            int bench_depth = Benchmark::DEFAULT_BENCH_DEPTH;
-            iss >> std::skipws >> bench_depth;
-            Benchmark::run(bench_depth);
-        }
-#ifdef TUNE
-        else if (token == "tuneinfo") {
-            for (const TunableParam &tunable_param : TunableParamList::get()) {
-                tunable_param.print_ob_format();
-            }
-        }
-#endif
-        else if (!token.empty()) {
+            handle_bench(iss);
+        } else if (token == "tuneinfo") { // if `TUNE` is not defined at compile time this is just a dummy option
+            handle_tuneinfo();
+        } else if (!token.empty()) {
             std::cout << "Unknown command: '" << token << "'. Type help for information." << std::endl;
         }
     } while (token != "quit");
@@ -164,7 +131,33 @@ void UciHandler::run() {
         m_thread.join();
 }
 
-void UciHandler::print_debug_info() {
+void UciHandler::handle_go(std::istringstream &iss) {
+#ifdef TUNE
+    init_search_params();
+#endif
+    if (!stopped()) {
+        std::cerr << "TODO\n";
+        return;
+    }
+
+    m_engine.prepare_search();
+    const CounterType perft_depth = parse_go(iss);
+    if (perft_depth != 0) {
+        perft(m_pos, perft_depth);
+    } else {
+        go();
+    }
+}
+
+void UciHandler::handle_tuneinfo() {
+#ifdef TUNE
+    for (const TunableParam &tunable_param : TunableParamList::get()) {
+        tunable_param.print_ob_format();
+    }
+#endif // TUNE
+}
+
+void UciHandler::handle_debug() {
     m_pos.print();
     TTEntry tte;
     Movegen::ScoredMoveList move_list;
@@ -176,7 +169,7 @@ void UciHandler::print_debug_info() {
     std::cout << "\nNNUE eval: " << m_engine.static_eval() << std::endl;
 }
 
-void UciHandler::position(std::istringstream &iss) {
+void UciHandler::handle_position(std::istringstream &iss) {
     std::string token, fen, move;
     iss >> token;
     if (token == "startpos") {
@@ -220,9 +213,23 @@ void UciHandler::set_position(const std::string &fen, const std::vector<std::str
     m_engine.prepare_search(m_pos);
 }
 
-void UciHandler::ucinewgame() { m_engine.new_game(); }
+void UciHandler::handle_ucinewgame() { m_engine.new_game(); }
 
-void UciHandler::set_option(std::istringstream &iss) {
+void UciHandler::handle_isready() { std::cout << "readyok" << std::endl; }
+
+void UciHandler::handle_uci() {
+    std::cout << "id name Minke 6.0.0 \n"
+              << "id author Eduardo Marinho \n";
+    EngineOptions::print();
+    std::cout << "uciok" << std::endl;
+}
+
+void UciHandler::handle_setoption(std::istringstream &iss) {
+    if (!stopped()) {
+        std::cerr << "TODO: Can not set an option while searching" << std::endl;
+        return;
+    }
+
     std::string value;
     int value_int;
     bool value_bool;
@@ -267,6 +274,17 @@ void UciHandler::set_option(std::istringstream &iss) {
     }
 }
 
+void UciHandler::handle_bench(std::istringstream &iss) {
+    if (!stopped()) {
+        std::cerr << "TODO\n";
+        return;
+    }
+
+    int bench_depth = Benchmark::DEFAULT_BENCH_DEPTH;
+    iss >> std::skipws >> bench_depth;
+    Benchmark::run(bench_depth);
+}
+
 int64_t UciHandler::perft(Position &position, CounterType depth, bool root) {
     const bool is_leaf = (depth == 2);
     int64_t count = 0, nodes = 0;
@@ -299,7 +317,7 @@ int64_t UciHandler::perft(Position &position, CounterType depth, bool root) {
     return nodes;
 }
 
-void UciHandler::eval() { std::cout << "The position evaluation is " << m_engine.static_eval() << std::endl; }
+void UciHandler::handle_eval() { std::cout << "The position evaluation is " << m_engine.static_eval() << std::endl; }
 
 CounterType UciHandler::parse_go(std::istringstream &iss, bool bench) {
     std::string token;
@@ -339,5 +357,15 @@ CounterType UciHandler::parse_go(std::istringstream &iss, bool bench) {
 }
 
 void UciHandler::go() { m_thread = std::thread(&Engine::search, std::ref(m_engine)); }
+
+bool UciHandler::stopped() {
+    if (!m_engine.stopped())
+        return false;
+
+    if (m_thread.joinable())
+        m_thread.join();
+
+    return true;
+}
 
 } // namespace UCI

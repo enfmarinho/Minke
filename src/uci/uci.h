@@ -34,22 +34,35 @@ class UciHandler {
   public:
     UciHandler();
     ~UciHandler() = default;
+
     void run();
 
   private:
-    void position(std::istringstream &);
-    void set_position(const std::string &fen, const std::vector<std::string> &move_list);
-    void ucinewgame();
+    ///=== standard UCI commands
+    void handle_isready();
+    void handle_uci();
+    void handle_position(std::istringstream &);
+    void handle_go(std::istringstream &);
+    void handle_ucinewgame();
+    void handle_setoption(std::istringstream &);
+    ///===
 
-    void set_option(std::istringstream &);
+    ///=== non-standard UCI commands
+    void handle_bench(std::istringstream &);
+    void handle_perft(std::istringstream &);
+    void handle_tuneinfo();
+    void handle_debug();
+    void handle_eval();
+    ///===
+
+    void set_position(const std::string &fen, const std::vector<std::string> &move_list);
 
     /// Returns perft depth or 0 if should not perft
     CounterType parse_go(std::istringstream &, bool bench = false);
     int64_t perft(Position &position, CounterType depth, bool root = true);
     void go();
 
-    void print_debug_info();
-    void eval();
+    bool stopped();
 
     std::thread m_thread;
     Position m_pos;
