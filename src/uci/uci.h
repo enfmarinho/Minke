@@ -42,7 +42,7 @@ class UciHandler {
     void handle_isready();
     void handle_uci();
     void handle_position(std::istringstream &);
-    void handle_go(std::istringstream &);
+    void handle_go(std::istringstream &iss);
     void handle_ucinewgame();
     void handle_setoption(std::istringstream &);
     ///===
@@ -55,8 +55,6 @@ class UciHandler {
     void handle_eval();
     ///===
 
-    /// Returns perft depth or 0 if should not perft
-    CounterType parse_go(std::istringstream &, bool bench = false);
     int64_t perft(Position &position, CounterType depth, bool root = true);
     void go();
 

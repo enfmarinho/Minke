@@ -140,13 +140,40 @@ void UciHandler::handle_go(std::istringstream &iss) {
         return;
     }
 
-    m_engine.prepare_search();
-    const CounterType perft_depth = parse_go(iss);
-    if (perft_depth != 0) {
-        perft(m_pos, perft_depth);
-    } else {
-        go();
+    std::string token;
+    SearchLimits limits;
+
+    while (iss >> token) {
+        if (token == "infinite") {
+            limits.infinite = true;
+            break;
+        }
+
+        CounterType option;
+        iss >> option;
+        if (token == "depth") {
+            limits.depth = option;
+        } else if (token == "nodes") {
+            limits.maximum_node = option;
+        } else if (token == "movetime") {
+            limits.movetime = option;
+        } else if (token == "wtime" && m_pos.stm() == WHITE) {
+            limits.time_remaining = option;
+        } else if (token == "btime" && m_pos.stm() == BLACK) {
+            limits.time_remaining = option;
+        } else if (token == "winc" && m_pos.stm() == WHITE) {
+            limits.time_increment = option;
+        } else if (token == "binc" && m_pos.stm() == BLACK) {
+            limits.time_increment = option;
+        } else if (token == "movestogo") {
+            limits.mtg = option;
+        }
     }
+
+    m_engine.limit_search(limits);
+
+    m_engine.prepare_search();
+    go();
 }
 
 void UciHandler::handle_perft(std::istringstream &iss) {
@@ -326,43 +353,6 @@ int64_t UciHandler::perft(Position &position, CounterType depth, bool root) {
 }
 
 void UciHandler::handle_eval() { std::cout << "The position evaluation is " << m_engine.static_eval() << std::endl; }
-
-CounterType UciHandler::parse_go(std::istringstream &iss, bool bench) {
-    std::string token;
-    SearchLimits limits;
-
-    while (iss >> token) {
-        if (token == "infinite" && !bench) {
-            limits.infinite = true;
-            break;
-        }
-
-        CounterType option;
-        iss >> option;
-        if (token == "perft" && !iss.fail()) { // Don't "perft" if depth hasn't been passed
-            return option;
-        } else if (token == "depth") {
-            limits.depth = option;
-        } else if (token == "nodes") {
-            limits.maximum_node = option;
-        } else if (token == "movetime") {
-            limits.movetime = option;
-        } else if (token == "wtime" && m_pos.stm() == WHITE) {
-            limits.time_remaining = option;
-        } else if (token == "btime" && m_pos.stm() == BLACK) {
-            limits.time_remaining = option;
-        } else if (token == "winc" && m_pos.stm() == WHITE) {
-            limits.time_increment = option;
-        } else if (token == "binc" && m_pos.stm() == BLACK) {
-            limits.time_increment = option;
-        } else if (token == "movestogo") {
-            limits.mtg = option;
-        }
-    }
-
-    m_engine.limit_search(limits);
-    return 0;
-}
 
 void UciHandler::go() { m_thread = std::thread(&Engine::search, std::ref(m_engine)); }
 
