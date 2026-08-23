@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
         std::optional<std::filesystem::path> opening_book = (argc == 5 ? std::optional(argv[4]) : std::nullopt);
 
         DatagenEngine dt_engine;
-        dt_engine.datagen_loop(concurrency, EngineOptions::HASH_DEFAULT, directory, opening_book);
+        dt_engine.datagen_loop(concurrency, directory, opening_book);
     } else {
         UCI uci;
         uci.loop();
