@@ -73,6 +73,11 @@ void print() {
 
 namespace UCI {
 
+void run() {
+    UciHandler uci_handler;
+    uci_handler.run();
+}
+
 UciHandler::UciHandler() {
     m_pos.set_fen(START_FEN);
     m_engine.resize_tt(EngineOptions::HASH_DEFAULT);
@@ -260,49 +265,6 @@ void UciHandler::set_option(std::istringstream &iss) {
     else {
         std::cout << "Trying to set unknown option: " << token << "\n";
     }
-}
-
-void UciHandler::bench(int depth) {
-    TimeType total_time = 0;
-    int64_t nodes_searched = 0;
-    m_engine.report(false);
-    for (const std::string &fen : BENCHMARK_FEN_LIST) {
-        ucinewgame();
-        m_pos.set_fen(fen);
-        m_engine.prepare_search(m_pos);
-
-        SearchLimits sl;
-        sl.depth = depth;
-        m_engine.limit_search(sl);
-
-        TimeType start_time = now();
-        go();
-        m_thread.join();
-        nodes_searched += m_engine.nodes_searched();
-        total_time += now() - start_time;
-    }
-    m_engine.report(true);
-
-    std::cout << "info time " << total_time << "ms\n";
-    std::cout << nodes_searched << " nodes " << nodes_searched * 1000 / total_time << " nps\n";
-
-#ifdef TRACK_ACTIVATIONS
-    std::ofstream out_file("activations_table.txt");
-    if (!out_file) {
-        std::cerr << "Failed to open file to write activations table data\n";
-        return;
-    }
-
-    const auto table = m_engine.main_td().nnue.activation_table();
-    bool first = true;
-    for (auto e : table) {
-        if (!first)
-            out_file << ", ";
-        out_file << e;
-
-        first = false;
-    }
-#endif // TRACK_ACTIVATIONS
 }
 
 int64_t UciHandler::perft(Position &position, CounterType depth, bool root) {
