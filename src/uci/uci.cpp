@@ -121,7 +121,6 @@ UciHandler::UciHandler() {
 void UciHandler::run() {
     std::cout << "Minke Chess Engine by Eduardo Marinho" << std::endl;
 
-    handle_ucinewgame();
     std::string input, token;
     do {
         if (!std::getline(std::cin, input))
