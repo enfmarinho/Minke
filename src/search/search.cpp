@@ -90,19 +90,6 @@ void Engine::prepare_search(const Position &pos) {
     }
 }
 
-void Engine::prepare_search(const std::string &fen) {
-    Position &pos = m_main_thread_data->position;
-    pos.set_fen(fen);
-    m_main_thread_data->nnue.refresh(pos);
-    m_main_thread_data->init();
-
-    for (auto &td : m_threads_data) {
-        td.position = pos;
-        td.nnue.refresh(pos);
-        td.init();
-    }
-}
-
 std::pair<Move, ScoreType> Engine::search() {
     assert(m_threads.size() == m_threads_data.size());
 

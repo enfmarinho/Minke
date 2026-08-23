@@ -87,7 +87,6 @@ class Engine {
     void new_game();
     void prepare_search();
     void prepare_search(const Position &pos);
-    void prepare_search(const std::string &fen);
     inline void limit_search(const SearchLimits &sl) { m_search_limiter.init(sl); }
 
     std::pair<Move, ScoreType> search();

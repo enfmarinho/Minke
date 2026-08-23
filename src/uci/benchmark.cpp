@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "core/position.h"
 #include "core/types.h"
 #include "search/search.h"
 
@@ -94,12 +95,17 @@ void run(const int bench_depth) {
     TimeType total_time = 0;
     int64_t nodes_searched = 0;
 
+    Position pos;
     Engine engine;
     engine.report(false);
     engine.resize_tt(BENCH_TT_SIZE);
     for (const std::string &fen : FEN_LIST) {
+        if (!pos.set_fen(fen)) {
+            std::cerr << "Invalid fen on benchmark FEN_LIST: " << fen << "\n";
+            continue;
+        }
         engine.new_game();
-        engine.prepare_search(fen);
+        engine.prepare_search(pos);
 
         SearchLimits sl;
         sl.depth = bench_depth;
