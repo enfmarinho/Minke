@@ -166,7 +166,7 @@ void UciHandler::handle_go(std::istringstream &iss) {
     init_search_params();
 #endif
     if (!stopped()) {
-        std::cerr << "TODO\n";
+        std::cerr << "`go` command is invalid while engine is running!\n";
         return;
     }
     if (m_thread.joinable()) {
@@ -213,7 +213,7 @@ void UciHandler::handle_perft(std::istringstream &iss) {
     int perft_depth;
     iss >> perft_depth;
     if (iss.fail()) {
-        std::cerr << "TODO\n";
+        std::cerr << "'perft' command is invalid while engine is running!\n";
         return;
     }
     perft(m_pos, perft_depth, true);
@@ -294,7 +294,7 @@ void UciHandler::handle_uci() {
 
 void UciHandler::handle_setoption(std::istringstream &iss) {
     if (!stopped()) {
-        std::cerr << "TODO: Can not set an option while searching" << std::endl;
+        std::cerr << "`setoption` command is invalid while engine is runnnig!" << std::endl;
         return;
     }
 
@@ -344,7 +344,7 @@ void UciHandler::handle_setoption(std::istringstream &iss) {
 
 void UciHandler::handle_bench(std::istringstream &iss) {
     if (!stopped()) {
-        std::cerr << "TODO\n";
+        std::cerr << "`bench` command is invalid while engine is running!\n";
         return;
     }
 
