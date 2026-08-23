@@ -55,8 +55,6 @@ class UciHandler {
     void handle_eval();
     ///===
 
-    void set_position(const std::string &fen, const std::vector<std::string> &move_list);
-
     /// Returns perft depth or 0 if should not perft
     CounterType parse_go(std::istringstream &, bool bench = false);
     int64_t perft(Position &position, CounterType depth, bool root = true);

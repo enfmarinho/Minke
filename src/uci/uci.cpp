@@ -182,13 +182,11 @@ void UciHandler::handle_position(std::istringstream &iss) {
         return;
     }
 
-    std::vector<std::string> move_list;
-    while (iss >> move)
-        move_list.push_back(move);
-    set_position(fen, move_list);
-}
+    std::vector<std::string> moves;
+    while (iss >> move) {
+        moves.push_back(move);
+    }
 
-void UciHandler::set_position(const std::string &fen, const std::vector<std::string> &moves) {
     if (!m_pos.set_fen(fen)) {
         std::cerr << "Invalid FEN!" << std::endl;
         return;
