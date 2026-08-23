@@ -46,6 +46,31 @@
 #include "utils/utils.h"
 #endif
 
+namespace EngineOptions {
+
+constexpr CounterType HASH_DEFAULT = 16;
+constexpr CounterType HASH_MIN = 1;
+constexpr CounterType HASH_MAX = 2097152;
+constexpr CounterType THREADS_DEFAULT = 1;
+constexpr CounterType THREADS_MIN = 1;
+constexpr CounterType THREADS_MAX = 2048;
+
+void print() {
+    std::cout << "option name Hash type spin default " << HASH_DEFAULT << " min " << HASH_MIN << " max " << HASH_MAX
+              << "\n";
+    std::cout << "option name Threads type spin default " << THREADS_DEFAULT << " min " << THREADS_MIN << " max "
+              << THREADS_MAX << "\n";
+    std::cout << "option name UCI_Chess960 type check default false\n";
+
+#ifdef TUNE
+    for (const TunableParam &tunable_param : TunableParamList::get()) {
+        tunable_param.print();
+    }
+#endif
+}
+
+} // namespace EngineOptions
+
 namespace UCI {
 
 UciHandler::UciHandler() {
@@ -354,17 +379,3 @@ CounterType UciHandler::parse_go(std::istringstream &iss, bool bench) {
 void UciHandler::go() { m_thread = std::thread(&Engine::search, std::ref(m_engine)); }
 
 } // namespace UCI
-
-void EngineOptions::print() {
-    std::cout << "option name Hash type spin default " << HASH_DEFAULT << " min " << HASH_MIN << " max " << HASH_MAX
-              << "\n";
-    std::cout << "option name Threads type spin default " << THREADS_DEFAULT << " min " << THREADS_MIN << " max "
-              << THREADS_MAX << "\n";
-    std::cout << "option name UCI_Chess960 type check default false\n";
-
-#ifdef TUNE
-    for (const TunableParam &tunable_param : TunableParamList::get()) {
-        tunable_param.print();
-    }
-#endif
-}
