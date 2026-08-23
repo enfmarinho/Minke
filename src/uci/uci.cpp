@@ -297,7 +297,7 @@ void UciHandler::handle_uci() {
 
 void UciHandler::handle_setoption(std::istringstream &iss) {
     if (!stopped()) {
-        std::cerr << "`setoption` command is invalid while engine is runnnig!" << std::endl;
+        std::cerr << "`setoption` command is invalid while engine is running!" << std::endl;
         return;
     }
 
