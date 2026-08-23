@@ -149,6 +149,16 @@ void UciHandler::handle_go(std::istringstream &iss) {
     }
 }
 
+void UciHandler::handle_perft(std::istringstream &iss) {
+    int perft_depth;
+    iss >> perft_depth;
+    if (iss.fail()) {
+        std::cerr << "TODO\n";
+        return;
+    }
+    perft(m_pos, perft_depth);
+}
+
 void UciHandler::handle_tuneinfo() {
 #ifdef TUNE
     for (const TunableParam &tunable_param : TunableParamList::get()) {
