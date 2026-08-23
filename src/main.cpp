@@ -47,8 +47,7 @@ int main(int argc, char *argv[]) {
         DatagenEngine dt_engine;
         dt_engine.datagen_loop(concurrency, directory, opening_book);
     } else {
-        UCI uci;
-        uci.loop();
+        UCI::run();
     }
 
     return EXIT_SUCCESS;

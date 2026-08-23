@@ -46,7 +46,9 @@
 #include "utils/utils.h"
 #endif
 
-UCI::UCI() {
+namespace UCI {
+
+UciHandler::UciHandler() {
     m_pos.set_fen(START_FEN);
     m_engine.resize_tt(EngineOptions::HASH_DEFAULT);
     m_engine.new_game();
@@ -54,7 +56,7 @@ UCI::UCI() {
     m_engine.report(true);
 }
 
-void UCI::loop() {
+void UciHandler::run() {
     std::cout << "Minke Chess Engine by Eduardo Marinho" << std::endl;
 
     ucinewgame();
@@ -132,7 +134,7 @@ void UCI::loop() {
         m_thread.join();
 }
 
-void UCI::print_debug_info() {
+void UciHandler::print_debug_info() {
     m_pos.print();
     TTEntry tte;
     Movegen::ScoredMoveList move_list;
@@ -144,7 +146,7 @@ void UCI::print_debug_info() {
     std::cout << "\nNNUE eval: " << m_engine.static_eval() << std::endl;
 }
 
-void UCI::position(std::istringstream &iss) {
+void UciHandler::position(std::istringstream &iss) {
     std::string token, fen, move;
     iss >> token;
     if (token == "startpos") {
@@ -163,7 +165,7 @@ void UCI::position(std::istringstream &iss) {
     set_position(fen, move_list);
 }
 
-void UCI::set_position(const std::string &fen, const std::vector<std::string> &moves) {
+void UciHandler::set_position(const std::string &fen, const std::vector<std::string> &moves) {
     if (!m_pos.set_fen(fen)) {
         std::cerr << "Invalid FEN!" << std::endl;
         return;
@@ -188,9 +190,9 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
     m_engine.prepare_search(m_pos);
 }
 
-void UCI::ucinewgame() { m_engine.new_game(); }
+void UciHandler::ucinewgame() { m_engine.new_game(); }
 
-void UCI::set_option(std::istringstream &iss) {
+void UciHandler::set_option(std::istringstream &iss) {
     std::string value;
     int value_int;
     bool value_bool;
@@ -235,7 +237,7 @@ void UCI::set_option(std::istringstream &iss) {
     }
 }
 
-void UCI::bench(int depth) {
+void UciHandler::bench(int depth) {
     TimeType total_time = 0;
     int64_t nodes_searched = 0;
     m_engine.report(false);
@@ -278,7 +280,7 @@ void UCI::bench(int depth) {
 #endif // TRACK_ACTIVATIONS
 }
 
-int64_t UCI::perft(Position &position, CounterType depth, bool root) {
+int64_t UciHandler::perft(Position &position, CounterType depth, bool root) {
     const bool is_leaf = (depth == 2);
     int64_t count = 0, nodes = 0;
 
@@ -310,9 +312,9 @@ int64_t UCI::perft(Position &position, CounterType depth, bool root) {
     return nodes;
 }
 
-void UCI::eval() { std::cout << "The position evaluation is " << m_engine.static_eval() << std::endl; }
+void UciHandler::eval() { std::cout << "The position evaluation is " << m_engine.static_eval() << std::endl; }
 
-CounterType UCI::parse_go(std::istringstream &iss, bool bench) {
+CounterType UciHandler::parse_go(std::istringstream &iss, bool bench) {
     std::string token;
     SearchLimits limits;
 
@@ -349,7 +351,9 @@ CounterType UCI::parse_go(std::istringstream &iss, bool bench) {
     return 0;
 }
 
-void UCI::go() { m_thread = std::thread(&Engine::search, std::ref(m_engine)); }
+void UciHandler::go() { m_thread = std::thread(&Engine::search, std::ref(m_engine)); }
+
+} // namespace UCI
 
 void EngineOptions::print() {
     std::cout << "option name Hash type spin default " << HASH_DEFAULT << " min " << HASH_MIN << " max " << HASH_MAX

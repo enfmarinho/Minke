@@ -36,11 +36,15 @@ static constexpr CounterType THREADS_MAX = 2048;
 void print();
 } // namespace EngineOptions
 
-class UCI {
+namespace UCI {
+
+void run();
+
+class UciHandler {
   public:
-    UCI();
-    ~UCI() = default;
-    void loop();
+    UciHandler();
+    ~UciHandler() = default;
+    void run();
 
   private:
     void position(std::istringstream &);
@@ -61,3 +65,5 @@ class UCI {
     Position m_pos;
     Engine m_engine;
 };
+
+} // namespace UCI
