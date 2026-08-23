@@ -96,6 +96,7 @@ void run(const int bench_depth) {
 
     Engine engine;
     engine.report(false);
+    engine.resize_tt(BENCH_TT_SIZE);
     for (const std::string &fen : FEN_LIST) {
         engine.new_game();
         engine.prepare_search(fen);

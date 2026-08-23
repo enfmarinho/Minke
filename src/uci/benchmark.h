@@ -19,11 +19,15 @@
 #pragma once
 
 namespace Benchmark {
+
 #ifdef TRACK_ACTIVATIONS
 constexpr int DEFAULT_BENCH_DEPTH = 18;
 #else
 constexpr int DEFAULT_BENCH_DEPTH = 16;
 #endif
 
+constexpr int BENCH_TT_SIZE = 16;
+
 void run(int bench_depth = DEFAULT_BENCH_DEPTH);
+
 } // namespace Benchmark
