@@ -173,7 +173,7 @@ void UciHandler::handle_go(std::istringstream &iss) {
     m_engine.limit_search(limits);
 
     m_engine.prepare_search();
-    go();
+    m_thread = std::thread(&Engine::search, std::ref(m_engine));
 }
 
 void UciHandler::handle_perft(std::istringstream &iss) {
@@ -353,8 +353,6 @@ int64_t UciHandler::perft(Position &position, CounterType depth, bool root) {
 }
 
 void UciHandler::handle_eval() { std::cout << "The position evaluation is " << m_engine.static_eval() << std::endl; }
-
-void UciHandler::go() { m_thread = std::thread(&Engine::search, std::ref(m_engine)); }
 
 bool UciHandler::stopped() {
     if (!m_engine.stopped())

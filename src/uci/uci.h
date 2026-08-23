@@ -56,7 +56,6 @@ class UciHandler {
     ///===
 
     int64_t perft(Position &position, CounterType depth, bool root = true);
-    void go();
 
     bool stopped();
 
