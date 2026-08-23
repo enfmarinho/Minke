@@ -131,7 +131,7 @@ void UciHandler::run() {
         token.clear();
         iss >> std::skipws >> token;
         if (token == "quit" || token == "stop") {
-            m_engine.stop_search();
+            handle_stop();
         } else if (token == "go") {
             handle_go(iss);
         } else if (token == "perft") {
@@ -157,17 +157,15 @@ void UciHandler::run() {
         } else if (!token.empty()) {
             std::cout << "Unknown command: '" << token << "'. Type help for information." << std::endl;
         }
-    } while (token != "quit");
 
-    if (m_thread.joinable())
-        m_thread.join();
+    } while (token != "quit");
 }
 
 void UciHandler::handle_go(std::istringstream &iss) {
 #ifdef TUNE
     init_search_params();
 #endif
-    if (!stopped()) {
+    if (!m_engine.stopped()) {
         std::cerr << "TODO\n";
         return;
     }
@@ -292,7 +290,7 @@ void UciHandler::handle_uci() {
 }
 
 void UciHandler::handle_setoption(std::istringstream &iss) {
-    if (!stopped()) {
+    if (!m_engine.stopped()) {
         std::cerr << "TODO: Can not set an option while searching" << std::endl;
         return;
     }
@@ -342,7 +340,7 @@ void UciHandler::handle_setoption(std::istringstream &iss) {
 }
 
 void UciHandler::handle_bench(std::istringstream &iss) {
-    if (!stopped()) {
+    if (!m_engine.stopped()) {
         std::cerr << "TODO\n";
         return;
     }
@@ -354,14 +352,11 @@ void UciHandler::handle_bench(std::istringstream &iss) {
 
 void UciHandler::handle_eval() { std::cout << "The position evaluation is " << m_engine.static_eval() << std::endl; }
 
-bool UciHandler::stopped() {
-    if (!m_engine.stopped())
-        return false;
-
-    if (m_thread.joinable())
+void UciHandler::handle_stop() {
+    m_engine.stop_search();
+    if (m_thread.joinable()) {
         m_thread.join();
-
-    return true;
+    }
 }
 
 } // namespace UCI
