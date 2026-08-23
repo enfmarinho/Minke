@@ -112,8 +112,9 @@ void run(const int bench_depth) {
         nodes_searched += engine.nodes_searched();
     }
 
-    std::cout << "info time " << total_time << "ms\n";
-    std::cout << nodes_searched << " nodes " << nodes_searched * 1000 / total_time << " nps\n";
+    const TimeType time_elapsed = std::max<TimeType>(total_time, 1);
+    std::cout << "info time " << time_elapsed << "ms\n";
+    std::cout << nodes_searched << " nodes " << nodes_searched * 1000 / time_elapsed << " nps\n";
 
 #ifdef TRACK_ACTIVATIONS
     std::ofstream out_file("activations_table.txt");
@@ -122,7 +123,7 @@ void run(const int bench_depth) {
         return;
     }
 
-    const auto table = m_engine.main_td().nnue.activation_table();
+    const auto table = engine.main_td().nnue.activation_table();
     bool first = true;
     for (auto e : table) {
         if (!first)
