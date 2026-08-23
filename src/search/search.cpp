@@ -246,6 +246,7 @@ ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, Co
     const bool singular_search = !excluded_move.is_none();
     Position &position = td.position;
     SearchStackEntry &node = td.search_stack[ply];
+    const bool in_check = position.in_check();
 
     // Early return conditions
     const bool root = ply == 0;
@@ -258,6 +259,12 @@ ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, Co
 
         // Upcoming repetition detection
         if (alpha < 0 && position.has_upcoming_repetition(ply)) {
+            if (!in_check) {
+                const ScoreType raw_eval = td.nnue.eval(td.position);
+                const HistoryType correction = td.correction_history.correction(td, ply);
+                const ScoreType adjusted_eval = adjust_eval(td.position, raw_eval, correction);
+                td.correction_history.update(td, depth, ply, 0 - adjusted_eval);
+            }
             alpha = 0;
             if (alpha >= beta)
                 return alpha;
@@ -299,7 +306,6 @@ ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, Co
         depth -= 1;
     }
 
-    const bool in_check = position.in_check();
     ScoreType eval, raw_eval;
     const ScoreType correction_value = td.correction_history.correction(td, ply);
     const ScoreType complexity = std::abs(correction_value);
@@ -638,8 +644,16 @@ ScoreType Engine::quiescence(ScoreType alpha, ScoreType beta, CounterType ply, T
     else if (ply >= MAX_SEARCH_DEPTH - 1)
         return position.in_check() ? 0 : td.nnue.eval(position);
 
+    const bool in_check = position.in_check();
+
     // Upcoming repetition detection
     if (alpha < 0 && position.has_upcoming_repetition(ply)) {
+        if (!in_check) {
+            const ScoreType raw_eval = td.nnue.eval(td.position);
+            const HistoryType correction = td.correction_history.correction(td, ply);
+            const ScoreType adjusted_eval = adjust_eval(td.position, raw_eval, correction);
+            td.correction_history.update(td, 1, ply, 0 - adjusted_eval);
+        }
         alpha = 0;
         if (alpha >= beta)
             return alpha;
@@ -665,7 +679,6 @@ ScoreType Engine::quiescence(ScoreType alpha, ScoreType beta, CounterType ply, T
         return ttscore;
     }
 
-    const bool in_check = position.in_check();
     ScoreType best_score, raw_eval;
     if (in_check) {
         node.static_eval = raw_eval = SCORE_NONE;
