@@ -170,9 +170,6 @@ void UciHandler::handle_go(std::istringstream &iss) {
         std::cerr << "`go` command is invalid while engine is running!\n";
         return;
     }
-    if (m_thread.joinable()) {
-        m_thread.join();
-    }
 
     std::string token;
     SearchLimits limits;
