@@ -54,6 +54,8 @@ class UciHandler {
     void handle_eval();
     ///===
 
+    bool stopped();
+
     std::thread m_thread;
     Position m_pos;
     Engine m_engine;

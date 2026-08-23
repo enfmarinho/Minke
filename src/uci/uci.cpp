@@ -165,7 +165,7 @@ void UciHandler::handle_go(std::istringstream &iss) {
 #ifdef TUNE
     init_search_params();
 #endif
-    if (!m_engine.stopped()) {
+    if (!stopped()) {
         std::cerr << "TODO\n";
         return;
     }
@@ -293,7 +293,7 @@ void UciHandler::handle_uci() {
 }
 
 void UciHandler::handle_setoption(std::istringstream &iss) {
-    if (!m_engine.stopped()) {
+    if (!stopped()) {
         std::cerr << "TODO: Can not set an option while searching" << std::endl;
         return;
     }
@@ -343,7 +343,7 @@ void UciHandler::handle_setoption(std::istringstream &iss) {
 }
 
 void UciHandler::handle_bench(std::istringstream &iss) {
-    if (!m_engine.stopped()) {
+    if (!stopped()) {
         std::cerr << "TODO\n";
         return;
     }
@@ -360,6 +360,16 @@ void UciHandler::handle_stop() {
     if (m_thread.joinable()) {
         m_thread.join();
     }
+}
+
+bool UciHandler::stopped() {
+    if (!m_engine.stopped()) {
+        return false;
+    }
+    if (m_thread.joinable()) {
+        m_thread.join();
+    }
+    return true;
 }
 
 } // namespace UCI
