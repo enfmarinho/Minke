@@ -31,7 +31,7 @@ void run();
 class UciHandler {
   public:
     UciHandler();
-    ~UciHandler() = default;
+    ~UciHandler();
 
     void run();
 

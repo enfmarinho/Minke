@@ -118,6 +118,8 @@ UciHandler::UciHandler() {
     m_engine.report(true);
 }
 
+UciHandler::~UciHandler() { handle_stop(); }
+
 void UciHandler::run() {
     std::cout << "Minke Chess Engine by Eduardo Marinho" << std::endl;
 
