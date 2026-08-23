@@ -169,6 +169,9 @@ void UciHandler::handle_go(std::istringstream &iss) {
         std::cerr << "TODO\n";
         return;
     }
+    if (m_thread.joinable()) {
+        m_thread.join();
+    }
 
     std::string token;
     SearchLimits limits;
