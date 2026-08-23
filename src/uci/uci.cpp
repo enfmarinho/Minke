@@ -46,8 +46,41 @@
 #include "utils/utils.h"
 #endif
 
-namespace EngineOptions {
+namespace {
+int64_t perft(Position &position, CounterType depth, bool root) {
+    const bool is_leaf = (depth == 2);
+    int64_t count = 0, nodes = 0;
 
+    Movegen::ScoredMoveList move_list;
+    Movegen::all(move_list, position);
+    for (ScoredMove score_move : move_list) {
+        const Move move = score_move.move;
+        position.make_move(move);
+
+        if (root && depth <= 1) {
+            count = 1;
+        } else if (is_leaf) {
+            Movegen::ScoredMoveList tmp;
+            Movegen::all(tmp, position);
+            count = tmp.size();
+        } else {
+            count = perft(position, depth - 1, false);
+        }
+        nodes += count;
+
+        position.unmake_move(move);
+
+        if (root)
+            std::cout << position.move_to_uci(move) << ": " << count << std::endl;
+    }
+
+    if (root)
+        std::cout << "\nNodes searched: " << nodes << std::endl;
+    return nodes;
+}
+} // namespace
+
+namespace EngineOptions {
 constexpr CounterType HASH_DEFAULT = 16;
 constexpr CounterType HASH_MIN = 1;
 constexpr CounterType HASH_MAX = 2097152;
@@ -68,7 +101,6 @@ void print() {
     }
 #endif
 }
-
 } // namespace EngineOptions
 
 namespace UCI {
@@ -183,7 +215,7 @@ void UciHandler::handle_perft(std::istringstream &iss) {
         std::cerr << "TODO\n";
         return;
     }
-    perft(m_pos, perft_depth);
+    perft(m_pos, perft_depth, true);
 }
 
 void UciHandler::handle_tuneinfo() {
@@ -318,38 +350,6 @@ void UciHandler::handle_bench(std::istringstream &iss) {
     int bench_depth = Benchmark::DEFAULT_BENCH_DEPTH;
     iss >> std::skipws >> bench_depth;
     Benchmark::run(bench_depth);
-}
-
-int64_t UciHandler::perft(Position &position, CounterType depth, bool root) {
-    const bool is_leaf = (depth == 2);
-    int64_t count = 0, nodes = 0;
-
-    Movegen::ScoredMoveList move_list;
-    Movegen::all(move_list, position);
-    for (ScoredMove score_move : move_list) {
-        const Move move = score_move.move;
-        position.make_move(move);
-
-        if (root && depth <= 1) {
-            count = 1;
-        } else if (is_leaf) {
-            Movegen::ScoredMoveList tmp;
-            Movegen::all(tmp, position);
-            count = tmp.size();
-        } else {
-            count = perft(position, depth - 1, false);
-        }
-        nodes += count;
-
-        position.unmake_move(move);
-
-        if (root)
-            std::cout << position.move_to_uci(move) << ": " << count << std::endl;
-    }
-
-    if (root)
-        std::cout << "\nNodes searched: " << nodes << std::endl;
-    return nodes;
 }
 
 void UciHandler::handle_eval() { std::cout << "The position evaluation is " << m_engine.static_eval() << std::endl; }

@@ -18,12 +18,10 @@
 
 #pragma once
 
-#include <cstdint>
 #include <sstream>
 #include <thread>
 
 #include "core/position.h"
-#include "core/types.h"
 #include "search/search.h"
 
 namespace UCI {
@@ -54,8 +52,6 @@ class UciHandler {
     void handle_debug();
     void handle_eval();
     ///===
-
-    int64_t perft(Position &position, CounterType depth, bool root = true);
 
     bool stopped();
 
