@@ -21,7 +21,6 @@
 #include <cassert>
 #include <cstdint>
 #include <exception>
-#include <fstream>
 #include <ios>
 #include <iostream>
 #include <sstream>
@@ -33,16 +32,85 @@
 #include "core/movegen.h"
 #include "core/position.h"
 #include "core/types.h"
-#include "search/movepicker.h"
 #include "search/search.h"
 #include "search/search_limiter.h"
 #include "search/tt.h"
 #include "uci/benchmark.h"
+
+#ifdef TRACK_ACTIVATIONS
+#include <fstream>
+#endif
+#ifdef TUNE
 #include "uci/init.h"
 #include "uci/tune.h"
 #include "utils/utils.h"
+#endif
 
-UCI::UCI() {
+namespace {
+int64_t perft(Position &position, CounterType depth, bool root) {
+    const bool is_leaf = (depth == 2);
+    int64_t count = 0, nodes = 0;
+
+    Movegen::ScoredMoveList move_list;
+    Movegen::all(move_list, position);
+    for (ScoredMove score_move : move_list) {
+        const Move move = score_move.move;
+        position.make_move(move);
+
+        if (root && depth <= 1) {
+            count = 1;
+        } else if (is_leaf) {
+            Movegen::ScoredMoveList tmp;
+            Movegen::all(tmp, position);
+            count = tmp.size();
+        } else {
+            count = perft(position, depth - 1, false);
+        }
+        nodes += count;
+
+        position.unmake_move(move);
+
+        if (root)
+            std::cout << position.move_to_uci(move) << ": " << count << std::endl;
+    }
+
+    if (root)
+        std::cout << "\nNodes searched: " << nodes << std::endl;
+    return nodes;
+}
+} // namespace
+
+namespace EngineOptions {
+constexpr CounterType HASH_DEFAULT = 16;
+constexpr CounterType HASH_MIN = 1;
+constexpr CounterType HASH_MAX = 2097152;
+constexpr CounterType THREADS_DEFAULT = 1;
+constexpr CounterType THREADS_MIN = 1;
+constexpr CounterType THREADS_MAX = 2048;
+
+void print() {
+    std::cout << "option name Hash type spin default " << HASH_DEFAULT << " min " << HASH_MIN << " max " << HASH_MAX
+              << "\n";
+    std::cout << "option name Threads type spin default " << THREADS_DEFAULT << " min " << THREADS_MIN << " max "
+              << THREADS_MAX << "\n";
+    std::cout << "option name UCI_Chess960 type check default false\n";
+
+#ifdef TUNE
+    for (const TunableParam &tunable_param : TunableParamList::get()) {
+        tunable_param.print();
+    }
+#endif
+}
+} // namespace EngineOptions
+
+namespace UCI {
+
+void run() {
+    UciHandler uci_handler;
+    uci_handler.run();
+}
+
+UciHandler::UciHandler() {
     m_pos.set_fen(START_FEN);
     m_engine.resize_tt(EngineOptions::HASH_DEFAULT);
     m_engine.new_game();
@@ -50,10 +118,11 @@ UCI::UCI() {
     m_engine.report(true);
 }
 
-void UCI::loop() {
+UciHandler::~UciHandler() { handle_stop(); }
+
+void UciHandler::run() {
     std::cout << "Minke Chess Engine by Eduardo Marinho" << std::endl;
 
-    ucinewgame();
     std::string input, token;
     do {
         if (!std::getline(std::cin, input))
@@ -63,72 +132,105 @@ void UCI::loop() {
         token.clear();
         iss >> std::skipws >> token;
         if (token == "quit" || token == "stop") {
-            m_engine.stop_search();
+            handle_stop();
         } else if (token == "go") {
-#ifdef TUNE
-            init_search_params();
-#endif
-            if (!m_engine.stopped())
-                continue;
-            else if (m_thread.joinable())
-                m_thread.join();
-            m_engine.prepare_search();
-            const CounterType perft_depth = parse_go(iss);
-            if (perft_depth != 0) {
-                perft(m_pos, perft_depth);
-            } else {
-                go();
-            }
+            handle_go(iss);
+        } else if (token == "perft") {
+            handle_perft(iss);
         } else if (token == "position") {
-            position(iss);
+            handle_position(iss);
         } else if (token == "ucinewgame") {
-            ucinewgame();
+            handle_ucinewgame();
         } else if (token == "setoption") {
-            if (!m_engine.stopped()) {
-                std::cerr << "Can not set an option while searching" << std::endl;
-                continue;
-            } else if (m_thread.joinable()) {
-                m_thread.join();
-            }
-            set_option(iss);
+            handle_setoption(iss);
         } else if (token == "eval") {
-            eval();
+            handle_eval();
         } else if (token == "uci") {
-            std::cout << "id name Minke 6.0.0 \n"
-                      << "id author Eduardo Marinho \n";
-            EngineOptions::print();
-            std::cout << "uciok" << std::endl;
+            handle_uci();
         } else if (token == "isready") {
-            std::cout << "readyok" << std::endl;
-        } else if (token == "d") {
-            print_debug_info();
+            handle_isready();
+        } else if (token == "debug" || token == "d") {
+            handle_debug();
         } else if (token == "bench") {
-            if (!m_engine.stopped())
-                continue;
-            else if (m_thread.joinable())
-                m_thread.join();
-
-            int bench_depth = EngineOptions::BENCH_DEPTH;
-            iss >> std::skipws >> bench_depth;
-            bench(bench_depth);
-        }
-#ifdef TUNE
-        else if (token == "tuneinfo") {
-            for (const TunableParam &tunable_param : TunableParamList::get()) {
-                tunable_param.print_ob_format();
-            }
-        }
-#endif
-        else if (!token.empty()) {
+            handle_bench(iss);
+        } else if (token == "tuneinfo") { // if `TUNE` is not defined at compile time this is just a dummy option
+            handle_tuneinfo();
+        } else if (!token.empty()) {
             std::cout << "Unknown command: '" << token << "'. Type help for information." << std::endl;
         }
-    } while (token != "quit");
 
-    if (m_thread.joinable())
-        m_thread.join();
+    } while (token != "quit");
 }
 
-void UCI::print_debug_info() {
+void UciHandler::handle_go(std::istringstream &iss) {
+#ifdef TUNE
+    init_search_params();
+#endif
+    if (!stopped()) {
+        std::cerr << "`go` command is invalid while engine is running!\n";
+        return;
+    }
+
+    std::string token;
+    SearchLimits limits;
+
+    while (iss >> token) {
+        if (token == "infinite") {
+            limits.infinite = true;
+            break;
+        }
+
+        CounterType option;
+        iss >> option;
+        if (token == "depth") {
+            limits.depth = option;
+        } else if (token == "nodes") {
+            limits.maximum_node = option;
+        } else if (token == "movetime") {
+            limits.movetime = option;
+        } else if (token == "wtime" && m_pos.stm() == WHITE) {
+            limits.time_remaining = option;
+        } else if (token == "btime" && m_pos.stm() == BLACK) {
+            limits.time_remaining = option;
+        } else if (token == "winc" && m_pos.stm() == WHITE) {
+            limits.time_increment = option;
+        } else if (token == "binc" && m_pos.stm() == BLACK) {
+            limits.time_increment = option;
+        } else if (token == "movestogo") {
+            limits.mtg = option;
+        }
+    }
+
+    m_engine.limit_search(limits);
+
+    m_engine.prepare_search();
+    m_thread = std::thread(&Engine::search, std::ref(m_engine));
+}
+
+void UciHandler::handle_perft(std::istringstream &iss) {
+    if (!stopped()) {
+        std::cerr << "`perft` command is invalid while engine is running!\n";
+        return;
+    }
+
+    int perft_depth;
+    iss >> perft_depth;
+    if (iss.fail()) {
+        std::cerr << "'perft' command is invalid while engine is running!\n";
+        return;
+    }
+    perft(m_pos, perft_depth, true);
+}
+
+void UciHandler::handle_tuneinfo() {
+#ifdef TUNE
+    for (const TunableParam &tunable_param : TunableParamList::get()) {
+        tunable_param.print_ob_format();
+    }
+#endif // TUNE
+}
+
+void UciHandler::handle_debug() {
     m_pos.print();
     TTEntry tte;
     Movegen::ScoredMoveList move_list;
@@ -140,7 +242,7 @@ void UCI::print_debug_info() {
     std::cout << "\nNNUE eval: " << m_engine.static_eval() << std::endl;
 }
 
-void UCI::position(std::istringstream &iss) {
+void UciHandler::handle_position(std::istringstream &iss) {
     std::string token, fen, move;
     iss >> token;
     if (token == "startpos") {
@@ -153,13 +255,11 @@ void UCI::position(std::istringstream &iss) {
         return;
     }
 
-    std::vector<std::string> move_list;
-    while (iss >> move)
-        move_list.push_back(move);
-    set_position(fen, move_list);
-}
+    std::vector<std::string> moves;
+    while (iss >> move) {
+        moves.push_back(move);
+    }
 
-void UCI::set_position(const std::string &fen, const std::vector<std::string> &moves) {
     if (!m_pos.set_fen(fen)) {
         std::cerr << "Invalid FEN!" << std::endl;
         return;
@@ -184,9 +284,23 @@ void UCI::set_position(const std::string &fen, const std::vector<std::string> &m
     m_engine.prepare_search(m_pos);
 }
 
-void UCI::ucinewgame() { m_engine.new_game(); }
+void UciHandler::handle_ucinewgame() { m_engine.new_game(); }
 
-void UCI::set_option(std::istringstream &iss) {
+void UciHandler::handle_isready() { std::cout << "readyok" << std::endl; }
+
+void UciHandler::handle_uci() {
+    std::cout << "id name Minke 6.0.0 \n"
+              << "id author Eduardo Marinho \n";
+    EngineOptions::print();
+    std::cout << "uciok" << std::endl;
+}
+
+void UciHandler::handle_setoption(std::istringstream &iss) {
+    if (!stopped()) {
+        std::cerr << "`setoption` command is invalid while engine is running!" << std::endl;
+        return;
+    }
+
     std::string value;
     int value_int;
     bool value_bool;
@@ -231,132 +345,34 @@ void UCI::set_option(std::istringstream &iss) {
     }
 }
 
-void UCI::bench(int depth) {
-    TimeType total_time = 0;
-    int64_t nodes_searched = 0;
-    m_engine.report(false);
-    for (const std::string &fen : BENCHMARK_FEN_LIST) {
-        ucinewgame();
-        m_pos.set_fen(fen);
-        m_engine.prepare_search(m_pos);
-
-        SearchLimits sl;
-        sl.depth = depth;
-        m_engine.limit_search(sl);
-
-        TimeType start_time = now();
-        go();
-        m_thread.join();
-        nodes_searched += m_engine.nodes_searched();
-        total_time += now() - start_time;
-    }
-    m_engine.report(true);
-
-    std::cout << "info time " << total_time << "ms\n";
-    std::cout << nodes_searched << " nodes " << nodes_searched * 1000 / total_time << " nps\n";
-
-#ifdef TRACK_ACTIVATIONS
-    std::ofstream out_file("activations_table.txt");
-    if (!out_file) {
-        std::cerr << "Failed to open file to write activations table data\n";
+void UciHandler::handle_bench(std::istringstream &iss) {
+    if (!stopped()) {
+        std::cerr << "`bench` command is invalid while engine is running!\n";
         return;
     }
 
-    const auto table = m_engine.main_td().nnue.activation_table();
-    bool first = true;
-    for (auto e : table) {
-        if (!first)
-            out_file << ", ";
-        out_file << e;
-
-        first = false;
-    }
-#endif // TRACK_ACTIVATIONS
+    int bench_depth = Benchmark::DEFAULT_BENCH_DEPTH;
+    iss >> std::skipws >> bench_depth;
+    Benchmark::run(bench_depth);
 }
 
-int64_t UCI::perft(Position &position, CounterType depth, bool root) {
-    const bool is_leaf = (depth == 2);
-    int64_t count = 0, nodes = 0;
+void UciHandler::handle_eval() { std::cout << "The position evaluation is " << m_engine.static_eval() << std::endl; }
 
-    Movegen::ScoredMoveList move_list;
-    Movegen::all(move_list, position);
-    for (ScoredMove score_move : move_list) {
-        const Move move = score_move.move;
-        position.make_move(move);
-
-        if (root && depth <= 1) {
-            count = 1;
-        } else if (is_leaf) {
-            Movegen::ScoredMoveList tmp;
-            Movegen::all(tmp, position);
-            count = tmp.size();
-        } else {
-            count = perft(position, depth - 1, false);
-        }
-        nodes += count;
-
-        position.unmake_move(move);
-
-        if (root)
-            std::cout << position.move_to_uci(move) << ": " << count << std::endl;
+void UciHandler::handle_stop() {
+    m_engine.stop_search();
+    if (m_thread.joinable()) {
+        m_thread.join();
     }
-
-    if (root)
-        std::cout << "\nNodes searched: " << nodes << std::endl;
-    return nodes;
 }
 
-void UCI::eval() { std::cout << "The position evaluation is " << m_engine.static_eval() << std::endl; }
-
-CounterType UCI::parse_go(std::istringstream &iss, bool bench) {
-    std::string token;
-    SearchLimits limits;
-
-    while (iss >> token) {
-        if (token == "infinite" && !bench) {
-            limits.infinite = true;
-            break;
-        }
-
-        CounterType option;
-        iss >> option;
-        if (token == "perft" && !iss.fail()) { // Don't "perft" if depth hasn't been passed
-            return option;
-        } else if (token == "depth") {
-            limits.depth = option;
-        } else if (token == "nodes") {
-            limits.maximum_node = option;
-        } else if (token == "movetime") {
-            limits.movetime = option;
-        } else if (token == "wtime" && m_pos.stm() == WHITE) {
-            limits.time_remaining = option;
-        } else if (token == "btime" && m_pos.stm() == BLACK) {
-            limits.time_remaining = option;
-        } else if (token == "winc" && m_pos.stm() == WHITE) {
-            limits.time_increment = option;
-        } else if (token == "binc" && m_pos.stm() == BLACK) {
-            limits.time_increment = option;
-        } else if (token == "movestogo") {
-            limits.mtg = option;
-        }
+bool UciHandler::stopped() {
+    if (!m_engine.stopped()) {
+        return false;
     }
-
-    m_engine.limit_search(limits);
-    return 0;
+    if (m_thread.joinable()) {
+        m_thread.join();
+    }
+    return true;
 }
 
-void UCI::go() { m_thread = std::thread(&Engine::search, std::ref(m_engine)); }
-
-void EngineOptions::print() {
-    std::cout << "option name Hash type spin default " << HASH_DEFAULT << " min " << HASH_MIN << " max " << HASH_MAX
-              << "\n";
-    std::cout << "option name Threads type spin default " << THREADS_DEFAULT << " min " << THREADS_MIN << " max "
-              << THREADS_MAX << "\n";
-    std::cout << "option name UCI_Chess960 type check default false\n";
-
-#ifdef TUNE
-    for (const TunableParam &tunable_param : TunableParamList::get()) {
-        tunable_param.print();
-    }
-#endif
-}
+} // namespace UCI

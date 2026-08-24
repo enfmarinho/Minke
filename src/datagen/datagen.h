@@ -50,11 +50,11 @@ class DatagenThread {
     static constexpr int WIN_ADJ_SCORE = 2000;
     static constexpr int DRAW_ADJ_SCORE = 10;
     static constexpr int DRAW_ADJ_MIN_PLY = 60;
+    static constexpr int DEFAULT_TT_SIZE = 16;
 
   public:
     DatagenThread() = delete;
-    DatagenThread(int id, int tt_size_mb, const std::filesystem::path& outdir_path, const EpdBook& opening_book,
-                  uint64_t seed);
+    DatagenThread(int id, const std::filesystem::path& outdir_path, const EpdBook& opening_book, uint64_t seed);
     ~DatagenThread();
 
     void run();
@@ -87,13 +87,13 @@ class DatagenEngine {
     DatagenEngine() = default;
     ~DatagenEngine();
 
-    void datagen_loop(int thread_count, int tt_size_mb, const std::filesystem::path& outdir_path,
+    void datagen_loop(int thread_count, const std::filesystem::path& outdir_path,
                       const std::optional<std::filesystem::path> opening_book_path);
 
   private:
     void report() const;
 
-    void start(int thread_count, int tt_size_mb, const std::filesystem::path& outdir_path, const EpdBook& opening_book,
+    void start(int thread_count, const std::filesystem::path& outdir_path, const EpdBook& opening_book,
                uint64_t master_seed);
     void stop();
 

@@ -19,21 +19,22 @@
 #include <cstdlib>
 #include <filesystem>
 #include <optional>
+#include <string_view>
 
 #include "datagen/datagen.h"
+#include "uci/benchmark.h"
 #include "uci/init.h"
 #include "uci/uci.h"
 
 int main(int argc, char *argv[]) {
     init_all();
-    if (argc > 1 && std::string(argv[1]) == "bench") {
-        int depth = EngineOptions::BENCH_DEPTH;
+    if (argc > 1 && std::string_view(argv[1]) == "bench") {
+        int depth = Benchmark::DEFAULT_BENCH_DEPTH;
         if (argc > 2)
             depth = std::stoi(argv[2]);
 
-        UCI uci;
-        uci.bench(depth);
-    } else if (argc > 1 && std::string(argv[1]) == "datagen") {
+        Benchmark::run(depth);
+    } else if (argc > 1 && std::string_view(argv[1]) == "datagen") {
         if (argc != 4 && argc != 5) {
             std::cerr << "usage: " << argv[0] << " datagen <threads> <output_directory> [opening_book.epd]\n";
             return EXIT_FAILURE;
@@ -44,10 +45,9 @@ int main(int argc, char *argv[]) {
         std::optional<std::filesystem::path> opening_book = (argc == 5 ? std::optional(argv[4]) : std::nullopt);
 
         DatagenEngine dt_engine;
-        dt_engine.datagen_loop(concurrency, EngineOptions::HASH_DEFAULT, directory, opening_book);
+        dt_engine.datagen_loop(concurrency, directory, opening_book);
     } else {
-        UCI uci;
-        uci.loop();
+        UCI::run();
     }
 
     return EXIT_SUCCESS;
