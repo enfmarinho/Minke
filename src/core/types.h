@@ -22,7 +22,7 @@
 #include <cstdint>
 
 // clang-format off
-enum Square : int {
+enum Square : uint8_t {
     a1, b1, c1, d1, e1, f1, g1, h1,
     a2, b2, c2, d2, e2, f2, g2, h2,
     a3, b3, c3, d3, e3, f3, g3, h3,
@@ -37,13 +37,13 @@ enum Square : int {
 
 constexpr int COLOR_OFFSET = 6;
 
-enum Color : int {
+enum Color : uint8_t {
     WHITE,
     BLACK,
     COLOR_NB
 };
 
-enum PieceType : int {
+enum PieceType : uint8_t {
     PAWN,
     KNIGHT,
     BISHOP,
@@ -54,7 +54,7 @@ enum PieceType : int {
     PIECE_TYPE_NB
 };
 
-enum Piece : int {
+enum Piece : uint8_t {
     WHITE_PAWN,
     WHITE_KNIGHT,
     WHITE_BISHOP,
@@ -114,14 +114,14 @@ enum Direction : int {
     DOUBLE_WEST_SOUTH = 2 * WEST + SOUTH,
 };
 
-enum BoundType : char {
+enum BoundType : uint8_t {
     BOUND_EMPTY,
     EXACT,
     LOWER,
     UPPER,
 };
 
-enum MoveType : char {
+enum MoveType : uint8_t {
     REGULAR = 0b0000,
     CAPTURE = 0b0100,
     EP = 0b010 | CAPTURE,
@@ -186,7 +186,7 @@ struct PieceSquare {
     inline PieceSquare(Piece _piece, Square _sq) : piece(_piece), sq(_sq) {}
 };
 
-enum DirtyPieceType {
+enum DirtyPieceType : uint8_t {
     ADD_SUB,
     ADD_SUB2,
     ADD2_SUB2,
