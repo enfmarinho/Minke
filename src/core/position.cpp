@@ -320,7 +320,7 @@ DirtyPiece Position::make_regular(const Move &move) {
         m_curr_state.fifty_move_ply = 0;
         int pawn_offset = get_pawn_offset(m_stm);
         if (to - from == 2 * pawn_offset &&
-            (pawn_attacks[m_stm][to - pawn_offset] &
+            (Attacks::pawn_attacks[m_stm][to - pawn_offset] &
              piece_bb(PAWN, nstm()))) { // Double push and there is a enemy pawn to en passant
             m_curr_state.en_passant = static_cast<Square>(to - pawn_offset);
             hash_ep_key();
@@ -541,16 +541,16 @@ void Position::calculate_aux_bbs() {
     Color adversary = nstm();
     Square ksq = king_sq(m_stm);
     m_curr_state.pins = 0;
-    m_curr_state.checkers = (pawn_attacks[m_stm][ksq] & piece_bb(PAWN, adversary)) // Pawns
-                            | (knight_attacks[ksq] & piece_bb(KNIGHT, adversary)); // Knights;
+    m_curr_state.checkers = (Attacks::pawn_attacks[m_stm][ksq] & piece_bb(PAWN, adversary)) // Pawns
+                            | (Attacks::knight_attacks[ksq] & piece_bb(KNIGHT, adversary)); // Knights;
 
     Bitboard slider_checkers =
-        ((piece_bb(QUEEN, adversary) | piece_bb(BISHOP, adversary)) & get_bishop_attacks(ksq, 0)) |
-        ((piece_bb(QUEEN, adversary) | piece_bb(ROOK, adversary)) & get_rook_attacks(ksq, 0));
+        ((piece_bb(QUEEN, adversary) | piece_bb(BISHOP, adversary)) & Attacks::get_bishop_attacks(ksq, 0)) |
+        ((piece_bb(QUEEN, adversary) | piece_bb(ROOK, adversary)) & Attacks::get_rook_attacks(ksq, 0));
     while (slider_checkers) {
         Square sq = slider_checkers.poplsb();
 
-        Bitboard blockers = inbetween_masks[ksq][sq] & occ_bb();
+        Bitboard blockers = Attacks::inbetween_masks[ksq][sq] & occ_bb();
         if (!blockers) {
             m_curr_state.checkers.set_sq(sq);
         } else if (blockers.popcount() == 1) {
@@ -575,22 +575,22 @@ void Position::calculate_threats_bb() {
     Bitboard knights_bb = piece_bb(KNIGHT, opp);
     while (knights_bb) {
         const Square sq = knights_bb.poplsb();
-        threats |= knight_attacks[sq];
+        threats |= Attacks::knight_attacks[sq];
     }
 
     Bitboard bishop_bb = piece_bb(BISHOP, opp) | piece_bb(QUEEN, opp);
     while (bishop_bb) {
         const Square sq = bishop_bb.poplsb();
-        threats |= get_piece_attacks(sq, occupancy_bb, BISHOP);
+        threats |= Attacks::get_bishop_attacks(sq, occupancy_bb);
     }
 
     Bitboard rook_bb = piece_bb(ROOK, opp) | piece_bb(QUEEN, opp);
     while (rook_bb) {
         const Square sq = rook_bb.poplsb();
-        threats |= get_piece_attacks(sq, occupancy_bb, ROOK);
+        threats |= Attacks::get_rook_attacks(sq, occupancy_bb);
     }
 
-    threats |= king_attacks[king_sq(opp)];
+    threats |= Attacks::king_attacks[king_sq(opp)];
 }
 
 void Position::calculate_hashes() {
@@ -624,23 +624,23 @@ bool Position::is_attacked(const Square &sq) const {
     occupancy.unset_sq(sq); // square to be checked has to be unset on occupancy bitboard
 
     // Check if sq is attacked by opponent pawns. Note: pawn attack mask has to be "stm" because the logic is reversed
-    if (piece_bb(PAWN, opponent) & pawn_attacks[m_stm][sq])
+    if (piece_bb(PAWN, opponent) & Attacks::pawn_attacks[m_stm][sq])
         return true;
 
     // Check if sq is attacked by opponent knights
-    if (piece_bb(KNIGHT, opponent) & knight_attacks[sq])
+    if (piece_bb(KNIGHT, opponent) & Attacks::knight_attacks[sq])
         return true;
 
     // Check if sq is attacked by opponent bishops or queens
-    if ((piece_bb(BISHOP, opponent) | piece_bb(QUEEN, opponent)) & get_bishop_attacks(sq, occupancy))
+    if ((piece_bb(BISHOP, opponent) | piece_bb(QUEEN, opponent)) & Attacks::get_bishop_attacks(sq, occupancy))
         return true;
 
     // Check if sq is attacked by opponent rooks or queens
-    if ((piece_bb(ROOK, opponent) | piece_bb(QUEEN, opponent)) & get_rook_attacks(sq, occupancy))
+    if ((piece_bb(ROOK, opponent) | piece_bb(QUEEN, opponent)) & Attacks::get_rook_attacks(sq, occupancy))
         return true;
 
     // Check if sq is attacked by opponent king. Unnecessary when checking for checks
-    if (piece_bb(KING, opponent) & king_attacks[sq])
+    if (piece_bb(KING, opponent) & Attacks::king_attacks[sq])
         return true;
 
     return false;
@@ -650,17 +650,19 @@ Bitboard Position::attackers(const Square &sq) const {
     Bitboard attackers;
     Bitboard occupancy = occ_bb();
 
-    attackers |= pawn_attacks[WHITE][sq] & piece_bb(PAWN, BLACK);
-    attackers |= pawn_attacks[BLACK][sq] & piece_bb(PAWN, WHITE);
-    attackers |= get_piece_attacks(sq, occupancy, KNIGHT) & piece_bb(KNIGHT);
-    attackers |= get_piece_attacks(sq, occupancy, BISHOP) & (piece_bb(BISHOP) | piece_bb(QUEEN));
-    attackers |= get_piece_attacks(sq, occupancy, ROOK) & (piece_bb(ROOK) | piece_bb(QUEEN));
-    attackers |= get_piece_attacks(sq, occupancy, KING) & piece_bb(KING);
+    attackers |= Attacks::pawn_attacks[WHITE][sq] & piece_bb(PAWN, BLACK);
+    attackers |= Attacks::pawn_attacks[BLACK][sq] & piece_bb(PAWN, WHITE);
+    attackers |= Attacks::get_piece_attacks(sq, occupancy, KNIGHT) & piece_bb(KNIGHT);
+    attackers |= Attacks::get_piece_attacks(sq, occupancy, BISHOP) & (piece_bb(BISHOP) | piece_bb(QUEEN));
+    attackers |= Attacks::get_piece_attacks(sq, occupancy, ROOK) & (piece_bb(ROOK) | piece_bb(QUEEN));
+    attackers |= Attacks::get_piece_attacks(sq, occupancy, KING) & piece_bb(KING);
 
     return attackers;
 }
 
 bool Position::is_legal(const Move &move) {
+    using Attacks::inbetween_masks;
+
     const Square ksq = king_sq(m_stm);
     const Square from = move.from();
     const Square to = move.to();
@@ -752,7 +754,7 @@ bool Position::is_pseudo_legal(const Move &move) const {
         return castling_pseudo_legal(from, to, moved_pt);
     }
 
-    const Bitboard moved_piece_attacks = get_piece_attacks(from, occ_bb(), moved_pt);
+    const Bitboard moved_piece_attacks = Attacks::get_piece_attacks(from, occ_bb(), moved_pt);
     return moved_piece_attacks.is_set(to);
 }
 
@@ -773,7 +775,7 @@ bool Position::pawn_pseudo_legal(const Square &from, const Square &to, const Mov
         if (m_curr_state.en_passant != to || !piece_bb(PAWN, nstm()).is_set(static_cast<Square>(to - pawn_offset)))
             return false;
     } else if (move.is_capture()) {
-        if (!pawn_attacks[m_stm][from].is_set(to))
+        if (!Attacks::pawn_attacks[m_stm][from].is_set(to))
             return false;
     } else if (from + 2 * pawn_offset == to) {
         if (get_rank(from) != get_pawn_start_rank(m_stm) || piece_at(static_cast<Square>(from + pawn_offset)) != EMPTY)
@@ -786,6 +788,8 @@ bool Position::pawn_pseudo_legal(const Square &from, const Square &to, const Mov
 }
 
 bool Position::castling_pseudo_legal(const Square &from, const Square &to, const PieceType &moved_piece_type) const {
+    using Attacks::inbetween_masks;
+
     if (moved_piece_type != KING)
         return false;
     if (checkers_bb())
@@ -850,7 +854,7 @@ bool Position::has_upcoming_repetition(const int ply) const {
         const Square from = move.from();
         const Square to = move.to();
 
-        if (!((inbetween_masks[to][from] ^ 1ULL << to) & occ)) {
+        if (!((Attacks::inbetween_masks[to][from] ^ 1ULL << to) & occ)) {
             // repetition is after root, done
             if (ply > i) {
                 return true;

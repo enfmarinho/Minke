@@ -23,11 +23,3 @@ void init_all();
 void init_search_params();
 
 void init_network_params();
-
-void init_magic_attack_tables();
-
-void init_inbetween_masks();
-
-void init_passing_masks();
-
-void init_diagonal_antidiagonal_masks();

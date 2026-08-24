@@ -816,6 +816,7 @@ bool Engine::SEE(Position &position, const Move &move, int threshold) {
 
         // Add x-ray attackers, if there is any
         switch (cheapest_attacker) {
+            using namespace Attacks;
             case PAWN:
                 [[fallthrough]];
             case BISHOP:

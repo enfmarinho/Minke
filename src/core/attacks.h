@@ -24,6 +24,8 @@
 #include "core/bitboard.h"
 #include "core/types.h"
 
+namespace Attacks {
+
 extern Bitboard bishop_masks[64];
 extern Bitboard rook_masks[64];
 
@@ -47,16 +49,7 @@ extern Bitboard passing_masks[64][64];
 extern Bitboard diagonal_masks[64];
 extern Bitboard antidiagonal_masks[64];
 
-void init_magic_table(PieceType piece_type);
-
-Bitboard generate_bishop_mask(Square sq);
-Bitboard generate_rook_mask(Square sq);
-
-Bitboard generate_pawn_attacks(Square sq, Color color);
-Bitboard generate_knight_attacks(Square sq);
-Bitboard generate_bishop_attacks(Square sq, const Bitboard& blockers);
-Bitboard generate_rook_attacks(Square sq, const Bitboard& blockers);
-Bitboard generate_king_attacks(Square sq);
+void init();
 
 inline int get_attack_index(Bitboard blockers, uint64_t magic, int shift) { return (blockers.raw() * magic) >> shift; }
 
@@ -91,3 +84,5 @@ inline Bitboard get_piece_attacks(const Square& sq, const Bitboard& occupancy, P
             __builtin_unreachable();
     }
 }
+
+} // namespace Attacks

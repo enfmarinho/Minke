@@ -27,6 +27,8 @@
 #include "utils/random.h"
 #include "utils/utils.h"
 
+namespace Attacks {
+
 Bitboard bishop_masks[64];
 Bitboard rook_masks[64];
 
@@ -41,6 +43,181 @@ Bitboard knight_attacks[64];
 Bitboard king_attacks[64];
 Bitboard bishop_attacks[64][512];
 Bitboard rook_attacks[64][4096];
+
+Bitboard inbetween_masks[64][64];
+Bitboard passing_masks[64][64];
+
+Bitboard diagonal_masks[64];
+Bitboard antidiagonal_masks[64];
+
+namespace {
+
+void ray_mask(Bitboard& mask, Square sq, auto shift_fn, Bitboard edge_mask) {
+    for (Bitboard b = shift_fn(Bitboard(sq)); b & ~edge_mask; b = shift_fn(b)) {
+        mask |= b;
+    }
+}
+
+Bitboard generate_bishop_mask(Square sq) {
+    Bitboard mask;
+
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_north_east(); }, Bitboard::RANK_8 | Bitboard::FILE_H);
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_north_west(); }, Bitboard::RANK_8 | Bitboard::FILE_A);
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_south_east(); }, Bitboard::RANK_1 | Bitboard::FILE_H);
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_south_west(); }, Bitboard::RANK_1 | Bitboard::FILE_A);
+
+    return mask;
+}
+
+Bitboard generate_rook_mask(Square sq) {
+    Bitboard mask;
+
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_north(); }, Bitboard::RANK_8);
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_south(); }, Bitboard::RANK_1);
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_west(); }, Bitboard::FILE_A);
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_east(); }, Bitboard::FILE_H);
+
+    return mask;
+}
+
+Bitboard generate_pawn_attacks(Square sq, Color color) {
+    Bitboard attacks;
+    Bitboard board(sq);
+
+    if (color == WHITE) {
+        attacks |= board.shift_north_west();
+        attacks |= board.shift_north_east();
+    } else {
+        assert(color == BLACK);
+        attacks |= board.shift_south_west();
+        attacks |= board.shift_south_east();
+    }
+
+    return attacks;
+}
+
+Bitboard generate_knight_attacks(Square sq) {
+    Bitboard attacks;
+    Bitboard board(sq);
+
+    attacks |= board.shift_double_north_west();
+    attacks |= board.shift_double_north_east();
+    attacks |= board.shift_double_south_west();
+    attacks |= board.shift_double_south_east();
+    attacks |= board.shift_double_west_south();
+    attacks |= board.shift_double_west_north();
+    attacks |= board.shift_double_east_south();
+    attacks |= board.shift_double_east_north();
+
+    return attacks;
+}
+
+void ray_attack_mask(Bitboard& attack_mask, Square sq, const Bitboard& blockers, auto shift_fn) {
+    for (Bitboard b = shift_fn(Bitboard(sq)); b; b = shift_fn(b)) {
+        attack_mask |= b;
+        if (b & blockers)
+            break;
+    }
+}
+
+Bitboard generate_bishop_attacks(Square sq, const Bitboard& blockers) {
+    Bitboard attack_mask;
+    Bitboard board(sq);
+
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_north_west(); });
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_north_east(); });
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_south_west(); });
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_south_east(); });
+
+    return attack_mask;
+}
+
+Bitboard generate_rook_attacks(Square sq, const Bitboard& blockers) {
+    Bitboard attack_mask;
+    Bitboard board(sq);
+
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_north(); });
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_south(); });
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_west(); });
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_east(); });
+
+    return attack_mask;
+}
+
+Bitboard generate_king_attacks(Square sq) {
+    Bitboard attacks;
+    Bitboard board(sq);
+
+    attacks |= board.shift_north();
+    attacks |= board.shift_south();
+    attacks |= board.shift_west();
+    attacks |= board.shift_east();
+    attacks |= board.shift_north_west();
+    attacks |= board.shift_north_east();
+    attacks |= board.shift_south_west();
+    attacks |= board.shift_south_east();
+
+    return attacks;
+}
+
+void init_inbetween_masks() {
+    for (int sqi1 = a1; sqi1 <= h8; ++sqi1) {
+        for (int sqi2 = a1; sqi2 <= h8; ++sqi2) {
+            Square sq1 = static_cast<Square>(sqi1);
+            Square sq2 = static_cast<Square>(sqi2);
+            Bitboard occ1(sq1);
+            Bitboard occ2(sq2);
+            if (get_bishop_attacks(sq1, 0) & occ2) {
+                inbetween_masks[sq1][sq2] = get_bishop_attacks(sq1, occ2) & get_bishop_attacks(sq2, occ1);
+            } else if (get_rook_attacks(sq1, 0) & occ2) {
+                inbetween_masks[sq1][sq2] = get_rook_attacks(sq1, occ2) & get_rook_attacks(sq2, occ1);
+            }
+        }
+    }
+}
+
+void init_passing_masks() {
+    for (int src = a1; src <= h8; ++src) {
+        Square src_sq = static_cast<Square>(src);
+        Bitboard src_mask(src_sq);
+
+        Bitboard rook_attack = get_rook_attacks(src_sq, 0);
+        Bitboard bishop_attack = get_bishop_attacks(src_sq, 0);
+        for (int to = a1; to <= h8; ++to) {
+            if (src == to)
+                continue;
+
+            Square to_sq = static_cast<Square>(to);
+            Bitboard to_mask(to_sq);
+
+            if (rook_attack & to_mask) {
+                passing_masks[src][to] = rook_attack & (get_rook_attacks(to_sq, src_mask) | to_mask);
+            } else if (bishop_attack & to_mask) {
+                passing_masks[src][to] = bishop_attack & (get_bishop_attacks(to_sq, src_mask) | to_mask);
+            }
+        }
+    }
+}
+
+void init_diagonal_antidiagonal_masks() {
+    for (int sqi = a1; sqi <= h8; ++sqi) {
+        Square sq = static_cast<Square>(sqi);
+
+        Bitboard diag(sq); // south_west to north_east
+        for (Bitboard mask = diag.shift_north_east(); mask; mask = mask.shift_north_east())
+            diag |= mask;
+        for (Bitboard mask = diag.shift_south_west(); mask; mask = mask.shift_south_west())
+            diag |= mask;
+        diagonal_masks[sq] = diag;
+
+        Bitboard antidiag(sq); // north_west to south_east
+        for (Bitboard mask = antidiag.shift_north_west(); mask; mask = mask.shift_north_west())
+            antidiag |= mask;
+        for (Bitboard mask = antidiag.shift_south_east(); mask; mask = mask.shift_south_east())
+            antidiag |= mask;
+        antidiagonal_masks[sq] = antidiag;
+    }
+}
 
 //=== Adapted from Stockfish.
 // Initialize all attacks, masks, magics and shifts tables for piece_type.
@@ -108,110 +285,29 @@ void init_magic_table(PieceType piece_type) {
     }
 }
 
-static void ray_mask(Bitboard& mask, Square sq, auto shift_fn, Bitboard edge_mask) {
-    for (Bitboard b = shift_fn(Bitboard(sq)); b & ~edge_mask; b = shift_fn(b)) {
-        mask |= b;
+void init_magic_attack_tables() {
+    // This initializes all attacks, masks, magics and shifts for Bishop and Rook as a side effect
+    init_magic_table(BISHOP);
+    init_magic_table(ROOK);
+
+    // Initialize non-slider attack tables
+    for (int sqi = a1; sqi <= h8; ++sqi) {
+        Square sq = static_cast<Square>(sqi);
+
+        pawn_attacks[WHITE][sq] = generate_pawn_attacks(sq, WHITE);
+        pawn_attacks[BLACK][sq] = generate_pawn_attacks(sq, BLACK);
+        knight_attacks[sq] = generate_knight_attacks(sq);
+        king_attacks[sq] = generate_king_attacks(sq);
     }
 }
 
-Bitboard generate_bishop_mask(Square sq) {
-    Bitboard mask;
+} // namespace
 
-    ray_mask(mask, sq, [](Bitboard b) { return b.shift_north_east(); }, Bitboard::RANK_8 | Bitboard::FILE_H);
-    ray_mask(mask, sq, [](Bitboard b) { return b.shift_north_west(); }, Bitboard::RANK_8 | Bitboard::FILE_A);
-    ray_mask(mask, sq, [](Bitboard b) { return b.shift_south_east(); }, Bitboard::RANK_1 | Bitboard::FILE_H);
-    ray_mask(mask, sq, [](Bitboard b) { return b.shift_south_west(); }, Bitboard::RANK_1 | Bitboard::FILE_A);
-
-    return mask;
+void init() {
+    init_magic_attack_tables();
+    init_inbetween_masks();
+    init_passing_masks();
+    init_diagonal_antidiagonal_masks();
 }
 
-Bitboard generate_rook_mask(Square sq) {
-    Bitboard mask;
-
-    ray_mask(mask, sq, [](Bitboard b) { return b.shift_north(); }, Bitboard::RANK_8);
-    ray_mask(mask, sq, [](Bitboard b) { return b.shift_south(); }, Bitboard::RANK_1);
-    ray_mask(mask, sq, [](Bitboard b) { return b.shift_west(); }, Bitboard::FILE_A);
-    ray_mask(mask, sq, [](Bitboard b) { return b.shift_east(); }, Bitboard::FILE_H);
-
-    return mask;
-}
-
-Bitboard generate_pawn_attacks(Square sq, Color color) {
-    Bitboard attacks;
-    Bitboard board(sq);
-
-    if (color == WHITE) {
-        attacks |= board.shift_north_west();
-        attacks |= board.shift_north_east();
-    } else {
-        assert(color == BLACK);
-        attacks |= board.shift_south_west();
-        attacks |= board.shift_south_east();
-    }
-
-    return attacks;
-}
-
-Bitboard generate_knight_attacks(Square sq) {
-    Bitboard attacks;
-    Bitboard board(sq);
-
-    attacks |= board.shift_double_north_west();
-    attacks |= board.shift_double_north_east();
-    attacks |= board.shift_double_south_west();
-    attacks |= board.shift_double_south_east();
-    attacks |= board.shift_double_west_south();
-    attacks |= board.shift_double_west_north();
-    attacks |= board.shift_double_east_south();
-    attacks |= board.shift_double_east_north();
-
-    return attacks;
-}
-
-static void ray_attack_mask(Bitboard& attack_mask, Square sq, const Bitboard& blockers, auto shift_fn) {
-    for (Bitboard b = shift_fn(Bitboard(sq)); b; b = shift_fn(b)) {
-        attack_mask |= b;
-        if (b & blockers)
-            break;
-    }
-}
-
-Bitboard generate_bishop_attacks(Square sq, const Bitboard& blockers) {
-    Bitboard attack_mask;
-    Bitboard board(sq);
-
-    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_north_west(); });
-    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_north_east(); });
-    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_south_west(); });
-    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_south_east(); });
-
-    return attack_mask;
-}
-
-Bitboard generate_rook_attacks(Square sq, const Bitboard& blockers) {
-    Bitboard attack_mask;
-    Bitboard board(sq);
-
-    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_north(); });
-    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_south(); });
-    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_west(); });
-    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_east(); });
-
-    return attack_mask;
-}
-
-Bitboard generate_king_attacks(Square sq) {
-    Bitboard attacks;
-    Bitboard board(sq);
-
-    attacks |= board.shift_north();
-    attacks |= board.shift_south();
-    attacks |= board.shift_west();
-    attacks |= board.shift_east();
-    attacks |= board.shift_north_west();
-    attacks |= board.shift_north_east();
-    attacks |= board.shift_south_west();
-    attacks |= board.shift_south_east();
-
-    return attacks;
-}
+} // namespace Attacks

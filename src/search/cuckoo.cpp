@@ -46,7 +46,7 @@ void init() {
                 for (int sqi1 = sqi0 + 1; sqi1 <= h8; ++sqi1) {
                     const Square sq1 = static_cast<Square>(sqi1);
 
-                    if (!get_piece_attacks(sq0, 0, pt).is_set(sq1)) {
+                    if (!Attacks::get_piece_attacks(sq0, 0, pt).is_set(sq1)) {
                         continue;
                     }
 
