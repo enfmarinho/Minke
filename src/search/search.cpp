@@ -816,17 +816,19 @@ bool Engine::SEE(Position &position, const Move &move, int threshold) {
 
         // Add x-ray attackers, if there is any
         switch (cheapest_attacker) {
+            using Attacks::bishop_attack;
+            using Attacks::rook_attack;
             case PAWN:
                 [[fallthrough]];
             case BISHOP:
-                attackers |= get_piece_attacks(to, occupancy, BISHOP) & diagonal_attackers;
+                attackers |= bishop_attack(to, occupancy) & diagonal_attackers;
                 break;
             case ROOK:
-                attackers |= get_piece_attacks(to, occupancy, ROOK) & line_attackers;
+                attackers |= rook_attack(to, occupancy) & line_attackers;
                 break;
             case QUEEN:
-                attackers |= (get_piece_attacks(to, occupancy, BISHOP) & diagonal_attackers) |
-                             (get_piece_attacks(to, occupancy, ROOK) & line_attackers);
+                attackers |=
+                    (bishop_attack(to, occupancy) & diagonal_attackers) | (rook_attack(to, occupancy) & line_attackers);
                 break;
             default:
                 break;

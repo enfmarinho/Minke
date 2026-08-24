@@ -320,7 +320,7 @@ DirtyPiece Position::make_regular(const Move &move) {
         m_curr_state.fifty_move_ply = 0;
         int pawn_offset = get_pawn_offset(m_stm);
         if (to - from == 2 * pawn_offset &&
-            (pawn_attacks[m_stm][to - pawn_offset] &
+            (Attacks::pawn_attack(stm(), static_cast<Square>(to - pawn_offset)) &
              piece_bb(PAWN, nstm()))) { // Double push and there is a enemy pawn to en passant
             m_curr_state.en_passant = static_cast<Square>(to - pawn_offset);
             hash_ep_key();
@@ -541,16 +541,16 @@ void Position::calculate_aux_bbs() {
     Color adversary = nstm();
     Square ksq = king_sq(m_stm);
     m_curr_state.pins = 0;
-    m_curr_state.checkers = (pawn_attacks[m_stm][ksq] & piece_bb(PAWN, adversary)) // Pawns
-                            | (knight_attacks[ksq] & piece_bb(KNIGHT, adversary)); // Knights;
+    m_curr_state.checkers = (Attacks::pawn_attack(stm(), ksq) & piece_bb(PAWN, adversary)) // Pawns
+                            | (Attacks::knight_attack(ksq) & piece_bb(KNIGHT, adversary)); // Knights;
 
     Bitboard slider_checkers =
-        ((piece_bb(QUEEN, adversary) | piece_bb(BISHOP, adversary)) & get_bishop_attacks(ksq, 0)) |
-        ((piece_bb(QUEEN, adversary) | piece_bb(ROOK, adversary)) & get_rook_attacks(ksq, 0));
+        ((piece_bb(QUEEN, adversary) | piece_bb(BISHOP, adversary)) & Attacks::bishop_attack(ksq, 0)) |
+        ((piece_bb(QUEEN, adversary) | piece_bb(ROOK, adversary)) & Attacks::rook_attack(ksq, 0));
     while (slider_checkers) {
         Square sq = slider_checkers.poplsb();
 
-        Bitboard blockers = inbetween_masks[ksq][sq] & occ_bb();
+        Bitboard blockers = Attacks::inbetween_mask(ksq, sq) & occ_bb();
         if (!blockers) {
             m_curr_state.checkers.set_sq(sq);
         } else if (blockers.popcount() == 1) {
@@ -575,22 +575,22 @@ void Position::calculate_threats_bb() {
     Bitboard knights_bb = piece_bb(KNIGHT, opp);
     while (knights_bb) {
         const Square sq = knights_bb.poplsb();
-        threats |= knight_attacks[sq];
+        threats |= Attacks::knight_attack(sq);
     }
 
     Bitboard bishop_bb = piece_bb(BISHOP, opp) | piece_bb(QUEEN, opp);
     while (bishop_bb) {
         const Square sq = bishop_bb.poplsb();
-        threats |= get_piece_attacks(sq, occupancy_bb, BISHOP);
+        threats |= Attacks::bishop_attack(sq, occupancy_bb);
     }
 
     Bitboard rook_bb = piece_bb(ROOK, opp) | piece_bb(QUEEN, opp);
     while (rook_bb) {
         const Square sq = rook_bb.poplsb();
-        threats |= get_piece_attacks(sq, occupancy_bb, ROOK);
+        threats |= Attacks::rook_attack(sq, occupancy_bb);
     }
 
-    threats |= king_attacks[king_sq(opp)];
+    threats |= Attacks::king_attack(king_sq(opp));
 }
 
 void Position::calculate_hashes() {
@@ -624,23 +624,23 @@ bool Position::is_attacked(const Square &sq) const {
     occupancy.unset_sq(sq); // square to be checked has to be unset on occupancy bitboard
 
     // Check if sq is attacked by opponent pawns. Note: pawn attack mask has to be "stm" because the logic is reversed
-    if (piece_bb(PAWN, opponent) & pawn_attacks[m_stm][sq])
+    if (piece_bb(PAWN, opponent) & Attacks::pawn_attack(stm(), sq))
         return true;
 
     // Check if sq is attacked by opponent knights
-    if (piece_bb(KNIGHT, opponent) & knight_attacks[sq])
+    if (piece_bb(KNIGHT, opponent) & Attacks::knight_attack(sq))
         return true;
 
     // Check if sq is attacked by opponent bishops or queens
-    if ((piece_bb(BISHOP, opponent) | piece_bb(QUEEN, opponent)) & get_bishop_attacks(sq, occupancy))
+    if ((piece_bb(BISHOP, opponent) | piece_bb(QUEEN, opponent)) & Attacks::bishop_attack(sq, occupancy))
         return true;
 
     // Check if sq is attacked by opponent rooks or queens
-    if ((piece_bb(ROOK, opponent) | piece_bb(QUEEN, opponent)) & get_rook_attacks(sq, occupancy))
+    if ((piece_bb(ROOK, opponent) | piece_bb(QUEEN, opponent)) & Attacks::rook_attack(sq, occupancy))
         return true;
 
     // Check if sq is attacked by opponent king. Unnecessary when checking for checks
-    if (piece_bb(KING, opponent) & king_attacks[sq])
+    if (piece_bb(KING, opponent) & Attacks::king_attack(sq))
         return true;
 
     return false;
@@ -650,17 +650,19 @@ Bitboard Position::attackers(const Square &sq) const {
     Bitboard attackers;
     Bitboard occupancy = occ_bb();
 
-    attackers |= pawn_attacks[WHITE][sq] & piece_bb(PAWN, BLACK);
-    attackers |= pawn_attacks[BLACK][sq] & piece_bb(PAWN, WHITE);
-    attackers |= get_piece_attacks(sq, occupancy, KNIGHT) & piece_bb(KNIGHT);
-    attackers |= get_piece_attacks(sq, occupancy, BISHOP) & (piece_bb(BISHOP) | piece_bb(QUEEN));
-    attackers |= get_piece_attacks(sq, occupancy, ROOK) & (piece_bb(ROOK) | piece_bb(QUEEN));
-    attackers |= get_piece_attacks(sq, occupancy, KING) & piece_bb(KING);
+    attackers |= Attacks::pawn_attack(WHITE, sq) & piece_bb(PAWN, BLACK);
+    attackers |= Attacks::pawn_attack(BLACK, sq) & piece_bb(PAWN, WHITE);
+    attackers |= Attacks::knight_attack(sq) & piece_bb(KNIGHT);
+    attackers |= Attacks::bishop_attack(sq, occupancy) & (piece_bb(BISHOP) | piece_bb(QUEEN));
+    attackers |= Attacks::rook_attack(sq, occupancy) & (piece_bb(ROOK) | piece_bb(QUEEN));
+    attackers |= Attacks::king_attack(sq) & piece_bb(KING);
 
     return attackers;
 }
 
 bool Position::is_legal(const Move &move) {
+    using Attacks::inbetween_mask;
+
     const Square ksq = king_sq(m_stm);
     const Square from = move.from();
     const Square to = move.to();
@@ -674,10 +676,10 @@ bool Position::is_legal(const Move &move) {
         const Square rook_from = move.to();
         const auto [king_to, rook_to] = castling_to_sqs(king_from, rook_from);
 
-        const Bitboard crossing_mask = (inbetween_masks[king_from][king_to] | inbetween_masks[rook_from][rook_to] |
+        const Bitboard crossing_mask = (inbetween_mask(king_from, king_to) | inbetween_mask(rook_from, rook_to) |
                                         Bitboard(king_to) | Bitboard(rook_to)) &
                                        ~(Bitboard(king_from) | Bitboard(rook_from));
-        const Bitboard king_crossing = inbetween_masks[king_from][king_to] | Bitboard(king_to);
+        const Bitboard king_crossing = inbetween_mask(king_from, king_to) | Bitboard(king_to);
 
         return !(crossing_mask & occ_bb())         // no blocker
                && !(king_crossing & threats_bb()); // no passing square (and destiny) is attacked
@@ -706,10 +708,10 @@ bool Position::is_legal(const Move &move) {
         return false;
 
     if (pins_bb().is_set(from)) // if piece is pinned, it must keep blocking the check
-        return !checkers_bb() && (inbetween_masks[ksq][to].is_set(from) || inbetween_masks[ksq][from].is_set(to));
+        return !checkers_bb() && (inbetween_mask(ksq, to).is_set(from) || inbetween_mask(ksq, from).is_set(to));
 
     if (checkers_bb()) // If in check and not moving the king, it must either block the check or take the attacker
-        return (checkers_bb() | inbetween_masks[checkers_bb().lsb()][ksq]).is_set(to);
+        return (checkers_bb() | inbetween_mask(checkers_bb().lsb(), ksq)).is_set(to);
 
     return true;
 }
@@ -742,7 +744,7 @@ bool Position::is_pseudo_legal(const Move &move) const {
     if (moved_pt != PAWN && (move.is_ep() || move.is_promotion()))
         return false;
 
-    // get_piece_attacks can't be called when piece_type = PAWN, so this has to cause an early return clause
+    // piece_attack can't be called when piece_type = PAWN, so this has to cause an early return clause
     if (moved_pt == PAWN) {
         return pawn_pseudo_legal(from, to, move);
     }
@@ -752,7 +754,7 @@ bool Position::is_pseudo_legal(const Move &move) const {
         return castling_pseudo_legal(from, to, moved_pt);
     }
 
-    const Bitboard moved_piece_attacks = get_piece_attacks(from, occ_bb(), moved_pt);
+    const Bitboard moved_piece_attacks = Attacks::piece_attack(moved_pt, from, occ_bb());
     return moved_piece_attacks.is_set(to);
 }
 
@@ -773,7 +775,7 @@ bool Position::pawn_pseudo_legal(const Square &from, const Square &to, const Mov
         if (m_curr_state.en_passant != to || !piece_bb(PAWN, nstm()).is_set(static_cast<Square>(to - pawn_offset)))
             return false;
     } else if (move.is_capture()) {
-        if (!pawn_attacks[m_stm][from].is_set(to))
+        if (!Attacks::pawn_attack(stm(), from).is_set(to))
             return false;
     } else if (from + 2 * pawn_offset == to) {
         if (get_rank(from) != get_pawn_start_rank(m_stm) || piece_at(static_cast<Square>(from + pawn_offset)) != EMPTY)
@@ -786,6 +788,8 @@ bool Position::pawn_pseudo_legal(const Square &from, const Square &to, const Mov
 }
 
 bool Position::castling_pseudo_legal(const Square &from, const Square &to, const PieceType &moved_piece_type) const {
+    using Attacks::inbetween_mask;
+
     if (moved_piece_type != KING)
         return false;
     if (checkers_bb())
@@ -807,10 +811,10 @@ bool Position::castling_pseudo_legal(const Square &from, const Square &to, const
     if (!(castling_rights() & castling_right) || !m_curr_state.castle_rooks.is_set(rook_from))
         return false;
 
-    const Bitboard crossing_mask = (inbetween_masks[king_from][king_to] | inbetween_masks[rook_from][rook_to] |
+    const Bitboard crossing_mask = (inbetween_mask(king_from, king_to) | inbetween_mask(rook_from, rook_to) |
                                     Bitboard(king_to) | Bitboard(rook_to)) &
                                    ~(Bitboard(king_from) | Bitboard(rook_from));
-    const Bitboard king_crossing = inbetween_masks[king_from][king_to] | Bitboard(king_to);
+    const Bitboard king_crossing = inbetween_mask(king_from, king_to) | Bitboard(king_to);
 
     return !(crossing_mask & occ_bb())         // no blocker
            && !(king_crossing & threats_bb()); // no passing square is attacked
@@ -850,7 +854,7 @@ bool Position::has_upcoming_repetition(const int ply) const {
         const Square from = move.from();
         const Square to = move.to();
 
-        if (!((inbetween_masks[to][from] ^ 1ULL << to) & occ)) {
+        if (!((Attacks::inbetween_mask(to, from) ^ 1ULL << to) & occ)) {
             // repetition is after root, done
             if (ply > i) {
                 return true;
