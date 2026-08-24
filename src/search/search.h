@@ -65,12 +65,12 @@ struct ThreadData {
     inline bool is_main() const { return id == 0; }
 };
 
-inline void make_move(ThreadData &td, const Move move) {
+inline void make_move(ThreadData &td, Move move) {
     DirtyPiece dp = td.position.make_move(move);
     td.nnue.push(dp, td.position.king_sq(WHITE), td.position.king_sq(BLACK));
 }
 
-inline void unmake_move(ThreadData &td, const Move move) {
+inline void unmake_move(ThreadData &td, Move move) {
     td.position.unmake_move(move);
     td.nnue.pop();
 }
@@ -108,21 +108,20 @@ class Engine {
     ThreadData &main_td() { return *m_main_thread_data; }
     const ThreadData &main_td() const { return *m_main_thread_data; }
 
-    static bool SEE(Position &position, const Move &move, int threshold);
+    static bool SEE(Position &position, Move move, int threshold);
 
   private:
     std::pair<Move, ScoreType> iterative_deepening(ThreadData &td);
-    ScoreType aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td);
-    ScoreType negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterType ply, const bool cutnode,
-                      ThreadData &td);
-    ScoreType quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadData &td);
+    ScoreType aspiration(ThreadData &td, CounterType depth, ScoreType prev_score);
+    ScoreType negamax(ThreadData &td, ScoreType alpha, ScoreType beta, CounterType depth, CounterType ply,
+                      bool cutnode);
+    ScoreType quiescence(ThreadData &td, ScoreType alpha, ScoreType beta, CounterType ply);
 
     inline bool time_over(const ThreadData &td) {
         return m_stop || (td.is_main() && m_search_limiter.time_over(td.nodes_searched));
     }
 
-    void report_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
-                            const Position &pos);
+    void report_search_info(const Position &pos, CounterType depth, ScoreType eval, const PvList &pv_list);
     void report_search_result(const Position &pos, Move best_move);
 
     std::vector<std::thread> m_threads;

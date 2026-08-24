@@ -148,7 +148,7 @@ std::pair<Move, ScoreType> Engine::iterative_deepening(ThreadData &td) {
     CounterType pv_stability = 0;
     CounterType score_stability = 0;
     for (CounterType depth = 1; depth <= std::min(m_search_limiter.max_depth(), MAX_SEARCH_DEPTH - 1); ++depth) {
-        const ScoreType score = aspiration(depth, past_score, td);
+        const ScoreType score = aspiration(td, depth, past_score);
         const Move best_move = td.search_stack[0].pv_list.best_move();
         if (time_over(td)) // Search did not finished completely
             break;
@@ -178,7 +178,7 @@ std::pair<Move, ScoreType> Engine::iterative_deepening(ThreadData &td) {
 
         if (td.is_main()) { // main thread
             if (m_report)
-                report_search_info(depth, score, td.search_stack[0].pv_list, td.position);
+                report_search_info(td.position, depth, score, td.search_stack[0].pv_list);
 
             if (depth > 5) {
                 const double node_fraction =
@@ -199,7 +199,7 @@ std::pair<Move, ScoreType> Engine::iterative_deepening(ThreadData &td) {
     return {past_best_move, past_score};
 }
 
-ScoreType Engine::aspiration(const CounterType &depth, const ScoreType prev_score, ThreadData &td) {
+ScoreType Engine::aspiration(ThreadData &td, const CounterType depth, const ScoreType prev_score) {
     int alpha = -MAX_SCORE;
     int beta = MAX_SCORE;
     int delta = aw_first_window();
@@ -211,7 +211,7 @@ ScoreType Engine::aspiration(const CounterType &depth, const ScoreType prev_scor
     int score = SCORE_NONE;
     CounterType curr_depth = depth;
     while (true) {
-        const ScoreType curr_score = negamax(alpha, beta, curr_depth, 0, false, td);
+        const ScoreType curr_score = negamax(td, alpha, beta, curr_depth, 0, false);
 
         if (time_over(td))
             break;
@@ -235,12 +235,12 @@ ScoreType Engine::aspiration(const CounterType &depth, const ScoreType prev_scor
     return score;
 }
 
-ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, CounterType ply, const bool cutnode,
-                          ThreadData &td) {
+ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, CounterType depth, CounterType ply,
+                          const bool cutnode) {
     if (time_over(td)) // Out of time
         return -MAX_SCORE;
     if (depth <= 0)
-        return quiescence(alpha, beta, ply, td);
+        return quiescence(td, alpha, beta, ply);
     ++td.nodes_searched;
 
     const bool pv_node = alpha != beta - 1;
@@ -376,7 +376,7 @@ ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, Co
 
         // Razoring heuristic
         if (depth <= razoring_max_depth() && node.static_eval + razoring_mult() * depth < alpha) {
-            const ScoreType razor_score = quiescence(alpha, beta, ply, td);
+            const ScoreType razor_score = quiescence(td, alpha, beta, ply);
             if (razor_score <= alpha)
                 return razor_score;
         }
@@ -399,7 +399,7 @@ ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, Co
             make_null_move(td);
             m_tt.prefetch(position.hash());
             node.curr_pmove = PieceMove::none();
-            const ScoreType null_score = -negamax(-beta, -beta + 1, depth - reduction, ply + 1, !cutnode, td);
+            const ScoreType null_score = -negamax(td, -beta, -beta + 1, depth - reduction, ply + 1, !cutnode);
             unmake_null_move(td);
 
             if (null_score >= beta)
@@ -428,9 +428,9 @@ ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, Co
 
                 m_tt.prefetch(position.hash());
 
-                int pc_score = -quiescence(-pc_beta, -pc_beta + 1, ply + 1, td);
+                int pc_score = -quiescence(td, -pc_beta, -pc_beta + 1, ply + 1);
                 if (pc_score >= pc_beta)
-                    pc_score = -negamax(-pc_beta, -pc_beta + 1, depth - 4, ply + 1, !cutnode, td);
+                    pc_score = -negamax(td, -pc_beta, -pc_beta + 1, depth - 4, ply + 1, !cutnode);
 
                 unmake_move(td, move);
 
@@ -516,7 +516,7 @@ ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, Co
 
             td.search_stack[ply].excluded_move = ttmove;
             const ScoreType singular_score =
-                negamax(singular_beta - 1, singular_beta, singular_depth, ply, cutnode, td);
+                negamax(td, singular_beta - 1, singular_beta, singular_depth, ply, cutnode);
             td.search_stack[ply].excluded_move = Move::none();
 
             if (singular_score < singular_beta) {
@@ -550,7 +550,7 @@ ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, Co
         td.search_stack[ply + 1].pv_list.clear();
         ScoreType score;
         if (moves_searched == 1) {
-            score = -negamax(-beta, -alpha, new_depth, ply + 1, false, td);
+            score = -negamax(td, -beta, -alpha, new_depth, ply + 1, false);
         } else {
             int scaled_reduction = 0;
             // Late Move Reduction
@@ -576,18 +576,18 @@ ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, Co
             const int lmr_depth = std::min(std::max(new_depth - reduction, 1), new_depth);
 
             td.search_stack[ply].reduction = reduction;
-            score = -negamax(-alpha - 1, -alpha, lmr_depth, ply + 1, true, td);
+            score = -negamax(td, -alpha - 1, -alpha, lmr_depth, ply + 1, true);
             td.search_stack[ply].reduction = 0;
 
             if (score > alpha && lmr_depth < new_depth) {
                 new_depth += score > best_score + lmr_deeper_margin() + lmr_deeper_depth_factor() * new_depth;
                 new_depth -= score < best_score + lmr_shallower_margin() + lmr_shallower_depth_factor() * new_depth;
 
-                score = -negamax(-alpha - 1, -alpha, new_depth, ply + 1, !cutnode, td);
+                score = -negamax(td, -alpha - 1, -alpha, new_depth, ply + 1, !cutnode);
             }
 
             if (pv_node && score > alpha) {
-                score = -negamax(-beta, -alpha, new_depth, ply + 1, false, td);
+                score = -negamax(td, -beta, -alpha, new_depth, ply + 1, false);
             }
         }
 
@@ -634,7 +634,7 @@ ScoreType Engine::negamax(ScoreType alpha, ScoreType beta, CounterType depth, Co
     return best_score;
 }
 
-ScoreType Engine::quiescence(ScoreType alpha, ScoreType beta, CounterType ply, ThreadData &td) {
+ScoreType Engine::quiescence(ThreadData &td, ScoreType alpha, ScoreType beta, CounterType ply) {
     ++td.nodes_searched;
     Position &position = td.position;
     if (time_over(td))
@@ -735,7 +735,7 @@ ScoreType Engine::quiescence(ScoreType alpha, ScoreType beta, CounterType ply, T
         m_tt.prefetch(position.hash());
 
         ++moves_searched;
-        const ScoreType score = -quiescence(-beta, -alpha, ply + 1, td);
+        const ScoreType score = -quiescence(td, -beta, -alpha, ply + 1);
 
         unmake_move(td, move);
 
@@ -763,7 +763,7 @@ ScoreType Engine::quiescence(ScoreType alpha, ScoreType beta, CounterType ply, T
     return best_score;
 }
 
-bool Engine::SEE(Position &position, const Move &move, int threshold) {
+bool Engine::SEE(Position &position, const Move move, int threshold) {
     if (move.is_castle()) // Cannot win or lose material by castling
         return threshold <= 0;
 
@@ -838,8 +838,8 @@ bool Engine::SEE(Position &position, const Move &move, int threshold) {
     return stm != position.stm();
 }
 
-void Engine::report_search_info(const CounterType &depth, const ScoreType &eval, const PvList &pv_list,
-                                const Position &pos) {
+void Engine::report_search_info(const Position &pos, const CounterType depth, const ScoreType eval,
+                                const PvList &pv_list) {
     std::cout << "info depth " << depth;
     if (is_decisive(eval)) {
         std::cout << " score mate " << (eval < 0 ? "-" : "") << (MATE_SCORE - std::abs(eval) + 1) / 2;
