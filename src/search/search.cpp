@@ -529,6 +529,8 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
                 extension = -2;
             } else if (cutnode) {
                 extension = -2;
+            } else if (ttscore <= alpha) {
+                extension = -1;
             }
         }
 
