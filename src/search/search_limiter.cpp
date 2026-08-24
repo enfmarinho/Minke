@@ -23,7 +23,6 @@
 #include <limits>
 
 #include "core/types.h"
-#include "search/search.h"
 #include "uci/tune.h"
 
 void SearchLimiter::init(const SearchLimits& sl) {
@@ -82,7 +81,8 @@ void SearchLimiter::init() {
     m_can_stop = false;
 }
 
-void SearchLimiter::update(CounterType pv_stability, CounterType score_stability, double node_fraction) {
+void SearchLimiter::update(const CounterType pv_stability, const CounterType score_stability,
+                           const double node_fraction) {
     if (m_movetime || !m_time_set)
         return;
 
@@ -100,11 +100,11 @@ void SearchLimiter::update(CounterType pv_stability, CounterType score_stability
                                  tm_max_scale() / 1000.0);
 }
 
-bool SearchLimiter::stop_early(uint64_t nodes) const {
+bool SearchLimiter::stop_early(const uint64_t nodes) const {
     return nodes > m_optimum_nodes || (m_can_stop && time_passed() > m_optimum_time * m_scale);
 }
 
-bool SearchLimiter::time_over(uint64_t nodes) const {
+bool SearchLimiter::time_over(const uint64_t nodes) const {
     return nodes > m_maximum_nodes || (m_can_stop && ((nodes & 2047) == 2047 && time_passed() > m_maximum_time));
 }
 

@@ -34,7 +34,7 @@ class FinnyTable {
 
     void reset();
 
-    const PovAccumulator &update(const Position &pos, const Color pov);
+    const PovAccumulator &update(const Position &pos, Color pov);
 
   private:
     struct FinnyTableCache {
@@ -48,7 +48,7 @@ class FinnyTable {
         void reset();
     };
 
-    FinnyTableCache &get_cache(const bool flip, const size_t king_bucket, const Color pov);
+    FinnyTableCache &get_cache(bool flip, size_t king_bucket, Color pov);
 
     std::array<std::array<std::array<FinnyTableCache, 2>, NUM_KING_BUCKETS>, 2>
         cache; // [flip][king_bucket_idx][pov_color]

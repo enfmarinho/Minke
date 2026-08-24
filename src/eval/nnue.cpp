@@ -18,7 +18,6 @@
 
 #include "eval/nnue.h"
 
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -38,7 +37,7 @@ void NNUE::refresh(const Position &pos) {
     const auto &black_pov_acc = m_finny_table.update(pos, BLACK);
 
     m_accumulators.clear();
-    m_accumulators.emplace_back(pos.king_sq(WHITE), pos.king_sq(BLACK), white_pov_acc, black_pov_acc);
+    m_accumulators.emplace_back(white_pov_acc, black_pov_acc, pos.king_sq(WHITE), pos.king_sq(BLACK));
 
     assert(m_accumulators.back().updated(WHITE));
     assert(m_accumulators.back().updated(BLACK));
@@ -48,7 +47,7 @@ void NNUE::refresh(const Position &pos) {
 
 void NNUE::pop() { m_accumulators.pop_back(); }
 
-void NNUE::push(const DirtyPiece &dp, const Square white_king_sq, const Square black_king_sq) {
+void NNUE::push(const DirtyPiece dp, const Square white_king_sq, const Square black_king_sq) {
     assert(!m_accumulators.empty()); // NNUE must have been initialized with the 'refresh' method before pushing
     m_accumulators.emplace_back(dp, white_king_sq, black_king_sq);
 }
@@ -67,7 +66,7 @@ void NNUE::update(const Position &pos) {
     update_pov(pos, BLACK);
 }
 
-void NNUE::update_pov(const Position &pos, const Color &pov) {
+void NNUE::update_pov(const Position &pos, const Color pov) {
     auto head = m_accumulators.rbegin();
 
     if (head->updated(pov))
@@ -76,11 +75,11 @@ void NNUE::update_pov(const Position &pos, const Color &pov) {
     for (auto iter = m_accumulators.rbegin() + 1; iter != m_accumulators.rend(); ++iter) {
         if (iter->needs_refresh(pov, pos.king_sq(pov))) {
             const PovAccumulator &acc = m_finny_table.update(pos, pov);
-            head->refresh(pov, acc);
+            head->refresh(acc, pov);
             break;
         } else if (iter->updated(pov)) {
             while (iter != head) {
-                (iter - 1)->update(pov, iter->pov(pov));
+                (iter - 1)->update(iter->pov(pov), pov);
                 --iter;
             }
             break;
