@@ -29,26 +29,26 @@
 
 namespace Attacks {
 
-Bitboard bishop_masks[64];
-Bitboard rook_masks[64];
+alignas(64) Bitboard bishop_mask_table[64];
+alignas(64) Bitboard rook_mask_table[64];
 
-int bishop_shifts[64];
-int rook_shifts[64];
+alignas(64) int bishop_shifts[64];
+alignas(64) int rook_shifts[64];
 
-uint64_t bishop_magic_numbers[64];
-uint64_t rook_magic_numbers[64];
+alignas(64) uint64_t bishop_magic_numbers[64];
+alignas(64) uint64_t rook_magic_numbers[64];
 
-Bitboard pawn_attacks[2][64];
-Bitboard knight_attacks[64];
-Bitboard king_attacks[64];
-Bitboard bishop_attacks[64][512];
-Bitboard rook_attacks[64][4096];
+alignas(64) Bitboard pawn_attack_table[2][64];
+alignas(64) Bitboard knight_attack_table[64];
+alignas(64) Bitboard king_attack_table[64];
+alignas(64) Bitboard bishop_attack_table[64][512];
+alignas(64) Bitboard rook_attack_table[64][4096];
 
-Bitboard inbetween_masks[64][64];
-Bitboard passing_masks[64][64];
+alignas(64) Bitboard inbetween_mask_table[64][64];
+alignas(64) Bitboard passing_mask_table[64][64];
 
-Bitboard diagonal_masks[64];
-Bitboard antidiagonal_masks[64];
+alignas(64) Bitboard diagonal_mask_table[64];
+alignas(64) Bitboard antidiagonal_mask_table[64];
 
 namespace {
 
@@ -167,10 +167,10 @@ void init_inbetween_masks() {
             Square sq2 = static_cast<Square>(sqi2);
             Bitboard occ1(sq1);
             Bitboard occ2(sq2);
-            if (get_bishop_attacks(sq1, 0) & occ2) {
-                inbetween_masks[sq1][sq2] = get_bishop_attacks(sq1, occ2) & get_bishop_attacks(sq2, occ1);
-            } else if (get_rook_attacks(sq1, 0) & occ2) {
-                inbetween_masks[sq1][sq2] = get_rook_attacks(sq1, occ2) & get_rook_attacks(sq2, occ1);
+            if (bishop_attack(sq1, 0) & occ2) {
+                inbetween_mask_table[sq1][sq2] = bishop_attack(sq1, occ2) & bishop_attack(sq2, occ1);
+            } else if (rook_attack(sq1, 0) & occ2) {
+                inbetween_mask_table[sq1][sq2] = rook_attack(sq1, occ2) & rook_attack(sq2, occ1);
             }
         }
     }
@@ -181,8 +181,8 @@ void init_passing_masks() {
         Square src_sq = static_cast<Square>(src);
         Bitboard src_mask(src_sq);
 
-        Bitboard rook_attack = get_rook_attacks(src_sq, 0);
-        Bitboard bishop_attack = get_bishop_attacks(src_sq, 0);
+        Bitboard rook_attack_mask = rook_attack(src_sq, 0);
+        Bitboard bishop_attack_mask = bishop_attack(src_sq, 0);
         for (int to = a1; to <= h8; ++to) {
             if (src == to)
                 continue;
@@ -190,10 +190,10 @@ void init_passing_masks() {
             Square to_sq = static_cast<Square>(to);
             Bitboard to_mask(to_sq);
 
-            if (rook_attack & to_mask) {
-                passing_masks[src][to] = rook_attack & (get_rook_attacks(to_sq, src_mask) | to_mask);
-            } else if (bishop_attack & to_mask) {
-                passing_masks[src][to] = bishop_attack & (get_bishop_attacks(to_sq, src_mask) | to_mask);
+            if (rook_attack_mask & to_mask) {
+                passing_mask_table[src][to] = rook_attack_mask & (rook_attack(to_sq, src_mask) | to_mask);
+            } else if (bishop_attack_mask & to_mask) {
+                passing_mask_table[src][to] = bishop_attack_mask & (bishop_attack(to_sq, src_mask) | to_mask);
             }
         }
     }
@@ -208,14 +208,14 @@ void init_diagonal_antidiagonal_masks() {
             diag |= mask;
         for (Bitboard mask = diag.shift_south_west(); mask; mask = mask.shift_south_west())
             diag |= mask;
-        diagonal_masks[sq] = diag;
+        diagonal_mask_table[sq] = diag;
 
         Bitboard antidiag(sq); // north_west to south_east
         for (Bitboard mask = antidiag.shift_north_west(); mask; mask = mask.shift_north_west())
             antidiag |= mask;
         for (Bitboard mask = antidiag.shift_south_east(); mask; mask = mask.shift_south_east())
             antidiag |= mask;
-        antidiagonal_masks[sq] = antidiag;
+        antidiagonal_mask_table[sq] = antidiag;
     }
 }
 
@@ -239,14 +239,14 @@ void init_magic_table(PieceType piece_type) {
         uint64_t* magic;
         int n_shifts;
         if (piece_type == BISHOP) {
-            mask = bishop_masks[sq] = generate_bishop_mask(sq);
+            mask = bishop_mask_table[sq] = generate_bishop_mask(sq);
             magic = &bishop_magic_numbers[sq];
-            attacks = bishop_attacks[sq];
+            attacks = bishop_attack_table[sq];
             n_shifts = bishop_shifts[sq] = 64 - mask.popcount();
         } else {
-            mask = rook_masks[sq] = generate_rook_mask(sq);
+            mask = rook_mask_table[sq] = generate_rook_mask(sq);
             magic = &rook_magic_numbers[sq];
-            attacks = rook_attacks[sq];
+            attacks = rook_attack_table[sq];
             n_shifts = rook_shifts[sq] = 64 - mask.popcount();
         }
 
@@ -272,7 +272,7 @@ void init_magic_table(PieceType piece_type) {
                 *magic = prng.sparse_rand<Bitboard::UnderlyingT>();
 
             for (++cnt, i = 0; i < size; ++i) {
-                unsigned idx = get_attack_index(occupancy[i], *magic, n_shifts);
+                unsigned idx = attack_index(occupancy[i], *magic, n_shifts);
 
                 if (epoch[idx] < cnt) {
                     epoch[idx] = cnt;
@@ -294,10 +294,10 @@ void init_magic_attack_tables() {
     for (int sqi = a1; sqi <= h8; ++sqi) {
         Square sq = static_cast<Square>(sqi);
 
-        pawn_attacks[WHITE][sq] = generate_pawn_attacks(sq, WHITE);
-        pawn_attacks[BLACK][sq] = generate_pawn_attacks(sq, BLACK);
-        knight_attacks[sq] = generate_knight_attacks(sq);
-        king_attacks[sq] = generate_king_attacks(sq);
+        pawn_attack_table[WHITE][sq] = generate_pawn_attacks(sq, WHITE);
+        pawn_attack_table[BLACK][sq] = generate_pawn_attacks(sq, BLACK);
+        knight_attack_table[sq] = generate_knight_attacks(sq);
+        king_attack_table[sq] = generate_king_attacks(sq);
     }
 }
 

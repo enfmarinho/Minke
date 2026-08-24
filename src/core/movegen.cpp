@@ -60,8 +60,8 @@ static inline void push_pawn_promotions(ScoredMoveList& move_list, const Directi
 }
 
 static inline void gen_pawn_noisies(ScoredMoveList& move_list, const Position& pos, Bitboard dst_mask) {
-    using Attacks::antidiagonal_masks;
-    using Attacks::diagonal_masks;
+    using Attacks::antidiagonal_mask;
+    using Attacks::diagonal_mask;
 
     const Color stm = pos.stm();
     const Color nstm = pos.nstm();
@@ -76,8 +76,8 @@ static inline void gen_pawn_noisies(ScoredMoveList& move_list, const Position& p
     // pins bitboards
     const Square king_sq = pos.king_sq(stm);
     const Bitboard pins_bb = pos.pins_bb();
-    const Bitboard west_capture_pin_mask = stm == WHITE ? antidiagonal_masks[king_sq] : diagonal_masks[king_sq];
-    const Bitboard east_capture_pin_mask = stm == WHITE ? diagonal_masks[king_sq] : antidiagonal_masks[king_sq];
+    const Bitboard west_capture_pin_mask = stm == WHITE ? antidiagonal_mask(king_sq) : diagonal_mask(king_sq);
+    const Bitboard east_capture_pin_mask = stm == WHITE ? diagonal_mask(king_sq) : antidiagonal_mask(king_sq);
 
     // captures destination bitboards
     const Bitboard west_attackers_bb = (pawns_bb & ~pins_bb) | (pawns_bb & west_capture_pin_mask);
@@ -115,7 +115,7 @@ static inline void gen_pawn_noisies(ScoredMoveList& move_list, const Position& p
 
         if (pos.in_check()) {
             const bool captures_checker = pos.checkers_bb().is_set(captured_pawn_sq);
-            const bool blocks_check = Attacks::inbetween_masks[king_sq][pos.checkers_bb().lsb()].is_set(ep_sq);
+            const bool blocks_check = Attacks::inbetween_mask(king_sq, pos.checkers_bb().lsb()).is_set(ep_sq);
 
             if (!captures_checker && !blocks_check) {
                 ep_west_captures_bb = 0;
@@ -133,7 +133,7 @@ static inline void gen_pawn_noisies(ScoredMoveList& move_list, const Position& p
             const Bitboard occ_no_moved_bb = pos.occ_bb() ^ Bitboard(from_sq) ^ Bitboard(captured_pawn_sq);
             const Bitboard horizontal_attackers = pos.piece_bb(ROOK, nstm) | pos.piece_bb(QUEEN, nstm);
 
-            return static_cast<bool>(Attacks::get_rook_attacks(king_sq, occ_no_moved_bb) & horizontal_attackers &
+            return static_cast<bool>(Attacks::rook_attack(king_sq, occ_no_moved_bb) & horizontal_attackers &
                                      Bitboard::rank(king_sq));
         };
 
@@ -170,7 +170,7 @@ static inline void gen_knights(ScoredMoveList& move_list, const Position& pos, B
     Bitboard not_pinned_knights = pos.piece_bb(KNIGHT, pos.stm()) & ~pos.pins_bb();
     while (not_pinned_knights) {
         const Square from = not_pinned_knights.poplsb();
-        const Bitboard attacks = Attacks::knight_attacks[from];
+        const Bitboard attacks = Attacks::knight_attack(from);
         push_regular_moves<move_t>(move_list, from, attacks & dst_mask);
     }
 }
@@ -190,7 +190,7 @@ static inline void gen_sliders(ScoredMoveList& move_list, const Position& pos, B
         Bitboard not_pinned_bb = bb & ~pins;
         while (not_pinned_bb) {
             Square from = not_pinned_bb.poplsb();
-            Bitboard attacks = Attacks::get_piece_attacks(from, occ, pt);
+            Bitboard attacks = Attacks::piece_attack(pt, from, occ);
             push_regular_moves<move_t>(move_list, from, attacks & dst_mask);
         }
     };
@@ -198,8 +198,8 @@ static inline void gen_sliders(ScoredMoveList& move_list, const Position& pos, B
         Bitboard pinned_bb = bb & pins;
         while (pinned_bb) {
             Square from = pinned_bb.poplsb();
-            Bitboard attacks = Attacks::get_piece_attacks(from, occ, pt);
-            const Bitboard passing_mask = Attacks::passing_masks[king_sq][from];
+            Bitboard attacks = Attacks::piece_attack(pt, from, occ);
+            const Bitboard passing_mask = Attacks::passing_mask(king_sq, from);
             push_regular_moves<move_t>(move_list, from, attacks & dst_mask & passing_mask);
         }
     };
@@ -212,7 +212,7 @@ static inline void gen_sliders(ScoredMoveList& move_list, const Position& pos, B
 template <MoveType move_t>
 static inline void gen_kings(ScoredMoveList& move_list, const Position& pos, Bitboard dst_mask) {
     const Square king_sq = pos.king_sq(pos.stm());
-    const Bitboard attacks = Attacks::king_attacks[king_sq];
+    const Bitboard attacks = Attacks::king_attack(king_sq);
 
     push_regular_moves<move_t>(move_list, king_sq, attacks & dst_mask & ~pos.threats_bb());
 }
@@ -223,7 +223,7 @@ static inline void gen_castling(ScoredMoveList& move_list, const Position& pos) 
 
     Bitboard castle_rooks_stm = pos.castle_rooks_bb() & pos.occ_bb(stm);
     while (castle_rooks_stm) {
-        using Attacks::inbetween_masks;
+        using Attacks::inbetween_mask;
 
         Square rook_from = castle_rooks_stm.poplsb();
         if (pos.pins_bb().is_set(rook_from)) {
@@ -232,10 +232,10 @@ static inline void gen_castling(ScoredMoveList& move_list, const Position& pos) 
 
         auto [king_to, rook_to] = pos.castling_to_sqs(king_from, rook_from);
 
-        const Bitboard crossing_mask = (inbetween_masks[king_from][king_to] | inbetween_masks[rook_from][rook_to] |
+        const Bitboard crossing_mask = (inbetween_mask(king_from, king_to) | inbetween_mask(rook_from, rook_to) |
                                         Bitboard(king_to) | Bitboard(rook_to)) &
                                        ~(Bitboard(king_from) | Bitboard(rook_from));
-        const Bitboard king_crossing = inbetween_masks[king_from][king_to] | Bitboard(king_to);
+        const Bitboard king_crossing = inbetween_mask(king_from, king_to) | Bitboard(king_to);
         if (!(crossing_mask & pos.occ_bb())        // no blocker
             && !(king_crossing & pos.threats_bb()) // no passing square is attacked
         ) {
@@ -262,7 +262,7 @@ void noisies(ScoredMoveList& move_list, const Position& pos) {
         dst_mask = pos.checkers_bb();
 
         pawn_dst_mask = dst_mask;
-        pawn_dst_mask |= pawn_push_promotions & Attacks::inbetween_masks[pos.king_sq(stm)][pos.checkers_bb().lsb()];
+        pawn_dst_mask |= pawn_push_promotions & Attacks::inbetween_mask(pos.king_sq(stm), pos.checkers_bb().lsb());
     }
 
     gen_pawn_noisies(move_list, pos, pawn_dst_mask);
@@ -282,7 +282,7 @@ void quiets(ScoredMoveList& move_list, const Position& pos) {
             return;
         }
 
-        dst_mask = Attacks::inbetween_masks[pos.king_sq(stm)][pos.checkers_bb().lsb()];
+        dst_mask = Attacks::inbetween_mask(pos.king_sq(stm), pos.checkers_bb().lsb());
     } else {
         gen_castling(move_list, pos);
     }
