@@ -1,0 +1,2 @@
+VERSION := 6.0.0
+DEFAULT_EVALFILE := minke39
