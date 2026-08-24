@@ -3,6 +3,8 @@
 #   make PGO=on bmi2                                # two-phase profile-guided build
 #   make EVALFILE=net.nnue bmi2                     # use a custom network file
 
+include version.mk
+
 PGO ?= off
 
 # Flags
@@ -27,12 +29,11 @@ OBJECTS := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(notdir $(SOURCES)))
 PREPROCESSOR_SRC := tools/preprocess_nnue.cpp
 
 ifndef EXE
-	EXE = minke-v$(VERSION)
+	EXE := minke-v$(VERSION)
 	EXE_NOT_SET := true
 endif
 
 ifeq ($(OS), Windows_NT)
-	UNAME_S := Windows
 	CXX ?= g++
 	CXXFLAGS += -static
 	SUFFIX := .exe
@@ -51,14 +52,6 @@ else
 	MKDIR := mkdir -p
 	RMDIR := rm -rf
 	RM := rm
-endif
-
-ifeq ($(UNAME_S),Darwin)
-    VERSION := $(strip $(shell cat version.txt))
-	DEFAULT_EVALFILE := $(strip $(shell cat network.txt))
-else
-    VERSION := $(strip $(file < version.txt))
-	DEFAULT_EVALFILE := $(strip $(file < network.txt))
 endif
 
 ifeq ($(CXX), clang++)
