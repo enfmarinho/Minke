@@ -33,27 +33,30 @@ class History {
 
     void reset();
 
-    void update_history(const ThreadData &td, const Move &best_move, int depth, CounterType ply,
-                        const PieceMoveList &quiets_tried, const PieceMoveList &tacticals_tried);
+    void update(const ThreadData &td, Move best_move, int depth, CounterType ply, const PieceMoveList &quiets_tried,
+                const PieceMoveList &tacticals_tried);
 
-    int get_history(const ThreadData &td, const Move &move, CounterType ply) const;
+    int quiet_score(const ThreadData &td, Move move, CounterType ply) const;
 
-    inline HistoryType get_capture_history(const Position &position, const Move &move) {
-        Square to = move.to();
-        PieceType moved_pt = get_piece_type(position.piece_at(move.from()));
+    inline HistoryType noisy_score(const Position &position, Move move) {
+        const Square to = move.to();
+        const PieceType moved_pt = get_piece_type(position.piece_at(move.from()));
         PieceType captured_pt = get_piece_type(position.piece_at(to));
         if (captured_pt == NONE)
             captured_pt = PAWN;
-        return m_capture_history[position.stm()][moved_pt][to][captured_pt][position.is_threatened(to)].value;
+        return m_noisy_history[position.stm()][moved_pt][to][captured_pt][position.is_threatened(to)].value;
     }
 
-    inline void clear_killers(const int &height) {
+    inline void clear_killers(int height) {
         m_killer_moves[height][0] = Move::none();
         m_killer_moves[height][1] = Move::none();
     }
-    inline Move consult_killer1(const int &height) const { return m_killer_moves[height][0]; }
-    inline Move consult_killer2(const int &height) const { return m_killer_moves[height][1]; }
-    inline bool is_killer(const Move &move, const int &height) const {
+
+    inline Move consult_killer1(int height) const { return m_killer_moves[height][0]; }
+
+    inline Move consult_killer2(int height) const { return m_killer_moves[height][1]; }
+
+    inline bool is_killer(Move move, int height) const {
         return move == consult_killer1(height) || move == consult_killer2(height);
     }
 
@@ -65,24 +68,23 @@ class History {
         inline void update_with_base(int bonus, int base) { value += bonus - base * std::abs(bonus) / HISTORY_DIVISOR; }
     };
 
-    void update_capture_history_score(const Position &position, const Move &move, int bonus);
-    void update_history_heuristic_score(const Position &position, const Move &move, int bonus);
-    void update_continuation_history_table(const ThreadData &td, const PieceMove &pmove, int bonus, CounterType ply);
+    void update_noisy_history_score(const Position &position, Move move, int bonus);
+    void update_quiet_history_score(const Position &position, Move move, int bonus);
+    void update_continuation_history_scores(const ThreadData &td, PieceMove pmove, int bonus, CounterType ply);
+    void update_continuation_history_score(const ThreadData &td, PieceMove pmove, int bonus, int base, CounterType ply,
+                                           int offset);
 
-    void update_continuation_history_score(const ThreadData &td, const PieceMove &pmove, int bonus, int base,
-                                           CounterType ply, int offset);
-    HistoryType get_history_heuristic_score(const Position &position, const Move &move) const;
-    int get_continuation_history_score(const ThreadData &td, const PieceMove &pmove, CounterType ply) const;
-    HistoryType get_continuation_history_entry(const ThreadData &td, const PieceMove &pmove, CounterType ply,
-                                               int offset) const;
+    HistoryType quiet_history_score(const Position &position, Move move) const;
+    int continuation_history_score(const ThreadData &td, PieceMove pmove, CounterType ply) const;
+    HistoryType continuation_history_entry(const ThreadData &td, PieceMove pmove, CounterType ply, int offset) const;
 
-    inline void save_killer(const Move &move, const int height) {
+    inline void save_killer(Move move, int height) {
         m_killer_moves[height][1] = m_killer_moves[height][0];
         m_killer_moves[height][0] = move;
     }
 
-    HistoryEntry m_capture_history[2][6][64][5][2];
-    HistoryEntry m_search_history_table[2][64 * 64][2][2];
+    HistoryEntry m_noisy_history[2][6][64][5][2];
+    HistoryEntry m_quiet_history[2][64 * 64][2][2];
     HistoryEntry m_continuation_history[12 * 64][12 * 64];
     Move m_killer_moves[MAX_SEARCH_DEPTH][2];
 };

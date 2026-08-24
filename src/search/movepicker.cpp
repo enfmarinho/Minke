@@ -26,11 +26,11 @@
 #include "search/search.h"
 #include "uci/tune.h"
 
-MovePicker::MovePicker(Move ttmove, ThreadData &td, int ply, MovePickerType mp_type, ScoreType threshold) {
-    init(ttmove, td, ply, mp_type, threshold);
+MovePicker::MovePicker(ThreadData &td, Move ttmove, int ply, MovePickerType mp_type, ScoreType threshold) {
+    init(td, ttmove, ply, mp_type, threshold);
 }
 
-void MovePicker::init(Move ttmove, ThreadData &td, int ply, MovePickerType mp_type, ScoreType threshold) {
+void MovePicker::init(ThreadData &td, Move ttmove, int ply, MovePickerType mp_type, ScoreType threshold) {
     m_td = &td;
     m_ply = ply;
     m_ttmove = ttmove;
@@ -138,7 +138,7 @@ size_t MovePicker::sort_next_move() {
 void MovePicker::score_quiet_moves() {
     for (size_t i = m_idx; i < m_end; ++i) {
         auto &[move, score] = m_move_list[i];
-        score = m_td->search_history.get_history(*m_td, move, m_ply);
+        score = m_td->search_history.quiet_score(*m_td, move, m_ply);
         if (move == m_killer1)
             score += mp_killer1_bonus();
         else if (move == m_killer2)
@@ -156,7 +156,7 @@ void MovePicker::score_noisy_moves() {
                 return m_td->position.piece_at(move.to());
         }();
 
-        score = 20 * SEE_VALUES[captured] + m_td->search_history.get_capture_history(m_td->position, move);
+        score = 20 * SEE_VALUES[captured] + m_td->search_history.noisy_score(m_td->position, move);
 
         if (move.is_promotion()) {
             score += SEE_VALUES[move.promotee()] - SEE_VALUES[WHITE_PAWN];

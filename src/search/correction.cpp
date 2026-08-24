@@ -26,7 +26,7 @@
 #include "search/search.h"
 #include "uci/tune.h"
 
-static inline size_t cont_corr_idx(const PieceMove& pmove) {
+static inline size_t cont_corr_idx(const PieceMove pmove) {
     return (static_cast<size_t>(pmove.piece) << 6) | static_cast<size_t>(pmove.move.to());
 };
 
@@ -35,7 +35,7 @@ void CorrectionHistory::reset() {
     m_cont_corr = {};
 }
 
-void CorrectionHistory::update(const ThreadData& td, int depth, int ply, int diff) {
+void CorrectionHistory::update(const ThreadData& td, const int depth, const int ply, const int diff) {
     const HistoryType bonus = std::clamp(diff * depth / 8, -CORRHIST_MAX / 4, CORRHIST_MAX / 4);
 
     PovTables& tables = m_pov_tables[td.position.stm()];
@@ -58,7 +58,7 @@ void CorrectionHistory::update(const ThreadData& td, int depth, int ply, int dif
     update_cont(2);
 }
 
-HistoryType CorrectionHistory::correction(const ThreadData& td, int ply) const {
+HistoryType CorrectionHistory::correction(const ThreadData& td, const int ply) const {
     const PovTables& tables = m_pov_tables[td.position.stm()];
 
     int adjustment = pawn_corr_factor() * tables.pawn[td.position.pawn_hash() % CORRHIST_SIZE];

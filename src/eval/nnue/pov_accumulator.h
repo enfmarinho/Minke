@@ -30,7 +30,7 @@ class Position;
 class alignas(64) PovAccumulator {
   public:
     PovAccumulator() = default;
-    PovAccumulator(const Position &pos, const Color pov);
+    PovAccumulator(const Position &pos, Color pov);
     PovAccumulator(const PovAccumulator &copy) = default;
     ~PovAccumulator() = default;
 
@@ -40,16 +40,15 @@ class alignas(64) PovAccumulator {
 
     std::span<const int16_t, L1_SIZE> neurons() const { return m_neurons; }
 
-    void add(const PovAccumulator &input, const size_t add0);
-    void sub(const PovAccumulator &input, const size_t sub0);
-    void add_sub(const PovAccumulator &input, const size_t add0, const size_t sub0);
-    void add_sub2(const PovAccumulator &input, const size_t add0, const size_t sub0, const size_t sub1);
-    void add2_sub2(const PovAccumulator &input, const size_t add0, const size_t add1, const size_t sub0,
-                   const size_t sub1);
+    void add(const PovAccumulator &input, size_t add0);
+    void sub(const PovAccumulator &input, size_t sub0);
+    void add_sub(const PovAccumulator &input, size_t add0, size_t sub0);
+    void add_sub2(const PovAccumulator &input, size_t add0, size_t sub0, size_t sub1);
+    void add2_sub2(const PovAccumulator &input, size_t add0, size_t add1, size_t sub0, size_t sub1);
 
-    void self_add(const size_t add0);
-    void self_sub(const size_t sub0);
-    void self_add_sub(const size_t add0, const size_t sub0);
+    void self_add(size_t add0);
+    void self_sub(size_t sub0);
+    void self_add_sub(size_t add0, size_t sub0);
 
     friend bool operator==(const PovAccumulator &lhs, const PovAccumulator &rhs);
 

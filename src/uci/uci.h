@@ -39,16 +39,16 @@ class UciHandler {
     ///=== standard UCI commands
     void handle_isready();
     void handle_uci();
-    void handle_position(std::istringstream &);
+    void handle_position(std::istringstream &iss);
     void handle_go(std::istringstream &iss);
     void handle_ucinewgame();
-    void handle_setoption(std::istringstream &);
+    void handle_setoption(std::istringstream &iss);
     void handle_stop();
     ///===
 
     ///=== non-standard UCI commands
-    void handle_bench(std::istringstream &);
-    void handle_perft(std::istringstream &);
+    void handle_bench(std::istringstream &iss);
+    void handle_perft(std::istringstream &iss);
     void handle_tuneinfo();
     void handle_debug();
     void handle_eval();

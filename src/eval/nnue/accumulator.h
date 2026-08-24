@@ -26,23 +26,23 @@ class Position;
 class alignas(64) Accumulator {
   public:
     Accumulator() = delete;
-    Accumulator(const Square white_king_sq, const Square black_king_sq, const PovAccumulator &white_pov_acc,
-                const PovAccumulator &black_pov_acc);
-    Accumulator(const DirtyPiece &dp, const Square white_king_sq, const Square black_king_sq);
+    Accumulator(const PovAccumulator &white_pov_acc, const PovAccumulator &black_pov_acc, Square white_king_sq,
+                Square black_king_sq);
+    Accumulator(DirtyPiece dp, Square white_king_sq, Square black_king_sq);
     ~Accumulator() = default;
 
-    void update(const Color pov, const PovAccumulator &prev_pov_acc);
-    inline bool updated(const Color pov) const { return m_updated[pov]; }
+    void update(const PovAccumulator &prev_pov_acc, Color pov);
+    inline bool updated(Color pov) const { return m_updated[pov]; }
 
-    bool needs_refresh(const Color side, const Square new_king_sq) const;
-    void refresh(const Color side, const PovAccumulator &finny_table_neurons);
+    bool needs_refresh(Color side, Square new_king_sq) const;
+    void refresh(const PovAccumulator &finny_table_neurons, Color side);
 
-    inline const PovAccumulator &pov(const Color pov) const { return m_pov_accumulators[pov]; }
+    inline const PovAccumulator &pov(Color pov) const { return m_pov_accumulators[pov]; }
 
     friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
 
   private:
-    void init(const DirtyPiece &dp, const Square white_king_sq, const Square black_king_sq);
+    void init(DirtyPiece dp, Square white_king_sq, Square black_king_sq);
 
     alignas(64) PovAccumulator m_pov_accumulators[2];
     bool m_updated[2];

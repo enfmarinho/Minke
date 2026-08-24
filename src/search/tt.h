@@ -37,9 +37,8 @@ class TTEntry {
     IndexType bound() const { return m_age_pv_bound & BOUND_MASK; }
     IndexType age() const { return (m_age_pv_bound & AGE_MASK) >> AGE_OFFSET; }
     bool was_pv() const { return m_age_pv_bound & PV_MASK; }
-    void store(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-               const ScoreType &eval, const BoundType &bound, const bool was_pv, const IndexType age,
-               const bool &tthit);
+    void store(HashType hash, IndexType depth, Move best_move, ScoreType score, ScoreType eval, BoundType bound,
+               bool was_pv, IndexType age, bool tthit);
     void reset();
 
   private:
@@ -69,7 +68,7 @@ class TranspositionTable {
     static_assert(sizeof(TTEntry) == 10, "TTEntry is not 10 bytes");
     static_assert(sizeof(TTBucket) == 32, "TTBucket is not 32 bytes");
 
-    size_t table_index_from_hash(const HashType hash);
+    size_t table_index_from_hash(HashType hash);
 
   public:
     TranspositionTable() = default;
@@ -78,11 +77,11 @@ class TranspositionTable {
     TranspositionTable &operator=(const TranspositionTable &) = delete;
 
     bool probe(const Position &position, TTEntry &found);
-    void store(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-               const ScoreType &eval, const BoundType &bound, const bool was_pv, const IndexType age);
+    void store(HashType hash, IndexType depth, Move best_move, ScoreType score, ScoreType eval, BoundType bound,
+               bool was_pv, IndexType age);
     void update_age() { m_age = (m_age + 1) & AGE_MASK; }
     IndexType age() { return m_age; }
-    void prefetch(const HashType &key);
+    void prefetch(HashType key);
     void resize(size_t MB);
     void clear();
     size_t tt_size_mb() const { return size_mb; }

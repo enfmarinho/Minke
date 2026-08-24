@@ -29,9 +29,9 @@
 
 inline static KeyType key_from_hash(const HashType &hash) { return static_cast<KeyType>(hash); }
 
-void TTEntry::store(const HashType &hash, const IndexType &depth, const Move &best_move, const ScoreType &score,
-                    const ScoreType &eval, const BoundType &bound, const bool was_pv, const IndexType age,
-                    const bool &tthit) {
+void TTEntry::store(const HashType hash, const IndexType depth, const Move best_move, const ScoreType score,
+                    const ScoreType eval, const BoundType bound, const bool was_pv, const IndexType age,
+                    const bool tthit) {
     if (best_move || !tthit)
         m_best_move = best_move;
 
@@ -68,9 +68,8 @@ bool TranspositionTable::probe(const Position &position, TTEntry &tte) {
     return false;
 }
 
-void TranspositionTable::store(const HashType &hash, const IndexType &depth, const Move &best_move,
-                               const ScoreType &score, const ScoreType &eval, const BoundType &bound, const bool was_pv,
-                               const IndexType age) {
+void TranspositionTable::store(const HashType hash, const IndexType depth, const Move best_move, const ScoreType score,
+                               const ScoreType eval, const BoundType bound, const bool was_pv, const IndexType age) {
     size_t table_index = table_index_from_hash(hash);
     KeyType target_key = key_from_hash(hash);
     TTBucket *bucket = &m_table[table_index];
@@ -92,7 +91,7 @@ void TranspositionTable::store(const HashType &hash, const IndexType &depth, con
     replace->store(hash, depth, best_move, score, eval, bound, was_pv, age, tthit);
 }
 
-void TranspositionTable::prefetch(const HashType &key) {
+void TranspositionTable::prefetch(const HashType key) {
     size_t table_index = table_index_from_hash(key);
     __builtin_prefetch(&m_table[table_index]);
 }

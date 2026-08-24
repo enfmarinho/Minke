@@ -412,7 +412,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             && !is_decisive(beta)                                                               //
             && (!tthit || ttdepth < depth - 3 || (ttscore != SCORE_NONE && ttscore >= pc_beta)) //
         ) {
-            MovePicker move_picker(ttmove, td, ply, PROBCUT, pc_beta - node.static_eval);
+            MovePicker move_picker(td, ttmove, ply, PROBCUT, pc_beta - node.static_eval);
             while (true) { // iterate through all moves in move_picker
                 const Move move = move_picker.next_move(true);
                 if (!move) { // no more moves
@@ -448,7 +448,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
     int moves_searched = 0;
 
     bool skip_quiets = false;
-    MovePicker move_picker(ttmove, td, ply, SEARCH);
+    MovePicker move_picker(td, ttmove, ply, SEARCH);
     PieceMoveList quiets_tried, tacticals_tried;
     while (true) { // iterate through all moves in move_picker
         const Move move = move_picker.next_move(skip_quiets);
@@ -487,7 +487,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             // Quiet History Pruning
             if (lmr_scaled_depth <= history_pruning_max_depth_scaled() //
                 && move.is_quiet()                                     //
-                && td.search_history.get_history(td, move, ply) <
+                && td.search_history.quiet_score(td, move, ply) <
                        quiet_hist_pruning_factor() * depth + quiet_hist_pruning_base() //
             ) {
                 skip_quiets = true;
@@ -605,7 +605,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
                 }
 
                 if (score >= beta) { // Failed high
-                    td.search_history.update_history(td, best_move, depth, ply, quiets_tried, tacticals_tried);
+                    td.search_history.update(td, best_move, depth, ply, quiets_tried, tacticals_tried);
                     bound = LOWER;
                     break;
                 }
@@ -708,7 +708,7 @@ ScoreType Engine::quiescence(ThreadData &td, ScoreType alpha, ScoreType beta, Co
     alpha = std::max(alpha, best_score);
 
     Move best_move = Move::none();
-    MovePicker move_picker((tthit ? ttmove : Move::none()), td, ply, QSEARCH);
+    MovePicker move_picker(td, ttmove, ply, QSEARCH);
     int moves_searched = 0;
     BoundType bound = UPPER;
     while (true) { // iterate through all moves in move_picker

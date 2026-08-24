@@ -43,7 +43,7 @@ class CorrectionHistory {
     struct CorrectionEntry {
         HistoryType value{};
 
-        inline void update(const HistoryType bonus) {
+        inline void update(HistoryType bonus) {
             const int scaled_bonus = bonus - value * std::abs(bonus) / CORRHIST_MAX;
             value = std::clamp<int>(value + scaled_bonus, -CORRHIST_MAX, CORRHIST_MAX);
         }

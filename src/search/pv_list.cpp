@@ -22,7 +22,7 @@
 
 #include "core/position.h"
 
-void PvList::update(Move new_move, const PvList &list) {
+void PvList::update(const Move new_move, const PvList &list) {
     std::copy(list.m_pv.begin(), list.m_pv.begin() + list.m_size, m_pv.begin() + 1);
     m_pv[0] = new_move;
 

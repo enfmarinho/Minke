@@ -41,7 +41,7 @@ class NNUE {
     void refresh(const Position &pos);
 
     void pop();
-    void push(const DirtyPiece &dp, const Square white_king_sq, const Square black_king_sq);
+    void push(DirtyPiece dp, Square white_king_sq, Square black_king_sq);
 
     ScoreType eval(const Position &pos);
 
@@ -51,7 +51,7 @@ class NNUE {
 
   private:
     void update(const Position &pos);
-    void update_pov(const Position &pos, const Color &pov);
+    void update_pov(const Position &pos, Color pov);
 
     int32_t propagate(std::span<const int16_t, L1_SIZE> stm_inputs, std::span<const int16_t, L1_SIZE> ntm_inputs,
                       const int bucket);

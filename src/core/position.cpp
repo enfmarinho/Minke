@@ -239,7 +239,7 @@ void Position::reset() {
     m_curr_state.reset();
 }
 
-void Position::add_piece(const PieceSquare &ps) {
+void Position::add_piece(const PieceSquare ps) {
     assert(ps.piece >= WHITE_PAWN && ps.piece <= BLACK_KING);
     assert(ps.sq >= a1 && ps.sq <= h8);
 
@@ -249,7 +249,7 @@ void Position::add_piece(const PieceSquare &ps) {
     m_board[ps.sq] = ps.piece;
 }
 
-void Position::remove_piece(const PieceSquare &ps) {
+void Position::remove_piece(const PieceSquare ps) {
     assert(ps.piece >= WHITE_PAWN && ps.piece <= BLACK_KING);
     assert(ps.sq >= a1 && ps.sq <= h8);
 
@@ -259,7 +259,7 @@ void Position::remove_piece(const PieceSquare &ps) {
     m_board[ps.sq] = EMPTY;
 }
 
-DirtyPiece Position::make_move(const Move &move) {
+DirtyPiece Position::make_move(const Move move) {
     m_history_stack[m_history_ply] = m_curr_state;
     ++m_history_ply;
     ++m_game_clock_ply;
@@ -303,7 +303,7 @@ DirtyPiece Position::make_move(const Move &move) {
     return dp;
 }
 
-DirtyPiece Position::make_regular(const Move &move) {
+DirtyPiece Position::make_regular(const Move move) {
     Square from = move.from();
     Square to = move.to();
     Piece piece = piece_at(from);
@@ -330,7 +330,7 @@ DirtyPiece Position::make_regular(const Move &move) {
     return dp;
 }
 
-DirtyPiece Position::make_capture(const Move &move) {
+DirtyPiece Position::make_capture(const Move move) {
     Square from = move.from();
     Square to = move.to();
     Piece piece = piece_at(from);
@@ -355,7 +355,7 @@ DirtyPiece Position::make_capture(const Move &move) {
     return dp;
 }
 
-DirtyPiece Position::make_castle(const Move &move) {
+DirtyPiece Position::make_castle(const Move move) {
     Square king_from = move.from();
     Piece king = piece_at(king_from);
 
@@ -379,7 +379,7 @@ DirtyPiece Position::make_castle(const Move &move) {
     return dp;
 }
 
-DirtyPiece Position::make_promotion(const Move &move) {
+DirtyPiece Position::make_promotion(const Move move) {
     const Square from = move.from();
     const Square to = move.to();
 
@@ -396,7 +396,7 @@ DirtyPiece Position::make_promotion(const Move &move) {
     return dp;
 }
 
-DirtyPiece Position::make_en_passant(const Move &move) {
+DirtyPiece Position::make_en_passant(const Move move) {
     Square from = move.from();
     Square to = move.to();
     Piece piece = piece_at(from);
@@ -419,7 +419,7 @@ DirtyPiece Position::make_en_passant(const Move &move) {
     return dp;
 }
 
-void Position::update_castling_rights(const Move &move) {
+void Position::update_castling_rights(const Move move) {
     const Square from = move.from();
     const Square to = move.to();
     const PieceType moved_piece_type = [&]() {
@@ -465,7 +465,7 @@ void Position::update_castling_rights(const Move &move) {
     }
 }
 
-void Position::unmake_move(const Move &move) {
+void Position::unmake_move(const Move move) {
     assert(m_history_ply > 0); // check if there is a move to unmake
 
     --m_game_clock_ply;
@@ -618,7 +618,7 @@ void Position::calculate_hashes() {
         hash_side_key();
 }
 
-bool Position::is_attacked(const Square &sq) const {
+bool Position::is_attacked(const Square sq) const {
     Color opponent = nstm();
     Bitboard occupancy = occ_bb();
     occupancy.unset_sq(sq); // square to be checked has to be unset on occupancy bitboard
@@ -646,7 +646,7 @@ bool Position::is_attacked(const Square &sq) const {
     return false;
 }
 
-Bitboard Position::attackers(const Square &sq) const {
+Bitboard Position::attackers(const Square sq) const {
     Bitboard attackers;
     Bitboard occupancy = occ_bb();
 
@@ -660,7 +660,7 @@ Bitboard Position::attackers(const Square &sq) const {
     return attackers;
 }
 
-bool Position::is_legal(const Move &move) {
+bool Position::is_legal(const Move move) {
     using Attacks::inbetween_mask;
 
     const Square ksq = king_sq(m_stm);
@@ -716,7 +716,7 @@ bool Position::is_legal(const Move &move) {
     return true;
 }
 
-bool Position::is_pseudo_legal(const Move &move) const {
+bool Position::is_pseudo_legal(const Move move) const {
     if (!move)
         return false;
 
@@ -758,7 +758,7 @@ bool Position::is_pseudo_legal(const Move &move) const {
     return moved_piece_attacks.is_set(to);
 }
 
-bool Position::pawn_pseudo_legal(const Square &from, const Square &to, const Move &move) const {
+bool Position::pawn_pseudo_legal(const Square from, const Square to, const Move move) const {
     int pawn_offset = get_pawn_offset(m_stm);
 
     if (move.is_promotion()) {
@@ -787,7 +787,7 @@ bool Position::pawn_pseudo_legal(const Square &from, const Square &to, const Mov
     return true;
 }
 
-bool Position::castling_pseudo_legal(const Square &from, const Square &to, const PieceType &moved_piece_type) const {
+bool Position::castling_pseudo_legal(const Square from, const Square to, const PieceType moved_piece_type) const {
     using Attacks::inbetween_mask;
 
     if (moved_piece_type != KING)
@@ -994,7 +994,7 @@ bool Position::repetition() const {
     return false;
 }
 
-bool Position::is_fifty_move_draw() {
+bool Position::is_fifty_move_draw() const {
     if (m_curr_state.fifty_move_ply >= 100) {
         Movegen::ScoredMoveList move_list;
         Movegen::all(move_list, *this);
@@ -1003,7 +1003,8 @@ bool Position::is_fifty_move_draw() {
 
     return false;
 }
-void Position::hash_dirty_piece(const DirtyPiece &dp) {
+
+void Position::hash_dirty_piece(const DirtyPiece dp) {
     switch (dp.move_type) {
         case ADD_SUB:
             hash_piece_key(dp.add0);
@@ -1026,7 +1027,7 @@ void Position::hash_dirty_piece(const DirtyPiece &dp) {
     }
 }
 
-void Position::hash_piece_key(const PieceSquare &ps) {
+void Position::hash_piece_key(const PieceSquare ps) {
     assert(ps.piece >= WHITE_PAWN && ps.piece <= BLACK_KING);
     assert(ps.sq >= a1 && ps.sq <= h8);
 

@@ -24,16 +24,16 @@
 #include "core/types.h"
 
 template <typename TYPE>
-inline void set_bits(TYPE &bits, const TYPE &mask) {
+inline void set_bits(TYPE &bits, TYPE mask) {
     bits |= mask;
 }
-template void set_bits<uint8_t>(uint8_t &bits, const uint8_t &mask);
+template void set_bits<uint8_t>(uint8_t &bits, uint8_t mask);
 
 template <typename TYPE>
-inline void unset_mask(TYPE &bits, const TYPE &mask) {
+inline void unset_mask(TYPE &bits, TYPE mask) {
     bits &= (~mask);
 }
-template void unset_mask<uint8_t>(uint8_t &bits, const uint8_t &mask);
+template void unset_mask<uint8_t>(uint8_t &bits, uint8_t mask);
 
 // Returns the rank of "sq"
 constexpr inline int get_rank(Square sq) { return sq >> 3; }
@@ -41,30 +41,30 @@ constexpr inline int get_rank(Square sq) { return sq >> 3; }
 // Returns the file of "sq"
 constexpr inline int get_file(Square sq) { return sq & 0b111; }
 
-inline Piece get_piece(const PieceType &piece_type, const Color &color) {
+inline Piece get_piece(PieceType piece_type, Color color) {
     return static_cast<Piece>(piece_type + color * COLOR_OFFSET);
 }
 
-inline PieceType get_piece_type(const Piece &piece, const Color &color) {
+inline PieceType get_piece_type(Piece piece, Color color) {
     return static_cast<PieceType>(piece - color * COLOR_OFFSET);
 }
 
-inline PieceType get_piece_type(const Piece &piece) {
+inline PieceType get_piece_type(Piece piece) {
     assert(piece >= WHITE_PAWN && piece <= EMPTY);
     if (piece >= 6)
         return static_cast<PieceType>(piece - 6);
     return static_cast<PieceType>(piece);
 }
 
-inline Color get_color(const Piece &piece) { return static_cast<Color>(piece / COLOR_OFFSET); }
+inline Color get_color(Piece piece) { return static_cast<Color>(piece / COLOR_OFFSET); }
 
-inline Square get_square(const int file, const int rank) { return static_cast<Square>(rank * 8 + file); }
+inline Square get_square(int file, int rank) { return static_cast<Square>(rank * 8 + file); }
 
-inline int get_pawn_start_rank(const Color &color) { return color == WHITE ? 1 : 6; }
+inline int get_pawn_start_rank(Color color) { return color == WHITE ? 1 : 6; }
 
-inline int get_pawn_promotion_rank(const Color &color) { return color == WHITE ? 7 : 0; }
+inline int get_pawn_promotion_rank(Color color) { return color == WHITE ? 7 : 0; }
 
-inline Direction get_pawn_offset(const Color &color) { return color == WHITE ? NORTH : SOUTH; }
+inline Direction get_pawn_offset(Color color) { return color == WHITE ? NORTH : SOUTH; }
 
 #if defined(__linux__)
 #include <sys/mman.h>
