@@ -289,8 +289,8 @@ void UciHandler::handle_ucinewgame() { m_engine.new_game(); }
 void UciHandler::handle_isready() { std::cout << "readyok" << std::endl; }
 
 void UciHandler::handle_uci() {
-    std::cout << "id name Minke 6.0.0 \n"
-              << "id author Eduardo Marinho \n";
+    std::cout << "id name Minke " << VERSION << "\n";
+    std::cout << "id author Eduardo Marinho \n";
     EngineOptions::print();
     std::cout << "uciok" << std::endl;
 }

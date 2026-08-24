@@ -12,7 +12,7 @@ PGO ?= off
 # Flags
 CXXSTD := -std=c++20
 CXXWARNS := -Wall
-CXXFLAGS = -O3 -funroll-loops -flto=auto -I src -DNDEBUG -DEVALFILE=\"$(NNUE_FILE_PROCESSED)\" $(CXXSTD) $(CXXWARNS)
+CXXFLAGS = -O3 -funroll-loops -flto=auto -I src -DNDEBUG -DVERSION=\"$(VERSION)\" -DEVALFILE=\"$(NNUE_FILE_PROCESSED)\" $(CXXSTD) $(CXXWARNS)
 LDFLAGS := -flto=auto
 
 # Arch flags
