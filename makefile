@@ -27,7 +27,7 @@ OBJECTS := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(notdir $(SOURCES)))
 PREPROCESSOR_SRC := tools/preprocess_nnue.cpp
 
 ifndef EXE
-	EXE := minke-v$(VERSION)
+	EXE = minke-v$(VERSION)
 	EXE_NOT_SET := true
 endif
 
