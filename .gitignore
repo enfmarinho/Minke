@@ -1,6 +1,7 @@
 build/
 data/
 .cache/
+.clangd
 
 # Minke nnue file
 *.nnue
