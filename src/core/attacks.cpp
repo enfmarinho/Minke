@@ -22,6 +22,7 @@
 #include <cassert>
 #include <cstdint>
 
+#include "core/bitboard.h"
 #include "core/types.h"
 #include "utils/random.h"
 #include "utils/utils.h"
@@ -107,18 +108,19 @@ void init_magic_table(PieceType piece_type) {
     }
 }
 
+static void ray_mask(Bitboard& mask, Square sq, auto shift_fn, Bitboard edge_mask) {
+    for (Bitboard b = shift_fn(Bitboard(sq)); b & ~edge_mask; b = shift_fn(b)) {
+        mask |= b;
+    }
+}
+
 Bitboard generate_bishop_mask(Square sq) {
     Bitboard mask;
 
-    // TODO improve readability
-    for (Bitboard b(sq); (b = b.shift_north_east()) & ~Bitboard::RANK_8 & ~Bitboard::FILE_H;)
-        mask |= b;
-    for (Bitboard b(sq); (b = b.shift_north_west()) & ~Bitboard::RANK_8 & ~Bitboard::FILE_A;)
-        mask |= b;
-    for (Bitboard b(sq); (b = b.shift_south_east()) & ~Bitboard::RANK_1 & ~Bitboard::FILE_H;)
-        mask |= b;
-    for (Bitboard b(sq); (b = b.shift_south_west()) & ~Bitboard::RANK_1 & ~Bitboard::FILE_A;)
-        mask |= b;
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_north_east(); }, Bitboard::RANK_8 | Bitboard::FILE_H);
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_north_west(); }, Bitboard::RANK_8 | Bitboard::FILE_A);
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_south_east(); }, Bitboard::RANK_1 | Bitboard::FILE_H);
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_south_west(); }, Bitboard::RANK_1 | Bitboard::FILE_A);
 
     return mask;
 }
@@ -126,15 +128,10 @@ Bitboard generate_bishop_mask(Square sq) {
 Bitboard generate_rook_mask(Square sq) {
     Bitboard mask;
 
-    // TODO improve readability
-    for (Bitboard b(sq); (b = b.shift_north()) & ~Bitboard::RANK_8;)
-        mask |= b;
-    for (Bitboard b(sq); (b = b.shift_south()) & ~Bitboard::RANK_1;)
-        mask |= b;
-    for (Bitboard b(sq); (b = b.shift_west()) & ~Bitboard::FILE_A;)
-        mask |= b;
-    for (Bitboard b(sq); (b = b.shift_east()) & ~Bitboard::FILE_H;)
-        mask |= b;
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_north(); }, Bitboard::RANK_8);
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_south(); }, Bitboard::RANK_1);
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_west(); }, Bitboard::FILE_A);
+    ray_mask(mask, sq, [](Bitboard b) { return b.shift_east(); }, Bitboard::FILE_H);
 
     return mask;
 }
@@ -171,60 +168,36 @@ Bitboard generate_knight_attacks(Square sq) {
     return attacks;
 }
 
+static void ray_attack_mask(Bitboard& attack_mask, Square sq, const Bitboard& blockers, auto shift_fn) {
+    for (Bitboard b = shift_fn(Bitboard(sq)); b; b = shift_fn(b)) {
+        attack_mask |= b;
+        if (b & blockers)
+            break;
+    }
+}
+
 Bitboard generate_bishop_attacks(Square sq, const Bitboard& blockers) {
-    Bitboard attacks;
+    Bitboard attack_mask;
     Bitboard board(sq);
 
-    for (Bitboard bb = board.shift_south_west(); bb; bb = bb.shift_south_west()) {
-        attacks |= bb;
-        if (bb & blockers)
-            break;
-    }
-    for (Bitboard bb = board.shift_south_east(); bb; bb = bb.shift_south_east()) {
-        attacks |= bb;
-        if (bb & blockers)
-            break;
-    }
-    for (Bitboard bb = board.shift_north_west(); bb; bb = bb.shift_north_west()) {
-        attacks |= bb;
-        if (bb & blockers)
-            break;
-    }
-    for (Bitboard bb = board.shift_north_east(); bb; bb = bb.shift_north_east()) {
-        attacks |= bb;
-        if (bb & blockers)
-            break;
-    }
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_north_west(); });
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_north_east(); });
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_south_west(); });
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_south_east(); });
 
-    return attacks;
+    return attack_mask;
 }
 
 Bitboard generate_rook_attacks(Square sq, const Bitboard& blockers) {
-    Bitboard attacks;
+    Bitboard attack_mask;
     Bitboard board(sq);
 
-    for (Bitboard bb = board.shift_north(); bb; bb = bb.shift_north()) {
-        attacks |= bb;
-        if (bb & blockers)
-            break;
-    }
-    for (Bitboard bb = board.shift_south(); bb; bb = bb.shift_south()) {
-        attacks |= bb;
-        if (bb & blockers)
-            break;
-    }
-    for (Bitboard bb = board.shift_west(); bb; bb = bb.shift_west()) {
-        attacks |= bb;
-        if (bb & blockers)
-            break;
-    }
-    for (Bitboard bb = board.shift_east(); bb; bb = bb.shift_east()) {
-        attacks |= bb;
-        if (bb & blockers)
-            break;
-    }
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_north(); });
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_south(); });
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_west(); });
+    ray_attack_mask(attack_mask, sq, blockers, [](Bitboard b) { return b.shift_east(); });
 
-    return attacks;
+    return attack_mask;
 }
 
 Bitboard generate_king_attacks(Square sq) {
