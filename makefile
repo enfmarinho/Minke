@@ -3,7 +3,7 @@
 #   make PGO=on bmi2                                # two-phase profile-guided build
 #   make EVALFILE=net.nnue bmi2                     # use a custom network file
 
-include version.mk
+include config.mk
 
 PGO ?= off
 
