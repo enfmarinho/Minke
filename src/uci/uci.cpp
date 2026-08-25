@@ -93,7 +93,6 @@ void print() {
               << "\n";
     std::cout << "option name Threads type spin default " << THREADS_DEFAULT << " min " << THREADS_MIN << " max "
               << THREADS_MAX << "\n";
-    std::cout << "option name UCI_Chess960 type check default false\n";
 
 #ifdef TUNE
     for (const TunableParam &tunable_param : TunableParamList::get()) {
@@ -303,7 +302,6 @@ void UciHandler::handle_setoption(std::istringstream &iss) {
 
     std::string value;
     int value_int;
-    bool value_bool;
     auto valid_int_value = [&](int min, int max) -> bool {
         try {
             value_int = std::stoi(value);
@@ -311,16 +309,6 @@ void UciHandler::handle_setoption(std::istringstream &iss) {
         } catch (const std::exception &) {
             return false;
         }
-    };
-    auto valid_bool_value = [&]() -> bool {
-        if (value == "true") {
-            value_bool = true;
-            return true;
-        } else if (value == "false") {
-            value_bool = false;
-            return true;
-        }
-        return false;
     };
 
     std::string token, garbage;
@@ -332,8 +320,6 @@ void UciHandler::handle_setoption(std::istringstream &iss) {
         m_engine.resize_tt(value_int);
     } else if (token == "Threads" && valid_int_value(EngineOptions::THREADS_MIN, EngineOptions::THREADS_MAX)) {
         m_engine.resize_threads(value_int);
-    } else if (token == "UCI_Chess960" && valid_bool_value()) {
-        m_pos.chess960(value_bool);
     }
 #ifdef TUNE
     else if (TunableParam *param_ptr = TunableParamList::get().find(token)) {
