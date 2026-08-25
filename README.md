@@ -34,7 +34,7 @@ This will generate the executable called minke
 - Plain Magic Bitboards
 ### Move Generation
 - Staged Move Generator
-- fully legal
+- Full-legal
 #### Move ordering
 - Transposition Table Move
 - Noisy 
@@ -78,7 +78,7 @@ This will generate the executable called minke
     - Net architecture: (768x16hm->1280pw)x2->(16x2->32->1)x8
     - Trained exclusively on self-generated data from a random initialization
 
-\Note: this list is not exhaustive\
+/Note: this list is not exhaustive/
 
 ## Acknowledgements
 Minke has been inspired by several other chess engines, such as:
