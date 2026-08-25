@@ -34,39 +34,51 @@ This will generate the executable called minke
 - Plain Magic Bitboards
 ### Move Generation
 - Staged Move Generator
-- Pseudo-legal
+- Full-legal
 #### Move ordering
 - Transposition Table Move
-- Promotions
-- Captures 
+- Noisy 
     - Static Exchange Evaluation (SEE)
-    - Capture history
-- Killer Moves
-- Counter moves
-- Historic Heuristic
+    - Noisy history heuristic
+    - Promotions
+- Quiet
+    - Historic Heuristic
+    - Continuation History Heuristic
+    - Killer Moves
 ### Search
 - Iterative Deepening
-- Negamax with Alpha-Beta Pruning
 - Aspiration Windows Search 
+- Negamax with Alpha-Beta Pruning
 - Transposition Table Cutoffs
+- Cuckoo table
 - Principal Variation Search
 - Null Move Pruning
 - Reverse Futility Pruning
 - Futility Pruning
 - Razoring
+- Prob-cut
 - Late Move Reduction
 - Late Move Pruning
+- Quiet Futility Pruning
+- Quiet History Pruning
+- SEE Pruning
 - Internal Iterative Reduction
 - Improving Heuristic
 - Singular Extension
 - Multi-cut
 - Quiescence Search
 - Mate Distance Pruning
+- Correction History Heuristic
+    - Pawn correction
+    - White non-pawn Correction
+    - Black non-pawn Correction
+    - Continuation Correction
 ### Evaluation
 - Quantized NNUE (Easily Updatable Neural Network)
-    - SCrelu as the activation neuron
-    - Net architecture: (768x6hm->1024)x2->1 
+    - Net architecture: (768x16hm->1280pw)x2->(16x2->32->1)x8
     - Trained exclusively on self-generated data from a random initialization
+
+*Note: this list is not exhaustive*
 
 ## Acknowledgements
 Minke has been inspired by several other chess engines, such as:
@@ -74,6 +86,7 @@ Minke has been inspired by several other chess engines, such as:
 * [Altair](https://github.com/Alex2262/AltairChessEngine)
 * [Berserk](https://github.com/jhonnold/berserk)
 * [Ethereal](https://github.com/AndyGrant/Ethereal)
+* [Hobbes](https://github.com/kelseyde/hobbes-chess-engine)
 * [Stockfish](https://github.com/official-stockfish/Stockfish)
 * [Stormphrax](https://github.com/Ciekce/Stormphrax)
   
