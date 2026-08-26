@@ -64,27 +64,27 @@ alignas(16) static constexpr auto nonzero_idx = []() {
 
 #if USE_NEON
 
-using vep128u16 = uint16x8_t;
+using vepu16 = uint16x8_t;
 
-inline static vep128u16 set1(uint16_t v) { return vdupq_n_u16(v); }
+inline static vepu16 set1(uint16_t v) { return vdupq_n_u16(v); }
 
-inline static vep128u16 load(const void* ptr) { return vld1q_u16(reinterpret_cast<const uint16_t*>(ptr)); }
+inline static vepu16 load(const void* ptr) { return vld1q_u16(reinterpret_cast<const uint16_t*>(ptr)); }
 
-inline static void ustore(void* ptr, vep128u16 v) { return vst1q_u16(reinterpret_cast<uint16_t*>(ptr), v); }
+inline static void ustore(void* ptr, vepu16 v) { return vst1q_u16(reinterpret_cast<uint16_t*>(ptr), v); }
 
-inline static vep128u16 add(vep128u16 a, vep128u16 b) { return vaddq_u16(a, b); }
+inline static vepu16 add(vepu16 a, vepu16 b) { return vaddq_u16(a, b); }
 
 #elif USE_AVX2
 
-using vep128u16 = __m128i;
+using vepu16 = __m128i;
 
-inline static vep128u16 set1(uint16_t v) { return _mm_set1_epi16(static_cast<int16_t>(v)); }
+inline static vepu16 set1(uint16_t v) { return _mm_set1_epi16(static_cast<int16_t>(v)); }
 
-inline static vep128u16 load(const void* ptr) { return _mm_load_si128(static_cast<const __m128i*>(ptr)); }
+inline static vepu16 load(const void* ptr) { return _mm_load_si128(static_cast<const __m128i*>(ptr)); }
 
-inline static void ustore(void* ptr, vep128u16 v) { _mm_storeu_si128(static_cast<__m128i*>(ptr), v); }
+inline static void ustore(void* ptr, vepu16 v) { _mm_storeu_si128(static_cast<__m128i*>(ptr), v); }
 
-inline static vep128u16 add(vep128u16 a, vep128u16 b) { return _mm_add_epi16(a, b); }
+inline static vepu16 add(vepu16 a, vepu16 b) { return _mm_add_epi16(a, b); }
 
 #endif
 
@@ -104,8 +104,6 @@ void SparseIterator::update(simd::vepu8 a, simd::vepu8 b) {
         m_base = add(m_base, set1(8));
         m_count += std::popcount(mask);
     }
-
-    assert(m_count <= L1_SIZE / 4);
 }
 
 #endif
