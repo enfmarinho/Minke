@@ -17,7 +17,7 @@ LDFLAGS := -flto=auto
 NATIVE_FLAGS := -march=native
 AVX2_FLAGS := -DUSE_AVX2 -DUSE_SIMD -mavx2 -mbmi -mfma
 BMI2_FLAGS := -DUSE_AVX2 -DUSE_SIMD -mavx2 -mbmi -mbmi2 -mfma
-AVX512_FLAGS := -DUSE_AVX512 -DUSE_SIMD -mavx512f -mavx512bw -mfma
+AVX512_FLAGS := -DUSE_AVX512 -DUSE_SIMD -mavx512f -mavx512bw -mavx512vbmi2 -mfma
 APPLESILICON_FLAGS := -DUSE_NEON -DUSE_SIMD -march=armv8.5-a
 
 # Paths
