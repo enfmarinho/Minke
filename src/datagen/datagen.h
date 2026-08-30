@@ -42,7 +42,7 @@ class DatagenThread {
     static constexpr int VERIFICATION_HARD_NODE_LIMIT = 5 * VERIFICATION_SOFT_NODE_LIMIT;
     static constexpr int VERIFICATION_MAX_DEPTH = 14;
 
-    static constexpr int SOFT_NODE_LIMIT = 5'000;
+    static constexpr int SOFT_NODE_LIMIT = 12'000;
     static constexpr int HARD_NODE_LIMIT = 20 * SOFT_NODE_LIMIT;
 
     static constexpr int WIN_ADJ_PLY = 4;
