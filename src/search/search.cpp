@@ -487,6 +487,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             // Quiet History Pruning
             if (lmr_scaled_depth <= history_pruning_max_depth_scaled() //
                 && move.is_quiet()                                     //
+                && !td.search_history.is_killer(move, ply)             //
                 && td.search_history.quiet_score(td, move, ply) <
                        quiet_hist_pruning_factor() * depth + quiet_hist_pruning_base() //
             ) {
