@@ -732,6 +732,11 @@ ScoreType Engine::quiescence(ThreadData &td, ScoreType alpha, ScoreType beta, Co
                 best_score = std::max(best_score, futility);
                 continue;
             }
+
+            // SEE pruning
+            if (!SEE(position, move, qs_see_pruning_threshold())) {
+                continue;
+            }
         }
         make_move(td, move);
         m_tt.prefetch(position.hash());

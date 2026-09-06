@@ -172,6 +172,7 @@ TUNABLE_PARAM(quiet_hist_pruning_base, -475, -2500, 0, 100, 0.002)
 // SEE pruning
 TUNABLE_PARAM(see_quiet_pruning_factor, -102, -200, 50, 5, 0.002)
 TUNABLE_PARAM(see_noisy_pruning_factor, -25, -200, 50, 5, 0.002)
+TUNABLE_PARAM(qs_see_pruning_threshold, -90, -200, 50, 5, 0.002)
 
 // Singular Extension
 FIXED_PARAM(singular_extension_min_depth, 8, 4, 10, 0.5, 0.002)
