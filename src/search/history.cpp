@@ -124,7 +124,10 @@ void History::update_continuation_history_score(const ThreadData &td, const Piec
 HistoryType History::quiet_history_score(const Position &position, const Move move) const {
     const bool from_threatened = position.is_threatened(move.from());
     const bool to_threatened = position.is_threatened(move.to());
-    return m_quiet_history[position.stm()][move.from_and_to()][from_threatened][to_threatened].value;
+    const int butterfly_hist =
+        m_quiet_history[position.stm()][move.from_and_to()][from_threatened][to_threatened].value;
+
+    return butterfly_hist * butterfly_hist_weight() / 1024;
 }
 
 int History::continuation_history_score(const ThreadData &td, const PieceMove pmove, CounterType ply) const {

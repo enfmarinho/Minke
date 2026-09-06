@@ -222,6 +222,7 @@ TUNABLE_PARAM(pawn_corr_factor, 40, 1, 100, 5, 0.002)
 TUNABLE_PARAM(nonpawn_corr_factor, 35, 1, 100, 5, 0.002)
 TUNABLE_PARAM(cont_corr_factor, 36, 1, 100, 5, 0.002)
 
+TUNABLE_PARAM(butterfly_hist_weight, 700, 0, 1536, 50, 0.002)
 TUNABLE_PARAM(conthist_1ply_weight, 992, 0, 1536, 50, 0.002)
 TUNABLE_PARAM(conthist_2ply_weight, 1149, 0, 1536, 50, 0.002)
 TUNABLE_PARAM(conthist_4ply_weight, 565, 0, 1536, 50, 0.002)
