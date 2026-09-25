@@ -600,6 +600,7 @@ void Position::calculate_hashes() {
     board_s.pawn_hash = 0ull;
     board_s.white_non_pawn_hash = 0ull;
     board_s.black_non_pawn_hash = 0ull;
+    board_s.major_pieces_hash = 0ull;
 
     for (int sqi = a1; sqi <= h8; sqi++) {
         const Square sq = static_cast<Square>(sqi);
@@ -1040,6 +1041,10 @@ void Position::hash_piece_key(const PieceSquare ps) {
     } else {
         assert(get_color(ps.piece) == BLACK);
         board_state().black_non_pawn_hash ^= psq_key;
+    }
+
+    if (get_piece_type(ps.piece) == QUEEN || get_piece_type(ps.piece) == ROOK) { // is major piece
+        board_state().major_pieces_hash ^= psq_key;
     }
 }
 
