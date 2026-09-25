@@ -156,6 +156,8 @@ inline int32_t hsum_i32(const vepi32 vec) {
 inline vepi32 dpbusd_i32(vepi32 sum, vepu8 u, vepi8 i) {
 #if defined(__ARM_FEATURE_I8MM)
     return vusdotq_s32(sum, u, i);
+#elif defined(__ARM_FEATURE_DOTPROD)
+    return vdotq_s32(sum, vreinterpretq_s8_u8(u), i);
 #else
     int16x8_t p_low = vmulq_s16(vreinterpretq_s16_u16(vmovl_u8(vget_low_u8(u))), vmovl_s8(vget_low_s8(i)));
     int16x8_t p_high = vmulq_s16(vreinterpretq_s16_u16(vmovl_u8(vget_high_u8(u))), vmovl_s8(vget_high_s8(i)));
