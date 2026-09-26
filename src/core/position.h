@@ -43,6 +43,7 @@ struct BoardState {
     HashType pawn_hash;
     HashType white_non_pawn_hash;
     HashType black_non_pawn_hash;
+    HashType major_pieces_hash;
 
     void reset() {
         checkers = 0;
@@ -59,6 +60,7 @@ struct BoardState {
         pawn_hash = 0ull;
         white_non_pawn_hash = 0ull;
         black_non_pawn_hash = 0ull;
+        major_pieces_hash = 0ull;
     }
 };
 
@@ -121,6 +123,7 @@ class Position {
     inline HashType pawn_hash() const { return board_state().pawn_hash; }
     inline HashType white_nonpawn_hash() const { return board_state().white_non_pawn_hash; }
     inline HashType black_nonpawn_hash() const { return board_state().black_non_pawn_hash; }
+    inline HashType major_pieces_hash() const { return board_state().major_pieces_hash; }
     inline int game_ply() const { return m_game_clock_ply; }
     inline int halfmove_clock() const { return m_curr_state.fifty_move_ply; }
     inline int piece_count(Piece piece) const { return piece_bb(piece).popcount(); }
