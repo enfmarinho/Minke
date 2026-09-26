@@ -565,9 +565,6 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
                 scaled_reduction += !improving * lmr_non_improving_delta(); // Reduce more if not improving
                 scaled_reduction += cutnode * lmr_cutnode_delta();          // Reduce cutnodes more
 
-                // Reduce less if move is killer
-                scaled_reduction -= td.search_history.is_killer(move, ply) * lmr_killer_delta();
-
                 // Reduce less if this move is or was a principal variation
                 scaled_reduction -= ttpv * lmr_ttpv_delta();
 
