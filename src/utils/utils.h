@@ -72,6 +72,14 @@ inline Direction get_pawn_offset(Color color) { return color == WHITE ? NORTH : 
 
 inline void *aligned_malloc(size_t alignment, size_t required_bytes) {
     void *ptr = nullptr;
+
+#if defined(__linux__) && !defined(__ANDROID__)
+    constexpr size_t HUGE_PAGE_SIZE = 2 * 1024 * 1024;
+    if (required_bytes >= HUGE_PAGE_SIZE && alignment < HUGE_PAGE_SIZE) {
+        alignment = HUGE_PAGE_SIZE;
+    }
+#endif
+
     size_t remainder = required_bytes % alignment;
     if (remainder != 0)
         required_bytes += (alignment - remainder);

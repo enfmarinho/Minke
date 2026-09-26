@@ -26,12 +26,15 @@
 #include "search/search.h"
 #include "uci/tune.h"
 #include "utils/incbin.h"
+#include "utils/utils.h"
 
 INCBIN(NetParameters, EVALFILE);
 
 int LMR_TABLE[64][64];
 int LMP_TABLE[2][LMP_DEPTH];
-Network network;
+
+// Heap allocated so the feature transformer weights can be backed by huge pages, which greatly reduces TLB misses
+Network &network = *static_cast<Network *>(aligned_malloc(alignof(Network), sizeof(Network)));
 
 void init_all() {
     init_search_params();

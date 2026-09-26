@@ -72,7 +72,7 @@ struct alignas(64) Network {
     int32_t l3_weights[OUTPUT_BUCKET_COUNT][L3_SIZE];
     int32_t l3_biases[OUTPUT_BUCKET_COUNT];
 };
-extern Network network;
+extern Network &network;
 
 /// Check whether king has crossed half of the board, i.e. if the board should be flipped for horizontal mirroring
 inline bool should_flip(const Square king_sq) { return get_file(king_sq) > 3; }
