@@ -537,6 +537,22 @@ void Position::unmake_null_move() {
     change_side();
 }
 
+HashType Position::estimated_key_after(const Move move) const {
+    const Square from = move.from();
+    const Square to = move.to();
+    const Piece piece = piece_at(from);
+    const Piece captured = piece_at(to);
+
+    HashType key = hash() ^ Zobrist::color_key();
+    key ^= Zobrist::piece_square_key({piece, from}) ^ Zobrist::piece_square_key({piece, to});
+
+    if (captured != EMPTY) {
+        key ^= Zobrist::piece_square_key({captured, to});
+    }
+
+    return key;
+}
+
 void Position::calculate_aux_bbs() {
     Color adversary = nstm();
     Square ksq = king_sq(m_stm);
