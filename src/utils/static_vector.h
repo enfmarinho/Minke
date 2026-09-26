@@ -21,13 +21,19 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <type_traits>
 #include <utility>
 
 /// A wrapper for std::array.
 /// Make it move convenient to use arrays by tracking it's own size, just like a std::vector
+/// and does not initialize the elements
 template <typename T, size_t MAX_SIZE>
 class StaticVector {
+    static_assert(std::is_trivially_copyable_v<T> && std::is_trivially_destructible_v<T>);
+
   public:
+    StaticVector() {}
+
     inline void push(const T &v) {
         assert(m_size < MAX_SIZE);
         m_array[m_size++] = v;
@@ -75,6 +81,8 @@ class StaticVector {
     }
 
   private:
-    std::array<T, MAX_SIZE> m_array;
+    union {
+        std::array<T, MAX_SIZE> m_array;
+    };
     size_t m_size{};
 };
