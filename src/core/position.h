@@ -81,6 +81,9 @@ class Position {
     void make_null_move();
     void unmake_null_move();
 
+    /// only meant for TT prefetching since it ignores castling rights changes, promotions and ep sqs
+    HashType estimated_key_after(Move move) const;
+
     inline bool in_check() const { return m_curr_state.checkers != Bitboard::EMPTY; }
     inline bool is_threatened(Square sq) const { return m_curr_state.threats.is_set(sq); }
     inline Bitboard threats_bb() const { return m_curr_state.threats; }
