@@ -335,7 +335,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
 
     // Clean excluded and killer moves for the next ply
     td.search_stack[ply + 1].excluded_move = Move::none();
-    td.search_history.clear_killers(ply + 1);
+    td.search_history.clear_killer(ply + 1);
 
     const bool improving = [&]() -> bool {
         if (in_check)

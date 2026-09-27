@@ -47,18 +47,11 @@ class History {
         return m_noisy_history[position.stm()][moved_pt][to][captured_pt][position.is_threatened(to)].value;
     }
 
-    inline void clear_killers(int height) {
-        m_killer_moves[height][0] = Move::none();
-        m_killer_moves[height][1] = Move::none();
-    }
+    inline void clear_killer(int height) { m_killer_moves[height] = Move::none(); }
 
-    inline Move consult_killer1(int height) const { return m_killer_moves[height][0]; }
+    inline Move consult_killer(int height) const { return m_killer_moves[height]; }
 
-    inline Move consult_killer2(int height) const { return m_killer_moves[height][1]; }
-
-    inline bool is_killer(Move move, int height) const {
-        return move == consult_killer1(height) || move == consult_killer2(height);
-    }
+    inline bool is_killer(Move move, int height) const { return move == consult_killer(height); }
 
   private:
     struct HistoryEntry {
@@ -78,13 +71,10 @@ class History {
     int continuation_history_score(const ThreadData &td, PieceMove pmove, CounterType ply) const;
     HistoryType continuation_history_entry(const ThreadData &td, PieceMove pmove, CounterType ply, int offset) const;
 
-    inline void save_killer(Move move, int height) {
-        m_killer_moves[height][1] = m_killer_moves[height][0];
-        m_killer_moves[height][0] = move;
-    }
+    inline void save_killer(Move move, int height) { m_killer_moves[height] = move; }
 
     HistoryEntry m_noisy_history[2][6][64][5][2];
     HistoryEntry m_quiet_history[2][64 * 64][2][2];
     HistoryEntry m_continuation_history[12 * 64][12 * 64];
-    Move m_killer_moves[MAX_SEARCH_DEPTH][2];
+    Move m_killer_moves[MAX_SEARCH_DEPTH];
 };
