@@ -44,8 +44,7 @@ void History::reset() {
     std::memset(m_continuation_history, 0, sizeof(m_continuation_history));
 
     for (auto &moves : m_killer_moves) {
-        moves[0] = Move::none();
-        moves[1] = Move::none();
+        moves = Move::none();
     }
 };
 
