@@ -191,6 +191,7 @@ TUNABLE_PARAM(qs_futility_margin, 245, 150, 350, 10, 0.002)
 
 // Prob Cut
 TUNABLE_PARAM(probcut_margin, 321, 250, 400, 10, 0.002)
+TUNABLE_PARAM(probcut_improving_margin, 31, -100, 100, 10, 0.002)
 FIXED_PARAM(probcut_min_depth, 5, 4, 8, 0.5, 0.002)
 
 // History Formulas Parameters
