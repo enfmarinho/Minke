@@ -43,8 +43,7 @@ void MovePicker::init(ThreadData &td, Move ttmove, int ply, MovePickerType mp_ty
     else
         m_stage = GEN_NOISY;
 
-    m_killer1 = m_td->search_history.consult_killer1(m_ply);
-    m_killer2 = m_td->search_history.consult_killer2(m_ply);
+    m_killer = m_td->search_history.consult_killer(m_ply);
 
     m_idx = m_end = m_bad_noisy_end = 0;
 }
@@ -139,10 +138,8 @@ void MovePicker::score_quiet_moves() {
     for (size_t i = m_idx; i < m_end; ++i) {
         auto &[move, score] = m_move_list[i];
         score = m_td->search_history.quiet_score(*m_td, move, m_ply);
-        if (move == m_killer1)
+        if (move == m_killer)
             score += mp_killer1_bonus();
-        else if (move == m_killer2)
-            score += mp_killer2_bonus();
     }
 }
 
