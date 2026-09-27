@@ -409,7 +409,8 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
         }
 
         // Prob Cut
-        const ScoreType pc_beta = std::min(beta + probcut_margin(), MATE_FOUND - 1);
+        const ScoreType pc_beta =
+            std::min(beta + probcut_margin() - probcut_improving_margin() * improving, MATE_FOUND - 1);
         if (depth >= probcut_min_depth()                                                        //
             && !is_decisive(beta)                                                               //
             && (!tthit || ttdepth < depth - 3 || (ttscore != SCORE_NONE && ttscore >= pc_beta)) //
