@@ -199,6 +199,7 @@ void repermute_for_sparsity(std::unique_ptr<Network>& net) {
 }
 
 void permute_network_ft_params(std::unique_ptr<Network>& net) {
+#ifdef USE_SIMD
     using namespace simd;
 
     // permutation for packus lane-crossing, necessary to avoid doing so in the network inference hot-path
@@ -230,6 +231,7 @@ void permute_network_ft_params(std::unique_ptr<Network>& net) {
                 biases_chunk[i + j] = temp[PACKUS_LANE_ORDER[j]];
         }
     }
+#endif
 }
 
 Result<RawNetwork> read_in_raw_network(const std::string& in_path) {
