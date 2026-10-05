@@ -535,7 +535,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
                 extension += !pv_node && singular_score < singular_beta - double_extension_margin();
                 extension += !pv_node && singular_score < singular_beta - triple_ext_margin();
             } else if (singular_score >= beta) { // Multi-Cut
-                return singular_score;
+                return is_decisive(singular_score) ? singular_score : (singular_score + beta) / 2;
             } else if (ttscore >= beta) {
                 extension = -2;
             } else if (cutnode) {
