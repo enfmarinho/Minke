@@ -348,18 +348,28 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
         return false;
     }();
 
+    const ScoreType opp_worsening_rate = [&]() {
+        if (in_check)
+            return 0;
+        if (ply >= 1 && td.search_stack[ply - 1].static_eval != SCORE_NONE)
+            return node.static_eval + td.search_stack[ply - 1].static_eval;
+        if (ply >= 3 && td.search_stack[ply - 3].static_eval != SCORE_NONE)
+            return node.static_eval + td.search_stack[ply - 3].static_eval;
+
+        return 0;
+    }();
+
     // Forward pruning methods
     if (!in_check && !pv_node && !root && !singular_search) {
         if (ply >= 1 && td.search_stack[ply - 1].static_eval != SCORE_NONE) {
-            const ScoreType eval_delta = node.static_eval + td.search_stack[ply - 1].static_eval;
             const CounterType reduction = td.search_stack[ply - 1].reduction;
 
             // Hindsight extension
-            if (reduction > 1 && eval_delta < 0)
+            if (reduction > 1 && opp_worsening_rate < 0)
                 ++depth;
 
             // Hindsight reduction
-            if (depth >= 2 && reduction > 0 && eval_delta >= hindsight_eval())
+            if (depth >= 2 && reduction > 0 && opp_worsening_rate >= hindsight_eval())
                 --depth;
         }
 
@@ -368,6 +378,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             ScoreType margin = 0;
             margin += rfp_depth_factor() * depth;
             margin += rfp_improving_margin() * improving;
+            margin += rfp_opp_worsening_margin() * (opp_worsening_rate > 0);
             margin += rfp_complexity_factor() * complexity / 1024;
             return margin;
         }();
