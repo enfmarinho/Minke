@@ -372,7 +372,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             return margin;
         }();
         if (depth < rfp_max_depth() && eval - rfp_margin >= beta) {
-            return eval;
+            return (eval + beta) / 2;
         }
 
         // Razoring heuristic
