@@ -18,18 +18,28 @@
 
 #pragma once
 
+#include <vector>
+
 #include "core/position.h"
 #include "core/types.h"
+#include "eval/nnue/accumulator/finny_table.h"
 #include "eval/nnue/accumulator/state.h"
 
-struct ThreadData;
+namespace accumulator {
 
-namespace eval {
+class Stack {
+  public:
+    void refresh(const Position &pos);
 
-ScoreType evaluate(ThreadData& td);
+    void pop();
+    void push(DirtyPiece dp, Square white_king_sq, Square black_king_sq);
+    const State &top(const Position &pos);
 
-ScoreType evaluate(const Position& pos, const accumulator::State& acc_state);
+  private:
+    void update_pov(const Position &pos, Color pov);
 
-ScoreType adjust(const Position& pos, const ScoreType raw_eval, const ScoreType correction);
+    std::vector<State> m_stack;
+    FinnyTable m_finny_table;
+};
 
-} // namespace eval
+} // namespace accumulator

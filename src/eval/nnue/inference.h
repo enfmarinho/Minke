@@ -18,18 +18,16 @@
 
 #pragma once
 
-#include "core/position.h"
-#include "core/types.h"
-#include "eval/nnue/accumulator/state.h"
+#include <cassert>
+#include <cstdint>
+#include <span>
 
-struct ThreadData;
+#include "eval/nnue/arch.h"
 
-namespace eval {
+#ifdef TRACK_ACTIVATIONS
+#include <array>
+std::array<size_t, PAIR_COUNT> m_activation_table;
+#endif // TRACK_ACTIVATIONS
 
-ScoreType evaluate(ThreadData& td);
-
-ScoreType evaluate(const Position& pos, const accumulator::State& acc_state);
-
-ScoreType adjust(const Position& pos, const ScoreType raw_eval, const ScoreType correction);
-
-} // namespace eval
+int32_t propagate(std::span<const int16_t, L1_SIZE> stm_inputs, std::span<const int16_t, L1_SIZE> ntm_inputs,
+                  const int bucket);

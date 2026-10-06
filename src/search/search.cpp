@@ -32,7 +32,6 @@
 #include "core/types.h"
 #include "core/zobrist.h"
 #include "eval/eval.h"
-#include "eval/nnue/nnue.h"
 #include "search/movepicker.h"
 #include "search/tt.h"
 #include "uci/tune.h"
@@ -82,12 +81,12 @@ void Engine::prepare_search() {
 
 void Engine::prepare_search(const Position &pos) {
     m_main_thread_data->position = pos;
-    m_main_thread_data->nnue.refresh(pos);
+    m_main_thread_data->acc_stack.refresh(pos);
     m_main_thread_data->init();
 
     for (auto &td : m_threads_data) {
         td.position = pos;
-        td.nnue.refresh(pos);
+        td.acc_stack.refresh(pos);
         td.init();
     }
 }
@@ -130,7 +129,7 @@ void Engine::resize_threads(size_t new_size) {
     for (size_t i = 0; i < m_threads_data.size(); ++i) {
         m_threads_data[i].id = i + 1;
         m_threads_data[i].position = main_td.position;
-        m_threads_data[i].nnue = main_td.nnue;
+        m_threads_data[i].acc_stack = main_td.acc_stack;
         m_threads_data[i].init();
     }
 }
@@ -259,14 +258,14 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             return 0;
 
         if (ply >= MAX_SEARCH_DEPTH - 1)
-            return position.in_check() ? 0 : td.nnue.eval(position);
+            return position.in_check() ? 0 : eval::evaluate(td);
 
         // Upcoming repetition detection
         if (alpha < 0 && position.has_upcoming_repetition(ply)) {
             if (!in_check) {
-                const ScoreType raw_eval = td.nnue.eval(td.position);
+                const ScoreType raw_eval = eval::evaluate(td);
                 const HistoryType correction = td.correction_history.correction(td, ply);
-                const ScoreType adjusted_eval = adjust_eval(td.position, raw_eval, correction);
+                const ScoreType adjusted_eval = eval::adjust(td.position, raw_eval, correction);
                 td.correction_history.update(td, depth, ply, 0 - adjusted_eval);
             }
             alpha = 0;
@@ -318,8 +317,8 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
     } else if (singular_search) {
         eval = raw_eval = node.static_eval;
     } else if (tthit) {
-        raw_eval = tteval != SCORE_NONE ? tteval : td.nnue.eval(position);
-        eval = node.static_eval = adjust_eval(position, raw_eval, correction_value);
+        raw_eval = tteval != SCORE_NONE ? tteval : eval::evaluate(td);
+        eval = node.static_eval = eval::adjust(position, raw_eval, correction_value);
         if (ttscore != SCORE_NONE                        //
             && (ttbound == EXACT                         //
                 || (ttbound == UPPER && ttscore < eval)  //
@@ -329,8 +328,8 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
         }
 
     } else {
-        raw_eval = td.nnue.eval(position);
-        eval = node.static_eval = adjust_eval(position, raw_eval, correction_value);
+        raw_eval = eval::evaluate(td);
+        eval = node.static_eval = eval::adjust(position, raw_eval, correction_value);
         m_tt.store(position.hash(), 0, Move::none(), SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, m_tt.age());
     }
 
@@ -653,16 +652,16 @@ ScoreType Engine::quiescence(ThreadData &td, ScoreType alpha, ScoreType beta, Co
     else if (position.is_draw())
         return 0;
     else if (ply >= MAX_SEARCH_DEPTH - 1)
-        return position.in_check() ? 0 : td.nnue.eval(position);
+        return position.in_check() ? 0 : eval::evaluate(td);
 
     const bool in_check = position.in_check();
 
     // Upcoming repetition detection
     if (alpha < 0 && position.has_upcoming_repetition(ply)) {
         if (!in_check) {
-            const ScoreType raw_eval = td.nnue.eval(td.position);
+            const ScoreType raw_eval = eval::evaluate(td);
             const HistoryType correction = td.correction_history.correction(td, ply);
-            const ScoreType adjusted_eval = adjust_eval(td.position, raw_eval, correction);
+            const ScoreType adjusted_eval = eval::adjust(td.position, raw_eval, correction);
             td.correction_history.update(td, 1, ply, 0 - adjusted_eval);
         }
         alpha = 0;
@@ -695,8 +694,8 @@ ScoreType Engine::quiescence(ThreadData &td, ScoreType alpha, ScoreType beta, Co
         node.static_eval = raw_eval = SCORE_NONE;
         best_score = -MAX_SCORE;
     } else if (tthit) {
-        raw_eval = tteval != SCORE_NONE ? tteval : td.nnue.eval(position);
-        best_score = node.static_eval = adjust_eval(position, raw_eval, td.correction_history.correction(td, ply));
+        raw_eval = tteval != SCORE_NONE ? tteval : eval::evaluate(td);
+        best_score = node.static_eval = eval::adjust(position, raw_eval, td.correction_history.correction(td, ply));
 
         if (ttscore != SCORE_NONE                              //
             && (ttbound == EXACT                               //
@@ -707,8 +706,8 @@ ScoreType Engine::quiescence(ThreadData &td, ScoreType alpha, ScoreType beta, Co
         }
 
     } else {
-        raw_eval = td.nnue.eval(position);
-        best_score = node.static_eval = adjust_eval(position, raw_eval, td.correction_history.correction(td, ply));
+        raw_eval = eval::evaluate(td);
+        best_score = node.static_eval = eval::adjust(position, raw_eval, td.correction_history.correction(td, ply));
         m_tt.store(position.hash(), 0, Move::none(), SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, m_tt.age());
     }
 
