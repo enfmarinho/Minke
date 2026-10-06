@@ -71,6 +71,6 @@ class NNUE {
 
 #endif // TRACK_ACTIVATIONS
 
-    Accumulator::FinnyTable m_finny_table;
-    std::vector<Accumulator::State> m_accumulators;
+    accumulator::FinnyTable m_finny_table;
+    std::vector<accumulator::State> m_accumulators;
 };

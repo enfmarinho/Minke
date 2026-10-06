@@ -41,8 +41,8 @@ void NNUE::refresh(const Position &pos) {
 
     assert(m_accumulators.back().updated(WHITE));
     assert(m_accumulators.back().updated(BLACK));
-    assert(m_accumulators.back().pov(WHITE) == PovAccumulator(pos, WHITE));
-    assert(m_accumulators.back().pov(BLACK) == PovAccumulator(pos, BLACK));
+    assert(m_accumulators.back().pov(WHITE) == Perspective(pos, WHITE));
+    assert(m_accumulators.back().pov(BLACK) == Perspective(pos, BLACK));
 }
 
 void NNUE::pop() { m_accumulators.pop_back(); }
@@ -55,7 +55,7 @@ void NNUE::push(const DirtyPiece dp, const Square white_king_sq, const Square bl
 ScoreType NNUE::eval(const Position &pos) {
     update(pos); // ensure accumulator is up-to date
 
-    const Accumulator::State &acc = m_accumulators.back();
+    const accumulator::State &acc = m_accumulators.back();
     const int bucket = (pos.piece_count() - 2) / BUCKET_SIZE;
 
     return propagate(acc.pov(pos.stm()).neurons(), acc.pov(pos.nstm()).neurons(), bucket);
@@ -74,7 +74,7 @@ void NNUE::update_pov(const Position &pos, const Color pov) {
 
     for (auto iter = m_accumulators.rbegin() + 1; iter != m_accumulators.rend(); ++iter) {
         if (iter->needs_refresh(pov, pos.king_sq(pov))) {
-            const Accumulator::Perspective &acc = m_finny_table.update(pos, pov);
+            const accumulator::Perspective &acc = m_finny_table.update(pos, pov);
             head->refresh(acc, pov);
             break;
         } else if (iter->updated(pov)) {
@@ -86,7 +86,7 @@ void NNUE::update_pov(const Position &pos, const Color pov) {
         }
     }
     assert(head->updated(pov));
-    assert(head->pov(pov) == PovAccumulator(pos, pov));
+    assert(head->pov(pov) == Perspective(pos, pov));
 }
 
 int32_t NNUE::propagate(std::span<const int16_t, L1_SIZE> stm_inputs, std::span<const int16_t, L1_SIZE> ntm_inputs,

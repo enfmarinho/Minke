@@ -27,7 +27,7 @@
 
 class Position;
 
-namespace Accumulator {
+namespace accumulator {
 
 class FinnyTable {
   public:
@@ -56,4 +56,4 @@ class FinnyTable {
         cache; // [flip][king_bucket_idx][pov_color]
 };
 
-} // namespace Accumulator
+} // namespace accumulator
