@@ -27,31 +27,35 @@
 
 class Position;
 
-class alignas(64) PovAccumulator {
-  public:
-    PovAccumulator() = default;
-    PovAccumulator(const Position &pos, Color pov);
-    PovAccumulator(const PovAccumulator &copy) = default;
-    ~PovAccumulator() = default;
+namespace Accumulator {
 
-    PovAccumulator &operator=(const PovAccumulator &) = default;
+class alignas(64) Perspective {
+  public:
+    Perspective() = default;
+    Perspective(const Position &pos, Color pov);
+    Perspective(const Perspective &copy) = default;
+    ~Perspective() = default;
+
+    Perspective &operator=(const Perspective &) = default;
 
     inline void reset() { std::memcpy(m_neurons.data(), network.ft_biases, sizeof(network.ft_biases)); }
 
     std::span<const int16_t, L1_SIZE> neurons() const { return m_neurons; }
 
-    void add(const PovAccumulator &input, size_t add0);
-    void sub(const PovAccumulator &input, size_t sub0);
-    void add_sub(const PovAccumulator &input, size_t add0, size_t sub0);
-    void add_sub2(const PovAccumulator &input, size_t add0, size_t sub0, size_t sub1);
-    void add2_sub2(const PovAccumulator &input, size_t add0, size_t add1, size_t sub0, size_t sub1);
+    void add(const Perspective &input, size_t add0);
+    void sub(const Perspective &input, size_t sub0);
+    void add_sub(const Perspective &input, size_t add0, size_t sub0);
+    void add_sub2(const Perspective &input, size_t add0, size_t sub0, size_t sub1);
+    void add2_sub2(const Perspective &input, size_t add0, size_t add1, size_t sub0, size_t sub1);
 
     void self_add(size_t add0);
     void self_sub(size_t sub0);
     void self_add_sub(size_t add0, size_t sub0);
 
-    friend bool operator==(const PovAccumulator &lhs, const PovAccumulator &rhs);
+    friend bool operator==(const Perspective &lhs, const Perspective &rhs);
 
   private:
     std::array<int16_t, L1_SIZE> m_neurons;
 };
+
+} // namespace Accumulator

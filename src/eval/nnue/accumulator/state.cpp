@@ -16,24 +16,26 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "eval/nnue/accumulator.h"
+#include "eval/nnue/accumulator/state.h"
 
 #include "core/types.h"
-#include "eval/nnue/pov_accumulator.h"
+#include "eval/nnue/accumulator/perspective.h"
 
-Accumulator::Accumulator(const PovAccumulator &white_pov_acc, const PovAccumulator &black_pov_acc,
-                         const Square white_king_sq, const Square black_king_sq)
+namespace Accumulator {
+
+State::State(const Perspective &white_pov_acc, const Perspective &black_pov_acc, const Square white_king_sq,
+             const Square black_king_sq)
     : m_pov_accumulators{white_pov_acc, black_pov_acc} {
     m_updated[WHITE] = m_updated[BLACK] = true;
     m_king_sqs[WHITE] = white_king_sq;
     m_king_sqs[BLACK] = black_king_sq;
 }
 
-Accumulator::Accumulator(const DirtyPiece dp, const Square white_king_sq, const Square black_king_sq) {
+State::State(const DirtyPiece dp, const Square white_king_sq, const Square black_king_sq) {
     init(dp, white_king_sq, black_king_sq);
 }
 
-void Accumulator::init(const DirtyPiece dp, const Square white_king_sq, const Square black_king_sq) {
+void State::init(const DirtyPiece dp, const Square white_king_sq, const Square black_king_sq) {
     m_updated[WHITE] = m_updated[BLACK] = false;
 
     m_king_sqs[WHITE] = white_king_sq;
@@ -42,7 +44,7 @@ void Accumulator::init(const DirtyPiece dp, const Square white_king_sq, const Sq
     m_dirty_piece = dp;
 }
 
-void Accumulator::update(const PovAccumulator &prev_pov_acc, const Color pov) {
+void State::update(const Perspective &prev_pov_acc, const Color pov) {
     if (m_updated[pov])
         return;
 
@@ -75,18 +77,18 @@ void Accumulator::update(const PovAccumulator &prev_pov_acc, const Color pov) {
     m_updated[pov] = true;
 }
 
-bool Accumulator::needs_refresh(const Color pov, const Square new_king_sq) const {
+bool State::needs_refresh(const Color pov, const Square new_king_sq) const {
     return (new_king_sq & 0b100) != (m_king_sqs[pov] & 0b100) ||                       // King crossed half of the board
            king_bucket_idx(new_king_sq, pov) != king_bucket_idx(m_king_sqs[pov], pov); // King bucket change
 }
 
-void Accumulator::refresh(const PovAccumulator &finny_table_neurons, const Color side) {
+void State::refresh(const Perspective &finny_table_neurons, const Color side) {
     m_pov_accumulators[side] = finny_table_neurons;
     m_updated[side] = true;
 }
 
 // This does not check if the Accumulators are identical, only their neurons. Used for debugging
-bool operator==(const Accumulator &lhs, const Accumulator &rhs) {
+bool operator==(const State &lhs, const State &rhs) {
     for (int color_i = 0; color_i <= 1; ++color_i) {
         Color color = static_cast<Color>(color_i);
         if (lhs.pov(color) != rhs.pov(color))
@@ -97,3 +99,4 @@ bool operator==(const Accumulator &lhs, const Accumulator &rhs) {
 
     return true;
 }
+} // namespace Accumulator

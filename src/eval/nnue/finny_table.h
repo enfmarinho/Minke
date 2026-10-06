@@ -22,7 +22,8 @@
 
 #include "core/bitboard.h"
 #include "core/types.h"
-#include "eval/nnue/accumulator.h"
+#include "eval/nnue/accumulator/perspective.h"
+#include "eval/nnue/accumulator/state.h"
 #include "eval/nnue/arch.h"
 
 class Position;
@@ -34,13 +35,13 @@ class FinnyTable {
 
     void reset();
 
-    const PovAccumulator &update(const Position &pos, Color pov);
+    const Accumulator::Perspective &update(const Position &pos, Color pov);
 
   private:
     struct FinnyTableCache {
         std::array<Bitboard, 6> pt_bb;    // [piece_type]
         std::array<Bitboard, 2> color_bb; // [color]
-        PovAccumulator pov_accumulator;
+        Accumulator::Perspective pov_accumulator;
 
         FinnyTableCache() { reset(); };
         ~FinnyTableCache() = default;

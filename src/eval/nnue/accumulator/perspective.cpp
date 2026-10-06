@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "eval/nnue/pov_accumulator.h"
+#include "eval/nnue/accumulator/perspective.h"
 
 #include <cstddef>
 #include <cstring>
@@ -24,8 +24,10 @@
 #include "core/position.h"
 #include "eval/nnue/arch.h"
 
-PovAccumulator::PovAccumulator(const Position &pos, const Color pov) {
-    // Debug-only constructor. Computes a PovAccumulator from scratch and uses it as a
+namespace Accumulator {
+
+Perspective::Perspective(const Position &pos, const Color pov) {
+    // Debug-only constructor. Computes a `Perspective` from scratch and uses it as a
     // source of truth to validate incremental updates and finny tables.
     reset();
     for (int sqi = a1; sqi <= h8; ++sqi) {
@@ -36,34 +38,34 @@ PovAccumulator::PovAccumulator(const Position &pos, const Color pov) {
     }
 }
 
-void PovAccumulator::add(const PovAccumulator &input, const size_t add0) {
+void Perspective::add(const Perspective &input, const size_t add0) {
     for (int column{0}; column < L1_SIZE; ++column) {
         m_neurons[column] = input.m_neurons[column] + network.ft_weights[add0 + column];
     }
 }
 
-void PovAccumulator::sub(const PovAccumulator &input, const size_t sub0) {
+void Perspective::sub(const Perspective &input, const size_t sub0) {
     for (int column{0}; column < L1_SIZE; ++column) {
         m_neurons[column] = input.m_neurons[column] - network.ft_weights[sub0 + column];
     }
 }
 
-void PovAccumulator::add_sub(const PovAccumulator &input, const size_t add0, const size_t sub0) {
+void Perspective::add_sub(const Perspective &input, const size_t add0, const size_t sub0) {
     for (int column{0}; column < L1_SIZE; ++column) {
         m_neurons[column] =
             input.m_neurons[column] + network.ft_weights[add0 + column] - network.ft_weights[sub0 + column];
     }
 }
 
-void PovAccumulator::add_sub2(const PovAccumulator &input, const size_t add0, const size_t sub0, const size_t sub1) {
+void Perspective::add_sub2(const Perspective &input, const size_t add0, const size_t sub0, const size_t sub1) {
     for (int column{0}; column < L1_SIZE; ++column) {
         m_neurons[column] = input.m_neurons[column] + network.ft_weights[add0 + column] -
                             network.ft_weights[sub0 + column] - network.ft_weights[sub1 + column];
     }
 }
 
-void PovAccumulator::add2_sub2(const PovAccumulator &input, const size_t add0, const size_t add1, const size_t sub0,
-                               const size_t sub1) {
+void Perspective::add2_sub2(const Perspective &input, const size_t add0, const size_t add1, const size_t sub0,
+                            const size_t sub1) {
     for (int column{0}; column < L1_SIZE; ++column) {
         m_neurons[column] = input.m_neurons[column] + network.ft_weights[add0 + column] +
                             network.ft_weights[add1 + column] - network.ft_weights[sub0 + column] -
@@ -71,16 +73,17 @@ void PovAccumulator::add2_sub2(const PovAccumulator &input, const size_t add0, c
     }
 }
 
-void PovAccumulator::self_add(const size_t add0) { add(*this, add0); }
+void Perspective::self_add(const size_t add0) { add(*this, add0); }
 
-void PovAccumulator::self_sub(const size_t sub0) { sub(*this, sub0); }
+void Perspective::self_sub(const size_t sub0) { sub(*this, sub0); }
 
-void PovAccumulator::self_add_sub(const size_t add0, const size_t sub0) { add_sub(*this, add0, sub0); }
+void Perspective::self_add_sub(const size_t add0, const size_t sub0) { add_sub(*this, add0, sub0); }
 
-bool operator==(const PovAccumulator &lhs, const PovAccumulator &rhs) {
+bool operator==(const Perspective &lhs, const Perspective &rhs) {
     for (size_t i = 0; i < lhs.m_neurons.size(); ++i) {
         if (lhs.m_neurons[i] != rhs.m_neurons[i])
             return false;
     }
     return true;
 }
+} // namespace Accumulator

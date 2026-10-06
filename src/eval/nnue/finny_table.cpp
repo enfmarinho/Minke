@@ -20,9 +20,9 @@
 
 #include "core/position.h"
 #include "core/types.h"
-#include "eval/nnue/accumulator.h"
+#include "eval/nnue/accumulator/perspective.h"
+#include "eval/nnue/accumulator/state.h"
 #include "eval/nnue/arch.h"
-#include "eval/nnue/pov_accumulator.h"
 #include "utils/utils.h"
 
 void FinnyTable::reset() {
@@ -33,7 +33,7 @@ void FinnyTable::reset() {
                 side_buckets.reset();
 }
 
-const PovAccumulator &FinnyTable::update(const Position &pos, const Color pov) {
+const Accumulator::Perspective &FinnyTable::update(const Position &pos, const Color pov) {
     const Square king_sq = pos.king_sq(pov);
     FinnyTableCache &cached_entry = get_cache(should_flip(king_sq), king_bucket_idx(king_sq, pov), pov);
 

@@ -23,7 +23,7 @@ APPLESILICON_FLAGS := -DUSE_NEON -DUSE_SIMD -march=armv8.5-a
 # Paths
 BASE_BUILD_DIR := build
 PGO_DIR := $(BASE_BUILD_DIR)/pgo
-SRC_DIRS := src/ src/core/ src/datagen/ src/eval/ src/eval/nnue/ src/eval/nnue/simd/ src/search/ src/uci/ src/utils/
+SRC_DIRS := src/ src/core/ src/datagen/ src/eval/ src/eval/nnue/ src/eval/nnue/accumulator/ src/eval/nnue/simd/ src/search/ src/uci/ src/utils/
 SOURCES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 OBJECTS := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(notdir $(SOURCES)))
 PREPROCESSOR_SRC := tools/preprocess_nnue.cpp

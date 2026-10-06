@@ -26,9 +26,9 @@
 
 #include "core/position.h"
 #include "core/types.h"
-#include "eval/nnue/accumulator.h"
+#include "eval/nnue/accumulator/perspective.h"
+#include "eval/nnue/accumulator/state.h"
 #include "eval/nnue/arch.h"
-#include "eval/nnue/pov_accumulator.h"
 #include "eval/nnue/simd.h"
 #include "utils/incbin.h"
 
@@ -55,7 +55,7 @@ void NNUE::push(const DirtyPiece dp, const Square white_king_sq, const Square bl
 ScoreType NNUE::eval(const Position &pos) {
     update(pos); // ensure accumulator is up-to date
 
-    const Accumulator &acc = m_accumulators.back();
+    const Accumulator::State &acc = m_accumulators.back();
     const int bucket = (pos.piece_count() - 2) / BUCKET_SIZE;
 
     return propagate(acc.pov(pos.stm()).neurons(), acc.pov(pos.nstm()).neurons(), bucket);
@@ -74,7 +74,7 @@ void NNUE::update_pov(const Position &pos, const Color pov) {
 
     for (auto iter = m_accumulators.rbegin() + 1; iter != m_accumulators.rend(); ++iter) {
         if (iter->needs_refresh(pov, pos.king_sq(pov))) {
-            const PovAccumulator &acc = m_finny_table.update(pos, pov);
+            const Accumulator::Perspective &acc = m_finny_table.update(pos, pov);
             head->refresh(acc, pov);
             break;
         } else if (iter->updated(pov)) {
