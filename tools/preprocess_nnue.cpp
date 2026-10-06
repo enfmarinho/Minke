@@ -21,6 +21,7 @@ using Err = std::string;
 template <typename T>
 using Result = std::variant<T, Err>;
 
+using namespace nnue;
 using RawNetworkData = std::array<uint8_t, sizeof(Network)>;
 using RawNetwork = std::unique_ptr<RawNetworkData>;
 

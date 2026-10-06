@@ -23,6 +23,7 @@
 #include "core/position.h"
 #include "core/types.h"
 #include "eval/nnue/accumulator/state.h"
+#include "eval/nnue/arch.h"
 #include "eval/nnue/inference.h"
 #include "search/search.h"
 #include "uci/tune.h"
@@ -44,10 +45,10 @@ inline int apply_material_scaling(const Position& pos, ScoreType raw_eval) {
 
 namespace eval {
 
-ScoreType evaluate(const Position& pos, const accumulator::State& acc_state) {
-    const int bucket = (pos.piece_count() - 2) / BUCKET_SIZE;
+ScoreType evaluate(const Position& pos, const nnue::accumulator::State& acc_state) {
+    const int bucket = nnue::output_bucket(pos.piece_count());
 
-    return propagate(acc_state.pov(pos.stm()).neurons(), acc_state.pov(pos.nstm()).neurons(), bucket);
+    return nnue::propagate(acc_state.pov(pos.stm()).neurons(), acc_state.pov(pos.nstm()).neurons(), bucket);
 }
 
 ScoreType evaluate(ThreadData& td) { return evaluate(td.position, td.acc_stack.top(td.position)); }

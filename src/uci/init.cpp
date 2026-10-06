@@ -34,7 +34,8 @@ int LMR_TABLE[64][64];
 int LMP_TABLE[2][LMP_DEPTH];
 
 // Heap allocated so the feature transformer weights can be backed by huge pages, which greatly reduces TLB misses
-Network &network = *static_cast<Network *>(aligned_malloc(alignof(Network), sizeof(Network)));
+nnue::Network &nnue::network =
+    *static_cast<nnue::Network *>(aligned_malloc(alignof(nnue::Network), sizeof(nnue::Network)));
 
 void init_all() {
     init_search_params();
@@ -57,4 +58,4 @@ void init_search_params() {
     }
 }
 
-void init_network_params() { network = *reinterpret_cast<const Network *>(&gNetParametersData); }
+void init_network_params() { nnue::network = *reinterpret_cast<const nnue::Network *>(&gNetParametersData); }

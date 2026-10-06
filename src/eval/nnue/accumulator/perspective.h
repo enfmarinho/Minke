@@ -27,7 +27,7 @@
 
 class Position;
 
-namespace accumulator {
+namespace nnue::accumulator {
 
 class alignas(64) Perspective {
   public:
@@ -58,4 +58,4 @@ class alignas(64) Perspective {
     std::array<int16_t, L1_SIZE> m_neurons;
 };
 
-} // namespace accumulator
+} // namespace nnue::accumulator

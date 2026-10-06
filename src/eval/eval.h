@@ -28,7 +28,7 @@ namespace eval {
 
 ScoreType evaluate(ThreadData& td);
 
-ScoreType evaluate(const Position& pos, const accumulator::State& acc_state);
+ScoreType evaluate(const Position& pos, const nnue::accumulator::State& acc_state);
 
 ScoreType adjust(const Position& pos, const ScoreType raw_eval, const ScoreType correction);
 

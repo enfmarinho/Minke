@@ -23,6 +23,8 @@
 #include "core/types.h"
 #include "utils/utils.h"
 
+namespace nnue {
+
 constexpr bool DUAL_ACTIVATION = true;
 
 constexpr int INPUT_LAYER_SIZE = 64 * 12;
@@ -107,3 +109,7 @@ inline size_t feature_idx(const Piece piece, const Square sq, const Square king_
 inline size_t feature_idx(const PieceSquare ps, const Square king_sq, const Color pov) {
     return feature_idx(ps.piece, ps.sq, king_sq, pov);
 }
+
+inline int output_bucket(int piece_count) { return (piece_count - 2) / BUCKET_SIZE; }
+
+} // namespace nnue

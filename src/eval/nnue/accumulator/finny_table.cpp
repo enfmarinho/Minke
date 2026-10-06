@@ -24,7 +24,7 @@
 #include "eval/nnue/arch.h"
 #include "utils/utils.h"
 
-namespace accumulator {
+namespace nnue::accumulator {
 
 void FinnyTable::reset() {
     // Reset all cached accumulators
@@ -34,7 +34,7 @@ void FinnyTable::reset() {
                 side_buckets.reset();
 }
 
-const accumulator::Perspective &FinnyTable::update(const Position &pos, const Color pov) {
+const nnue::accumulator::Perspective &FinnyTable::update(const Position &pos, const Color pov) {
     const Square king_sq = pos.king_sq(pov);
     FinnyTableCache &cached_entry = get_cache(should_flip(king_sq), king_bucket_idx(king_sq, pov), pov);
 
@@ -95,4 +95,4 @@ FinnyTable::FinnyTableCache &FinnyTable::get_cache(const bool flip, const size_t
     return cache[flip][king_bucket][side];
 }
 
-} // namespace accumulator
+} // namespace nnue::accumulator

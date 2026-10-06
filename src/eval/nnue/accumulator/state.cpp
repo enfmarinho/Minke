@@ -21,7 +21,7 @@
 #include "core/types.h"
 #include "eval/nnue/accumulator/perspective.h"
 
-namespace accumulator {
+namespace nnue::accumulator {
 
 State::State(const Perspective &white_pov_acc, const Perspective &black_pov_acc, const Square white_king_sq,
              const Square black_king_sq)
@@ -99,4 +99,4 @@ bool operator==(const State &lhs, const State &rhs) {
 
     return true;
 }
-} // namespace accumulator
+} // namespace nnue::accumulator

@@ -21,7 +21,7 @@
 #include "core/types.h"
 #include "eval/nnue/accumulator/perspective.h"
 
-namespace accumulator {
+namespace nnue::accumulator {
 
 class alignas(64) State {
   public:
@@ -50,4 +50,4 @@ class alignas(64) State {
     DirtyPiece m_dirty_piece;
 };
 
-} // namespace accumulator
+} // namespace nnue::accumulator

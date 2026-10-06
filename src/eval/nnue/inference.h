@@ -29,5 +29,9 @@
 std::array<size_t, PAIR_COUNT> m_activation_table;
 #endif // TRACK_ACTIVATIONS
 
+namespace nnue {
+
 int32_t propagate(std::span<const int16_t, L1_SIZE> stm_inputs, std::span<const int16_t, L1_SIZE> ntm_inputs,
                   const int bucket);
+
+}

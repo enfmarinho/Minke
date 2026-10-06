@@ -25,7 +25,7 @@
 #include "eval/nnue/accumulator/finny_table.h"
 #include "eval/nnue/accumulator/state.h"
 
-namespace accumulator {
+namespace nnue::accumulator {
 
 class Stack {
   public:
@@ -42,4 +42,4 @@ class Stack {
     FinnyTable m_finny_table;
 };
 
-} // namespace accumulator
+} // namespace nnue::accumulator

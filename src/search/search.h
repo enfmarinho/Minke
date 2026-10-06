@@ -53,7 +53,7 @@ struct ThreadData {
     size_t id;
 
     Position position;
-    accumulator::Stack acc_stack;
+    nnue::accumulator::Stack acc_stack;
     History search_history;
     CorrectionHistory correction_history;
     SearchStackEntry search_stack[MAX_SEARCH_DEPTH];
