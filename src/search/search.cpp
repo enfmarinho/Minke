@@ -32,6 +32,7 @@
 #include "core/types.h"
 #include "core/zobrist.h"
 #include "eval/eval.h"
+#include "eval/nnue/nnue.h"
 #include "search/movepicker.h"
 #include "search/tt.h"
 #include "uci/tune.h"

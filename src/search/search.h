@@ -27,7 +27,7 @@
 #include "core/move.h"
 #include "core/position.h"
 #include "core/types.h"
-#include "eval/nnue.h"
+#include "eval/nnue/nnue.h"
 #include "search/correction.h"
 #include "search/history.h"
 #include "search/pv_list.h"

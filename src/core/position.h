@@ -25,7 +25,7 @@
 
 #include "core/bitboard.h"
 #include "core/move.h"
-#include "eval/nnue.h"
+#include "eval/nnue/nnue.h"
 #include "types.h"
 
 struct BoardState {

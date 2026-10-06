@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "eval/nnue.h"
+#include "eval/nnue/nnue.h"
 
 #include <cassert>
 #include <cstddef>
