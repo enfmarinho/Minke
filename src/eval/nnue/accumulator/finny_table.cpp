@@ -16,14 +16,15 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "eval/nnue/finny_table.h"
+#include "eval/nnue/accumulator/finny_table.h"
 
 #include "core/position.h"
 #include "core/types.h"
 #include "eval/nnue/accumulator/perspective.h"
-#include "eval/nnue/accumulator/state.h"
 #include "eval/nnue/arch.h"
 #include "utils/utils.h"
+
+namespace Accumulator {
 
 void FinnyTable::reset() {
     // Reset all cached accumulators
@@ -93,3 +94,5 @@ void FinnyTable::FinnyTableCache::reset() {
 FinnyTable::FinnyTableCache &FinnyTable::get_cache(const bool flip, const size_t king_bucket, const Color side) {
     return cache[flip][king_bucket][side];
 }
+
+} // namespace Accumulator

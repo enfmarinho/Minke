@@ -24,10 +24,10 @@
 #include <vector>
 
 #include "core/types.h"
+#include "eval/nnue/accumulator/finny_table.h"
 #include "eval/nnue/accumulator/perspective.h"
 #include "eval/nnue/accumulator/state.h"
 #include "eval/nnue/arch.h"
-#include "eval/nnue/finny_table.h"
 #include "eval/nnue/sparse_iterator.h"
 
 class Position;
@@ -71,6 +71,6 @@ class NNUE {
 
 #endif // TRACK_ACTIVATIONS
 
-    FinnyTable m_finny_table;
+    Accumulator::FinnyTable m_finny_table;
     std::vector<Accumulator::State> m_accumulators;
 };
