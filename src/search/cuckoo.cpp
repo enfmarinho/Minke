@@ -75,4 +75,4 @@ void init() {
     assert(count == 3668);
 }
 
-}; // namespace minke::cuckoo
+} // namespace minke::cuckoo
