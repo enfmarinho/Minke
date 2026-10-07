@@ -34,7 +34,7 @@ void FinnyTable::reset() {
                 side_buckets.reset();
 }
 
-const nnue::accumulator::Perspective &FinnyTable::update(const Position &pos, const Color pov) {
+const Perspective &FinnyTable::update(const Position &pos, const Color pov) {
     const Square king_sq = pos.king_sq(pov);
     FinnyTableCache &cached_entry = get_cache(should_flip(king_sq), king_bucket_idx(king_sq, pov), pov);
 

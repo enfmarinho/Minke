@@ -61,7 +61,7 @@ void Stack::update_pov(const Position &pos, const Color pov) {
 
     for (auto iter = m_stack.rbegin() + 1; iter != m_stack.rend(); ++iter) {
         if (iter->needs_refresh(pov, pos.king_sq(pov))) {
-            const accumulator::Perspective &acc = m_finny_table.update(pos, pov);
+            const Perspective &acc = m_finny_table.update(pos, pov);
             head->refresh(acc, pov);
             break;
         } else if (iter->updated(pov)) {
