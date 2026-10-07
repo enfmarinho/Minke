@@ -276,11 +276,11 @@ void Runner::report() const {
 
     uint64_t game_count = 0;
     uint64_t position_count = 0;
-    for (const auto& dt_ptr : m_datagen_threads) {
-        print_info_line(std::to_string(dt_ptr->id()), dt_ptr->game_count(), dt_ptr->positions_count());
+    for (const auto& worker : m_workers) {
+        print_info_line(std::to_string(worker->id()), worker->game_count(), worker->positions_count());
 
-        position_count += dt_ptr->positions_count();
-        game_count += dt_ptr->game_count();
+        position_count += worker->positions_count();
+        game_count += worker->game_count();
     }
 
     std::cout << line;
@@ -291,21 +291,21 @@ void Runner::report() const {
 void Runner::start(int thread_count, const std::filesystem::path& outdir_path, const EpdBook& opening_book,
                    uint64_t master_seed) {
     SeedGenerator seed_gen(master_seed);
-    m_datagen_threads.reserve(thread_count);
+    m_workers.reserve(thread_count);
     for (int id = 0; id < thread_count; ++id) {
-        m_datagen_threads.emplace_back(std::make_unique<Worker>(id, outdir_path, opening_book, seed_gen.next()));
+        m_workers.emplace_back(std::make_unique<Worker>(id, outdir_path, opening_book, seed_gen.next()));
     }
 
     m_threads.reserve(thread_count);
     for (int id = 0; id < thread_count; ++id) {
-        m_threads.emplace_back(&Worker::run, m_datagen_threads[id].get());
+        m_threads.emplace_back(&Worker::run, m_workers[id].get());
     }
 }
 
 void Runner::stop() {
-    for (auto& datagen_thread : m_datagen_threads) {
-        if (datagen_thread) {
-            datagen_thread->stop();
+    for (auto& worker : m_workers) {
+        if (worker) {
+            worker->stop();
         }
     }
 
@@ -315,7 +315,7 @@ void Runner::stop() {
         }
     }
     m_threads.clear();
-    m_datagen_threads.clear();
+    m_workers.clear();
 }
 
 } // namespace minke::datagen

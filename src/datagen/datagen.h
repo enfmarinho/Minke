@@ -101,7 +101,7 @@ class Runner {
 
     TimeType m_start_time;
 
-    std::vector<std::unique_ptr<Worker>> m_datagen_threads;
+    std::vector<std::unique_ptr<Worker>> m_workers;
     std::vector<std::thread> m_threads;
 };
 
