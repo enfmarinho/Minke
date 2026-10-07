@@ -33,7 +33,7 @@ class Stack {
 
     void pop();
     void push(DirtyPiece dp, Square white_king_sq, Square black_king_sq);
-    const State &top(const Position &pos);
+    const State &update_top(const Position &pos);
 
   private:
     void update_pov(const Position &pos, Color pov);

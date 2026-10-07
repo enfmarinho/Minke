@@ -47,7 +47,7 @@ void Stack::push(const DirtyPiece dp, const Square white_king_sq, const Square b
 
 void Stack::pop() { m_stack.pop_back(); }
 
-const State &Stack::top(const Position &pos) {
+const State &Stack::update_top(const Position &pos) {
     update_pov(pos, WHITE);
     update_pov(pos, BLACK);
     return m_stack.back();

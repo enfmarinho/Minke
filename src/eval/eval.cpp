@@ -51,7 +51,7 @@ ScoreType evaluate(const Position& pos, const nnue::accumulator::State& acc_stat
     return nnue::propagate(acc_state.pov(pos.stm()).neurons(), acc_state.pov(pos.nstm()).neurons(), bucket);
 }
 
-ScoreType evaluate(ThreadData& td) { return evaluate(td.position, td.acc_stack.top(td.position)); }
+ScoreType evaluate(ThreadData& td) { return evaluate(td.position, td.acc_stack.update_top(td.position)); }
 
 ScoreType adjust(const Position& pos, const ScoreType raw_eval, const ScoreType correction) {
     int adjusted_eval = apply_material_scaling(pos, raw_eval);
