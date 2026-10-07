@@ -110,6 +110,6 @@ inline size_t feature_idx(const PieceSquare ps, const Square king_sq, const Colo
     return feature_idx(ps.piece, ps.sq, king_sq, pov);
 }
 
-inline int output_bucket(int piece_count) { return (piece_count - 2) / BUCKET_SIZE; }
+constexpr inline int output_bucket(int piece_count) { return (piece_count - 2) / BUCKET_SIZE; }
 
 } // namespace nnue
