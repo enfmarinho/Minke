@@ -44,8 +44,8 @@ int main(int argc, char *argv[]) {
         std::filesystem::path directory = argv[3];
         std::optional<std::filesystem::path> opening_book = (argc == 5 ? std::optional(argv[4]) : std::nullopt);
 
-        minke::datagen::DatagenEngine dt_engine;
-        dt_engine.datagen_loop(concurrency, directory, opening_book);
+        minke::datagen::Runner runner;
+        runner.datagen_loop(concurrency, directory, opening_book);
     } else {
         UCI::run();
     }
