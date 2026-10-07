@@ -18,6 +18,7 @@
 
 #include "eval/nnue/accumulator/stack.h"
 
+#include <cassert>
 #include <vector>
 
 #include "core/position.h"
@@ -33,15 +34,15 @@ void Stack::refresh(const Position &pos) {
     m_stack.clear();
     m_stack.emplace_back(white_perspective_acc, black_perspective_acc, pos.king_sq(WHITE), pos.king_sq(BLACK));
 
-    assert(m_accumulators.back().updated(WHITE));
-    assert(m_accumulators.back().updated(BLACK));
-    assert(m_accumulators.back().pov(WHITE) == Perspective(pos, WHITE));
-    assert(m_accumulators.back().pov(BLACK) == Perspective(pos, BLACK));
+    assert(m_stack.back().updated(WHITE));
+    assert(m_stack.back().updated(BLACK));
+    assert(m_stack.back().pov(WHITE) == Perspective(pos, WHITE));
+    assert(m_stack.back().pov(BLACK) == Perspective(pos, BLACK));
 }
 
 // TODO: simplify this API
 void Stack::push(const DirtyPiece dp, const Square white_king_sq, const Square black_king_sq) {
-    assert(!m_accumulators.empty()); // NNUE must have been initialized with the 'refresh' method before pushing
+    assert(!m_stack.empty()); // NNUE must have been initialized with the 'refresh' method before pushing
     m_stack.emplace_back(dp, white_king_sq, black_king_sq);
 }
 
