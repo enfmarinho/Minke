@@ -210,7 +210,7 @@ void DatagenThread::init_pos_randomly() {
     }
 
     // initialize engine for search
-    m_engine.main_td().nnue.refresh(pos);
+    m_engine.main_td().acc_stack.refresh(pos);
     m_engine.new_game();
     m_games.reset(pos);
 }

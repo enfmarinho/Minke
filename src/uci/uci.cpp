@@ -37,9 +37,6 @@
 #include "search/tt.h"
 #include "uci/benchmark.h"
 
-#ifdef TRACK_ACTIVATIONS
-#include <fstream>
-#endif
 #ifdef TUNE
 #include "uci/init.h"
 #include "uci/tune.h"

@@ -16,14 +16,15 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "eval/nnue/finny_table.h"
+#include "eval/nnue/accumulator/finny_table.h"
 
 #include "core/position.h"
 #include "core/types.h"
-#include "eval/nnue/accumulator.h"
+#include "eval/nnue/accumulator/perspective.h"
 #include "eval/nnue/arch.h"
-#include "eval/nnue/pov_accumulator.h"
 #include "utils/utils.h"
+
+namespace nnue::accumulator {
 
 void FinnyTable::reset() {
     // Reset all cached accumulators
@@ -33,7 +34,7 @@ void FinnyTable::reset() {
                 side_buckets.reset();
 }
 
-const PovAccumulator &FinnyTable::update(const Position &pos, const Color pov) {
+const Perspective &FinnyTable::update(const Position &pos, const Color pov) {
     const Square king_sq = pos.king_sq(pov);
     FinnyTableCache &cached_entry = get_cache(should_flip(king_sq), king_bucket_idx(king_sq, pov), pov);
 
@@ -51,18 +52,18 @@ const PovAccumulator &FinnyTable::update(const Position &pos, const Color pov) {
             while (added && removed) {
                 const Square add_sq = added.poplsb();
                 const Square sub_sq = removed.poplsb();
-                cached_entry.pov_accumulator.self_add_sub(feature_idx(piece, add_sq, king_sq, pov),
+                cached_entry.perspective_acc.self_add_sub(feature_idx(piece, add_sq, king_sq, pov),
                                                           feature_idx(piece, sub_sq, king_sq, pov));
             }
 
             while (added) {
                 const Square sq = added.poplsb();
-                cached_entry.pov_accumulator.self_add(feature_idx(piece, sq, king_sq, pov));
+                cached_entry.perspective_acc.self_add(feature_idx(piece, sq, king_sq, pov));
             }
 
             while (removed) {
                 const Square sq = removed.poplsb();
-                cached_entry.pov_accumulator.self_sub(feature_idx(piece, sq, king_sq, pov));
+                cached_entry.perspective_acc.self_sub(feature_idx(piece, sq, king_sq, pov));
             }
         }
     }
@@ -75,9 +76,9 @@ const PovAccumulator &FinnyTable::update(const Position &pos, const Color pov) {
         cached_entry.pt_bb[pt_idx] = pos.piece_bb(static_cast<PieceType>(pt_idx));
     }
 
-    assert(cached_entry.pov_accumulator == PovAccumulator(pos, pov));
+    assert(cached_entry.perspective_acc == Perspective(pos, pov));
 
-    return cached_entry.pov_accumulator;
+    return cached_entry.perspective_acc;
 }
 
 void FinnyTable::FinnyTableCache::reset() {
@@ -87,9 +88,11 @@ void FinnyTable::FinnyTableCache::reset() {
     for (Bitboard &bb : color_bb) {
         bb = 0;
     }
-    pov_accumulator.reset();
+    perspective_acc.reset();
 }
 
 FinnyTable::FinnyTableCache &FinnyTable::get_cache(const bool flip, const size_t king_bucket, const Color side) {
     return cache[flip][king_bucket][side];
 }
+
+} // namespace nnue::accumulator

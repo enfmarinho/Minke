@@ -19,33 +19,35 @@
 #pragma once
 
 #include "core/types.h"
-#include "eval/nnue/pov_accumulator.h"
+#include "eval/nnue/accumulator/perspective.h"
 
-class Position;
+namespace nnue::accumulator {
 
-class alignas(64) Accumulator {
+class alignas(64) State {
   public:
-    Accumulator() = delete;
-    Accumulator(const PovAccumulator &white_pov_acc, const PovAccumulator &black_pov_acc, Square white_king_sq,
-                Square black_king_sq);
-    Accumulator(DirtyPiece dp, Square white_king_sq, Square black_king_sq);
-    ~Accumulator() = default;
+    State() = delete;
+    State(const Perspective &white_perspective_acc, const Perspective &black_perspective_acc, Square white_king_sq,
+          Square black_king_sq);
+    State(DirtyPiece dp, Square white_king_sq, Square black_king_sq);
+    ~State() = default;
 
-    void update(const PovAccumulator &prev_pov_acc, Color pov);
+    void update(const Perspective &prev_perspective_acc, Color pov);
     inline bool updated(Color pov) const { return m_updated[pov]; }
 
     bool needs_refresh(Color side, Square new_king_sq) const;
-    void refresh(const PovAccumulator &finny_table_neurons, Color side);
+    void refresh(const Perspective &finny_table_neurons, Color side);
 
-    inline const PovAccumulator &pov(Color pov) const { return m_pov_accumulators[pov]; }
+    inline const Perspective &pov(Color pov) const { return m_perspective_accs[pov]; }
 
-    friend bool operator==(const Accumulator &lhs, const Accumulator &rhs);
+    friend bool operator==(const State &lhs, const State &rhs);
 
   private:
     void init(DirtyPiece dp, Square white_king_sq, Square black_king_sq);
 
-    alignas(64) PovAccumulator m_pov_accumulators[2];
+    alignas(64) Perspective m_perspective_accs[2];
     bool m_updated[2];
     Square m_king_sqs[2];
     DirtyPiece m_dirty_piece;
 };
+
+} // namespace nnue::accumulator

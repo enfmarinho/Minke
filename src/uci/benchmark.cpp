@@ -28,7 +28,7 @@
 #ifdef TRACK_ACTIVATIONS
 #include <fstream>
 
-#include "eval/nnue.h"
+#include "eval/nnue/inference.h"
 #endif
 
 namespace Benchmark {
@@ -123,15 +123,14 @@ void run(const int bench_depth) {
     std::cout << nodes_searched << " nodes " << nodes_searched * 1000 / time_elapsed << " nps\n";
 
 #ifdef TRACK_ACTIVATIONS
-    std::ofstream out_file("activations_table.txt");
+    std::ofstream out_file("activation_table.txt");
     if (!out_file) {
         std::cerr << "Failed to open file to write activations table data\n";
         return;
     }
 
-    const auto table = engine.main_td().nnue.activation_table();
     bool first = true;
-    for (auto e : table) {
+    for (auto e : activation_table) {
         if (!first)
             out_file << ", ";
         out_file << e;

@@ -16,97 +16,26 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "eval/nnue.h"
+#include "eval/nnue/inference.h"
 
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <span>
 
-#include "core/position.h"
-#include "core/types.h"
-#include "eval/nnue/accumulator.h"
 #include "eval/nnue/arch.h"
-#include "eval/nnue/pov_accumulator.h"
 #include "eval/nnue/simd.h"
+#include "eval/nnue/sparse_iterator.h"
 #include "utils/incbin.h"
 
-void NNUE::refresh(const Position &pos) {
-    const auto &white_pov_acc = m_finny_table.update(pos, WHITE);
-    const auto &black_pov_acc = m_finny_table.update(pos, BLACK);
+namespace nnue {
 
-    m_accumulators.clear();
-    m_accumulators.emplace_back(white_pov_acc, black_pov_acc, pos.king_sq(WHITE), pos.king_sq(BLACK));
+namespace {
 
-    assert(m_accumulators.back().updated(WHITE));
-    assert(m_accumulators.back().updated(BLACK));
-    assert(m_accumulators.back().pov(WHITE) == PovAccumulator(pos, WHITE));
-    assert(m_accumulators.back().pov(BLACK) == PovAccumulator(pos, BLACK));
-}
-
-void NNUE::pop() { m_accumulators.pop_back(); }
-
-void NNUE::push(const DirtyPiece dp, const Square white_king_sq, const Square black_king_sq) {
-    assert(!m_accumulators.empty()); // NNUE must have been initialized with the 'refresh' method before pushing
-    m_accumulators.emplace_back(dp, white_king_sq, black_king_sq);
-}
-
-ScoreType NNUE::eval(const Position &pos) {
-    update(pos); // ensure accumulator is up-to date
-
-    const Accumulator &acc = m_accumulators.back();
-    const int bucket = (pos.piece_count() - 2) / BUCKET_SIZE;
-
-    return propagate(acc.pov(pos.stm()).neurons(), acc.pov(pos.nstm()).neurons(), bucket);
-}
-
-void NNUE::update(const Position &pos) {
-    update_pov(pos, WHITE);
-    update_pov(pos, BLACK);
-}
-
-void NNUE::update_pov(const Position &pos, const Color pov) {
-    auto head = m_accumulators.rbegin();
-
-    if (head->updated(pov))
-        return;
-
-    for (auto iter = m_accumulators.rbegin() + 1; iter != m_accumulators.rend(); ++iter) {
-        if (iter->needs_refresh(pov, pos.king_sq(pov))) {
-            const PovAccumulator &acc = m_finny_table.update(pos, pov);
-            head->refresh(acc, pov);
-            break;
-        } else if (iter->updated(pov)) {
-            while (iter != head) {
-                (iter - 1)->update(iter->pov(pov), pov);
-                --iter;
-            }
-            break;
-        }
-    }
-    assert(head->updated(pov));
-    assert(head->pov(pov) == PovAccumulator(pos, pov));
-}
-
-int32_t NNUE::propagate(std::span<const int16_t, L1_SIZE> stm_inputs, std::span<const int16_t, L1_SIZE> ntm_inputs,
-                        const int bucket) {
-    alignas(64) uint8_t ft_outputs[L1_SIZE];
-    alignas(64) int32_t l1_outputs[ACTUAL_L2_SIZE];
-    alignas(64) int32_t l2_outputs[L3_SIZE];
-    int32_t l3_output;
-    SparseIterator si;
-
-    activate_ft(stm_inputs, ntm_inputs, ft_outputs, si);
-    propagate_l1(bucket, ft_outputs, l1_outputs, si);
-    propagate_l2(bucket, l1_outputs, l2_outputs);
-    propagate_l3(bucket, l2_outputs, l3_output);
-
-    return l3_output;
-}
-
-void NNUE::activate_ft(std::span<const int16_t, L1_SIZE> stm_acc, std::span<const int16_t, L1_SIZE> ntm_acc,
-                       std::span<uint8_t, L1_SIZE> outputs, [[maybe_unused]] SparseIterator &si) {
+void activate_ft(std::span<const int16_t, L1_SIZE> stm_acc, std::span<const int16_t, L1_SIZE> ntm_acc,
+                 std::span<uint8_t, L1_SIZE> outputs, [[maybe_unused]] SparseIterator &si) {
     const auto pov_activate = [&](std::span<const int16_t, L1_SIZE> acc, int output_offset) {
 #if USE_SIMD
         using namespace simd;
@@ -161,12 +90,16 @@ void NNUE::activate_ft(std::span<const int16_t, L1_SIZE> stm_acc, std::span<cons
 #endif // USE_SIMD
 
 #ifdef TRACK_ACTIVATIONS
-    track_activations(outputs);
+    for (size_t idx = 0; idx < L1_SIZE; ++idx) {
+        if (outputs[idx] != 0) {
+            ++activation_table[idx % (PAIR_COUNT)];
+        }
+    }
 #endif // TRACK_ACTIVATIONS
 }
 
-void NNUE::propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs,
-                        std::span<int32_t, ACTUAL_L2_SIZE> outputs, [[maybe_unused]] const SparseIterator &si) {
+void propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs, std::span<int32_t, ACTUAL_L2_SIZE> outputs,
+                  [[maybe_unused]] const SparseIterator &si) {
     constexpr int shift = 8;
 
 #if USE_SIMD
@@ -297,8 +230,7 @@ void NNUE::propagate_l1(int bucket, std::span<const uint8_t, L1_SIZE> inputs,
 }
 
 /// Does not activate outputs, that's done on 'propagate_l3'
-void NNUE::propagate_l2(int bucket, std::span<const int32_t, ACTUAL_L2_SIZE> inputs,
-                        std::span<int32_t, L3_SIZE> outputs) {
+void propagate_l2(int bucket, std::span<const int32_t, ACTUAL_L2_SIZE> inputs, std::span<int32_t, L3_SIZE> outputs) {
     // L2 biases
     std::memcpy(outputs.data(), &network.l2_biases[bucket], outputs.size_bytes());
 
@@ -330,7 +262,7 @@ void NNUE::propagate_l2(int bucket, std::span<const int32_t, ACTUAL_L2_SIZE> inp
 #endif
 }
 
-void NNUE::propagate_l3(int bucket, std::span<const int32_t, L3_SIZE> inputs, int32_t &output) {
+void propagate_l3(int bucket, std::span<const int32_t, L3_SIZE> inputs, int32_t &output) {
     // Activate L2 outputs ('inputs') and L3 matmul
 #if USE_SIMD
     using namespace simd;
@@ -366,16 +298,22 @@ void NNUE::propagate_l3(int bucket, std::span<const int32_t, L3_SIZE> inputs, in
     output = static_cast<int32_t>(rescaled_out);
 }
 
-#ifdef TRACK_ACTIVATIONS
+} // namespace
 
-void NNUE::track_activations(std::span<const uint8_t, L1_SIZE> ft_out) {
-    for (size_t idx = 0; idx < L1_SIZE; ++idx) {
-        if (ft_out[idx] != 0) {
-            ++m_activation_table[idx % (PAIR_COUNT)];
-        }
-    }
+int32_t propagate(std::span<const int16_t, L1_SIZE> stm_inputs, std::span<const int16_t, L1_SIZE> ntm_inputs,
+                  const int bucket) {
+    alignas(64) uint8_t ft_outputs[L1_SIZE];
+    alignas(64) int32_t l1_outputs[ACTUAL_L2_SIZE];
+    alignas(64) int32_t l2_outputs[L3_SIZE];
+    int32_t l3_output;
+    SparseIterator si;
+
+    activate_ft(stm_inputs, ntm_inputs, ft_outputs, si);
+    propagate_l1(bucket, ft_outputs, l1_outputs, si);
+    propagate_l2(bucket, l1_outputs, l2_outputs);
+    propagate_l3(bucket, l2_outputs, l3_output);
+
+    return l3_output;
 }
 
-const std::array<size_t, PAIR_COUNT> &NNUE::activation_table() { return m_activation_table; }
-
-#endif // TRACK_ACTIVATIONS
+} // namespace nnue

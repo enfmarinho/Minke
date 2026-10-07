@@ -33,7 +33,6 @@
 #include "core/movegen.h"
 #include "core/types.h"
 #include "core/zobrist.h"
-#include "eval/nnue.h"
 #include "search/cuckoo.h"
 #include "utils/utils.h"
 

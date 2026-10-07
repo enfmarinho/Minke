@@ -18,20 +18,21 @@
 
 #pragma once
 
-#include "core/types.h"
+#include <cassert>
+#include <cstdint>
+#include <span>
 
-struct ThreadData;
-class Position;
-namespace nnue::accumulator {
-class State;
+#include "eval/nnue/arch.h"
+
+#ifdef TRACK_ACTIVATIONS
+#include <array>
+#include <cstddef>
+inline std::array<size_t, nnue::PAIR_COUNT> activation_table;
+#endif // TRACK_ACTIVATIONS
+
+namespace nnue {
+
+int32_t propagate(std::span<const int16_t, L1_SIZE> stm_inputs, std::span<const int16_t, L1_SIZE> ntm_inputs,
+                  const int bucket);
+
 }
-
-namespace eval {
-
-ScoreType evaluate(ThreadData& td);
-
-ScoreType evaluate(const Position& pos, const nnue::accumulator::State& acc_state);
-
-ScoreType adjust(const Position& pos, const ScoreType raw_eval, const ScoreType correction);
-
-} // namespace eval

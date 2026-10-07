@@ -28,6 +28,8 @@
 
 #include "eval/nnue/simd.h"
 
+namespace nnue {
+
 #ifdef USE_AVX512
 
 void SparseIterator::update(simd::vepu8 a, simd::vepu8 b) {
@@ -109,3 +111,4 @@ void SparseIterator::update(simd::vepu8 a, simd::vepu8 b) {
 #endif
 
 #endif // #if USE_SIMD
+}

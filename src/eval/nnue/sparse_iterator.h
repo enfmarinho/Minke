@@ -33,6 +33,8 @@
 #include "eval/nnue/arch.h"
 #include "eval/nnue/simd.h"
 
+namespace nnue {
+
 class SparseIterator {
   public:
     inline size_t count() const { return m_count; }
@@ -72,3 +74,4 @@ class SparseIterator {
 class SparseIterator {};
 
 #endif // #if USE_SIMD
+}

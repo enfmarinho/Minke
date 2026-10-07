@@ -27,7 +27,8 @@
 #include "core/move.h"
 #include "core/position.h"
 #include "core/types.h"
-#include "eval/nnue.h"
+#include "eval/eval.h"
+#include "eval/nnue/accumulator/stack.h"
 #include "search/correction.h"
 #include "search/history.h"
 #include "search/pv_list.h"
@@ -52,7 +53,7 @@ struct ThreadData {
     size_t id;
 
     Position position;
-    NNUE nnue;
+    nnue::accumulator::Stack acc_stack;
     History search_history;
     CorrectionHistory correction_history;
     SearchStackEntry search_stack[MAX_SEARCH_DEPTH];
@@ -66,12 +67,12 @@ struct ThreadData {
 
 inline void make_move(ThreadData &td, Move move) {
     DirtyPiece dp = td.position.make_move(move);
-    td.nnue.push(dp, td.position.king_sq(WHITE), td.position.king_sq(BLACK));
+    td.acc_stack.push(dp, td.position.king_sq(WHITE), td.position.king_sq(BLACK));
 }
 
 inline void unmake_move(ThreadData &td, Move move) {
     td.position.unmake_move(move);
-    td.nnue.pop();
+    td.acc_stack.pop();
 }
 
 inline void make_null_move(ThreadData &td) { td.position.make_null_move(); }
@@ -99,7 +100,7 @@ class Engine {
 
     void report(bool r) { m_report = r; }
 
-    inline ScoreType static_eval() { return m_main_thread_data->nnue.eval(m_main_thread_data->position); }
+    inline ScoreType static_eval() { return eval::evaluate(*m_main_thread_data); }
     size_t nodes_searched() const;
 
     Position &position() { return m_main_thread_data->position; }
