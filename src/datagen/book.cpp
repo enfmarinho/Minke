@@ -29,6 +29,8 @@
 #include "core/position.h"
 #include "core/types.h"
 
+namespace minke::datagen {
+
 EpdBook::EpdBook() { m_book.push_back(START_FEN); }
 
 EpdBook::EpdBook(const std::filesystem::path &path) {
@@ -55,3 +57,5 @@ EpdBook::EpdBook(const std::filesystem::path &path) {
         std::cout << m_book.size() << " openings read from " << path << std::endl;
     }
 }
+
+} // namespace minke::datagen

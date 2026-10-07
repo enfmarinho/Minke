@@ -25,6 +25,8 @@
 #include "core/position.h"
 #include "datagen/packed_position.h"
 
+namespace minke::datagen {
+
 class Viriformat {
   public:
     Viriformat();
@@ -47,3 +49,5 @@ class Viriformat {
     PackedPosition m_initial_pos;
     std::vector<MoveScore> m_moves_scores; // move and score for this ply
 };
+
+} // namespace minke::datagen

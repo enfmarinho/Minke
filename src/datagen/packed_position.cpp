@@ -24,6 +24,8 @@
 #include "core/position.h"
 #include "core/types.h"
 
+namespace minke::datagen {
+
 PackedPosition::PackedPosition(const Position &position, ScoreType score) {
     m_occupancy = static_cast<uint64_t>(position.occ_bb());
 
@@ -66,3 +68,5 @@ PackedPosition::PackedPosition(const Position &position, ScoreType score) {
 }
 
 void PackedPosition::set_result(uint8_t result) { m_result = result; }
+
+} // namespace minke::datagen

@@ -46,6 +46,8 @@
 #include "search/search_limiter.h"
 #include "utils/random.h"
 
+namespace minke::datagen {
+
 DatagenThread::DatagenThread(int id, const std::filesystem::path& outdir_path, const EpdBook& opening_book,
                              uint64_t seed)
     : m_id(id), m_stop_flag(false), m_game_count(0), m_position_count(0), m_book(opening_book), m_prng(seed) {
@@ -316,3 +318,5 @@ void DatagenEngine::stop() {
     m_threads.clear();
     m_datagen_threads.clear();
 }
+
+} // namespace minke::datagen

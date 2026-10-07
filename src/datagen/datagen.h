@@ -35,6 +35,8 @@
 #include "search/search.h"
 #include "utils/random.h"
 
+namespace minke::datagen {
+
 class DatagenThread {
   private:
     static constexpr int VERIFICATION_MAX_SCORE = 800;
@@ -102,3 +104,5 @@ class DatagenEngine {
     std::vector<std::unique_ptr<DatagenThread>> m_datagen_threads;
     std::vector<std::thread> m_threads;
 };
+
+} // namespace minke::datagen

@@ -24,6 +24,8 @@
 #include "core/position.h"
 #include "core/types.h"
 
+namespace minke::datagen {
+
 // White perspective
 enum GameResult : uint8_t {
     LOSS,
@@ -49,3 +51,5 @@ class __attribute__((packed)) PackedPosition {
     uint8_t m_padding;
 };
 static_assert(sizeof(PackedPosition) == 32, "PackedPosition struct is not 32 bytes");
+
+} // namespace minke::datagen

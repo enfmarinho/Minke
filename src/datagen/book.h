@@ -23,6 +23,8 @@
 #include <string>
 #include <vector>
 
+namespace minke::datagen {
+
 class EpdBook {
   public:
     EpdBook();
@@ -33,3 +35,5 @@ class EpdBook {
   private:
     std::vector<std::string> m_book;
 };
+
+} // namespace minke::datagen
