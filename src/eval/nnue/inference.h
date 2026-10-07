@@ -26,6 +26,7 @@
 
 #ifdef TRACK_ACTIVATIONS
 #include <array>
+#include <cstddef>
 inline std::array<size_t, nnue::PAIR_COUNT> activation_table;
 #endif // TRACK_ACTIVATIONS
 
