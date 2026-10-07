@@ -27,6 +27,8 @@
 #include "core/move.h"
 #include "types.h"
 
+namespace minke {
+
 struct BoardState {
     Piece captured;
     int fifty_move_ply;
@@ -197,3 +199,5 @@ class Position {
 
     bool m_chess960{false};
 };
+
+} // namespace minke

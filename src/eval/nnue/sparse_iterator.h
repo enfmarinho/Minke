@@ -33,7 +33,7 @@
 #include "eval/nnue/arch.h"
 #include "eval/nnue/simd.h"
 
-namespace nnue {
+namespace minke::nnue {
 
 class SparseIterator {
   public:
@@ -74,4 +74,5 @@ class SparseIterator {
 class SparseIterator {};
 
 #endif // #if USE_SIMD
-}
+
+} // namespace minke::nnue

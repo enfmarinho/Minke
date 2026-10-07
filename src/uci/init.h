@@ -18,8 +18,12 @@
 
 #pragma once
 
+namespace minke {
+
 void init_all();
 
 void init_search_params();
 
 void init_network_params();
+
+} // namespace minke

@@ -25,9 +25,11 @@
 #include "eval/nnue/accumulator/perspective.h"
 #include "eval/nnue/arch.h"
 
+namespace minke {
 class Position;
+}
 
-namespace nnue::accumulator {
+namespace minke::nnue::accumulator {
 
 class FinnyTable {
   public:
@@ -56,4 +58,4 @@ class FinnyTable {
         cache; // [flip][king_bucket_idx][pov_color]
 };
 
-} // namespace nnue::accumulator
+} // namespace minke::nnue::accumulator

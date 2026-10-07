@@ -22,6 +22,8 @@
 
 #include "core/position.h"
 
+namespace minke {
+
 void PvList::update(const Move new_move, const PvList &list) {
     std::copy(list.m_pv.begin(), list.m_pv.begin() + list.m_size, m_pv.begin() + 1);
     m_pv[0] = new_move;
@@ -36,3 +38,5 @@ void PvList::print(const Position &pos) const {
 }
 
 void PvList::clear() { m_size = 0; }
+
+} // namespace minke

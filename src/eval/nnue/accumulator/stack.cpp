@@ -25,7 +25,7 @@
 #include "core/types.h"
 #include "eval/nnue/accumulator/state.h"
 
-namespace nnue::accumulator {
+namespace minke::nnue::accumulator {
 
 void Stack::refresh(const Position &pos) {
     const auto &white_perspective_acc = m_finny_table.update(pos, WHITE);
@@ -77,4 +77,4 @@ void Stack::update_pov(const Position &pos, const Color pov) {
     assert(head->pov(pov) == Perspective(pos, pov));
 }
 
-} // namespace nnue::accumulator
+} // namespace minke::nnue::accumulator

@@ -36,6 +36,8 @@
 #include "search/cuckoo.h"
 #include "utils/utils.h"
 
+namespace minke {
+
 bool Position::set_fen(const std::string &fen) {
     reset();
 
@@ -319,7 +321,7 @@ DirtyPiece Position::make_regular(const Move move) {
         m_curr_state.fifty_move_ply = 0;
         int pawn_offset = get_pawn_offset(m_stm);
         if (to - from == 2 * pawn_offset &&
-            (Attacks::pawn_attack(stm(), static_cast<Square>(to - pawn_offset)) &
+            (attacks::pawn_attack(stm(), static_cast<Square>(to - pawn_offset)) &
              piece_bb(PAWN, nstm()))) { // Double push and there is a enemy pawn to en passant
             m_curr_state.en_passant = static_cast<Square>(to - pawn_offset);
             hash_ep_key();
@@ -542,11 +544,11 @@ HashType Position::estimated_key_after(const Move move) const {
     const Piece piece = piece_at(from);
     const Piece captured = piece_at(to);
 
-    HashType key = hash() ^ Zobrist::color_key();
-    key ^= Zobrist::piece_square_key({piece, from}) ^ Zobrist::piece_square_key({piece, to});
+    HashType key = hash() ^ zobrist::color_key();
+    key ^= zobrist::piece_square_key({piece, from}) ^ zobrist::piece_square_key({piece, to});
 
     if (captured != EMPTY) {
-        key ^= Zobrist::piece_square_key({captured, to});
+        key ^= zobrist::piece_square_key({captured, to});
     }
 
     return key;
@@ -556,16 +558,16 @@ void Position::calculate_aux_bbs() {
     Color adversary = nstm();
     Square ksq = king_sq(m_stm);
     m_curr_state.pins = 0;
-    m_curr_state.checkers = (Attacks::pawn_attack(stm(), ksq) & piece_bb(PAWN, adversary)) // Pawns
-                            | (Attacks::knight_attack(ksq) & piece_bb(KNIGHT, adversary)); // Knights;
+    m_curr_state.checkers = (attacks::pawn_attack(stm(), ksq) & piece_bb(PAWN, adversary)) // Pawns
+                            | (attacks::knight_attack(ksq) & piece_bb(KNIGHT, adversary)); // Knights;
 
     Bitboard slider_checkers =
-        ((piece_bb(QUEEN, adversary) | piece_bb(BISHOP, adversary)) & Attacks::bishop_attack(ksq, 0)) |
-        ((piece_bb(QUEEN, adversary) | piece_bb(ROOK, adversary)) & Attacks::rook_attack(ksq, 0));
+        ((piece_bb(QUEEN, adversary) | piece_bb(BISHOP, adversary)) & attacks::bishop_attack(ksq, 0)) |
+        ((piece_bb(QUEEN, adversary) | piece_bb(ROOK, adversary)) & attacks::rook_attack(ksq, 0));
     while (slider_checkers) {
         Square sq = slider_checkers.poplsb();
 
-        Bitboard blockers = Attacks::inbetween_mask(ksq, sq) & occ_bb();
+        Bitboard blockers = attacks::inbetween_mask(ksq, sq) & occ_bb();
         if (!blockers) {
             m_curr_state.checkers.set_sq(sq);
         } else if (blockers.popcount() == 1) {
@@ -590,22 +592,22 @@ void Position::calculate_threats_bb() {
     Bitboard knights_bb = piece_bb(KNIGHT, opp);
     while (knights_bb) {
         const Square sq = knights_bb.poplsb();
-        threats |= Attacks::knight_attack(sq);
+        threats |= attacks::knight_attack(sq);
     }
 
     Bitboard bishop_bb = piece_bb(BISHOP, opp) | piece_bb(QUEEN, opp);
     while (bishop_bb) {
         const Square sq = bishop_bb.poplsb();
-        threats |= Attacks::bishop_attack(sq, occupancy_bb);
+        threats |= attacks::bishop_attack(sq, occupancy_bb);
     }
 
     Bitboard rook_bb = piece_bb(ROOK, opp) | piece_bb(QUEEN, opp);
     while (rook_bb) {
         const Square sq = rook_bb.poplsb();
-        threats |= Attacks::rook_attack(sq, occupancy_bb);
+        threats |= attacks::rook_attack(sq, occupancy_bb);
     }
 
-    threats |= Attacks::king_attack(king_sq(opp));
+    threats |= attacks::king_attack(king_sq(opp));
 }
 
 void Position::calculate_hashes() {
@@ -640,23 +642,23 @@ bool Position::is_attacked(const Square sq) const {
     occupancy.unset_sq(sq); // square to be checked has to be unset on occupancy bitboard
 
     // Check if sq is attacked by opponent pawns. Note: pawn attack mask has to be "stm" because the logic is reversed
-    if (piece_bb(PAWN, opponent) & Attacks::pawn_attack(stm(), sq))
+    if (piece_bb(PAWN, opponent) & attacks::pawn_attack(stm(), sq))
         return true;
 
     // Check if sq is attacked by opponent knights
-    if (piece_bb(KNIGHT, opponent) & Attacks::knight_attack(sq))
+    if (piece_bb(KNIGHT, opponent) & attacks::knight_attack(sq))
         return true;
 
     // Check if sq is attacked by opponent bishops or queens
-    if ((piece_bb(BISHOP, opponent) | piece_bb(QUEEN, opponent)) & Attacks::bishop_attack(sq, occupancy))
+    if ((piece_bb(BISHOP, opponent) | piece_bb(QUEEN, opponent)) & attacks::bishop_attack(sq, occupancy))
         return true;
 
     // Check if sq is attacked by opponent rooks or queens
-    if ((piece_bb(ROOK, opponent) | piece_bb(QUEEN, opponent)) & Attacks::rook_attack(sq, occupancy))
+    if ((piece_bb(ROOK, opponent) | piece_bb(QUEEN, opponent)) & attacks::rook_attack(sq, occupancy))
         return true;
 
     // Check if sq is attacked by opponent king. Unnecessary when checking for checks
-    if (piece_bb(KING, opponent) & Attacks::king_attack(sq))
+    if (piece_bb(KING, opponent) & attacks::king_attack(sq))
         return true;
 
     return false;
@@ -666,18 +668,18 @@ Bitboard Position::attackers(const Square sq) const {
     Bitboard attackers;
     Bitboard occupancy = occ_bb();
 
-    attackers |= Attacks::pawn_attack(WHITE, sq) & piece_bb(PAWN, BLACK);
-    attackers |= Attacks::pawn_attack(BLACK, sq) & piece_bb(PAWN, WHITE);
-    attackers |= Attacks::knight_attack(sq) & piece_bb(KNIGHT);
-    attackers |= Attacks::bishop_attack(sq, occupancy) & (piece_bb(BISHOP) | piece_bb(QUEEN));
-    attackers |= Attacks::rook_attack(sq, occupancy) & (piece_bb(ROOK) | piece_bb(QUEEN));
-    attackers |= Attacks::king_attack(sq) & piece_bb(KING);
+    attackers |= attacks::pawn_attack(WHITE, sq) & piece_bb(PAWN, BLACK);
+    attackers |= attacks::pawn_attack(BLACK, sq) & piece_bb(PAWN, WHITE);
+    attackers |= attacks::knight_attack(sq) & piece_bb(KNIGHT);
+    attackers |= attacks::bishop_attack(sq, occupancy) & (piece_bb(BISHOP) | piece_bb(QUEEN));
+    attackers |= attacks::rook_attack(sq, occupancy) & (piece_bb(ROOK) | piece_bb(QUEEN));
+    attackers |= attacks::king_attack(sq) & piece_bb(KING);
 
     return attackers;
 }
 
 bool Position::is_legal(const Move move) {
-    using Attacks::inbetween_mask;
+    using attacks::inbetween_mask;
 
     const Square ksq = king_sq(m_stm);
     const Square from = move.from();
@@ -770,7 +772,7 @@ bool Position::is_pseudo_legal(const Move move) const {
         return castling_pseudo_legal(from, to, moved_pt);
     }
 
-    const Bitboard moved_piece_attacks = Attacks::piece_attack(moved_pt, from, occ_bb());
+    const Bitboard moved_piece_attacks = attacks::piece_attack(moved_pt, from, occ_bb());
     return moved_piece_attacks.is_set(to);
 }
 
@@ -791,7 +793,7 @@ bool Position::pawn_pseudo_legal(const Square from, const Square to, const Move 
         if (m_curr_state.en_passant != to || !piece_bb(PAWN, nstm()).is_set(static_cast<Square>(to - pawn_offset)))
             return false;
     } else if (move.is_capture()) {
-        if (!Attacks::pawn_attack(stm(), from).is_set(to))
+        if (!attacks::pawn_attack(stm(), from).is_set(to))
             return false;
     } else if (from + 2 * pawn_offset == to) {
         if (get_rank(from) != get_pawn_start_rank(m_stm) || piece_at(static_cast<Square>(from + pawn_offset)) != EMPTY)
@@ -804,7 +806,7 @@ bool Position::pawn_pseudo_legal(const Square from, const Square to, const Move 
 }
 
 bool Position::castling_pseudo_legal(const Square from, const Square to, const PieceType moved_piece_type) const {
-    using Attacks::inbetween_mask;
+    using attacks::inbetween_mask;
 
     if (moved_piece_type != KING)
         return false;
@@ -846,31 +848,31 @@ bool Position::has_upcoming_repetition(const int ply) const {
 
     const Bitboard occ = occ_bb();
     const HashType position_key = hash();
-    HashType other = position_key ^ prev_key(1) ^ Zobrist::color_key();
+    HashType other = position_key ^ prev_key(1) ^ zobrist::color_key();
 
     for (int i = 3; i <= end; i += 2) {
         HashType curr_key = prev_key(i);
-        other ^= curr_key ^ prev_key(i - 1) ^ Zobrist::color_key();
+        other ^= curr_key ^ prev_key(i - 1) ^ zobrist::color_key();
 
         if (other != 0) {
             continue;
         }
 
         const auto diff = position_key ^ curr_key;
-        uint32_t slot = Cuckoo::h1(diff);
-        if (diff != Cuckoo::keys[slot]) {
-            slot = Cuckoo::h2(diff);
+        uint32_t slot = cuckoo::h1(diff);
+        if (diff != cuckoo::keys[slot]) {
+            slot = cuckoo::h2(diff);
         }
 
-        if (diff != Cuckoo::keys[slot]) {
+        if (diff != cuckoo::keys[slot]) {
             continue;
         }
 
-        const auto move = Cuckoo::moves[slot];
+        const auto move = cuckoo::moves[slot];
         const Square from = move.from();
         const Square to = move.to();
 
-        if (!((Attacks::inbetween_mask(to, from) ^ 1ULL << to) & occ)) {
+        if (!((attacks::inbetween_mask(to, from) ^ 1ULL << to) & occ)) {
             // repetition is after root, done
             if (ply > i) {
                 return true;
@@ -1012,8 +1014,8 @@ bool Position::repetition() const {
 
 bool Position::is_fifty_move_draw() const {
     if (m_curr_state.fifty_move_ply >= 100) {
-        Movegen::ScoredMoveList move_list;
-        Movegen::all(move_list, *this);
+        movegen::ScoredMoveList move_list;
+        movegen::all(move_list, *this);
         return !move_list.empty(); // if there is at least one legal move, its not checkmate
     }
 
@@ -1047,7 +1049,7 @@ void Position::hash_piece_key(const PieceSquare ps) {
     assert(ps.piece >= WHITE_PAWN && ps.piece <= BLACK_KING);
     assert(ps.sq >= a1 && ps.sq <= h8);
 
-    const HashType psq_key = Zobrist::piece_square_key(ps);
+    const HashType psq_key = zobrist::piece_square_key(ps);
     board_state().position_hash ^= psq_key;
     if (ps.piece == WHITE_PAWN || ps.piece == BLACK_PAWN) {
         board_state().pawn_hash ^= psq_key;
@@ -1066,18 +1068,18 @@ void Position::hash_piece_key(const PieceSquare ps) {
 void Position::hash_castle_key() {
     assert(m_curr_state.castling_rights >= 0 && m_curr_state.castling_rights <= ANY_CASTLING);
 
-    board_state().position_hash ^= Zobrist::castle_key(m_curr_state.castling_rights);
+    board_state().position_hash ^= zobrist::castle_key(m_curr_state.castling_rights);
 }
 
 void Position::hash_ep_key() {
     assert(get_file(m_curr_state.en_passant) >= 0 && get_file(m_curr_state.en_passant) < 8);
 
-    const HashType ep_key = Zobrist::ep_key(get_file(m_curr_state.en_passant));
+    const HashType ep_key = zobrist::ep_key(get_file(m_curr_state.en_passant));
     board_state().position_hash ^= ep_key;
     board_state().pawn_hash ^= ep_key;
 }
 
-void Position::hash_side_key() { board_state().position_hash ^= Zobrist::color_key(); }
+void Position::hash_side_key() { board_state().position_hash ^= zobrist::color_key(); }
 
 std::pair<Square, Square> Position::castling_to_sqs(const Square king_from, const Square rook_from) const {
     const int pov_flip = stm() == WHITE ? 0 : 56;
@@ -1088,3 +1090,5 @@ std::pair<Square, Square> Position::castling_to_sqs(const Square king_from, cons
     // castle short
     return std::make_pair(static_cast<Square>(g1 ^ pov_flip), static_cast<Square>(f1 ^ pov_flip));
 }
+
+} // namespace minke

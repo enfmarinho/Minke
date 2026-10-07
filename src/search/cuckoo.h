@@ -24,7 +24,7 @@
 #include "core/move.h"
 #include "core/types.h"
 
-namespace Cuckoo {
+namespace minke::cuckoo {
 
 extern std::array<HashType, 8192> keys;
 extern std::array<Move, 8192> moves;
@@ -35,4 +35,4 @@ constexpr size_t h2(HashType hash) { return static_cast<size_t>((hash >> 16) & 0
 
 void init();
 
-}; // namespace Cuckoo
+} // namespace minke::cuckoo

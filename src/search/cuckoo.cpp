@@ -25,7 +25,7 @@
 #include "core/zobrist.h"
 #include "utils/utils.h"
 
-namespace Cuckoo {
+namespace minke::cuckoo {
 
 std::array<HashType, 8192> keys{};
 std::array<Move, 8192> moves{};
@@ -46,13 +46,13 @@ void init() {
                 for (int sqi1 = sqi0 + 1; sqi1 <= h8; ++sqi1) {
                     const Square sq1 = static_cast<Square>(sqi1);
 
-                    if (!Attacks::piece_attack(pt, sq0, 0).is_set(sq1)) {
+                    if (!attacks::piece_attack(pt, sq0, 0).is_set(sq1)) {
                         continue;
                     }
 
                     Move move = Move(sq0, sq1, REGULAR);
-                    HashType key = Zobrist::piece_square_key({piece, sq0}) ^ Zobrist::piece_square_key({piece, sq1}) ^
-                                   Zobrist::color_key();
+                    HashType key = zobrist::piece_square_key({piece, sq0}) ^ zobrist::piece_square_key({piece, sq1}) ^
+                                   zobrist::color_key();
 
                     size_t slot = h1(key);
 
@@ -75,4 +75,4 @@ void init() {
     assert(count == 3668);
 }
 
-}; // namespace Cuckoo
+} // namespace minke::cuckoo

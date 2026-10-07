@@ -25,6 +25,8 @@
 #include "core/position.h"
 #include "datagen/packed_position.h"
 
+namespace minke::datagen {
+
 Viriformat::Viriformat() : m_initial_pos(PackedPosition(Position(), 0)) { m_moves_scores.reserve(MAX_MOVES_PER_POS); }
 
 Viriformat::Viriformat(const Position &pos) : m_initial_pos(PackedPosition(pos, 0)) {
@@ -59,3 +61,5 @@ void Viriformat::write(std::ofstream &file_out, GameResult result) {
     file_out.write(reinterpret_cast<const char *>(m_moves_scores.data()), sizeof(MoveScore) * m_moves_scores.size());
     file_out.write(reinterpret_cast<const char *>(null_terminator), sizeof(MoveScore));
 }
+
+} // namespace minke::datagen

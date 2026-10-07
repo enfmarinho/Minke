@@ -30,7 +30,7 @@
 #include "eval/nnue/sparse_iterator.h"
 #include "utils/incbin.h"
 
-namespace nnue {
+namespace minke::nnue {
 
 namespace {
 
@@ -316,4 +316,4 @@ int32_t propagate(std::span<const int16_t, L1_SIZE> stm_inputs, std::span<const 
     return l3_output;
 }
 
-} // namespace nnue
+} // namespace minke::nnue

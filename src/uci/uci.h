@@ -24,7 +24,7 @@
 #include "core/position.h"
 #include "search/search.h"
 
-namespace UCI {
+namespace minke::uci {
 
 void run();
 
@@ -61,4 +61,4 @@ class UciHandler {
     Engine m_engine;
 };
 
-} // namespace UCI
+} // namespace minke::uci

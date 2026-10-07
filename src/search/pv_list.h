@@ -24,6 +24,8 @@
 #include "core/position.h"
 #include "core/types.h"
 
+namespace minke {
+
 class PvList {
   public:
     inline Move best_move() const { return m_size > 0 ? m_pv[0] : Move::none(); }
@@ -35,3 +37,5 @@ class PvList {
     std::array<Move, MAX_SEARCH_DEPTH> m_pv;
     CounterType m_size{0};
 };
+
+} // namespace minke

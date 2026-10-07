@@ -26,7 +26,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace simd {
+namespace minke::nnue::simd {
 
 constexpr size_t PACKUS_LANE_COUNT = 1;
 constexpr size_t PACKUS_LANE_ORDER[2] = {0, 0};
@@ -169,6 +169,6 @@ inline vepi32 dpbusd_i32(vepi32 sum, vepu8 u, vepi8 i) {
 #endif
 }
 
-} // namespace simd
+} // namespace minke::nnue::simd
 
 #endif

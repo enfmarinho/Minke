@@ -43,13 +43,15 @@
 #include "utils/utils.h"
 #endif
 
+namespace minke::uci {
+
 namespace {
 int64_t perft(Position &position, CounterType depth, bool root) {
     const bool is_leaf = (depth == 2);
     int64_t count = 0, nodes = 0;
 
-    Movegen::ScoredMoveList move_list;
-    Movegen::all(move_list, position);
+    movegen::ScoredMoveList move_list;
+    movegen::all(move_list, position);
     for (ScoredMove score_move : move_list) {
         const Move move = score_move.move;
         position.make_move(move);
@@ -57,8 +59,8 @@ int64_t perft(Position &position, CounterType depth, bool root) {
         if (root && depth <= 1) {
             count = 1;
         } else if (is_leaf) {
-            Movegen::ScoredMoveList tmp;
-            Movegen::all(tmp, position);
+            movegen::ScoredMoveList tmp;
+            movegen::all(tmp, position);
             count = tmp.size();
         } else {
             count = perft(position, depth - 1, false);
@@ -77,7 +79,7 @@ int64_t perft(Position &position, CounterType depth, bool root) {
 }
 } // namespace
 
-namespace EngineOptions {
+namespace engine_options {
 constexpr CounterType HASH_DEFAULT = 16;
 constexpr CounterType HASH_MIN = 1;
 constexpr CounterType HASH_MAX = 2097152;
@@ -97,9 +99,7 @@ void print() {
     }
 #endif
 }
-} // namespace EngineOptions
-
-namespace UCI {
+} // namespace engine_options
 
 void run() {
     UciHandler uci_handler;
@@ -108,7 +108,7 @@ void run() {
 
 UciHandler::UciHandler() {
     m_pos.set_fen(START_FEN);
-    m_engine.resize_tt(EngineOptions::HASH_DEFAULT);
+    m_engine.resize_tt(engine_options::HASH_DEFAULT);
     m_engine.new_game();
     m_engine.prepare_search(m_pos);
     m_engine.report(true);
@@ -229,8 +229,8 @@ void UciHandler::handle_tuneinfo() {
 void UciHandler::handle_debug() {
     m_pos.print();
     TTEntry tte;
-    Movegen::ScoredMoveList move_list;
-    Movegen::all(move_list, m_pos);
+    movegen::ScoredMoveList move_list;
+    movegen::all(move_list, m_pos);
     std::cout << "Move list(" << move_list.size() << "): ";
     for (ScoredMove scored_move : move_list) {
         std::cout << m_pos.move_to_uci(scored_move.move) << " ";
@@ -267,8 +267,8 @@ void UciHandler::handle_position(std::istringstream &iss) {
         if (moves.size() - index == 100 || m_pos.history_ply() > 100)
             m_pos.reset_history();
 
-        Movegen::ScoredMoveList move_list;
-        Movegen::all(move_list, m_pos);
+        movegen::ScoredMoveList move_list;
+        movegen::all(move_list, m_pos);
 
         for (auto scored_move : move_list) {
             if (moves[index] == m_pos.move_to_uci(scored_move.move)) {
@@ -287,7 +287,7 @@ void UciHandler::handle_isready() { std::cout << "readyok" << std::endl; }
 void UciHandler::handle_uci() {
     std::cout << "id name Minke " << VERSION << "\n";
     std::cout << "id author Eduardo Marinho \n";
-    EngineOptions::print();
+    engine_options::print();
     std::cout << "uciok" << std::endl;
 }
 
@@ -313,9 +313,9 @@ void UciHandler::handle_setoption(std::istringstream &iss) {
     iss >> token;
     iss >> garbage; // Consume the "value" token.
     iss >> value;
-    if (token == "Hash" && valid_int_value(EngineOptions::HASH_MIN, EngineOptions::HASH_MAX)) {
+    if (token == "Hash" && valid_int_value(engine_options::HASH_MIN, engine_options::HASH_MAX)) {
         m_engine.resize_tt(value_int);
-    } else if (token == "Threads" && valid_int_value(EngineOptions::THREADS_MIN, EngineOptions::THREADS_MAX)) {
+    } else if (token == "Threads" && valid_int_value(engine_options::THREADS_MIN, engine_options::THREADS_MAX)) {
         m_engine.resize_threads(value_int);
     }
 #ifdef TUNE
@@ -334,9 +334,9 @@ void UciHandler::handle_bench(std::istringstream &iss) {
         return;
     }
 
-    int bench_depth = Benchmark::DEFAULT_BENCH_DEPTH;
+    int bench_depth = benchmark::DEFAULT_BENCH_DEPTH;
     iss >> std::skipws >> bench_depth;
-    Benchmark::run(bench_depth);
+    benchmark::run(bench_depth);
 }
 
 void UciHandler::handle_eval() { std::cout << "The position evaluation is " << m_engine.static_eval() << std::endl; }
@@ -358,4 +358,4 @@ bool UciHandler::stopped() {
     return true;
 }
 
-} // namespace UCI
+} // namespace minke::uci

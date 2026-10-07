@@ -27,6 +27,8 @@
 
 #include "core/types.h"
 
+namespace minke {
+
 struct TunableParam {
     std::string name;
     int default_value;
@@ -113,6 +115,8 @@ class TunableParamList {
     inline int name() { return tuned_##name.curr_value; }
 
 #else
+
+namespace minke {
 
 #define TUNABLE_PARAM(name, default, min, max, cend, rend) \
     constexpr int name() { return default; }
@@ -273,3 +277,5 @@ const int SEE_VALUES[PIECE_NB] = {pawn_see_value(), knight_see_value(), bishop_s
 TUNABLE_PARAM(mp_see_threshold_base, 77, 0, 150, 5, 0.002)
 TUNABLE_PARAM(mp_killer1_bonus, 8515, 0, 16000, 400, 0.002)
 TUNABLE_PARAM(mp_killer2_bonus, 6375, 0, 16000, 400, 0.002)
+
+} // namespace minke

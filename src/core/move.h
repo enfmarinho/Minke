@@ -24,6 +24,8 @@
 #include "core/types.h"
 #include "utils/static_vector.h"
 
+namespace minke {
+
 class Move {
   public:
     constexpr Move() : m_bytes(0) {}
@@ -80,3 +82,5 @@ struct PieceMove {
 
 using MoveList = StaticVector<Move, MAX_MOVES_PER_POS>;
 using PieceMoveList = StaticVector<PieceMove, MAX_MOVES_PER_POS>;
+
+} // namespace minke

@@ -20,6 +20,7 @@
 
 #include "core/types.h"
 
+namespace minke {
 struct ThreadData;
 class Position;
 namespace nnue::accumulator {
@@ -35,3 +36,5 @@ ScoreType evaluate(const Position& pos, const nnue::accumulator::State& acc_stat
 ScoreType adjust(const Position& pos, const ScoreType raw_eval, const ScoreType correction);
 
 } // namespace eval
+
+} // namespace minke

@@ -35,7 +35,9 @@
 #include "search/search.h"
 #include "utils/random.h"
 
-class DatagenThread {
+namespace minke::datagen {
+
+class Worker {
   private:
     static constexpr int VERIFICATION_MAX_SCORE = 800;
     static constexpr int VERIFICATION_SOFT_NODE_LIMIT = 50'000;
@@ -53,9 +55,9 @@ class DatagenThread {
     static constexpr int DEFAULT_TT_SIZE = 16;
 
   public:
-    DatagenThread() = delete;
-    DatagenThread(int id, const std::filesystem::path& outdir_path, const EpdBook& opening_book, uint64_t seed);
-    ~DatagenThread();
+    Worker() = delete;
+    Worker(int id, const std::filesystem::path& outdir_path, const EpdBook& opening_book, uint64_t seed);
+    ~Worker();
 
     void run();
     void stop();
@@ -82,10 +84,10 @@ class DatagenThread {
     Viriformat m_games;
 };
 
-class DatagenEngine {
+class Runner {
   public:
-    DatagenEngine() = default;
-    ~DatagenEngine();
+    Runner() = default;
+    ~Runner();
 
     void datagen_loop(int thread_count, const std::filesystem::path& outdir_path,
                       const std::optional<std::filesystem::path> opening_book_path);
@@ -99,6 +101,8 @@ class DatagenEngine {
 
     TimeType m_start_time;
 
-    std::vector<std::unique_ptr<DatagenThread>> m_datagen_threads;
+    std::vector<std::unique_ptr<Worker>> m_workers;
     std::vector<std::thread> m_threads;
 };
+
+} // namespace minke::datagen

@@ -26,6 +26,8 @@
 #include "search/search.h"
 #include "uci/tune.h"
 
+namespace minke {
+
 static inline size_t cont_corr_idx(const PieceMove pmove) {
     return (static_cast<size_t>(pmove.piece) << 6) | static_cast<size_t>(pmove.move.to());
 };
@@ -81,3 +83,5 @@ HistoryType CorrectionHistory::correction(const ThreadData& td, const int ply) c
 
     return adjustment / CORRHIST_GRAIN;
 }
+
+} // namespace minke

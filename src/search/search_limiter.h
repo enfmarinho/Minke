@@ -23,6 +23,8 @@
 
 #include "core/types.h"
 
+namespace minke {
+
 struct ThreadData;
 
 struct SearchLimits {
@@ -69,3 +71,5 @@ class SearchLimiter {
     bool m_time_set;
     bool m_can_stop;
 };
+
+} // namespace minke

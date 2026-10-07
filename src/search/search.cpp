@@ -36,6 +36,8 @@
 #include "search/tt.h"
 #include "uci/tune.h"
 
+namespace minke {
+
 void SearchStackEntry::init() {
     curr_pmove = PieceMove::none();
     excluded_move = Move::none();
@@ -406,7 +408,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             && eval >= beta                               //
             && node.static_eval >= beta + nmp_beta_margin //
         ) {
-            m_tt.prefetch(position.hash() ^ Zobrist::color_key());
+            m_tt.prefetch(position.hash() ^ zobrist::color_key());
 
             const int reduction = (nmp_base_reduction() + depth * nmp_depth_factor()) / 64;
 
@@ -826,8 +828,8 @@ bool Engine::SEE(Position &position, const Move move, int threshold) {
 
         // Add x-ray attackers, if there is any
         switch (cheapest_attacker) {
-            using Attacks::bishop_attack;
-            using Attacks::rook_attack;
+            using attacks::bishop_attack;
+            using attacks::rook_attack;
             case PAWN:
                 [[fallthrough]];
             case BISHOP:
@@ -870,3 +872,5 @@ void Engine::report_search_info(const Position &pos, const CounterType depth, co
 void Engine::report_search_result(const Position &pos, Move best_move) {
     std::cout << "bestmove " << (!best_move ? "none" : pos.move_to_uci(best_move)) << std::endl;
 }
+
+} // namespace minke

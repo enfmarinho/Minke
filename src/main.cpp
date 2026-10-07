@@ -27,13 +27,14 @@
 #include "uci/uci.h"
 
 int main(int argc, char *argv[]) {
+    using namespace minke;
     init_all();
     if (argc > 1 && std::string_view(argv[1]) == "bench") {
-        int depth = Benchmark::DEFAULT_BENCH_DEPTH;
+        int depth = benchmark::DEFAULT_BENCH_DEPTH;
         if (argc > 2)
             depth = std::stoi(argv[2]);
 
-        Benchmark::run(depth);
+        benchmark::run(depth);
     } else if (argc > 1 && std::string_view(argv[1]) == "datagen") {
         if (argc != 4 && argc != 5) {
             std::cerr << "usage: " << argv[0] << " datagen <threads> <output_directory> [opening_book.epd]\n";
@@ -44,10 +45,10 @@ int main(int argc, char *argv[]) {
         std::filesystem::path directory = argv[3];
         std::optional<std::filesystem::path> opening_book = (argc == 5 ? std::optional(argv[4]) : std::nullopt);
 
-        DatagenEngine dt_engine;
-        dt_engine.datagen_loop(concurrency, directory, opening_book);
+        datagen::Runner runner;
+        runner.datagen_loop(concurrency, directory, opening_book);
     } else {
-        UCI::run();
+        uci::run();
     }
 
     return EXIT_SUCCESS;

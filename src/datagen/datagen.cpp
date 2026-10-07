@@ -46,8 +46,9 @@
 #include "search/search_limiter.h"
 #include "utils/random.h"
 
-DatagenThread::DatagenThread(int id, const std::filesystem::path& outdir_path, const EpdBook& opening_book,
-                             uint64_t seed)
+namespace minke::datagen {
+
+Worker::Worker(int id, const std::filesystem::path& outdir_path, const EpdBook& opening_book, uint64_t seed)
     : m_id(id), m_stop_flag(false), m_game_count(0), m_position_count(0), m_book(opening_book), m_prng(seed) {
     std::filesystem::path path = std::filesystem::path(outdir_path) / ("minke_data" + std::to_string(m_id) + ".vf");
 
@@ -70,21 +71,21 @@ DatagenThread::DatagenThread(int id, const std::filesystem::path& outdir_path, c
     m_engine.resize_tt(DEFAULT_TT_SIZE);
 }
 
-DatagenThread::~DatagenThread() { m_file_out.close(); }
+Worker::~Worker() { m_file_out.close(); }
 
-void DatagenThread::run() {
+void Worker::run() {
     m_stop_flag.store(false, std::memory_order_relaxed);
     while (!stopped()) {
         play_game();
     }
 }
 
-void DatagenThread::stop() {
+void Worker::stop() {
     m_stop_flag.store(true, std::memory_order_relaxed);
     m_engine.stop_search();
 }
 
-void DatagenThread::play_game() {
+void Worker::play_game() {
     init_pos_randomly();
 
     // Search deeper to verify position before generating data from it
@@ -185,7 +186,7 @@ void DatagenThread::play_game() {
     }
 }
 
-void DatagenThread::init_pos_randomly() {
+void Worker::init_pos_randomly() {
     auto random_startpos = [&]() -> const std::string& {
         return m_book.opening(m_prng.rand<size_t>()); //
     };
@@ -196,8 +197,8 @@ void DatagenThread::init_pos_randomly() {
     // apply `move_count` random moves to opening. If not reached `move_count` and there is no legal moves restart
     const int move_count = 8 + (m_prng.rand<uint32_t>() % 5);
     for (int i = 0; i < move_count; ++i) {
-        Movegen::ScoredMoveList move_list;
-        Movegen::all(move_list, pos);
+        movegen::ScoredMoveList move_list;
+        movegen::all(move_list, pos);
 
         if (move_list.empty()) { // no legal moves, restart from new opening
             pos.set_fen(random_startpos());
@@ -215,10 +216,10 @@ void DatagenThread::init_pos_randomly() {
     m_games.reset(pos);
 }
 
-DatagenEngine::~DatagenEngine() { stop(); }
+Runner::~Runner() { stop(); }
 
-void DatagenEngine::datagen_loop(int thread_count, const std::filesystem::path& outdir_path,
-                                 const std::optional<std::filesystem::path> opening_book_path) {
+void Runner::datagen_loop(int thread_count, const std::filesystem::path& outdir_path,
+                          const std::optional<std::filesystem::path> opening_book_path) {
     const uint64_t master_seed = SeedGenerator::master_seed();
 
     auto opening_book = [&opening_book_path]() {
@@ -254,7 +255,7 @@ void DatagenEngine::datagen_loop(int thread_count, const std::filesystem::path& 
     std::cout << "Datagen ran successfully!\n";
 }
 
-void DatagenEngine::report() const {
+void Runner::report() const {
     constexpr char line[] = "+------------+------------+------------+------------+------------+\n";
 
     TimeType elapsed_time = now() - m_start_time + 1; // plus 1 to avoid divisions by 0
@@ -275,11 +276,11 @@ void DatagenEngine::report() const {
 
     uint64_t game_count = 0;
     uint64_t position_count = 0;
-    for (const auto& dt_ptr : m_datagen_threads) {
-        print_info_line(std::to_string(dt_ptr->id()), dt_ptr->game_count(), dt_ptr->positions_count());
+    for (const auto& worker : m_workers) {
+        print_info_line(std::to_string(worker->id()), worker->game_count(), worker->positions_count());
 
-        position_count += dt_ptr->positions_count();
-        game_count += dt_ptr->game_count();
+        position_count += worker->positions_count();
+        game_count += worker->game_count();
     }
 
     std::cout << line;
@@ -287,24 +288,24 @@ void DatagenEngine::report() const {
     std::cout << line;
 }
 
-void DatagenEngine::start(int thread_count, const std::filesystem::path& outdir_path, const EpdBook& opening_book,
-                          uint64_t master_seed) {
+void Runner::start(int thread_count, const std::filesystem::path& outdir_path, const EpdBook& opening_book,
+                   uint64_t master_seed) {
     SeedGenerator seed_gen(master_seed);
-    m_datagen_threads.reserve(thread_count);
+    m_workers.reserve(thread_count);
     for (int id = 0; id < thread_count; ++id) {
-        m_datagen_threads.emplace_back(std::make_unique<DatagenThread>(id, outdir_path, opening_book, seed_gen.next()));
+        m_workers.emplace_back(std::make_unique<Worker>(id, outdir_path, opening_book, seed_gen.next()));
     }
 
     m_threads.reserve(thread_count);
     for (int id = 0; id < thread_count; ++id) {
-        m_threads.emplace_back(&DatagenThread::run, m_datagen_threads[id].get());
+        m_threads.emplace_back(&Worker::run, m_workers[id].get());
     }
 }
 
-void DatagenEngine::stop() {
-    for (auto& datagen_thread : m_datagen_threads) {
-        if (datagen_thread) {
-            datagen_thread->stop();
+void Runner::stop() {
+    for (auto& worker : m_workers) {
+        if (worker) {
+            worker->stop();
         }
     }
 
@@ -314,5 +315,7 @@ void DatagenEngine::stop() {
         }
     }
     m_threads.clear();
-    m_datagen_threads.clear();
+    m_workers.clear();
 }
+
+} // namespace minke::datagen
