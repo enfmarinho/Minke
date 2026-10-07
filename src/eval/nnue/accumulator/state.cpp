@@ -23,9 +23,9 @@
 
 namespace nnue::accumulator {
 
-State::State(const Perspective &white_pov_acc, const Perspective &black_pov_acc, const Square white_king_sq,
-             const Square black_king_sq)
-    : m_pov_accumulators{white_pov_acc, black_pov_acc} {
+State::State(const Perspective &white_perspective_acc, const Perspective &black_perspective_acc,
+             const Square white_king_sq, const Square black_king_sq)
+    : m_perspective_accs{white_perspective_acc, black_perspective_acc} {
     m_updated[WHITE] = m_updated[BLACK] = true;
     m_king_sqs[WHITE] = white_king_sq;
     m_king_sqs[BLACK] = black_king_sq;
@@ -44,25 +44,25 @@ void State::init(const DirtyPiece dp, const Square white_king_sq, const Square b
     m_dirty_piece = dp;
 }
 
-void State::update(const Perspective &prev_pov_acc, const Color pov) {
+void State::update(const Perspective &prev_perspective_acc, const Color pov) {
     if (m_updated[pov])
         return;
 
     // clang-format off
     switch (m_dirty_piece.move_type) {
         case ADD_SUB:
-            m_pov_accumulators[pov].add_sub(prev_pov_acc, 
+            m_perspective_accs[pov].add_sub(prev_perspective_acc, 
                                             feature_idx(m_dirty_piece.add0, m_king_sqs[pov], pov),
                                             feature_idx(m_dirty_piece.sub0, m_king_sqs[pov], pov));
             break;
         case ADD_SUB2:
-            m_pov_accumulators[pov].add_sub2(prev_pov_acc, 
+            m_perspective_accs[pov].add_sub2(prev_perspective_acc, 
                                              feature_idx(m_dirty_piece.add0, m_king_sqs[pov], pov),
                                              feature_idx(m_dirty_piece.sub0, m_king_sqs[pov], pov),
                                              feature_idx(m_dirty_piece.sub1, m_king_sqs[pov], pov));
             break;
         case ADD2_SUB2:
-            m_pov_accumulators[pov].add2_sub2(prev_pov_acc, 
+            m_perspective_accs[pov].add2_sub2(prev_perspective_acc, 
                                               feature_idx(m_dirty_piece.add0, m_king_sqs[pov], pov), 
                                               feature_idx(m_dirty_piece.add1, m_king_sqs[pov], pov),
                                               feature_idx(m_dirty_piece.sub0, m_king_sqs[pov], pov), 
@@ -83,7 +83,7 @@ bool State::needs_refresh(const Color pov, const Square new_king_sq) const {
 }
 
 void State::refresh(const Perspective &finny_table_neurons, const Color side) {
-    m_pov_accumulators[side] = finny_table_neurons;
+    m_perspective_accs[side] = finny_table_neurons;
     m_updated[side] = true;
 }
 

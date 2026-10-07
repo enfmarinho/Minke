@@ -27,11 +27,11 @@
 namespace nnue::accumulator {
 
 void Stack::refresh(const Position &pos) {
-    const auto &white_pov_acc = m_finny_table.update(pos, WHITE);
-    const auto &black_pov_acc = m_finny_table.update(pos, BLACK);
+    const auto &white_perspective_acc = m_finny_table.update(pos, WHITE);
+    const auto &black_perspective_acc = m_finny_table.update(pos, BLACK);
 
     m_stack.clear();
-    m_stack.emplace_back(white_pov_acc, black_pov_acc, pos.king_sq(WHITE), pos.king_sq(BLACK));
+    m_stack.emplace_back(white_perspective_acc, black_perspective_acc, pos.king_sq(WHITE), pos.king_sq(BLACK));
 
     assert(m_accumulators.back().updated(WHITE));
     assert(m_accumulators.back().updated(BLACK));

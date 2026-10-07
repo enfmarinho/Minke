@@ -42,7 +42,7 @@ class FinnyTable {
     struct FinnyTableCache {
         std::array<Bitboard, 6> pt_bb;    // [piece_type]
         std::array<Bitboard, 2> color_bb; // [color]
-        Perspective pov_accumulator;
+        Perspective perspective_acc;
 
         FinnyTableCache() { reset(); };
         ~FinnyTableCache() = default;

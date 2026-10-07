@@ -52,18 +52,18 @@ const nnue::accumulator::Perspective &FinnyTable::update(const Position &pos, co
             while (added && removed) {
                 const Square add_sq = added.poplsb();
                 const Square sub_sq = removed.poplsb();
-                cached_entry.pov_accumulator.self_add_sub(feature_idx(piece, add_sq, king_sq, pov),
+                cached_entry.perspective_acc.self_add_sub(feature_idx(piece, add_sq, king_sq, pov),
                                                           feature_idx(piece, sub_sq, king_sq, pov));
             }
 
             while (added) {
                 const Square sq = added.poplsb();
-                cached_entry.pov_accumulator.self_add(feature_idx(piece, sq, king_sq, pov));
+                cached_entry.perspective_acc.self_add(feature_idx(piece, sq, king_sq, pov));
             }
 
             while (removed) {
                 const Square sq = removed.poplsb();
-                cached_entry.pov_accumulator.self_sub(feature_idx(piece, sq, king_sq, pov));
+                cached_entry.perspective_acc.self_sub(feature_idx(piece, sq, king_sq, pov));
             }
         }
     }
@@ -76,9 +76,9 @@ const nnue::accumulator::Perspective &FinnyTable::update(const Position &pos, co
         cached_entry.pt_bb[pt_idx] = pos.piece_bb(static_cast<PieceType>(pt_idx));
     }
 
-    assert(cached_entry.pov_accumulator == Perspective(pos, pov));
+    assert(cached_entry.perspective_acc == Perspective(pos, pov));
 
-    return cached_entry.pov_accumulator;
+    return cached_entry.perspective_acc;
 }
 
 void FinnyTable::FinnyTableCache::reset() {
@@ -88,7 +88,7 @@ void FinnyTable::FinnyTableCache::reset() {
     for (Bitboard &bb : color_bb) {
         bb = 0;
     }
-    pov_accumulator.reset();
+    perspective_acc.reset();
 }
 
 FinnyTable::FinnyTableCache &FinnyTable::get_cache(const bool flip, const size_t king_bucket, const Color side) {
