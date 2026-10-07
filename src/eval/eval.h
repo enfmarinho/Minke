@@ -18,11 +18,13 @@
 
 #pragma once
 
-#include "core/position.h"
 #include "core/types.h"
-#include "eval/nnue/accumulator/state.h"
 
 struct ThreadData;
+class Position;
+namespace nnue::accumulator {
+class State;
+}
 
 namespace eval {
 
