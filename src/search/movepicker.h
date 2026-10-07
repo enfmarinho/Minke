@@ -61,7 +61,7 @@ class MovePicker {
 
     MovePickerType m_mp_type;
     MovePickerStage m_stage;
-    Movegen::ScoredMoveList m_move_list;
+    movegen::ScoredMoveList m_move_list;
     size_t m_idx, m_end, m_bad_noisy_end;
     Move m_ttmove, m_killer;
     ThreadData *m_td;

@@ -1014,8 +1014,8 @@ bool Position::repetition() const {
 
 bool Position::is_fifty_move_draw() const {
     if (m_curr_state.fifty_move_ply >= 100) {
-        Movegen::ScoredMoveList move_list;
-        Movegen::all(move_list, *this);
+        movegen::ScoredMoveList move_list;
+        movegen::all(move_list, *this);
         return !move_list.empty(); // if there is at least one legal move, its not checkmate
     }
 

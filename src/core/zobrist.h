@@ -66,4 +66,4 @@ inline HashType ep_key(int ep_file) { return HASH_KEYS.en_passant[ep_file]; }
 
 inline HashType color_key() { return HASH_KEYS.side; }
 
-}; // namespace minke::zobrist
+} // namespace minke::zobrist

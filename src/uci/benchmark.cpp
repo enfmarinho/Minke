@@ -31,7 +31,7 @@
 #include "eval/nnue/inference.h"
 #endif
 
-namespace minke::Benchmark {
+namespace minke::benchmark {
 
 // Copied from Stockfish
 const std::vector<std::string> FEN_LIST = {
@@ -140,4 +140,4 @@ void run(const int bench_depth) {
 #endif // TRACK_ACTIVATIONS
 }
 
-} // namespace minke::Benchmark
+} // namespace minke::benchmark

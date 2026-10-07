@@ -197,8 +197,8 @@ void Worker::init_pos_randomly() {
     // apply `move_count` random moves to opening. If not reached `move_count` and there is no legal moves restart
     const int move_count = 8 + (m_prng.rand<uint32_t>() % 5);
     for (int i = 0; i < move_count; ++i) {
-        Movegen::ScoredMoveList move_list;
-        Movegen::all(move_list, pos);
+        movegen::ScoredMoveList move_list;
+        movegen::all(move_list, pos);
 
         if (move_list.empty()) { // no legal moves, restart from new opening
             pos.set_fen(random_startpos());

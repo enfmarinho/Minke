@@ -61,7 +61,7 @@ Move MovePicker::next_move(bool skip_quiets) {
             }
             [[fallthrough]];
         case GEN_NOISY:
-            Movegen::noisies(m_move_list, m_td->position);
+            movegen::noisies(m_move_list, m_td->position);
             m_end = m_move_list.size();
             score_noisy_moves();
             m_stage = PICK_GOOD_NOISY;
@@ -93,7 +93,7 @@ Move MovePicker::next_move(bool skip_quiets) {
             }
             [[fallthrough]];
         case GEN_QUIET:
-            Movegen::quiets(m_move_list, m_td->position);
+            movegen::quiets(m_move_list, m_td->position);
             m_end = m_move_list.size();
             score_quiet_moves();
             m_stage = PICK_QUIET;

@@ -27,7 +27,7 @@
 #include "core/types.h"
 #include "utils/utils.h"
 
-namespace minke::Movegen {
+namespace minke::movegen {
 
 template <MoveType move_t>
 static inline void push_regular_moves(ScoredMoveList& move_list, const Square from_sq, Bitboard to_sqs) {
@@ -299,4 +299,4 @@ void all(ScoredMoveList& move_list, const Position& pos) {
     quiets(move_list, pos);
 }
 
-} // namespace minke::Movegen
+} // namespace minke::movegen

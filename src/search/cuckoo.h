@@ -35,4 +35,4 @@ constexpr size_t h2(HashType hash) { return static_cast<size_t>((hash >> 16) & 0
 
 void init();
 
-}; // namespace minke::cuckoo
+} // namespace minke::cuckoo

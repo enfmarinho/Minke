@@ -23,7 +23,7 @@
 #include "core/types.h"
 #include "utils/static_vector.h"
 
-namespace minke::Movegen {
+namespace minke::movegen {
 
 using ScoredMoveList = StaticVector<ScoredMove, MAX_MOVES_PER_POS>;
 
@@ -36,4 +36,4 @@ void quiets(ScoredMoveList& move_list, const Position& pos);
 /// Generate all legal moves
 void all(ScoredMoveList& move_list, const Position& pos);
 
-} // namespace minke::Movegen
+} // namespace minke::movegen

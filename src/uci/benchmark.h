@@ -18,7 +18,7 @@
 
 #pragma once
 
-namespace minke::Benchmark {
+namespace minke::benchmark {
 
 #ifdef TRACK_ACTIVATIONS
 constexpr int DEFAULT_BENCH_DEPTH = 18;
@@ -30,4 +30,4 @@ constexpr int BENCH_TT_SIZE = 16;
 
 void run(int bench_depth = DEFAULT_BENCH_DEPTH);
 
-} // namespace minke::Benchmark
+} // namespace minke::benchmark
