@@ -24,6 +24,8 @@
 #include <type_traits>
 #include <utility>
 
+namespace minke {
+
 /// A wrapper for std::array.
 /// Make it move convenient to use arrays by tracking it's own size, just like a std::vector
 /// and does not initialize the elements
@@ -86,3 +88,5 @@ class StaticVector {
     };
     size_t m_size{};
 };
+
+} // namespace minke

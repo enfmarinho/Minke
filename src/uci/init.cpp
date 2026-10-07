@@ -30,6 +30,8 @@
 
 INCBIN(NetParameters, EVALFILE);
 
+namespace minke {
+
 int LMR_TABLE[64][64];
 int LMP_TABLE[2][LMP_DEPTH];
 
@@ -59,3 +61,5 @@ void init_search_params() {
 }
 
 void init_network_params() { nnue::network = *reinterpret_cast<const nnue::Network *>(&gNetParametersData); }
+
+} // namespace minke

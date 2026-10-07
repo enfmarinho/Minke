@@ -24,6 +24,8 @@
 #include "core/types.h"
 #include "search/search.h"
 
+namespace minke {
+
 enum MovePickerStage {
     PICK_TT,
     GEN_NOISY,
@@ -66,3 +68,5 @@ class MovePicker {
     ScoreType m_threshold;
     int m_ply;
 };
+
+} // namespace minke

@@ -43,6 +43,8 @@
 #include "utils/utils.h"
 #endif
 
+namespace minke::UCI {
+
 namespace {
 int64_t perft(Position &position, CounterType depth, bool root) {
     const bool is_leaf = (depth == 2);
@@ -98,8 +100,6 @@ void print() {
 #endif
 }
 } // namespace EngineOptions
-
-namespace UCI {
 
 void run() {
     UciHandler uci_handler;
@@ -358,4 +358,4 @@ bool UciHandler::stopped() {
     return true;
 }
 
-} // namespace UCI
+} // namespace minke::UCI

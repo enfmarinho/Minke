@@ -21,7 +21,7 @@
 #include "core/types.h"
 #include "eval/nnue/accumulator/perspective.h"
 
-namespace nnue::accumulator {
+namespace minke::nnue::accumulator {
 
 State::State(const Perspective &white_perspective_acc, const Perspective &black_perspective_acc,
              const Square white_king_sq, const Square black_king_sq)
@@ -99,4 +99,4 @@ bool operator==(const State &lhs, const State &rhs) {
 
     return true;
 }
-} // namespace nnue::accumulator
+} // namespace minke::nnue::accumulator

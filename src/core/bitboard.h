@@ -26,6 +26,8 @@
 #include "core/types.h"
 #include "utils/utils.h"
 
+namespace minke {
+
 class Bitboard {
   public:
     using UnderlyingT = uint64_t;
@@ -215,3 +217,5 @@ class Bitboard {
   private:
     UnderlyingT m_bb;
 };
+
+} // namespace minke

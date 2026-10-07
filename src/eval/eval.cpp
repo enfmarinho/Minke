@@ -28,6 +28,8 @@
 #include "search/search.h"
 #include "uci/tune.h"
 
+namespace minke::eval {
+
 namespace {
 
 inline int apply_material_scaling(const Position& pos, ScoreType raw_eval) {
@@ -42,8 +44,6 @@ inline int apply_material_scaling(const Position& pos, ScoreType raw_eval) {
 }
 
 } // namespace
-
-namespace eval {
 
 ScoreType evaluate(const Position& pos, const nnue::accumulator::State& acc_state) {
     const int bucket = nnue::output_bucket(pos.piece_count());
@@ -60,4 +60,4 @@ ScoreType adjust(const Position& pos, const ScoreType raw_eval, const ScoreType 
     return std::clamp(adjusted_eval, -MATE_FOUND + 1, MATE_FOUND - 1);
 }
 
-} // namespace eval
+} // namespace minke::eval

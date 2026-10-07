@@ -23,6 +23,8 @@
 #include <limits>
 #include <random>
 
+namespace minke {
+
 // Implements the Splitmix64 algorithm to generate seeds for the xorshift64star PRNG
 class SeedGenerator {
   public:
@@ -94,3 +96,5 @@ class PRNG {
         return s * 2685821657736338717LL;
     }
 };
+
+} // namespace minke

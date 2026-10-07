@@ -24,7 +24,7 @@
 #include "core/position.h"
 #include "eval/nnue/arch.h"
 
-namespace nnue::accumulator {
+namespace minke::nnue::accumulator {
 
 Perspective::Perspective(const Position &pos, const Color pov) {
     // Debug-only constructor. Computes a `Perspective` from scratch and uses it as a
@@ -86,4 +86,4 @@ bool operator==(const Perspective &lhs, const Perspective &rhs) {
     }
     return true;
 }
-} // namespace nnue::accumulator
+} // namespace minke::nnue::accumulator

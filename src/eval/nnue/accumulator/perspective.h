@@ -25,9 +25,11 @@
 
 #include "eval/nnue/arch.h"
 
+namespace minke {
 class Position;
+} // namespace minke
 
-namespace nnue::accumulator {
+namespace minke::nnue::accumulator {
 
 class alignas(64) Perspective {
   public:
@@ -58,4 +60,4 @@ class alignas(64) Perspective {
     std::array<int16_t, L1_SIZE> m_neurons;
 };
 
-} // namespace nnue::accumulator
+} // namespace minke::nnue::accumulator

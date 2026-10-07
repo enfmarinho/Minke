@@ -24,7 +24,7 @@
 #include "eval/nnue/arch.h"
 #include "utils/utils.h"
 
-namespace nnue::accumulator {
+namespace minke::nnue::accumulator {
 
 void FinnyTable::reset() {
     // Reset all cached accumulators
@@ -95,4 +95,4 @@ FinnyTable::FinnyTableCache &FinnyTable::get_cache(const bool flip, const size_t
     return cache[flip][king_bucket][side];
 }
 
-} // namespace nnue::accumulator
+} // namespace minke::nnue::accumulator

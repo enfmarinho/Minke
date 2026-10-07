@@ -27,12 +27,15 @@
 #ifdef TRACK_ACTIVATIONS
 #include <array>
 #include <cstddef>
-inline std::array<size_t, nnue::PAIR_COUNT> activation_table;
-#endif // TRACK_ACTIVATIONS
+#endif
 
-namespace nnue {
+namespace minke::nnue {
+
+#ifdef TRACK_ACTIVATIONS
+inline std::array<size_t, nnue::PAIR_COUNT> activation_table;
+#endif
 
 int32_t propagate(std::span<const int16_t, L1_SIZE> stm_inputs, std::span<const int16_t, L1_SIZE> ntm_inputs,
                   const int bucket);
 
-}
+} // namespace minke::nnue

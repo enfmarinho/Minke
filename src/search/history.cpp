@@ -29,6 +29,8 @@
 #include "search/search.h"
 #include "uci/tune.h"
 
+namespace minke {
+
 static inline HistoryType calculate_score(const int depth, const int bonus_mult, const int bonus_offset,
                                           const int bonus_max) {
     return std::min(depth * bonus_mult + bonus_offset, bonus_max);
@@ -145,3 +147,5 @@ HistoryType History::continuation_history_entry(const ThreadData &td, const Piec
     const size_t curr_conthist_idx = cont_hist_idx(pmove);
     return m_continuation_history[past_conthist_idx][curr_conthist_idx].value;
 }
+
+} // namespace minke

@@ -35,6 +35,8 @@
 #include "search/search_limiter.h"
 #include "search/tt.h"
 
+namespace minke {
+
 constexpr int LMP_DEPTH = 32;
 extern int LMP_TABLE[2][LMP_DEPTH];
 extern int LMR_TABLE[64][64];
@@ -133,3 +135,5 @@ class Engine {
     bool m_stop{true};
     bool m_report{true};
 };
+
+} // namespace minke

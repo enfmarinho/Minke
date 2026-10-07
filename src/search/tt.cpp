@@ -27,6 +27,8 @@
 #include "core/types.h"
 #include "utils/utils.h"
 
+namespace minke {
+
 inline static KeyType key_from_hash(const HashType &hash) { return static_cast<KeyType>(hash); }
 
 void TTEntry::store(const HashType hash, const IndexType depth, const Move best_move, const ScoreType score,
@@ -126,3 +128,5 @@ void TranspositionTable::clear() {
         }
     }
 }
+
+} // namespace minke

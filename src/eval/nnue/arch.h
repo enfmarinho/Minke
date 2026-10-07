@@ -23,7 +23,7 @@
 #include "core/types.h"
 #include "utils/utils.h"
 
-namespace nnue {
+namespace minke::nnue {
 
 constexpr bool DUAL_ACTIVATION = true;
 
@@ -112,4 +112,4 @@ inline size_t feature_idx(const PieceSquare ps, const Square king_sq, const Colo
 
 inline constexpr int output_bucket(int piece_count) { return (piece_count - 2) / BUCKET_SIZE; }
 
-} // namespace nnue
+} // namespace minke::nnue

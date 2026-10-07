@@ -23,6 +23,8 @@
 
 #include "core/types.h"
 
+namespace minke {
+
 template <typename TYPE>
 inline void set_bits(TYPE &bits, TYPE mask) {
     bits |= mask;
@@ -102,3 +104,5 @@ inline void aligned_free(void *ptr) {
     std::free(ptr);
 #endif
 }
+
+} // namespace minke

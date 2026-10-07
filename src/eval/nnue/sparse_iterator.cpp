@@ -28,7 +28,7 @@
 
 #include "eval/nnue/simd.h"
 
-namespace nnue {
+namespace minke::nnue {
 
 #ifdef USE_AVX512
 
@@ -111,4 +111,5 @@ void SparseIterator::update(simd::vepu8 a, simd::vepu8 b) {
 #endif
 
 #endif // #if USE_SIMD
-}
+
+} // namespace minke::nnue

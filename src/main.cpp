@@ -27,6 +27,7 @@
 #include "uci/uci.h"
 
 int main(int argc, char *argv[]) {
+    using namespace minke;
     init_all();
     if (argc > 1 && std::string_view(argv[1]) == "bench") {
         int depth = Benchmark::DEFAULT_BENCH_DEPTH;
@@ -44,7 +45,7 @@ int main(int argc, char *argv[]) {
         std::filesystem::path directory = argv[3];
         std::optional<std::filesystem::path> opening_book = (argc == 5 ? std::optional(argv[4]) : std::nullopt);
 
-        minke::datagen::Runner runner;
+        datagen::Runner runner;
         runner.datagen_loop(concurrency, directory, opening_book);
     } else {
         UCI::run();

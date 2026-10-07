@@ -22,6 +22,8 @@
 
 #include "core/types.h"
 
+namespace minke {
+
 constexpr HistoryType CORRHIST_SIZE = 16384;
 constexpr HistoryType CORRHIST_MAX = 1024;
 constexpr HistoryType CORRHIST_GRAIN = 256;
@@ -61,3 +63,5 @@ class CorrectionHistory {
     std::array<PovTables, 2> m_pov_tables;
     std::array<std::array<CorrectionEntry, 64 * 12>, 64 * 12> m_cont_corr{};
 };
+
+} // namespace minke

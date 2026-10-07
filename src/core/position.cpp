@@ -36,6 +36,8 @@
 #include "search/cuckoo.h"
 #include "utils/utils.h"
 
+namespace minke {
+
 bool Position::set_fen(const std::string &fen) {
     reset();
 
@@ -1088,3 +1090,5 @@ std::pair<Square, Square> Position::castling_to_sqs(const Square king_from, cons
     // castle short
     return std::make_pair(static_cast<Square>(g1 ^ pov_flip), static_cast<Square>(f1 ^ pov_flip));
 }
+
+} // namespace minke

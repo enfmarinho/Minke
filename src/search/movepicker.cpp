@@ -26,6 +26,8 @@
 #include "search/search.h"
 #include "uci/tune.h"
 
+namespace minke {
+
 MovePicker::MovePicker(ThreadData &td, Move ttmove, int ply, MovePickerType mp_type, ScoreType threshold) {
     init(td, ttmove, ply, mp_type, threshold);
 }
@@ -160,3 +162,5 @@ void MovePicker::score_noisy_moves() {
         }
     }
 }
+
+} // namespace minke

@@ -27,7 +27,7 @@
 #include "utils/random.h"
 #include "utils/utils.h"
 
-namespace Attacks {
+namespace minke::Attacks {
 
 alignas(64) Bitboard bishop_mask_table[64];
 alignas(64) Bitboard rook_mask_table[64];
@@ -310,4 +310,4 @@ void init() {
     init_diagonal_antidiagonal_masks();
 }
 
-} // namespace Attacks
+} // namespace minke::Attacks

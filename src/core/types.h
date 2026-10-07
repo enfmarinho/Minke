@@ -21,6 +21,8 @@
 #include <chrono>
 #include <cstdint>
 
+namespace minke {
+
 // clang-format off
 enum Square : uint8_t {
     a1, b1, c1, d1, e1, f1, g1, h1,
@@ -196,3 +198,5 @@ struct DirtyPiece {
     PieceSquare add0, add1, sub0, sub1;
     DirtyPieceType move_type;
 };
+
+} // namespace minke

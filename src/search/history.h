@@ -22,6 +22,8 @@
 #include "core/position.h"
 #include "core/types.h"
 
+namespace minke {
+
 struct ThreadData;
 
 constexpr HistoryType HISTORY_DIVISOR = 16384;
@@ -78,3 +80,5 @@ class History {
     HistoryEntry m_continuation_history[12 * 64][12 * 64];
     Move m_killer_moves[MAX_SEARCH_DEPTH];
 };
+
+} // namespace minke

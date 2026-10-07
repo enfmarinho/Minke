@@ -25,6 +25,8 @@
 #include "core/types.h"
 #include "uci/tune.h"
 
+namespace minke {
+
 void SearchLimiter::init(const SearchLimits& sl) {
     constexpr uint64_t overhead = 50;
 
@@ -116,3 +118,5 @@ void SearchLimiter::can_stop() {
     if (m_time_set) // If time is not set, search should stop only with the stop command
         m_can_stop = true;
 }
+
+} // namespace minke

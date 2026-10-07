@@ -24,7 +24,7 @@
 #include "core/bitboard.h"
 #include "core/types.h"
 
-namespace Attacks {
+namespace minke::Attacks {
 
 alignas(64) extern Bitboard bishop_mask_table[64];
 alignas(64) extern Bitboard rook_mask_table[64];
@@ -100,4 +100,4 @@ inline Bitboard piece_attack(PieceType piece_type, Square sq, const Bitboard& oc
     }
 }
 
-} // namespace Attacks
+} // namespace minke::Attacks

@@ -25,7 +25,7 @@
 #include "core/zobrist.h"
 #include "utils/utils.h"
 
-namespace Cuckoo {
+namespace minke::Cuckoo {
 
 std::array<HashType, 8192> keys{};
 std::array<Move, 8192> moves{};
@@ -75,4 +75,4 @@ void init() {
     assert(count == 3668);
 }
 
-}; // namespace Cuckoo
+}; // namespace minke::Cuckoo

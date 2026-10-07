@@ -24,6 +24,8 @@
 #include "core/position.h"
 #include "core/types.h"
 
+namespace minke {
+
 class TTEntry {
   public:
     TTEntry() = default;
@@ -95,3 +97,5 @@ class TranspositionTable {
     TTBucket *m_table{nullptr};
     IndexType m_age{0};
 };
+
+} // namespace minke
