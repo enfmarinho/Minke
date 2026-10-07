@@ -34,16 +34,6 @@ namespace nnue {
 
 namespace {
 
-#ifdef TRACK_ACTIVATIONS
-void NNUE::track_activations(std::span<const uint8_t, L1_SIZE> ft_out) {
-    for (size_t idx = 0; idx < L1_SIZE; ++idx) {
-        if (ft_out[idx] != 0) {
-            ++m_activation_table[idx % (PAIR_COUNT)];
-        }
-    }
-}
-#endif // TRACK_ACTIVATIONS
-
 void activate_ft(std::span<const int16_t, L1_SIZE> stm_acc, std::span<const int16_t, L1_SIZE> ntm_acc,
                  std::span<uint8_t, L1_SIZE> outputs, [[maybe_unused]] SparseIterator &si) {
     const auto pov_activate = [&](std::span<const int16_t, L1_SIZE> acc, int output_offset) {
@@ -100,7 +90,11 @@ void activate_ft(std::span<const int16_t, L1_SIZE> stm_acc, std::span<const int1
 #endif // USE_SIMD
 
 #ifdef TRACK_ACTIVATIONS
-    track_activations(outputs);
+    for (size_t idx = 0; idx < L1_SIZE; ++idx) {
+        if (outputs[idx] != 0) {
+            ++activation_table[idx % (PAIR_COUNT)];
+        }
+    }
 #endif // TRACK_ACTIVATIONS
 }
 

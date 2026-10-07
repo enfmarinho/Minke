@@ -26,7 +26,7 @@
 
 #ifdef TRACK_ACTIVATIONS
 #include <array>
-std::array<size_t, PAIR_COUNT> m_activation_table;
+inline std::array<size_t, nnue::PAIR_COUNT> activation_table;
 #endif // TRACK_ACTIVATIONS
 
 namespace nnue {
