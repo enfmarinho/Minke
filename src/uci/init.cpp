@@ -42,8 +42,8 @@ nnue::Network &nnue::network =
 void init_all() {
     init_search_params();
     init_network_params();
-    Attacks::init();
-    Cuckoo::init();
+    attacks::init();
+    cuckoo::init();
 }
 
 void init_search_params() {

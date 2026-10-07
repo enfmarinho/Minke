@@ -408,7 +408,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             && eval >= beta                               //
             && node.static_eval >= beta + nmp_beta_margin //
         ) {
-            m_tt.prefetch(position.hash() ^ Zobrist::color_key());
+            m_tt.prefetch(position.hash() ^ zobrist::color_key());
 
             const int reduction = (nmp_base_reduction() + depth * nmp_depth_factor()) / 64;
 
@@ -828,8 +828,8 @@ bool Engine::SEE(Position &position, const Move move, int threshold) {
 
         // Add x-ray attackers, if there is any
         switch (cheapest_attacker) {
-            using Attacks::bishop_attack;
-            using Attacks::rook_attack;
+            using attacks::bishop_attack;
+            using attacks::rook_attack;
             case PAWN:
                 [[fallthrough]];
             case BISHOP:

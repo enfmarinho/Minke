@@ -24,7 +24,7 @@
 #include "core/types.h"
 #include "utils/random.h"
 
-namespace minke::Zobrist {
+namespace minke::zobrist {
 
 // Randoms uint64_t for performing Zobrist Hashing.
 struct HashKeys {
@@ -66,4 +66,4 @@ inline HashType ep_key(int ep_file) { return HASH_KEYS.en_passant[ep_file]; }
 
 inline HashType color_key() { return HASH_KEYS.side; }
 
-}; // namespace minke::Zobrist
+}; // namespace minke::zobrist
