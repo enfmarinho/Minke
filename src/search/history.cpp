@@ -91,11 +91,11 @@ void History::update(const ThreadData &td, const Move best_move, int depth, Coun
 
 void History::update_noisy_history_score(const Position &position, const Move move, int bonus) {
     Square to = move.to();
-    PieceType moved_pt = get_piece_type(position.piece_at(move.from()));
     PieceType captured_pt = get_piece_type(position.piece_at(to));
     if (captured_pt == NONE)
         captured_pt = PAWN;
-    m_noisy_history[position.stm()][moved_pt][to][captured_pt][position.is_threatened(to)].update_score(bonus);
+    assert(captured_pt != KING);
+    m_noisy_history[position.stm()][to][captured_pt][position.is_threatened(to)].update_score(bonus);
 }
 
 void History::update_quiet_history_score(const Position &position, const Move move, int bonus) {

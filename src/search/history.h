@@ -42,11 +42,11 @@ class History {
 
     inline HistoryType noisy_score(const Position &position, Move move) {
         const Square to = move.to();
-        const PieceType moved_pt = get_piece_type(position.piece_at(move.from()));
         PieceType captured_pt = get_piece_type(position.piece_at(to));
         if (captured_pt == NONE)
             captured_pt = PAWN;
-        return m_noisy_history[position.stm()][moved_pt][to][captured_pt][position.is_threatened(to)].value;
+        assert(captured_pt != KING);
+        return m_noisy_history[position.stm()][to][captured_pt][position.is_threatened(to)].value;
     }
 
     inline void clear_killer(int height) { m_killer_moves[height] = Move::none(); }
@@ -75,7 +75,7 @@ class History {
 
     inline void save_killer(Move move, int height) { m_killer_moves[height] = move; }
 
-    HistoryEntry m_noisy_history[2][6][64][5][2];
+    HistoryEntry m_noisy_history[2][64][5][2];
     HistoryEntry m_quiet_history[2][64 * 64][2][2];
     HistoryEntry m_continuation_history[12 * 64][12 * 64];
     Move m_killer_moves[MAX_SEARCH_DEPTH];
