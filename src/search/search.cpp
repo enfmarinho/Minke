@@ -389,7 +389,10 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
         }
 
         // Razoring heuristic
-        if (depth <= razoring_max_depth() && node.static_eval + razoring_mult() * depth < alpha) {
+        if (depth <= razoring_max_depth()                         //
+            && node.static_eval + razoring_mult() * depth < alpha //
+            && ttbound != LOWER                                   //
+        ) {
             const ScoreType razor_score = quiescence(td, alpha, beta, ply);
             if (razor_score <= alpha)
                 return razor_score;
