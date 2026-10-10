@@ -533,9 +533,12 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             td.search_stack[ply].excluded_move = Move::none();
 
             if (singular_score < singular_beta) {
+                int double_margin = double_extension_base() + double_extension_pv_factor() * pv_node;
+                int triple_margin = triple_extension_base();
+
                 extension = 1;
-                extension += !pv_node && singular_score < singular_beta - double_extension_margin();
-                extension += !pv_node && singular_score < singular_beta - triple_ext_margin();
+                extension += singular_score < singular_beta - double_margin;
+                extension += !pv_node && singular_score < singular_beta - triple_margin;
             } else if (singular_score >= beta) { // Multi-Cut
                 return singular_score;
             } else if (ttscore >= beta) {
