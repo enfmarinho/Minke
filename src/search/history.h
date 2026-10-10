@@ -27,6 +27,7 @@ namespace minke {
 struct ThreadData;
 
 constexpr HistoryType HISTORY_DIVISOR = 16384;
+constexpr HistoryType PAWNHIST_SIZE = 16384;
 
 class History {
   public:
@@ -65,11 +66,13 @@ class History {
 
     void update_noisy_history_score(const Position &position, Move move, int bonus);
     void update_quiet_history_score(const Position &position, Move move, int bonus);
+    void update_pawn_history(const Position &position, const PieceMove move, int bonus);
     void update_continuation_history_scores(const ThreadData &td, PieceMove pmove, int bonus, CounterType ply);
     void update_continuation_history_score(const ThreadData &td, PieceMove pmove, int bonus, int base, CounterType ply,
                                            int offset);
 
     HistoryType quiet_history_score(const Position &position, Move move) const;
+    HistoryType pawnhist_score(const Position &position, PieceMove pmove) const;
     int continuation_history_score(const ThreadData &td, PieceMove pmove, CounterType ply) const;
     HistoryType continuation_history_entry(const ThreadData &td, PieceMove pmove, CounterType ply, int offset) const;
 
@@ -77,6 +80,7 @@ class History {
 
     HistoryEntry m_noisy_history[2][6][64][5][2];
     HistoryEntry m_quiet_history[2][64 * 64][2][2];
+    HistoryEntry m_pawn_history[PAWNHIST_SIZE][12 * 64];
     HistoryEntry m_continuation_history[12 * 64][12 * 64];
     Move m_killer_moves[MAX_SEARCH_DEPTH];
 };

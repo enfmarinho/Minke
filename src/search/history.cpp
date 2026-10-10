@@ -36,7 +36,7 @@ static inline HistoryType calculate_score(const int depth, const int bonus_mult,
     return std::min(depth * bonus_mult + bonus_offset, bonus_max);
 }
 
-static inline size_t cont_hist_idx(const PieceMove &pmove) {
+static inline size_t piece_to_idx(const PieceMove &pmove) {
     return (static_cast<size_t>(pmove.piece) << 6) | static_cast<size_t>(pmove.move.to());
 };
 
@@ -44,6 +44,7 @@ void History::reset() {
     std::memset(m_noisy_history, 0, sizeof(m_noisy_history));
     std::memset(m_quiet_history, 0, sizeof(m_quiet_history));
     std::memset(m_continuation_history, 0, sizeof(m_continuation_history));
+    std::memset(m_pawn_history, 0, sizeof(m_pawn_history));
 
     for (auto &moves : m_killer_moves) {
         moves = Move::none();
@@ -52,13 +53,18 @@ void History::reset() {
 
 int History::quiet_score(const ThreadData &td, const Move move, const CounterType ply) const {
     PieceMove pmove = {move, td.position.piece_at(move.from())};
-    return quiet_history_score(td.position, move) + continuation_history_score(td, pmove, ply);
+    return quiet_history_score(td.position, move) + continuation_history_score(td, pmove, ply) +
+           pawnhist_score(td.position, pmove);
 }
 
 void History::update(const ThreadData &td, const Move best_move, int depth, CounterType ply,
                      const PieceMoveList &quiets_tried, const PieceMoveList &tacticals_tried) {
     HistoryType quiet_bonus = calculate_score(depth, hist_bonus_mult(), hist_bonus_offset(), hist_bonus_max());
     HistoryType quiet_penalty = calculate_score(depth, hist_penalty_mult(), hist_penalty_offset(), hist_penalty_max());
+    HistoryType pawnhist_bonus =
+        calculate_score(depth, pawnhist_bonus_mult(), pawnhist_bonus_offset(), pawnhist_bonus_max());
+    HistoryType pawnhist_penalty =
+        calculate_score(depth, pawnhist_penalty_mult(), pawnhist_penalty_offset(), pawnhist_penalty_max());
     HistoryType cont_bonus = calculate_score(depth, cont_bonus_mult(), cont_bonus_offset(), cont_bonus_max());
     HistoryType cont_penalty = calculate_score(depth, cont_penalty_mult(), cont_penalty_offset(), cont_penalty_max());
     HistoryType capture_bonus =
@@ -70,12 +76,15 @@ void History::update(const ThreadData &td, const Move best_move, int depth, Coun
 
         // Increase the score of the move that caused the beta cutoff
         update_quiet_history_score(td.position, best_move, quiet_bonus);
+        update_pawn_history(td.position, quiets_tried.back(), pawnhist_bonus);
         update_continuation_history_scores(td, quiets_tried.back(), cont_bonus, ply);
 
         // Decrease all the quiet moves scores that did not caused a beta cutoff
         for (size_t idx = 0; idx < quiets_tried.size() - 1; ++idx) {
-            update_quiet_history_score(td.position, quiets_tried[idx].move, quiet_penalty);
-            update_continuation_history_scores(td, quiets_tried[idx], cont_penalty, ply);
+            const PieceMove pmove = quiets_tried[idx];
+            update_quiet_history_score(td.position, pmove.move, quiet_penalty);
+            update_pawn_history(td.position, pmove, pawnhist_penalty);
+            update_continuation_history_scores(td, pmove, cont_penalty, ply);
         }
 
     } else {
@@ -104,6 +113,10 @@ void History::update_quiet_history_score(const Position &position, const Move mo
     m_quiet_history[position.stm()][move.from_and_to()][from_threatened][to_threatened].update_score(bonus);
 }
 
+void History::update_pawn_history(const Position &position, const PieceMove pmove, int bonus) {
+    m_pawn_history[position.pawn_hash() % PAWNHIST_SIZE][piece_to_idx(pmove)].update_score(bonus);
+}
+
 void History::update_continuation_history_scores(const ThreadData &td, const PieceMove pmove, int bonus,
                                                  CounterType ply) {
     const int base = continuation_history_score(td, pmove, ply);
@@ -116,8 +129,8 @@ void History::update_continuation_history_score(const ThreadData &td, const Piec
                                                 CounterType ply, int offset) {
     int past_node_idx = ply - offset;
     if (past_node_idx >= 0 && td.search_stack[past_node_idx].curr_pmove) {
-        const size_t past_conthist_idx = cont_hist_idx(td.search_stack[past_node_idx].curr_pmove);
-        const size_t curr_conthist_idx = cont_hist_idx(pmove);
+        const size_t past_conthist_idx = piece_to_idx(td.search_stack[past_node_idx].curr_pmove);
+        const size_t curr_conthist_idx = piece_to_idx(pmove);
         m_continuation_history[past_conthist_idx][curr_conthist_idx].update_with_base(bonus, base);
     }
 }
@@ -126,6 +139,10 @@ HistoryType History::quiet_history_score(const Position &position, const Move mo
     const bool from_threatened = position.is_threatened(move.from());
     const bool to_threatened = position.is_threatened(move.to());
     return m_quiet_history[position.stm()][move.from_and_to()][from_threatened][to_threatened].value;
+}
+
+HistoryType History::pawnhist_score(const Position &position, PieceMove pmove) const {
+    return m_pawn_history[position.pawn_hash() % PAWNHIST_SIZE][piece_to_idx(pmove)].value;
 }
 
 int History::continuation_history_score(const ThreadData &td, const PieceMove pmove, CounterType ply) const {
@@ -143,8 +160,8 @@ HistoryType History::continuation_history_entry(const ThreadData &td, const Piec
     if (past_node_idx < 0 || !td.search_stack[past_node_idx].curr_pmove)
         return 0;
 
-    const size_t past_conthist_idx = cont_hist_idx(td.search_stack[past_node_idx].curr_pmove);
-    const size_t curr_conthist_idx = cont_hist_idx(pmove);
+    const size_t past_conthist_idx = piece_to_idx(td.search_stack[past_node_idx].curr_pmove);
+    const size_t curr_conthist_idx = piece_to_idx(pmove);
     return m_continuation_history[past_conthist_idx][curr_conthist_idx].value;
 }
 
