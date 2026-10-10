@@ -407,6 +407,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             && position.has_non_pawns()                   //
             && eval >= beta                               //
             && node.static_eval >= beta + nmp_beta_margin //
+            && ttbound != UPPER                           //
         ) {
             m_tt.prefetch(position.hash() ^ zobrist::color_key());
 
