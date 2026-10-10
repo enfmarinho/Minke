@@ -240,6 +240,7 @@ TUNABLE_PARAM(major_pieces_corr_factor, 32, 1, 100, 5, 0.002)
 TUNABLE_PARAM(conthist_1ply_weight, 992, 0, 1536, 50, 0.002)
 TUNABLE_PARAM(conthist_2ply_weight, 1149, 0, 1536, 50, 0.002)
 TUNABLE_PARAM(conthist_4ply_weight, 565, 0, 1536, 50, 0.002)
+TUNABLE_PARAM(conthist_6ply_weight, 565, 0, 1536, 50, 0.002)
 
 // Time Manager
 TUNABLE_PARAM(tm_default_mtg, 29, 10, 60, 1, 0.002)

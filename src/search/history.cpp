@@ -123,6 +123,7 @@ void History::update_continuation_history_scores(const ThreadData &td, const Pie
     update_continuation_history_score(td, pmove, bonus, base, ply, 1); // Counter Moves History (1-ply)
     update_continuation_history_score(td, pmove, bonus, base, ply, 2); // Follow Up History (2-ply)
     update_continuation_history_score(td, pmove, bonus, base, ply, 4); // 4-ply
+    update_continuation_history_score(td, pmove, bonus, base, ply, 6); // 6-ply
 }
 
 void History::update_continuation_history_score(const ThreadData &td, const PieceMove pmove, int bonus, int base,
@@ -150,6 +151,7 @@ int History::continuation_history_score(const ThreadData &td, const PieceMove pm
     conthist += continuation_history_entry(td, pmove, ply, 1) * conthist_1ply_weight();
     conthist += continuation_history_entry(td, pmove, ply, 2) * conthist_2ply_weight();
     conthist += continuation_history_entry(td, pmove, ply, 4) * conthist_4ply_weight();
+    conthist += continuation_history_entry(td, pmove, ply, 6) * conthist_6ply_weight();
 
     return conthist / 1024;
 }
