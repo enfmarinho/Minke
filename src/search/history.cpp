@@ -131,7 +131,8 @@ void History::update_continuation_history_score(const ThreadData &td, const Piec
     if (past_node_idx >= 0 && td.search_stack[past_node_idx].curr_pmove) {
         const size_t past_conthist_idx = piece_to_idx(td.search_stack[past_node_idx].curr_pmove);
         const size_t curr_conthist_idx = piece_to_idx(pmove);
-        m_continuation_history[past_conthist_idx][curr_conthist_idx].update_with_base(bonus, base);
+        m_continuation_history[past_conthist_idx][curr_conthist_idx][td.position.in_check()].update_with_base(bonus,
+                                                                                                              base);
     }
 }
 
@@ -162,7 +163,7 @@ HistoryType History::continuation_history_entry(const ThreadData &td, const Piec
 
     const size_t past_conthist_idx = piece_to_idx(td.search_stack[past_node_idx].curr_pmove);
     const size_t curr_conthist_idx = piece_to_idx(pmove);
-    return m_continuation_history[past_conthist_idx][curr_conthist_idx].value;
+    return m_continuation_history[past_conthist_idx][curr_conthist_idx][td.position.in_check()].value;
 }
 
 } // namespace minke

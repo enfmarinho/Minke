@@ -81,7 +81,7 @@ class History {
     HistoryEntry m_noisy_history[2][6][64][5][2];
     HistoryEntry m_quiet_history[2][64 * 64][2][2];
     HistoryEntry m_pawn_history[PAWNHIST_SIZE][12 * 64];
-    HistoryEntry m_continuation_history[12 * 64][12 * 64];
+    HistoryEntry m_continuation_history[12 * 64][12 * 64][2];
     Move m_killer_moves[MAX_SEARCH_DEPTH];
 };
 
