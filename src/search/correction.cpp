@@ -59,6 +59,7 @@ void CorrectionHistory::update(const ThreadData& td, const int depth, const int 
     };
     update_cont(1);
     update_cont(2);
+    update_cont(4);
 }
 
 HistoryType CorrectionHistory::correction(const ThreadData& td, const int ply) const {
@@ -69,17 +70,18 @@ HistoryType CorrectionHistory::correction(const ThreadData& td, const int ply) c
     adjustment += nonpawn_corr_factor() * tables.black_nonpawn[td.position.black_nonpawn_hash() % CORRHIST_SIZE];
     adjustment += major_pieces_corr_factor() * tables.major_pieces[td.position.major_pieces_hash() % CORRHIST_SIZE];
 
-    auto adjust_cont = [&](int offset) {
+    auto adjust_cont = [&](int offset, int factor) {
         if (ply >= offset + 1) {
             const PieceMove pmove1 = td.search_stack[ply - 1].curr_pmove;
             const PieceMove pmove2 = td.search_stack[ply - offset - 1].curr_pmove;
             if (pmove1 && pmove2) {
-                adjustment += cont_corr_factor() * m_cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)];
+                adjustment += factor * m_cont_corr[cont_corr_idx(pmove1)][cont_corr_idx(pmove2)];
             }
         }
     };
-    adjust_cont(1);
-    adjust_cont(2);
+    adjust_cont(1, cont_corr_1ply_factor());
+    adjust_cont(2, cont_corr_2ply_factor());
+    adjust_cont(4, cont_corr_4ply_factor());
 
     return adjustment / CORRHIST_GRAIN;
 }
