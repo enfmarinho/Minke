@@ -734,15 +734,6 @@ ScoreType Engine::quiescence(ThreadData &td, ScoreType alpha, ScoreType beta, Co
         if (!is_mated(best_score)) {
             if (moves_searched >= 3) // late move pruning
                 break;
-
-            const ScoreType futility = node.static_eval + qs_futility_margin();
-            if (!in_check                  //
-                && futility <= alpha       //
-                && !SEE(position, move, 1) //
-            ) {
-                best_score = std::max(best_score, futility);
-                continue;
-            }
         }
         m_tt.prefetch(position.estimated_key_after(move));
         make_move(td, move);
