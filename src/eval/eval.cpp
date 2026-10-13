@@ -33,6 +33,7 @@ namespace minke::eval {
 namespace {
 
 inline int apply_material_scaling(const Position& pos, ScoreType raw_eval) {
+    using namespace minke::tunable;
     const int material_scale = material_scaling_base()                             //
                                + pos.piece_count(PAWN) * pawn_scaling_factor()     //
                                + pos.piece_count(KNIGHT) * knight_scaling_factor() //

@@ -30,6 +30,7 @@
 #include "uci/tune.h"
 
 namespace minke {
+using namespace minke::tunable;
 
 static inline HistoryType calculate_score(const int depth, const int bonus_mult, const int bonus_offset,
                                           const int bonus_max) {

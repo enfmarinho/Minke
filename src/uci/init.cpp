@@ -47,6 +47,7 @@ void init_all() {
 }
 
 void init_search_params() {
+    using namespace minke::tunable;
     for (int depth = 1; depth < 64; ++depth) {
         for (int move_counter = 1; move_counter < 64; ++move_counter) {
             LMR_TABLE[depth][move_counter] = lmr_base() + lmr_scale() * std::log(depth) * std::log(move_counter);

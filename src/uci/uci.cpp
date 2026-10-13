@@ -36,10 +36,10 @@
 #include "search/search_limiter.h"
 #include "search/tt.h"
 #include "uci/benchmark.h"
+#include "uci/tune.h"
 
 #ifdef TUNE
 #include "uci/init.h"
-#include "uci/tune.h"
 #include "utils/utils.h"
 #endif
 
@@ -94,6 +94,7 @@ void print() {
               << THREADS_MAX << "\n";
 
 #ifdef TUNE
+    using namespace minke::tunable;
     for (const TunableParam &tunable_param : TunableParamList::get()) {
         tunable_param.print();
     }
@@ -220,6 +221,7 @@ void UciHandler::handle_perft(std::istringstream &iss) {
 
 void UciHandler::handle_tuneinfo() {
 #ifdef TUNE
+    using namespace minke::tunable;
     for (const TunableParam &tunable_param : TunableParamList::get()) {
         tunable_param.print_ob_format();
     }
@@ -292,6 +294,8 @@ void UciHandler::handle_uci() {
 }
 
 void UciHandler::handle_setoption(std::istringstream &iss) {
+    using namespace minke::tunable;
+
     if (!stopped()) {
         std::cerr << "`setoption` command is invalid while engine is running!" << std::endl;
         return;

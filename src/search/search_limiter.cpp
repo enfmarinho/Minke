@@ -26,6 +26,7 @@
 #include "uci/tune.h"
 
 namespace minke {
+using namespace minke::tunable;
 
 void SearchLimiter::init(const SearchLimits& sl) {
     constexpr uint64_t overhead = 50;
