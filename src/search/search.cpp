@@ -37,6 +37,7 @@
 #include "uci/tune.h"
 
 namespace minke {
+using namespace minke::tunable;
 
 void SearchStackEntry::init() {
     curr_pmove = PieceMove::none();

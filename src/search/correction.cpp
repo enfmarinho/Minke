@@ -27,6 +27,7 @@
 #include "uci/tune.h"
 
 namespace minke {
+using namespace minke::tunable;
 
 static inline size_t cont_corr_idx(const PieceMove pmove) {
     return (static_cast<size_t>(pmove.piece) << 6) | static_cast<size_t>(pmove.move.to());

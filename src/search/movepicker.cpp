@@ -72,7 +72,7 @@ Move MovePicker::next_move(bool skip_quiets) {
                 const auto [move, score] = m_move_list[idx];
 
                 const ScoreType see_threshold =
-                    m_mp_type == PROBCUT ? m_threshold : -score / 32 + mp_see_threshold_base();
+                    m_mp_type == PROBCUT ? m_threshold : -score / 32 + tunable::mp_see_threshold_base();
 
                 if (!Engine::SEE(m_td->position, move, see_threshold)) // Bad noisy
                     m_move_list[m_bad_noisy_end++] = m_move_list[idx];
@@ -141,11 +141,12 @@ void MovePicker::score_quiet_moves() {
         auto &[move, score] = m_move_list[i];
         score = m_td->search_history.quiet_score(*m_td, move, m_ply);
         if (move == m_killer)
-            score += mp_killer1_bonus();
+            score += tunable::mp_killer1_bonus();
     }
 }
 
 void MovePicker::score_noisy_moves() {
+    using minke::tunable::SEE_VALUES;
     for (size_t i = m_idx; i < m_end; ++i) {
         auto &[move, score] = m_move_list[i];
         const Piece captured = [&]() {
