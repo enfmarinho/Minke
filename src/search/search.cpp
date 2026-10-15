@@ -521,10 +521,10 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
         int extension = 0;
         if (!root                                      //
             && depth >= singular_extension_min_depth() //
-            && move == ttmove                          //
-            && ttdepth > depth - 4                     //
-            && move != excluded_move                   //
+            && ttdepth >= depth - 3                    //
             && ttbound != UPPER                        //
+            && move == ttmove                          //
+            && excluded_move.is_none()                 //
         ) {
             const ScoreType singular_beta = ttscore - depth * singular_extension_depth_factor() / 16;
             const ScoreType singular_depth = (depth - 1) / 2;
