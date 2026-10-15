@@ -163,6 +163,8 @@ TUNABLE_PARAM(lmr_deeper_depth_factor, 2, 1, 10, 1, 0.002)
 TUNABLE_PARAM(lmr_shallower_margin, 9, 0, 40, 3, 0.002)
 TUNABLE_PARAM(lmr_shallower_depth_factor, 1, 0, 10, 1, 0.002)
 
+TUNABLE_PARAM(lmr_noisy_cutnode_delta, 1024, 512, 2048, 128, 0.002)
+
 // Late Moves Pruning
 TUNABLE_PARAM(lmp_base, 128, 100, 200, 5, 0.002)
 TUNABLE_PARAM(lmp_scale, 40, 20, 120, 5, 0.002)

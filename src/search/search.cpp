@@ -571,20 +571,24 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
         } else {
             int scaled_reduction = 0;
             // Late Move Reduction
-            if (moves_searched > 1 + root && depth >= 3 && move.is_quiet()) {
-                scaled_reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
+            if (moves_searched > 1 + root && depth >= 3) {
+                if (move.is_quiet()) {
+                    scaled_reduction = LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
 
-                if (position.checkers_bb()) // Reduce less for moves that give check
-                    scaled_reduction -= lmr_gives_check_delta();
+                    if (position.checkers_bb()) // Reduce less for moves that give check
+                        scaled_reduction -= lmr_gives_check_delta();
 
-                scaled_reduction += !improving * lmr_non_improving_delta(); // Reduce more if not improving
-                scaled_reduction += cutnode * lmr_cutnode_delta();          // Reduce cutnodes more
+                    scaled_reduction += !improving * lmr_non_improving_delta(); // Reduce more if not improving
+                    scaled_reduction += cutnode * lmr_cutnode_delta();          // Reduce cutnodes more
 
-                // Reduce less if this move is or was a principal variation
-                scaled_reduction -= ttpv * lmr_ttpv_delta();
+                    // Reduce less if this move is or was a principal variation
+                    scaled_reduction -= ttpv * lmr_ttpv_delta();
 
-                // Reduce based on correction history.
-                scaled_reduction -= complexity / lmr_corrhist_divisor();
+                    // Reduce based on correction history.
+                    scaled_reduction -= complexity / lmr_corrhist_divisor();
+                } else {
+                    scaled_reduction += cutnode * lmr_noisy_cutnode_delta(); // Reduce cutnodes more
+                }
             }
             const int reduction = scaled_reduction / 1024;
             const int lmr_depth = std::min(std::max(new_depth - reduction, 1), new_depth);
