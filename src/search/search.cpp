@@ -526,7 +526,8 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             && move == ttmove                          //
             && excluded_move.is_none()                 //
         ) {
-            const ScoreType singular_beta = ttscore - depth * singular_extension_depth_factor() / 16;
+            const ScoreType singular_beta =
+                ttscore - depth * singular_extension_depth_factor() / 16 - depth * (ttpv && !pv_node);
             const ScoreType singular_depth = (depth - 1) / 2;
 
             td.search_stack[ply].excluded_move = ttmove;
