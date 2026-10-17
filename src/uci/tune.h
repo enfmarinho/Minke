@@ -246,7 +246,7 @@ TUNABLE_PARAM(conthist_2ply_weight, 1149, 0, 1536, 50, 0.002)
 TUNABLE_PARAM(conthist_4ply_weight, 565, 0, 1536, 50, 0.002)
 
 TUNABLE_PARAM(opp_buterfly_hist_update_factor, 10, 5, 20, 1, 0.002)
-TUNABLE_PARAM(opp_buterfly_hist_update_offset, 600, 0, 1000, 50, 0.002)
+TUNABLE_PARAM(opp_buterfly_hist_update_offset, 300, 0, 1000, 50, 0.002)
 TUNABLE_PARAM(opp_buterfly_hist_update_min, -1800, -3000, -1000, 100, 0.002)
 TUNABLE_PARAM(opp_buterfly_hist_update_max, 1800, 1000, 3000, 100, 0.002)
 
