@@ -245,6 +245,11 @@ TUNABLE_PARAM(conthist_1ply_weight, 992, 0, 1536, 50, 0.002)
 TUNABLE_PARAM(conthist_2ply_weight, 1149, 0, 1536, 50, 0.002)
 TUNABLE_PARAM(conthist_4ply_weight, 565, 0, 1536, 50, 0.002)
 
+TUNABLE_PARAM(opp_buterfly_hist_update_factor, 10, 5, 20, 1, 0.002)
+TUNABLE_PARAM(opp_buterfly_hist_update_offset, 600, 0, 1000, 50, 0.002)
+TUNABLE_PARAM(opp_buterfly_hist_update_min, -1800, -3000, -1000, 100, 0.002)
+TUNABLE_PARAM(opp_buterfly_hist_update_max, 1800, 1000, 3000, 100, 0.002)
+
 // Time Manager
 TUNABLE_PARAM(tm_default_mtg, 29, 10, 60, 1, 0.002)
 TUNABLE_PARAM(tm_increment_factor, 74, 20, 120, 5, 0.002)

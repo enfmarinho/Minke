@@ -58,6 +58,12 @@ int History::quiet_score(const ThreadData &td, const Move move, const CounterTyp
            pawnhist_score(td.position, pmove);
 }
 
+void History::update_opp_butterfly_hist(const ThreadData &td, const Move move, const HistoryType bonus) {
+    m_quiet_history[td.position.nstm()][move.from_and_to()][td.position.prior_threats().is_set(move.from())]
+                   [td.position.prior_threats().is_set(move.to())]
+                       .update_score(bonus);
+}
+
 void History::update(const ThreadData &td, const Move best_move, int depth, CounterType ply,
                      const PieceMoveList &quiets_tried, const PieceMoveList &tacticals_tried) {
     HistoryType quiet_bonus = calculate_score(depth, hist_bonus_mult(), hist_bonus_offset(), hist_bonus_max());

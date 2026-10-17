@@ -87,6 +87,7 @@ class Position {
 
     inline bool in_check() const { return m_curr_state.checkers != Bitboard::EMPTY; }
     inline bool is_threatened(Square sq) const { return m_curr_state.threats.is_set(sq); }
+    inline Bitboard prior_threats() const { return m_history_stack[m_history_ply - 1].threats; }
     inline Bitboard threats_bb() const { return m_curr_state.threats; }
     bool is_attacked(Square sq) const;
     bool is_legal(Move move);

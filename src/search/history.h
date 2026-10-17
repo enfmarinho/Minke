@@ -36,6 +36,7 @@ class History {
 
     void reset();
 
+    void update_opp_butterfly_hist(const ThreadData &td, Move move, HistoryType bonus);
     void update(const ThreadData &td, Move best_move, int depth, CounterType ply, const PieceMoveList &quiets_tried,
                 const PieceMoveList &tacticals_tried);
 
