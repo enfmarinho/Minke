@@ -385,7 +385,9 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             margin += rfp_complexity_factor() * complexity / 1024;
             return margin;
         }();
-        if (depth < rfp_max_depth() && eval - rfp_margin >= beta) {
+        if (depth < rfp_max_depth()                    //
+            && (ttmove.is_none() || ttmove.is_noisy()) //
+            && eval - rfp_margin >= beta) {
             return (eval + beta) / 2;
         }
 
