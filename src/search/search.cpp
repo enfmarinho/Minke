@@ -365,7 +365,8 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
     // Quiet move history update based on eval difference
     const ScoreType parent_static_eval = ply >= 1 ? td.search_stack[ply - 1].static_eval : SCORE_NONE;
     const Move parent_move = ply >= 1 ? td.search_stack[ply - 1].curr_pmove.move : Move::none();
-    if (!in_check && parent_static_eval != SCORE_NONE && parent_move != Move::none() && parent_move.is_quiet()) {
+    if (!singular_search && !in_check && parent_static_eval != SCORE_NONE && parent_move != Move::none() &&
+        parent_move.is_quiet()) {
         const HistoryType static_eval_diff = -parent_static_eval - node.static_eval;
         const HistoryType bonus = std::clamp(opp_buterfly_hist_update_factor() * static_eval_diff,
                                              opp_buterfly_hist_update_min(), opp_buterfly_hist_update_max()) +
