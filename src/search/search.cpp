@@ -542,7 +542,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             } else if (singular_score >= beta) { // Multi-Cut
                 return singular_score;
             } else if (ttscore >= beta) {
-                extension = -2;
+                extension = -3;
             } else if (cutnode) {
                 extension = -2;
             } else if (ttscore <= alpha) {
