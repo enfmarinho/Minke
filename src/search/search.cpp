@@ -588,7 +588,8 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
                     // Reduce based on correction history.
                     scaled_reduction -= complexity / lmr_corrhist_divisor();
                 } else {
-                    scaled_reduction += cutnode * lmr_noisy_cutnode_delta(); // Reduce cutnodes more
+                    scaled_reduction += cutnode * lmr_noisy_cutnode_delta();    // Reduce cutnodes more
+                    scaled_reduction += !improving * lmr_non_improving_delta(); // Reduce more if not improving
                 }
             }
             const int reduction = scaled_reduction / 1024;
