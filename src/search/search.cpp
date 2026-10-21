@@ -362,99 +362,122 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
         return 0;
     }();
 
-    // Forward pruning methods
-    if (!in_check && !pv_node && !root && !singular_search) {
-        if (ply >= 1 && td.search_stack[ply - 1].static_eval != SCORE_NONE) {
-            const CounterType reduction = td.search_stack[ply - 1].reduction;
+    if (!in_check                                             //
+        && !pv_node                                           //
+        && !root                                              //
+        && !singular_search                                   //
+        && ply >= 1                                           //
+        && td.search_stack[ply - 1].static_eval != SCORE_NONE //
+    ) {
+        const CounterType reduction = td.search_stack[ply - 1].reduction;
 
-            // Hindsight extension
-            if (reduction > 1 && opp_worsening_rate < 0)
-                ++depth;
+        // Hindsight extension
+        if (reduction > 1 && opp_worsening_rate < 0)
+            ++depth;
 
-            // Hindsight reduction
-            if (depth >= 2 && reduction > 0 && opp_worsening_rate >= hindsight_eval())
-                --depth;
-        }
+        // Hindsight reduction
+        if (depth >= 2 && reduction > 0 && opp_worsening_rate >= hindsight_eval())
+            --depth;
+    }
 
-        // Reverse futility pruning
-        const ScoreType rfp_margin = [&]() {
-            ScoreType margin = 0;
-            margin += rfp_depth_factor() * depth;
-            margin += rfp_improving_margin() * improving;
-            margin += rfp_opp_worsening_margin() * (opp_worsening_rate > 0);
-            margin += rfp_complexity_factor() * complexity / 1024;
-            return margin;
-        }();
-        if (depth < rfp_max_depth() && eval - rfp_margin >= beta) {
-            return (eval + beta) / 2;
-        }
+    // Reverse futility pruning
+    const ScoreType rfp_margin = [&]() {
+        ScoreType margin = 0;
+        margin += rfp_depth_factor() * depth;
+        margin += rfp_improving_margin() * improving;
+        margin += rfp_opp_worsening_margin() * (opp_worsening_rate > 0);
+        margin += rfp_complexity_factor() * complexity / 1024;
+        return margin;
+    }();
+    if (!in_check                    //
+        && !pv_node                  //
+        && !root                     //
+        && !singular_search          //
+        && depth < rfp_max_depth()   //
+        && eval - rfp_margin >= beta //
+    ) {
+        return (eval + beta) / 2;
+    }
 
-        // Razoring heuristic
-        if (depth <= razoring_max_depth() && node.static_eval + razoring_mult() * depth < alpha) {
-            const ScoreType razor_score = quiescence(td, alpha, beta, ply);
-            if (razor_score <= alpha)
-                return razor_score;
-        }
+    // Razoring heuristic
+    if (!in_check                                             //
+        && !pv_node                                           //
+        && !root                                              //
+        && !singular_search                                   //
+        && depth <= razoring_max_depth()                      //
+        && node.static_eval + razoring_mult() * depth < alpha //
+    ) {
+        const ScoreType razor_score = quiescence(td, alpha, beta, ply);
+        if (razor_score <= alpha)
+            return razor_score;
+    }
 
-        // Null move pruning (NMP)
-        const ScoreType nmp_beta_margin = [&]() {
-            int margin = nmp_beta_base_margin();
-            margin -= nmp_beta_improving_margin() * improving;
-            margin -= nmp_beta_depth_factor() * depth / 128;
-            return std::max(margin, 0);
-        }();
-        if (!position.last_was_null()                     //
-            && depth >= nmp_min_depth()                   //
-            && position.has_non_pawns()                   //
-            && eval >= beta                               //
-            && node.static_eval >= beta + nmp_beta_margin //
-        ) {
-            m_tt.prefetch(position.hash() ^ zobrist::color_key());
+    // Null move pruning (NMP)
+    const ScoreType nmp_beta_margin = [&]() {
+        int margin = nmp_beta_base_margin();
+        margin -= nmp_beta_improving_margin() * improving;
+        margin -= nmp_beta_depth_factor() * depth / 128;
+        return std::max(margin, 0);
+    }();
+    if (!in_check                                     //
+        && !pv_node                                   //
+        && !root                                      //
+        && !singular_search                           //
+        && !position.last_was_null()                  //
+        && depth >= nmp_min_depth()                   //
+        && position.has_non_pawns()                   //
+        && eval >= beta                               //
+        && node.static_eval >= beta + nmp_beta_margin //
+    ) {
+        m_tt.prefetch(position.hash() ^ zobrist::color_key());
 
-            const int reduction = (nmp_base_reduction() + depth * nmp_depth_factor()) / 64;
+        const int reduction = (nmp_base_reduction() + depth * nmp_depth_factor()) / 64;
 
-            make_null_move(td);
-            node.curr_pmove = PieceMove::none();
-            const ScoreType null_score = -negamax(td, -beta, -beta + 1, depth - reduction, ply + 1, !cutnode);
-            unmake_null_move(td);
+        make_null_move(td);
+        node.curr_pmove = PieceMove::none();
+        const ScoreType null_score = -negamax(td, -beta, -beta + 1, depth - reduction, ply + 1, !cutnode);
+        unmake_null_move(td);
 
-            if (null_score >= beta)
-                return null_score;
-        }
+        if (null_score >= beta)
+            return null_score;
+    }
 
-        // Prob Cut
-        const ScoreType pc_beta =
-            std::min(beta + probcut_margin() - probcut_improving_margin() * improving, MATE_FOUND - 1);
-        if (cutnode &&                                                                          //
-            depth >= probcut_min_depth()                                                        //
-            && !is_decisive(beta)                                                               //
-            && (!tthit || ttdepth < depth - 3 || (ttscore != SCORE_NONE && ttscore >= pc_beta)) //
-        ) {
-            MovePicker move_picker(td, ttmove, ply, PROBCUT, pc_beta - node.static_eval);
-            while (true) { // iterate through all moves in move_picker
-                const Move move = move_picker.next_move(true);
-                if (!move) { // no more moves
-                    break;
-                }
+    // Prob Cut
+    const ScoreType pc_beta =
+        std::min(beta + probcut_margin() - probcut_improving_margin() * improving, MATE_FOUND - 1);
+    if (!in_check                                                                           //
+        && !pv_node                                                                         //
+        && !root                                                                            //
+        && !singular_search                                                                 //
+        && cutnode                                                                          //
+        && depth >= probcut_min_depth()                                                     //
+        && !is_decisive(beta)                                                               //
+        && (!tthit || ttdepth < depth - 3 || (ttscore != SCORE_NONE && ttscore >= pc_beta)) //
+    ) {
+        MovePicker move_picker(td, ttmove, ply, PROBCUT, pc_beta - node.static_eval);
+        while (true) { // iterate through all moves in move_picker
+            const Move move = move_picker.next_move(true);
+            if (!move) { // no more moves
+                break;
+            }
 
-                if (move == excluded_move) { // skip excluded moves
-                    continue;
-                }
+            if (move == excluded_move) { // skip excluded moves
+                continue;
+            }
 
-                m_tt.prefetch(position.estimated_key_after(move));
-                node.curr_pmove = {move, position.piece_at(move.from())};
-                make_move(td, move);
+            m_tt.prefetch(position.estimated_key_after(move));
+            node.curr_pmove = {move, position.piece_at(move.from())};
+            make_move(td, move);
 
-                int pc_score = -quiescence(td, -pc_beta, -pc_beta + 1, ply + 1);
-                if (pc_score >= pc_beta)
-                    pc_score = -negamax(td, -pc_beta, -pc_beta + 1, depth - 4, ply + 1, !cutnode);
+            int pc_score = -quiescence(td, -pc_beta, -pc_beta + 1, ply + 1);
+            if (pc_score >= pc_beta)
+                pc_score = -negamax(td, -pc_beta, -pc_beta + 1, depth - 4, ply + 1, !cutnode);
 
-                unmake_move(td, move);
+            unmake_move(td, move);
 
-                if (pc_score >= pc_beta) {
-                    m_tt.store(position.hash(), depth - 3, move, pc_score, raw_eval, LOWER, ttpv, m_tt.age());
-                    return pc_score;
-                }
+            if (pc_score >= pc_beta) {
+                m_tt.store(position.hash(), depth - 3, move, pc_score, raw_eval, LOWER, ttpv, m_tt.age());
+                return pc_score;
             }
         }
     }
