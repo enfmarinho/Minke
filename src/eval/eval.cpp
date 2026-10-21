@@ -43,8 +43,7 @@ ScoreType adjust(const Position& pos, const ScoreType raw_eval, const ScoreType 
                  const std::array<ScoreType, 2>& optmism) {
     using namespace minke::tunable;
 
-    const int material_count = material_scaling_base()                             //
-                               + pos.piece_count(PAWN) * pawn_scaling_factor()     //
+    const int material_count = pos.piece_count(PAWN) * pawn_scaling_factor()       //
                                + pos.piece_count(KNIGHT) * knight_scaling_factor() //
                                + pos.piece_count(BISHOP) * bishop_scaling_factor() //
                                + pos.piece_count(ROOK) * rook_scaling_factor()     //

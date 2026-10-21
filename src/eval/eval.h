@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <array>
+
 #include "core/types.h"
 
 namespace minke {
