@@ -403,7 +403,6 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
     if (!in_check                                             //
         && !pv_node                                           //
         && !root                                              //
-        && !singular_search                                   //
         && depth <= razoring_max_depth()                      //
         && node.static_eval + razoring_mult() * depth < alpha //
     ) {
