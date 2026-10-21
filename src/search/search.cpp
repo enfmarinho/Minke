@@ -308,7 +308,10 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
     }
 
     // Internal Iterative Reductions
-    if (!singular_search && (!tthit || ttdepth + 4 < depth) && depth >= 3) {
+    if (!singular_search                                       //
+        && depth >= 3                                          //
+        && (!tthit || ttmove.is_none() || ttdepth + 4 < depth) //
+    ) {
         depth -= 1;
     }
 
