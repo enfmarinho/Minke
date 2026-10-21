@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -59,6 +60,7 @@ struct ThreadData {
     History search_history;
     CorrectionHistory correction_history;
     SearchStackEntry search_stack[MAX_SEARCH_DEPTH];
+    std::array<ScoreType, 2> optimism;
 
     int64_t nodes_searched;
     int64_t node_table[64 * 64];

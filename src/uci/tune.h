@@ -273,6 +273,11 @@ TUNABLE_PARAM(rook_scaling_factor, 522, 400, 700, 15, 0.002)
 TUNABLE_PARAM(queen_scaling_factor, 971, 800, 1400, 20, 0.002)
 TUNABLE_PARAM(material_scaling_base, 25962, 20000, 30000, 400, 0.002)
 
+// Optimism
+TUNABLE_PARAM(optimism_base, 2000, 0, 12000, 400, 0.002)
+TUNABLE_PARAM(optimism_stretch, 100, 50, 200, 8, 0.002)
+TUNABLE_PARAM(optimism_scale, 150, 75, 300, 12, 0.002)
+
 // SEE values
 TUNABLE_PARAM(pawn_see_value, 99, 20, 160, 5, 0.002)
 TUNABLE_PARAM(knight_see_value, 298, 200, 400, 10, 0.002)
