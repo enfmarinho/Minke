@@ -40,7 +40,7 @@ ScoreType evaluate(const Position& pos, const nnue::accumulator::State& acc_stat
 ScoreType evaluate(ThreadData& td) { return evaluate(td.position, td.acc_stack.update_top(td.position)); }
 
 ScoreType adjust(const Position& pos, const ScoreType raw_eval, const ScoreType correction,
-                 const std::array<ScoreType, 2>& optmism) {
+                 const std::array<ScoreType, 2>* optmism) {
     using namespace minke::tunable;
 
     const int material_count = pos.piece_count(PAWN) * pawn_scaling_factor()       //
@@ -50,9 +50,11 @@ ScoreType adjust(const Position& pos, const ScoreType raw_eval, const ScoreType 
                                + pos.piece_count(QUEEN) * queen_scaling_factor();
 
     int adjusted_eval = 0;
-    adjusted_eval += raw_eval * (material_scaling_base() + material_count) / 32768;   // material scaling
-    adjusted_eval += optmism[pos.stm()] * (optimism_base() + material_count) / 32768; // optimism
+    adjusted_eval += raw_eval * (material_scaling_base() + material_count) / 32768; // material scaling
     adjusted_eval += correction;
+    if (optmism != nullptr) {
+        adjusted_eval += (*optmism)[pos.stm()] * (optimism_base() + material_count) / 32768; // optimism
+    }
 
     return std::clamp(adjusted_eval, -MATE_FOUND + 1, MATE_FOUND - 1);
 }

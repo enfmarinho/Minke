@@ -274,7 +274,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             if (!in_check) {
                 const ScoreType raw_eval = eval::evaluate(td);
                 const HistoryType correction = td.correction_history.correction(td, ply);
-                const ScoreType adjusted_eval = eval::adjust(td.position, raw_eval, correction, td.optimism);
+                const ScoreType adjusted_eval = eval::adjust(td.position, raw_eval, correction, nullptr);
                 td.correction_history.update(td, depth, ply, 0 - adjusted_eval);
             }
             alpha = 0;
@@ -327,7 +327,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
         eval = raw_eval = node.static_eval;
     } else if (tthit) {
         raw_eval = tteval != SCORE_NONE ? tteval : eval::evaluate(td);
-        eval = node.static_eval = eval::adjust(position, raw_eval, correction_value, td.optimism);
+        eval = node.static_eval = eval::adjust(position, raw_eval, correction_value, &td.optimism);
         if (ttscore != SCORE_NONE                        //
             && (ttbound == EXACT                         //
                 || (ttbound == UPPER && ttscore < eval)  //
@@ -338,7 +338,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
 
     } else {
         raw_eval = eval::evaluate(td);
-        eval = node.static_eval = eval::adjust(position, raw_eval, correction_value, td.optimism);
+        eval = node.static_eval = eval::adjust(position, raw_eval, correction_value, &td.optimism);
         m_tt.store(position.hash(), 0, Move::none(), SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, m_tt.age());
     }
 
@@ -699,7 +699,7 @@ ScoreType Engine::quiescence(ThreadData &td, ScoreType alpha, ScoreType beta, Co
         if (!in_check) {
             const ScoreType raw_eval = eval::evaluate(td);
             const HistoryType correction = td.correction_history.correction(td, ply);
-            const ScoreType adjusted_eval = eval::adjust(td.position, raw_eval, correction, td.optimism);
+            const ScoreType adjusted_eval = eval::adjust(td.position, raw_eval, correction, nullptr);
             td.correction_history.update(td, 1, ply, 0 - adjusted_eval);
         }
         alpha = 0;
@@ -734,7 +734,7 @@ ScoreType Engine::quiescence(ThreadData &td, ScoreType alpha, ScoreType beta, Co
     } else if (tthit) {
         raw_eval = tteval != SCORE_NONE ? tteval : eval::evaluate(td);
         best_score = node.static_eval =
-            eval::adjust(position, raw_eval, td.correction_history.correction(td, ply), td.optimism);
+            eval::adjust(position, raw_eval, td.correction_history.correction(td, ply), &td.optimism);
 
         if (ttscore != SCORE_NONE                              //
             && (ttbound == EXACT                               //
@@ -747,7 +747,7 @@ ScoreType Engine::quiescence(ThreadData &td, ScoreType alpha, ScoreType beta, Co
     } else {
         raw_eval = eval::evaluate(td);
         best_score = node.static_eval =
-            eval::adjust(position, raw_eval, td.correction_history.correction(td, ply), td.optimism);
+            eval::adjust(position, raw_eval, td.correction_history.correction(td, ply), &td.optimism);
         m_tt.store(position.hash(), 0, Move::none(), SCORE_NONE, raw_eval, BOUND_EMPTY, ttpv, m_tt.age());
     }
 
