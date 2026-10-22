@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <optional>
 
 #include "core/attacks.h"
 #include "core/move.h"
@@ -274,7 +275,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             if (!in_check) {
                 const ScoreType raw_eval = eval::evaluate(td);
                 const HistoryType correction = td.correction_history.correction(td, ply);
-                const ScoreType adjusted_eval = eval::adjust(td.position, raw_eval, correction, td.optimism);
+                const ScoreType adjusted_eval = eval::adjust(td.position, raw_eval, correction, std::nullopt);
                 td.correction_history.update(td, depth, ply, 0 - adjusted_eval);
             }
             alpha = 0;
@@ -699,7 +700,7 @@ ScoreType Engine::quiescence(ThreadData &td, ScoreType alpha, ScoreType beta, Co
         if (!in_check) {
             const ScoreType raw_eval = eval::evaluate(td);
             const HistoryType correction = td.correction_history.correction(td, ply);
-            const ScoreType adjusted_eval = eval::adjust(td.position, raw_eval, correction, td.optimism);
+            const ScoreType adjusted_eval = eval::adjust(td.position, raw_eval, correction, std::nullopt);
             td.correction_history.update(td, 1, ply, 0 - adjusted_eval);
         }
         alpha = 0;
