@@ -22,7 +22,6 @@
 
 #include "core/move.h"
 #include "core/position.h"
-#include "datagen/packed_move.h"
 #include "datagen/packed_position.h"
 
 namespace minke::datagen {
@@ -38,8 +37,16 @@ class Viriformat {
     void write(std::ofstream &file_out, GameResult result);
 
   private:
+    struct PackedMoveScore {
+        uint16_t packed_move;
+        int16_t score;
+
+        PackedMoveScore(uint16_t _packed_move, int16_t _score) : packed_move(_packed_move), score(_score) {}
+    };
+    static_assert(sizeof(PackedMoveScore) == 4, "MoveScore struct is not 4 bytes");
+
     PackedPosition m_initial_pos;
-    std::vector<PackedMove> m_moves_scores; // move and score for this ply
+    std::vector<PackedMoveScore> m_moves_scores; // move and score for this ply
 };
 
 } // namespace minke::datagen

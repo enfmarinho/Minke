@@ -23,7 +23,6 @@
 
 #include "core/move.h"
 #include "core/position.h"
-#include "datagen/packed_move.h"
 #include "datagen/packed_position.h"
 
 namespace minke::datagen {
@@ -55,12 +54,13 @@ void Viriformat::push(const Move &move, const ScoreType &score) {
 }
 
 void Viriformat::write(std::ofstream &file_out, GameResult result) {
-    constexpr char null_terminator[sizeof(PackedMove)] = {};
+    constexpr char null_terminator[sizeof(PackedMoveScore)] = {};
 
     m_initial_pos.set_result(result);
     file_out.write(reinterpret_cast<const char *>(&m_initial_pos), sizeof(PackedPosition));
-    file_out.write(reinterpret_cast<const char *>(m_moves_scores.data()), sizeof(PackedMove) * m_moves_scores.size());
-    file_out.write(reinterpret_cast<const char *>(null_terminator), sizeof(PackedMove));
+    file_out.write(reinterpret_cast<const char *>(m_moves_scores.data()),
+                   sizeof(PackedMoveScore) * m_moves_scores.size());
+    file_out.write(reinterpret_cast<const char *>(null_terminator), sizeof(PackedMoveScore));
 }
 
 } // namespace minke::datagen

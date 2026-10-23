@@ -38,7 +38,6 @@
 #include "core/position.h"
 #include "core/types.h"
 #include "datagen/packed_position.h"
-#include "src/datagen/packed_move.h"
 #include "src/datagen/packed_position.h"
 #include "src/eval/eval.h"
 #include "src/eval/nnue/accumulator/stack.h"
@@ -169,14 +168,14 @@ void relabel_file(const Task &task, GlobalProgress &progress) {
                 throw std::runtime_error("File is incorrectly truncated: " + task.in_path.string());
             }
 
-            uint32_t raw_packed_move;
-            std::memcpy(&raw_packed_move, in_cursor, sizeof(uint32_t));
+            uint32_t raw_packed_move_score;
+            std::memcpy(&raw_packed_move_score, in_cursor, sizeof(uint32_t));
 
             in_cursor += sizeof(uint32_t);
             bytes_count += sizeof(uint32_t);
 
-            if (raw_packed_move == 0) { // null terminator
-                std::memcpy(out_cursor, &raw_packed_move, sizeof(uint32_t));
+            if (raw_packed_move_score == 0) { // null terminator
+                std::memcpy(out_cursor, &raw_packed_move_score, sizeof(uint32_t));
                 out_cursor += sizeof(uint32_t);
                 break;
             }
@@ -186,14 +185,16 @@ void relabel_file(const Task &task, GlobalProgress &progress) {
                 eval = -eval;
             }
 
-            const datagen::PackedMove packed_move(static_cast<uint16_t>(raw_packed_move), eval);
+            const uint16_t packed_move = static_cast<uint16_t>(raw_packed_move_score);
             std::memcpy(out_cursor, &packed_move, sizeof(packed_move));
+            std::memcpy(out_cursor, &eval, sizeof(eval));
 
             out_cursor += sizeof(uint32_t);
             position_count += 1;
 
             // apply move to state tracker
-            const DirtyPiece dp = pos.make_move(Move(static_cast<uint16_t>(raw_packed_move), pos));
+            const Move move(packed_move, pos);
+            const DirtyPiece dp = pos.make_move(move);
             acc_stack.push(dp, pos.king_sq(WHITE), pos.king_sq(BLACK));
         }
 
