@@ -35,11 +35,13 @@
 #include <thread>
 #include <vector>
 
-#include "../src/eval/eval.h"
-#include "../src/eval/nnue/accumulator/stack.h"
 #include "core/position.h"
 #include "core/types.h"
 #include "datagen/packed_position.h"
+#include "src/datagen/packed_move.h"
+#include "src/datagen/packed_position.h"
+#include "src/eval/eval.h"
+#include "src/eval/nnue/accumulator/stack.h"
 
 namespace fs = std::filesystem;
 
