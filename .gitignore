@@ -14,3 +14,4 @@ minke-*-avx512
 minke-*-apple-silicon
 
 preprocess_nnue
+relabel
