@@ -187,9 +187,10 @@ void relabel_file(const Task &task, GlobalProgress &progress) {
 
             const uint16_t packed_move = static_cast<uint16_t>(raw_packed_move_score);
             std::memcpy(out_cursor, &packed_move, sizeof(packed_move));
+            out_cursor += sizeof(uint16_t);
             std::memcpy(out_cursor, &eval, sizeof(eval));
+            out_cursor += sizeof(int16_t);
 
-            out_cursor += sizeof(uint32_t);
             position_count += 1;
 
             // apply move to state tracker
@@ -198,15 +199,15 @@ void relabel_file(const Task &task, GlobalProgress &progress) {
             acc_stack.push(dp, pos.king_sq(WHITE), pos.king_sq(BLACK));
         }
 
-        if (in_cursor != in_end) {
-            throw std::runtime_error("Unexpected trailing bytes at EOF in " + task.in_path.string());
-        }
-
         // flush progress after every game
         progress.completed_bytes.fetch_add(bytes_count, std::memory_order_relaxed);
         progress.completed_positions.fetch_add(position_count, std::memory_order_relaxed);
         bytes_count = 0;
         position_count = 0;
+    }
+
+    if (in_cursor != in_end) {
+        throw std::runtime_error("Unexpected trailing bytes at EOF in " + task.in_path.string());
     }
 }
 
