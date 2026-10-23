@@ -69,6 +69,7 @@ struct MmapInput {
 
         struct stat st;
         if (fstat(fd, &st) < 0 || st.st_size == 0) {
+            close(fd);
             throw std::runtime_error("Empty or invalid file: " + path.string());
         }
         size = st.st_size;
@@ -148,7 +149,8 @@ void relabel_file(const Task &task, GlobalProgress &progress) {
     uint64_t position_count = 0;
     uint64_t bytes_count = 0;
 
-    while (in_cursor < in_end) {
+    nnue::accumulator::Stack acc_stack;
+    while (in_cursor + sizeof(datagen::PackedPosition) < in_end) {
         datagen::PackedPosition packed_pos;
         std::memcpy(&packed_pos, in_cursor, sizeof(packed_pos));
         std::memcpy(out_cursor, &packed_pos, sizeof(packed_pos));
@@ -156,10 +158,9 @@ void relabel_file(const Task &task, GlobalProgress &progress) {
         in_cursor += sizeof(packed_pos);
         out_cursor += sizeof(packed_pos);
         bytes_count += sizeof(packed_pos);
-        position_count += 1;
 
         Position pos(packed_pos);
-        nnue::accumulator::Stack acc_stack(pos);
+        acc_stack.refresh(pos);
 
         while (true) {
             if (in_cursor + sizeof(uint32_t) > in_end) {
@@ -192,6 +193,10 @@ void relabel_file(const Task &task, GlobalProgress &progress) {
             // apply move to state tracker
             const DirtyPiece dp = pos.make_move(Move(packed_move));
             acc_stack.push(dp, pos.king_sq(WHITE), pos.king_sq(BLACK));
+        }
+
+        if (in_cursor != in_end) {
+            throw std::runtime_error("Unexpected trailing bytes at EOF in " + task.in_path.string());
         }
 
         // flush progress after every game
