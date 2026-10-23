@@ -25,7 +25,7 @@
 
 namespace minke {
 
-constexpr Move::Move(uint16_t raw_packed_move, const Position &pos) {
+Move::Move(uint16_t raw_packed_move, const Position &pos) {
     const uint16_t from_to = raw_packed_move & 0xFFF;
     const Square to = static_cast<Square>(from_to >> 6);
     const uint16_t move_flag = raw_packed_move >> 14;

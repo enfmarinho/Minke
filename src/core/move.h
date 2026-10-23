@@ -30,7 +30,7 @@ class Position;
 class Move {
   public:
     constexpr Move() : m_bytes(0) {}
-    constexpr Move(uint16_t raw_packed_move, const Position &pos);
+    Move(uint16_t raw_packed_move, const Position &pos);
     constexpr Move(Square from, Square to, MoveType move_type) { m_bytes = (move_type << 12) | (to << 6) | (from); }
 
     static constexpr Move none() { return Move(); }

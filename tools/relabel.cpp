@@ -193,7 +193,7 @@ void relabel_file(const Task &task, GlobalProgress &progress) {
             position_count += 1;
 
             // apply move to state tracker
-            const DirtyPiece dp = pos.make_move(Move(packed_move));
+            const DirtyPiece dp = pos.make_move(Move(static_cast<uint16_t>(raw_packed_move), pos));
             acc_stack.push(dp, pos.king_sq(WHITE), pos.king_sq(BLACK));
         }
 
