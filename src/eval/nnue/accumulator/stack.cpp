@@ -27,6 +27,8 @@
 
 namespace minke::nnue::accumulator {
 
+Stack::Stack(const Position &pos) { refresh(pos); }
+
 void Stack::refresh(const Position &pos) {
     const auto &white_perspective_acc = m_finny_table.update(pos, WHITE);
     const auto &black_perspective_acc = m_finny_table.update(pos, BLACK);

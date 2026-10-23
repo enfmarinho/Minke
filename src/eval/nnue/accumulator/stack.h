@@ -29,6 +29,7 @@ namespace minke::nnue::accumulator {
 
 class Stack {
   public:
+    Stack(const Position &pos);
     void refresh(const Position &pos);
 
     void pop();
