@@ -2,6 +2,7 @@
 #   make [native|avx2|bmi2|avx512|apple-silicon]    # build for target arch (default: auto-detected)
 #   make PGO=on bmi2                                # two-phase profile-guided build
 #   make EVALFILE=net.nnue bmi2                     # use a custom network file
+#   make relabel                                    # build the viriformat relabeler
 
 include config.mk
 
@@ -25,7 +26,6 @@ BASE_BUILD_DIR := build
 PGO_DIR := $(BASE_BUILD_DIR)/pgo
 SRC_DIRS := src/ src/core/ src/datagen/ src/eval/ src/eval/nnue/ src/eval/nnue/accumulator/ src/eval/nnue/simd/ src/search/ src/uci/ src/utils/
 SOURCES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
-OBJECTS := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(notdir $(SOURCES)))
 PREPROCESSOR_SRC := tools/preprocess_nnue.cpp
 RELABELER_SRC := tools/relabel.cpp
 
@@ -43,12 +43,16 @@ ifeq ($(OS), Windows_NT)
 	RM := del
 else
 	UNAME_S := $(shell uname -s)
+	UNAME_M := $(shell uname -m)
 	SUFFIX :=
 	ifeq ($(UNAME_S), Darwin)
-		CXX ?= clang++
+		ifeq ($(origin CXX), default)
+			CXX := clang++
+		endif
 		LDFLAGS := -flto
+	else
+		CXX ?= g++
 	endif
-	CXX ?= g++
 	LDFLAGS += -pthread
 	MKDIR := mkdir -p
 	RMDIR := rm -rf
@@ -65,21 +69,50 @@ else
 	PGO_MERGE_CMD := true
 endif
 
-NATIVE_ARCH := $(shell echo | $(CXX) -march=native -E -dM -)
-ifneq ($(findstring __AVX2__, $(NATIVE_ARCH)),)
-	DEFAULT_TARGET := avx2
-endif
-ifneq ($(findstring __BMI2__, $(NATIVE_ARCH)),)
-	DEFAULT_TARGET := bmi2
-endif
-ifneq ($(findstring __AVX512F__, $(NATIVE_ARCH)),)
-	ifneq ($(findstring __AVX512BW__, $(NATIVE_ARCH)),)
-		DEFAULT_TARGET := avx512
+ifeq ($(UNAME_S), Darwin)
+	ifeq ($(UNAME_M), arm64)
+		DEFAULT_TARGET := apple-silicon
+	else
+		DEFAULT_TARGET := native
 	endif
 endif
+
+ifndef DEFAULT_TARGET
+	NATIVE_ARCH := $(shell echo | $(CXX) -march=native -E -dM -)
+	ifneq ($(findstring __AVX2__, $(NATIVE_ARCH)),)
+		DEFAULT_TARGET := avx2
+	endif
+	ifneq ($(findstring __BMI2__, $(NATIVE_ARCH)),)
+		DEFAULT_TARGET := bmi2
+	endif
+	ifneq ($(findstring __AVX512F__, $(NATIVE_ARCH)),)
+		ifneq ($(findstring __AVX512BW__, $(NATIVE_ARCH)),)
+			DEFAULT_TARGET := avx512
+		endif
+	endif
+endif
+
 ifndef DEFAULT_TARGET
 	DEFAULT_TARGET := native
 endif
+
+ifeq ($(DEFAULT_TARGET), apple-silicon)
+	DEFAULT_ARCH_FLAGS := $(APPLESILICON_FLAGS)
+else ifeq ($(DEFAULT_TARGET), avx512)
+	DEFAULT_ARCH_FLAGS := $(AVX512_FLAGS)
+else ifeq ($(DEFAULT_TARGET), bmi2)
+	DEFAULT_ARCH_FLAGS := $(BMI2_FLAGS)
+else ifeq ($(DEFAULT_TARGET), avx2)
+	DEFAULT_ARCH_FLAGS := $(AVX2_FLAGS)
+else
+	DEFAULT_ARCH_FLAGS := $(NATIVE_FLAGS)
+endif
+
+ARCH_FLAGS ?= $(DEFAULT_ARCH_FLAGS)
+BUILD_DIR ?= $(BASE_BUILD_DIR)/$(DEFAULT_TARGET)
+
+OBJECTS := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(notdir $(SOURCES)))
+ENGINE_OBJECTS := $(filter-out $(BUILD_DIR)/main.o, $(OBJECTS))
 
 ifdef TRACK_ACTIVATIONS
 	CXXFLAGS += -DTRACK_ACTIVATIONS
@@ -126,12 +159,12 @@ define build
 endef
 endif
 
-.PHONY: all evalfile native avx2 bmi2 avx512 apple-silicon build clean
+.PHONY: all evalfile native avx2 bmi2 avx512 apple-silicon build clean relabel
 all: $(DEFAULT_TARGET)
 
-relabel: 
+relabel: evalfile_processed $(ENGINE_OBJECTS) 
 	@echo "Compiling relabeler"
-	$(CXX) $(CXXFLAGS) $(ARCH_FLAGS) $(PROFILE_FLAGS) $(LDFLAGS) $(RELABELER_SRC) -o relabel
+	$(CXX) $(CXXFLAGS) $(ARCH_FLAGS) $(PROFILE_FLAGS) $(LDFLAGS) $(RELABELER_SRC) $(ENGINE_OBJECTS) -o relabel
 
 evalfile_processed: evalfile
 	@echo "Compiling nnue pre-processor program"
@@ -180,6 +213,6 @@ $(BUILD_DIR):
 
 clean:
 	$(RMDIR) $(BASE_BUILD_DIR)
-	$(RM) -f $(EXE)*
+	$(RM) -f $(EXE)* relabel preprocess_nnue
 
 -include $(OBJECTS:.o=.d)
