@@ -27,6 +27,7 @@ SRC_DIRS := src/ src/core/ src/datagen/ src/eval/ src/eval/nnue/ src/eval/nnue/a
 SOURCES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 OBJECTS := $(patsubst %.cpp, $(BUILD_DIR)/%.o, $(notdir $(SOURCES)))
 PREPROCESSOR_SRC := tools/preprocess_nnue.cpp
+RELABELER_SRC := tools/relabel.cpp
 
 ifndef EXE
 	EXE := minke-v$(VERSION)
@@ -127,6 +128,10 @@ endif
 
 .PHONY: all evalfile native avx2 bmi2 avx512 apple-silicon build clean
 all: $(DEFAULT_TARGET)
+
+relabel: 
+	@echo "Compiling relabeler"
+	$(CXX) $(CXXFLAGS) $(ARCH_FLAGS) $(PROFILE_FLAGS) $(LDFLAGS) $(RELABELER_SRC) -o relabel
 
 evalfile_processed: evalfile
 	@echo "Compiling nnue pre-processor program"
