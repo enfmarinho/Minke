@@ -22,6 +22,7 @@
 #include <cstdint>
 
 #include "core/types.h"
+#include "datagen/packed_move.h"
 #include "utils/static_vector.h"
 
 namespace minke {
@@ -29,6 +30,9 @@ namespace minke {
 class Move {
   public:
     constexpr Move() : m_bytes(0) {}
+    constexpr Move(const datagen::PackedMove& packed_move) {
+        // TODO
+    }
     constexpr Move(Square from, Square to, MoveType move_type) { m_bytes = (move_type << 12) | (to << 6) | (from); }
 
     static constexpr Move none() { return Move(); }
