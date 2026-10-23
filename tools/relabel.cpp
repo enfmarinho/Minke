@@ -273,17 +273,34 @@ int main(int argc, char *argv[]) {
     GlobalProgress progress;
     std::vector<Task> tasks;
 
-    if (!fs::is_directory(in_path)) {
-        progress.total_bytes += fs::file_size(in_path);
-        std::thread monitor_thread(monitor_thread_func, std::ref(progress));
-        relabel_file({in_path, out_path}, progress);
-        return 0;
+    if (fs::exists(out_path)) {
+        std::cerr << "Err: output path alreday exists\n";
+        return 1;
     }
 
-    // if `in_path` is a directory `out_path` must be a directory
-    if (fs::exists(out_path) && !fs::is_directory(out_path)) {
-        std::cerr << "Err: input path is a directory but output path is not\n";
-        return 1;
+    if (!fs::is_directory(in_path)) {
+        const uintmax_t file_size = fs::file_size(in_path);
+
+        if (file_size == 0) {
+            std::cerr << "Err: input file is empty\n";
+            return 1;
+        }
+        progress.total_bytes += file_size;
+
+        std::thread monitor_thread(monitor_thread_func, std::ref(progress));
+
+        const Task task{in_path, out_path, file_size};
+        try {
+            relabel_file(task, progress);
+        } catch (const std::exception &ex) {
+            std::cerr << "\n[Worker Err] Failed on " << task.in_path << ": " << ex.what() << "\n";
+        }
+        progress.done.store(true, std::memory_order_relaxed);
+        if (monitor_thread.joinable()) {
+            monitor_thread.join();
+        }
+
+        return 0;
     }
     fs::create_directories(out_path);
 
