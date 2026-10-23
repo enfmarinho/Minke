@@ -310,7 +310,8 @@ int main(int argc, char *argv[]) {
     }
     num_threads = std::min(num_threads, tasks.size());
 
-    std::cout << "Found " << tasks.size() << " files (" << progress.total_bytes / (1024 * 1024 * 1024) << " GB).\n";
+    std::cout << "Found " << tasks.size() << " files (" << std::setprecision(1)
+              << progress.total_bytes / (1024.0 * 1024.0 * 1024.0) << " GB).\n";
     std::cout << "Launching " << num_threads << " workers...\n";
 
     std::thread monitor_thread(monitor_thread_func, std::ref(progress));
