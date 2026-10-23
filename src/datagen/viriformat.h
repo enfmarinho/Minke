@@ -18,25 +18,17 @@
 
 #pragma once
 
-#include <cstdint>
 #include <fstream>
 
 #include "core/move.h"
 #include "core/position.h"
+#include "datagen/packed_move.h"
 #include "datagen/packed_position.h"
 
 namespace minke::datagen {
 
 class Viriformat {
   public:
-    struct PackedMove {
-        uint16_t packed_move;
-        int16_t score;
-
-        PackedMove(uint16_t _packed_move, int16_t _score) : packed_move(_packed_move), score(_score) {}
-    };
-    static_assert(sizeof(PackedMove) == 4, "MoveScore struct is not 4 bytes");
-
     Viriformat();
     Viriformat(const Position &pos);
     ~Viriformat() = default;

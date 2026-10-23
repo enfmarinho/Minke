@@ -23,6 +23,7 @@
 
 #include "core/move.h"
 #include "core/position.h"
+#include "datagen/packed_move.h"
 #include "datagen/packed_position.h"
 
 namespace minke::datagen {
