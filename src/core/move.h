@@ -22,17 +22,15 @@
 #include <cstdint>
 
 #include "core/types.h"
-#include "datagen/packed_move.h"
 #include "utils/static_vector.h"
 
 namespace minke {
+class Position;
 
 class Move {
   public:
     constexpr Move() : m_bytes(0) {}
-    constexpr Move(const datagen::PackedMove& packed_move) {
-        // TODO
-    }
+    constexpr Move(uint16_t raw_packed_move, const Position &pos);
     constexpr Move(Square from, Square to, MoveType move_type) { m_bytes = (move_type << 12) | (to << 6) | (from); }
 
     static constexpr Move none() { return Move(); }
@@ -56,7 +54,7 @@ class Move {
     constexpr bool is_none() const { return m_bytes == 0; }
     constexpr explicit operator bool() const { return !is_none(); }
 
-    constexpr bool operator==(const Move&) const = default;
+    constexpr bool operator==(const Move &) const = default;
 
   private:
     // Bits are arranged in the following way:
