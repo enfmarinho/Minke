@@ -36,6 +36,7 @@ enum GameResult : uint8_t {
 
 class __attribute__((packed)) PackedPosition {
   public:
+    PackedPosition() = default;
     PackedPosition(const Position &position, ScoreType score);
 
     void set_result(uint8_t result);
