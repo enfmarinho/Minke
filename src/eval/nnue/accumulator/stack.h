@@ -29,7 +29,10 @@ namespace minke::nnue::accumulator {
 
 class Stack {
   public:
+    Stack() = default;
     Stack(const Position &pos);
+    ~Stack() = default;
+
     void refresh(const Position &pos);
 
     void pop();
