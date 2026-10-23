@@ -35,6 +35,8 @@ enum GameResult : uint8_t {
 };
 
 class __attribute__((packed)) PackedPosition {
+    friend class minke::Position;
+
   public:
     PackedPosition() = default;
     PackedPosition(const Position &position, ScoreType score);

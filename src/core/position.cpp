@@ -39,8 +39,38 @@
 
 namespace minke {
 
-Position::Position(datagen::PackedPosition packed_position) {
-    // TODO
+Position::Position(datagen::PackedPosition packed_pos) {
+    reset();
+
+    Bitboard occ = packed_pos.m_occupancy;
+    int idx = 0;
+    bool high_nibble = false;
+
+    while (occ) {
+        Square sq = occ.poplsb();
+
+        uint8_t packed_piece;
+        if (high_nibble) {
+            packed_piece = (packed_pos.m_pieces[idx] >> 4) & 0x0F;
+            ++idx;
+        } else {
+            packed_piece = packed_pos.m_pieces[idx] & 0x0F;
+        }
+        high_nibble = !high_nibble;
+
+        uint8_t raw_pt = packed_piece & 0x07;
+        Color color = (packed_piece & (1 << 3)) ? BLACK : WHITE;
+
+        PieceType pt;
+        if (raw_pt == 6) {
+            pt = ROOK;
+            m_curr_state.castle_rooks.set_sq(sq);
+        } else {
+            pt = static_cast<PieceType>(raw_pt);
+        }
+
+        add_piece({get_piece(pt, color), sq});
+    }
 }
 
 bool Position::set_fen(const std::string &fen) {
