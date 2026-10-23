@@ -28,6 +28,14 @@
 namespace minke::datagen {
 
 class Viriformat {
+    struct PackedMove {
+        uint16_t packed_move;
+        int16_t score;
+
+        PackedMove(uint16_t _packed_move, int16_t _score) : packed_move(_packed_move), score(_score) {}
+    };
+    static_assert(sizeof(PackedMove) == 4, "MoveScore struct is not 4 bytes");
+
   public:
     Viriformat();
     Viriformat(const Position &pos);
@@ -38,16 +46,8 @@ class Viriformat {
     void write(std::ofstream &file_out, GameResult result);
 
   private:
-    struct MoveScore {
-        uint16_t packed_move;
-        int16_t score;
-
-        MoveScore(uint16_t _packed_move, int16_t _score) : packed_move(_packed_move), score(_score) {}
-    };
-    static_assert(sizeof(MoveScore) == 4, "MoveScore struct is not 4 bytes");
-
     PackedPosition m_initial_pos;
-    std::vector<MoveScore> m_moves_scores; // move and score for this ply
+    std::vector<PackedMove> m_moves_scores; // move and score for this ply
 };
 
 } // namespace minke::datagen
