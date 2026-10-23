@@ -28,6 +28,7 @@
 namespace minke::datagen {
 
 class Viriformat {
+  public:
     struct PackedMove {
         uint16_t packed_move;
         int16_t score;
@@ -36,7 +37,6 @@ class Viriformat {
     };
     static_assert(sizeof(PackedMove) == 4, "MoveScore struct is not 4 bytes");
 
-  public:
     Viriformat();
     Viriformat(const Position &pos);
     ~Viriformat() = default;
