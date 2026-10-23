@@ -33,10 +33,15 @@
 #include "core/movegen.h"
 #include "core/types.h"
 #include "core/zobrist.h"
+#include "datagen/packed_position.h"
 #include "search/cuckoo.h"
 #include "utils/utils.h"
 
 namespace minke {
+
+Position::Position(datagen::PackedPosition packed_position) {
+    // TODO
+}
 
 bool Position::set_fen(const std::string &fen) {
     reset();

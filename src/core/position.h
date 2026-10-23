@@ -65,9 +65,14 @@ struct BoardState {
     }
 };
 
+namespace datagen {
+class PackedPosition;
+}
+
 class Position {
   public:
     Position() = default;
+    Position(datagen::PackedPosition packed_position);
     ~Position() = default;
 
     bool set_fen(const std::string &fen);
