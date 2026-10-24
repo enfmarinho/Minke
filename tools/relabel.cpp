@@ -343,7 +343,7 @@ int main(int argc, char *argv[]) {
     std::atomic<size_t> next_task_id{0};
     std::vector<std::thread> workers;
     workers.reserve(num_threads);
-    for (int i = 0; i < num_threads; ++i) {
+    for (size_t i = 0; i < num_threads; ++i) {
         workers.emplace_back([&]() {
             while (true) {
                 const size_t idx = next_task_id.fetch_add(1, std::memory_order_relaxed);
