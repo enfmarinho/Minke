@@ -40,7 +40,7 @@ Move::Move(uint16_t raw_packed_move, const Position &pos) {
         move_type = static_cast<MoveType>(PAWN_PROMOTION_MASK | promo);
     }
 
-    if (pos.piece_at(to) != EMPTY) { // regular
+    if (pos.piece_at(to) != EMPTY && move_type != CASTLING) { // regular
         move_type = static_cast<MoveType>(move_type | CAPTURE);
     }
 
