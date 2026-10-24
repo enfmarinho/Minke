@@ -71,6 +71,33 @@ Position::Position(datagen::PackedPosition packed_pos) {
 
         add_piece({get_piece(pt, color), sq});
     }
+
+    const uint8_t stm_ep = packed_pos.m_stm_ep_sq;
+    m_stm = (stm_ep & 0x80) ? BLACK : WHITE;
+
+    if (stm_ep & 0x40) {
+        m_curr_state.en_passant = NO_SQ;
+    } else {
+        m_curr_state.en_passant = static_cast<Square>(stm_ep & 0x3F);
+    }
+
+    m_curr_state.fifty_move_ply = packed_pos.m_half_move_counter;
+    m_game_clock_ply = (static_cast<int>(packed_pos.m_game_clock) - 1) * 2 + m_stm;
+
+    Bitboard castle_rooks = m_curr_state.castle_rooks;
+    while (castle_rooks) {
+        const Square sq = castle_rooks.poplsb();
+        const Color color = get_color(piece_at(sq));
+
+        if (sq > king_sq(color)) {
+            set_bits(m_curr_state.castling_rights, static_cast<uint8_t>(color == WHITE ? WHITE_OO : BLACK_OO));
+        } else {
+            set_bits(m_curr_state.castling_rights, static_cast<uint8_t>(color == WHITE ? WHITE_OOO : BLACK_OOO));
+        }
+    }
+
+    calculate_aux_bbs();
+    calculate_hashes();
 }
 
 bool Position::set_fen(const std::string &fen) {
