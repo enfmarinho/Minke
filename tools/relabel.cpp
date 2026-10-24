@@ -38,9 +38,9 @@
 #include "core/position.h"
 #include "core/types.h"
 #include "datagen/packed_position.h"
-#include "src/datagen/packed_position.h"
-#include "src/eval/eval.h"
-#include "src/eval/nnue/accumulator/stack.h"
+#include "eval/eval.h"
+#include "eval/nnue/accumulator/stack.h"
+#include "uci/init.h"
 
 namespace fs = std::filesystem;
 
@@ -197,6 +197,7 @@ void relabel_file(const Task &task, GlobalProgress &progress) {
             const Move move(packed_move, pos);
             const DirtyPiece dp = pos.make_move(move);
             acc_stack.push(dp, pos.king_sq(WHITE), pos.king_sq(BLACK));
+            pos.update_game_history();
         }
 
         // flush progress after every game
@@ -269,6 +270,8 @@ int main(int argc, char *argv[]) {
         std::cerr << "Err: input path does not exist\n";
         return 1;
     }
+
+    minke::init_all();
 
     GlobalProgress progress;
     std::vector<Task> tasks;
