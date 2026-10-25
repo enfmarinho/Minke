@@ -504,38 +504,39 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             continue;
         }
 
-        if (!root && !is_mated(best_score) && !skip_quiets) {
+        if (!root && !is_mated(best_score)) {
             const CounterType lmr_scaled_depth =
                 depth * 1024 - LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
             const CounterType lmr_depth = lmr_scaled_depth / 1024;
-
-            // Late Move Pruning
-            if (moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
-                skip_quiets = true;
-            }
-
-            // Quiet Futility pruning
-            const ScoreType futility_value = node.static_eval + fp_margin() + fp_depth_factor() * lmr_depth;
-            if (!in_check                             //
-                && move.is_quiet()                    //
-                && lmr_scaled_depth <= fp_max_depth() //
-                && futility_value <= alpha            //
-            ) {
-                if (!is_decisive(best_score) && best_score < futility_value) {
-                    best_score = futility_value;
+            if (!skip_quiets) {
+                // Late Move Pruning
+                if (moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
+                    skip_quiets = true;
                 }
-                skip_quiets = true;
-                continue;
-            }
 
-            // Quiet History Pruning
-            if (lmr_scaled_depth <= history_pruning_max_depth_scaled() //
-                && move.is_quiet()                                     //
-                && td.search_history.quiet_score(td, move, ply) <
-                       quiet_hist_pruning_factor() * depth + quiet_hist_pruning_base() //
-            ) {
-                skip_quiets = true;
-                continue;
+                // Quiet Futility pruning
+                const ScoreType futility_value = node.static_eval + fp_margin() + fp_depth_factor() * lmr_depth;
+                if (!in_check                             //
+                    && move.is_quiet()                    //
+                    && lmr_scaled_depth <= fp_max_depth() //
+                    && futility_value <= alpha            //
+                ) {
+                    if (!is_decisive(best_score) && best_score < futility_value) {
+                        best_score = futility_value;
+                    }
+                    skip_quiets = true;
+                    continue;
+                }
+
+                // Quiet History Pruning
+                if (lmr_scaled_depth <= history_pruning_max_depth_scaled() //
+                    && move.is_quiet()                                     //
+                    && td.search_history.quiet_score(td, move, ply) <
+                           quiet_hist_pruning_factor() * depth + quiet_hist_pruning_base() //
+                ) {
+                    skip_quiets = true;
+                    continue;
+                }
             }
 
             const int see_margin = see_noisy_pruning_factor() * lmr_depth * lmr_depth;
