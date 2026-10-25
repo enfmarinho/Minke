@@ -616,7 +616,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
                     scaled_reduction -= ttpv * lmr_ttpv_delta();
 
                     // Reduce based on correction history.
-                    scaled_reduction -= complexity / lmr_corrhist_divisor();
+                    scaled_reduction -= std::min(complexity * 1024 / lmr_corrhist_divisor(), 2048); // capped at 2 plies
                 } else {
                     scaled_reduction += cutnode * lmr_noisy_cutnode_delta(); // Reduce cutnodes more
                 }
