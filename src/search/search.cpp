@@ -435,7 +435,8 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
     ) {
         m_tt.prefetch(position.hash() ^ zobrist::color_key());
 
-        const int reduction = (nmp_base_reduction() + depth * nmp_depth_factor()) / 64;
+        const int eval_reduction = std::clamp((node.static_eval - beta) / nmp_eval_margin_divisor(), 0, 3);
+        const int reduction = (nmp_base_reduction() + depth * nmp_depth_factor()) / 64 + eval_reduction;
 
         make_null_move(td);
         node.curr_pmove = PieceMove::none();

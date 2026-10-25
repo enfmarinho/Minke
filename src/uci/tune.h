@@ -138,6 +138,7 @@ TUNABLE_PARAM(nmp_beta_base_margin, 208, 10, 300, 20, 0.002)
 TUNABLE_PARAM(nmp_beta_improving_margin, 51, 0, 100, 5, 0.002)
 TUNABLE_PARAM(nmp_beta_depth_factor, 1312, 500, 2000, 50, 0.002)
 FIXED_PARAM(nmp_min_depth, 2, 2, 8, 0.5, 0.002)
+TUNABLE_PARAM(nmp_eval_margin_divisor, 200, 80, 400, 16, 0.002)
 
 // Hindsight
 TUNABLE_PARAM(hindsight_eval, 158, 50, 300, 10, 0.002)
