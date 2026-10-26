@@ -510,7 +510,8 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             const CounterType lmr_depth = lmr_scaled_depth / 1024;
 
             // Late Move Pruning
-            if (moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
+            if (!pv_node && //
+                moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
                 skip_quiets = true;
             }
 
