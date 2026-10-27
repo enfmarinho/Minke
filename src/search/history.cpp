@@ -61,17 +61,17 @@ int History::quiet_score(const ThreadData &td, const Move move, const CounterTyp
 void History::update(const ThreadData &td, const Move best_move, int depth, CounterType ply,
                      const PieceMoveList &quiets_tried, const PieceMoveList &tacticals_tried) {
     HistoryType quiet_bonus = calculate_score(depth, hist_bonus_mult(), hist_bonus_offset(), hist_bonus_max());
-    HistoryType quiet_penalty = calculate_score(depth, hist_penalty_mult(), hist_penalty_offset(), hist_penalty_max());
+    HistoryType quiet_penalty = -calculate_score(depth, hist_penalty_mult(), hist_penalty_offset(), hist_penalty_max());
     HistoryType pawnhist_bonus =
         calculate_score(depth, pawnhist_bonus_mult(), pawnhist_bonus_offset(), pawnhist_bonus_max());
     HistoryType pawnhist_penalty =
-        calculate_score(depth, pawnhist_penalty_mult(), pawnhist_penalty_offset(), pawnhist_penalty_max());
+        -calculate_score(depth, pawnhist_penalty_mult(), pawnhist_penalty_offset(), pawnhist_penalty_max());
     HistoryType cont_bonus = calculate_score(depth, cont_bonus_mult(), cont_bonus_offset(), cont_bonus_max());
-    HistoryType cont_penalty = calculate_score(depth, cont_penalty_mult(), cont_penalty_offset(), cont_penalty_max());
+    HistoryType cont_penalty = -calculate_score(depth, cont_penalty_mult(), cont_penalty_offset(), cont_penalty_max());
     HistoryType capture_bonus =
         calculate_score(depth, capt_hist_bonus_mult(), capt_hist_bonus_offset(), capt_hist_bonus_max());
     HistoryType capture_penalty =
-        calculate_score(depth, capt_hist_penalty_mult(), capt_hist_penalty_offset(), capt_hist_penalty_max());
+        -calculate_score(depth, capt_hist_penalty_mult(), capt_hist_penalty_offset(), capt_hist_penalty_max());
     if (best_move.is_quiet()) {
         save_killer(best_move, ply);
 
