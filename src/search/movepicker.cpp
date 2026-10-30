@@ -146,7 +146,6 @@ void MovePicker::score_quiet_moves() {
 }
 
 void MovePicker::score_noisy_moves() {
-    using minke::tunable::SEE_VALUES;
     for (size_t i = m_idx; i < m_end; ++i) {
         auto &[move, score] = m_move_list[i];
         const Piece captured = [&]() {

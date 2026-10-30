@@ -34,6 +34,7 @@ namespace minke {
 
 int LMR_TABLE[64][64];
 int LMP_TABLE[2][LMP_DEPTH];
+int SEE_VALUES[PIECE_NB];
 
 // Heap allocated so the feature transformer weights can be backed by huge pages, which greatly reduces TLB misses
 nnue::Network &nnue::network =
@@ -48,6 +49,15 @@ void init_all() {
 
 void init_search_params() {
     using namespace minke::tunable;
+
+    const int piece_values[KING + 1] = {pawn_see_value(), knight_see_value(), bishop_see_value(),
+                                        rook_see_value(), queen_see_value(),  5000};
+    for (int pt = PAWN; pt <= KING; ++pt) {
+        SEE_VALUES[pt] = piece_values[pt];
+        SEE_VALUES[pt + COLOR_OFFSET] = piece_values[pt];
+    }
+    SEE_VALUES[EMPTY] = 0;
+
     for (int depth = 1; depth < 64; ++depth) {
         for (int move_counter = 1; move_counter < 64; ++move_counter) {
             LMR_TABLE[depth][move_counter] = lmr_base() + lmr_scale() * std::log(depth) * std::log(move_counter);
