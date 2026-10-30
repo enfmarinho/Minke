@@ -18,8 +18,6 @@
 
 #pragma once
 
-#define TUNE
-
 #ifdef TUNE
 
 #include <cassert>
