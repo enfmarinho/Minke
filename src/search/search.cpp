@@ -625,7 +625,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
                     scaled_reduction += lmr_ttmove_noisy_reduction() * (!ttmove.is_none() && ttmove.is_noisy());
 
                     // Change reduction based on the move history
-                    scaled_reduction -= history * 1024 / lmr_quiet_hist_divisor();
+                    scaled_reduction -= std::clamp(history * 1024 / lmr_quiet_hist_divisor(), -2048, 2048);
                 } else {
                     scaled_reduction += cutnode * lmr_noisy_cutnode_delta(); // Reduce cutnodes more
                 }
