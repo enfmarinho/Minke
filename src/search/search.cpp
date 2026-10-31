@@ -581,6 +581,9 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             }
         }
 
+        const HistoryType history = move.is_quiet() ? td.search_history.quiet_score(td, move, ply)
+                                                    : td.search_history.noisy_score(position, move);
+
         m_tt.prefetch(position.estimated_key_after(move));
         node.curr_pmove = {move, position.piece_at(move.from())};
         make_move(td, move);
@@ -620,6 +623,9 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
                     scaled_reduction -= std::min(complexity * 1024 / lmr_corrhist_divisor(), 2048); // capped at 2 plies
 
                     scaled_reduction += lmr_ttmove_noisy_reduction() * (!ttmove.is_none() && ttmove.is_noisy());
+
+                    // Change reduction based on the move history
+                    scaled_reduction -= history * 1024 / lmr_quiet_hist_divisor();
                 } else {
                     scaled_reduction += cutnode * lmr_noisy_cutnode_delta(); // Reduce cutnodes more
                 }
