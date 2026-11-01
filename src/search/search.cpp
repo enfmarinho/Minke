@@ -773,6 +773,13 @@ ScoreType Engine::quiescence(ThreadData &td, ScoreType alpha, ScoreType beta, Co
         if (!is_mated(best_score)) {
             if (moves_searched >= 3) // late move pruning
                 break;
+
+            // SEE pruning
+            if (!in_check                                           //
+                && !SEE(position, move, qs_see_pruning_threshold()) //
+            ) {
+                continue;
+            }
         }
         m_tt.prefetch(position.estimated_key_after(move));
         make_move(td, move);
