@@ -238,6 +238,11 @@ TUNABLE_PARAM(conthist_1ply_weight, 982, 0, 1536, 75, 0.002)
 TUNABLE_PARAM(conthist_2ply_weight, 1150, 0, 1536, 75, 0.002)
 TUNABLE_PARAM(conthist_4ply_weight, 473, 0, 1536, 75, 0.002)
 
+// Quiet history weights
+TUNABLE_PARAM(butterfly_hist_weight, 1024, 500, 2500, 100, 0.002)
+TUNABLE_PARAM(conthist_weight, 1024, 500, 2500, 100, 0.002)
+TUNABLE_PARAM(pawnhist_weight, 512, 500, 2500, 100, 0.002)
+
 // Correction History
 TUNABLE_PARAM(pawn_corr_factor, 44, 1, 100, 5, 0.002)
 TUNABLE_PARAM(nonpawn_corr_factor, 37, 1, 100, 5, 0.002)

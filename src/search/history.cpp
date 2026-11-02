@@ -54,8 +54,11 @@ void History::reset() {
 
 int History::quiet_score(const ThreadData &td, const Move move, const CounterType ply) const {
     PieceMove pmove = {move, td.position.piece_at(move.from())};
-    return quiet_history_score(td.position, move) + continuation_history_score(td, pmove, ply) +
-           pawnhist_score(td.position, pmove);
+    int score = 0;
+    score += quiet_history_score(td.position, move) * butterfly_hist_weight();
+    score += continuation_history_score(td, pmove, ply) * conthist_weight();
+    score += pawnhist_score(td.position, pmove) * pawnhist_weight();
+    return score / 1024;
 }
 
 void History::update(const ThreadData &td, const Move best_move, int depth, CounterType ply,
