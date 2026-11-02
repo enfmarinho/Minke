@@ -825,10 +825,13 @@ bool Engine::SEE(Position &position, const Move move, int threshold) {
     if (score >= 0) // Already surpassed threshold
         return true;
 
-    Bitboard attackers = position.attackers(to);
     Bitboard occupancy = position.occ_bb() ^ Bitboard(from); // Removed already used attacker
+    Bitboard attackers = position.attackers(to);
     const Bitboard diagonal_attackers = position.piece_bb(BISHOP) | position.piece_bb(QUEEN);
     const Bitboard line_attackers = position.piece_bb(ROOK) | position.piece_bb(QUEEN);
+    attackers |= (attacks::bishop_attack(to, occupancy) & diagonal_attackers) |
+                 (attacks::rook_attack(to, occupancy) & line_attackers);
+
     Color stm = static_cast<Color>(!position.stm());
 
     while (true) {
@@ -849,9 +852,9 @@ bool Engine::SEE(Position &position, const Move move, int threshold) {
         score = -score - SEE_VALUES[cheapest_attacker] - 1; // Updating negamaxed score
 
         if (score >= 0) { // Score beats threshold
-            if (cheapest_attacker == KING && (attackers & position.occ_bb(static_cast<Color>(!stm))))
-                // King is the only attacker and square is still attacked by opponent, so we don't have a valid attacker
+            if (cheapest_attacker == KING && (attackers & position.occ_bb(stm))) {
                 stm = static_cast<Color>(!stm);
+            }
             break;
         }
 
