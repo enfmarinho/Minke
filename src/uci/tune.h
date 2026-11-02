@@ -195,6 +195,9 @@ TUNABLE_PARAM(fp_max_depth, 12456, 8000, 16000, 400, 0.002)
 TUNABLE_PARAM(fp_margin, 243, 100, 400, 15, 0.002)
 TUNABLE_PARAM(fp_depth_factor, 95, 50, 150, 5, 0.002)
 
+FIXED_PARAM(bnfp_max_depth, 5, 2, 12, 0.5, 0.002)
+TUNABLE_PARAM(bnfp_depth_factor, 120, 50, 300, 12.5, 0.002)
+
 // Prob Cut
 TUNABLE_PARAM(probcut_margin, 324, 250, 450, 10, 0.002)
 TUNABLE_PARAM(probcut_improving_margin, 23, -100, 100, 10, 0.002)
