@@ -511,7 +511,10 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
 
             // Late Move Pruning
             if (!pv_node && //
-                moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
+                moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)] +
+                                     (move.is_quiet()
+                                          ? td.search_history.quiet_score(td, move, ply) / lmp_quiet_history_divisor()
+                                          : 0)) {
                 skip_quiets = true;
             }
 

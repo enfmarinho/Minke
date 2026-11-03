@@ -170,6 +170,7 @@ TUNABLE_PARAM(lmp_base, 157, 0, 400, 20, 0.002)
 TUNABLE_PARAM(lmp_scale, 34, 20, 120, 5, 0.002)
 TUNABLE_PARAM(lmp_improving_base, 240, 50, 550, 25, 0.002)
 TUNABLE_PARAM(lmp_improving_scale, 78, 30, 150, 6, 0.002)
+TUNABLE_PARAM(lmp_quiet_history_divisor, 8000, 5000, 25000, 1000, 0.002)
 
 // Quiet History Pruning
 TUNABLE_PARAM(history_pruning_max_depth_scaled, 5029, 2000, 8000, 300, 0.002)
