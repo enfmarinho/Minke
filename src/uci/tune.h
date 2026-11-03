@@ -244,6 +244,7 @@ TUNABLE_PARAM(nonpawn_corr_factor, 37, 1, 100, 5, 0.002)
 TUNABLE_PARAM(cont_corr_1ply_factor, 32, 1, 100, 5, 0.002)
 TUNABLE_PARAM(cont_corr_2ply_factor, 34, 1, 100, 5, 0.002)
 TUNABLE_PARAM(cont_corr_4ply_factor, 35, 1, 100, 5, 0.002)
+TUNABLE_PARAM(cont_corr_6ply_factor, 35, 1, 100, 5, 0.002)
 TUNABLE_PARAM(major_pieces_corr_factor, 33, 1, 100, 5, 0.002)
 
 // Time Manager
