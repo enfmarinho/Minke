@@ -185,6 +185,7 @@ FIXED_PARAM(singular_extension_min_depth, 6, 4, 10, 0.5, 0.002)
 TUNABLE_PARAM(singular_extension_depth_factor, 17, -20, 60, 4, 0.002)
 TUNABLE_PARAM(double_extension_base, 8, -20, 40, 3, 0.002)
 TUNABLE_PARAM(double_extension_pv_factor, 192, 100, 400, 15, 0.002)
+TUNABLE_PARAM(triple_extension_pv_factor, 300, 200, 600, 20, 0.002)
 TUNABLE_PARAM(triple_extension_base, 97, 40, 140, 5, 0.002)
 
 // Razoring
