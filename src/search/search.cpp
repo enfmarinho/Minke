@@ -504,7 +504,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             continue;
         }
 
-        if (!root && !is_mated(best_score) && !skip_quiets) {
+        if (!root && !is_mated(best_score)) {
             const CounterType lmr_scaled_depth =
                 depth * 1024 - LMR_TABLE[std::min(depth, 63)][std::min(moves_searched, 63)];
             const CounterType lmr_depth = lmr_scaled_depth / 1024;
