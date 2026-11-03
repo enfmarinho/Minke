@@ -513,6 +513,7 @@ ScoreType Engine::negamax(ThreadData &td, ScoreType alpha, ScoreType beta, Count
             if (!pv_node && //
                 moves_searched > LMP_TABLE[improving][std::min(depth, LMP_DEPTH - 1)]) {
                 skip_quiets = true;
+                continue;
             }
 
             // Quiet Futility pruning
